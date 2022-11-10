@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="clean up files [CE-45]" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="first init and checkin again [CE-45]">
+      <change beforePath="$PROJECT_DIR$/kbase.yml" beforeDir="false" afterPath="$PROJECT_DIR$/kbase.yml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -142,7 +144,7 @@
       <workItem from="1666801386429" duration="2159000" />
       <workItem from="1666896970338" duration="18322000" />
       <workItem from="1667400814017" duration="26482000" />
-      <workItem from="1667919131240" duration="13775000" />
+      <workItem from="1667919131240" duration="14454000" />
     </task>
     <task id="LOCAL-00001" summary="initial commit immediately after creating [CE-70]">
       <created>1662503370832</created>
@@ -480,7 +482,14 @@
       <option name="project" value="LOCAL" />
       <updated>1668097369081</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="first init and checkin again [CE-45]">
+      <created>1668097989700</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1668097989700</updated>
+    </task>
+    <option name="localTasksCounter" value="50" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -498,7 +507,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="store token in state file [CE-70]" />
     <MESSAGE value="add a comment [CE-70]" />
     <MESSAGE value="refactor linking [CE-70]" />
     <MESSAGE value="clean up, add env param for whether running as DS or not (defaults to yes!) [CE-70]" />
@@ -523,6 +531,7 @@
     <MESSAGE value="refactor little json db [CE-45]" />
     <MESSAGE value="add osti contributor type lookup [CE-45]" />
     <MESSAGE value="clean up files [CE-45]" />
-    <option name="LAST_COMMIT_MESSAGE" value="clean up files [CE-45]" />
+    <MESSAGE value="first init and checkin again [CE-45]" />
+    <option name="LAST_COMMIT_MESSAGE" value="first init and checkin again [CE-45]" />
   </component>
 </project>
