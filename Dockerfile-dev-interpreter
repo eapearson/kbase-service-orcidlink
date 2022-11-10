@@ -1,0 +1,53 @@
+FROM python:3.10.4-slim-bullseye
+# Note that the python version needs to match that used to create
+# poetry.lock.
+
+MAINTAINER KBase Developer
+# -----------------------------------------
+# In this section, you can install any system dependencies required
+# to run your App.  For instance, you could place an apt-get update or
+# install line here, a git checkout to download code, or run any other
+# installation scripts.
+# -----------------------------------------
+
+RUN apt update && apt install -y curl wget
+
+# Install poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+# Annoyingly it puts it here.
+ENV PATH="/root/.local/bin:$PATH"
+
+# dockerize for config
+# This version uses master; otherwise functionally equivalent other than style.
+RUN version=v0.15.1 && \
+    wget -O - https://github.com/powerman/dockerize/releases/download/${version}/dockerize-`uname -s`-`uname -m` | install /dev/stdin /usr/local/bin/dockerize
+
+
+#RUN mkdir -p /kb/module/work
+#RUN mkdir -p /kb/module/config
+#RUN chmod -R a+rw /kb/module
+#COPY ./src /kb/module/src
+#COPY ./scripts /kb/module/scripts
+#COPY ./templates /kb/module/templates
+#COPY ./poetry.lock /kb/module
+#COPY ./pyproject.toml /kb/module
+#COPY ./deploy.cfg /kb/module
+#COPY ./Makefile /kb/module
+#COPY ./kbase.yml /kb/module
+#COPY ./compile_report.json /kb/module
+##COPY ./sdk.cfg /kb/module
+#
+#WORKDIR /kb/module
+
+#RUN poetry install
+
+# RUN make all
+
+#ENTRYPOINT [ "sh", "./scripts/entrypoint.sh" ]
+#
+#CMD [ ]
+
+#ENTRYPOINT [ "dockerize" ]
+#
+#CMD [ "-template", "./templates/config.json.tmpl:./config/config.json", \
+#    "sh", "./scripts/entrypoint.sh" ]

@@ -1,0 +1,18 @@
+module-name:
+    ORCIDLink
+
+module-description:
+    A prototype service for creating linkage between a KBase account and an ORCID Sandbox account. This linkage allows
+    accessing an ORCID profile, and managing the work activity (publications) for an account.
+
+service-language:
+    python
+
+module-version:
+    0.1.0
+
+owners:
+    [eapearson]
+
+service-config:
+    dynamic-service: true

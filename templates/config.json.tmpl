@@ -1,0 +1,28 @@
+{
+    "kbase": {
+        "services": {
+            "Auth2": {
+                "url": "https://{{ .Env.KBASE_SECURE_CONFIG_PARAM_SERVICE_HOST }}/services/auth/api/legacy/KBase/Sessions/Login"
+            },
+            "ServiceWizard": {
+                "url": "https://{{ .Env.KBASE_SECURE_CONFIG_PARAM_SERVICE_HOST }}/services/service_wizard"
+            },
+            "ORCIDLink": {
+                "url": "https://{{ .Env.KBASE_SECURE_CONFIG_PARAM_SERVICE_HOST }}/services/orcidlink"
+            }
+        },
+        "baseURL": "https://{{ .Env.KBASE_SECURE_CONFIG_PARAM_UI_HOST }}"
+    },
+    "orcid": {
+        "tokenExchangeURL": "https://sandbox.orcid.org/oauth/token",
+        "tokenRevokeURL": "https://sandbox.orcid.org/oauth/revoke",
+        "baseURL": "https://sandbox.orcid.org",
+        "apiBaseURL": "https://api.sandbox.orcid.org/v3.0",
+        "authorizeURL": "https://sandbox.orcid.org/oauth/authorize"
+    },
+    "env": {
+        "CLIENT_ID": "{{ .Env.KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID }}",
+        "CLIENT_SECRET": "{{ .Env.KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET }}",
+        "IS_DYNAMIC_SERVICE": "{{ default "yes" .Env.KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE }}"
+    }
+}
