@@ -54,7 +54,7 @@ class TokenCache(object):
         with self.lock:
             self.cache[encoded_token] = [username, time.time()]
             if len(self.cache) > self.maxsize:
-                sorted_iems = sorted(list(self.cache.items()), key=(lambda v: v[1][1]))
+                sorted_items = sorted(list(self.cache.items()), key=(lambda v: v[1][1]))
                 for i, (t, _) in enumerate(sorted_items):
                     if i <= self.halfmax:
                         del self.cache[t]
@@ -78,7 +78,7 @@ class KBaseAuth(object):
 
         self.cache = TokenCache()
 
-    def get_user(self, token):
+    def get_user(self, token: str):
         if not token:
             raise ValueError("Must supply token")
 
@@ -86,19 +86,55 @@ class KBaseAuth(object):
         if username:
             return username
 
-        d = {"token": token, "fields": "user_id"}
+        data = {"token": token, "fields": "user_id"}
 
-        ret = requests.post(self.authurl, data=d)
-        if not ret.ok:
+        response = requests.post(self.authurl, data=data)
+
+        if not response.ok:
             try:
-                err = ret.json()
+                err = response.json()
             except Exception:
-                ret.raise_for_status()
-            message = "Error connecting to auth service: {} {}\n{}\n{}".format(
-                ret.status_code, ret.reason, err["error"]["message"], self.authurl
-            )
-            raise ValueError(message)
+                response.raise_for_status()
+            # message = "Error connecting to auth service: {} {}\n{}\n{}".format(
+            #     response.status_code, response.reason, err["error"]["message"], self.authurl
+            # )
+            # raise ValueError(message)
 
-        username = ret.json()["user_id"]
+            appcode = err['error']['appcode']
+            if appcode == 10020:
+                raise KBaseAuthInvalidToken('Invalid token')
+            elif appcode == 30000:
+                raise KBaseAuthMissingToken('Missing token')
+            else:
+                raise KBaseAuthException(err['error']['message'])
+            # raise KBaseAuthException(err['error']['appcode'], err['error']['apperror'], err['error']['message'])
+
+        username = response.json()["user_id"]
         self.cache.add_valid_token(token, username)
         return username
+
+
+class KBaseAuthException(Exception):
+    pass
+
+
+class KBaseAuthMissingToken(KBaseAuthException):
+    pass
+
+
+class KBaseAuthInvalidToken(KBaseAuthException):
+    pass
+
+# class KBaseAuthException(Exception):
+#     def __init__(self, code: int, message: str, long_message: str):
+#         super().__init__(message)
+#         self.code = code
+#         self.message = message
+#         self.long_message = long_message
+#
+#     def to_dict(self):
+#         return {
+#             'code': self.code,
+#             'message': self.message,
+#             'long_message': self.long_message
+#         }
