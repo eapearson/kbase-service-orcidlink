@@ -3,7 +3,7 @@ from typing import Union
 
 import requests
 import yaml
-from fastapi import FastAPI, Request, Header, HTTPException, status
+from fastapi import FastAPI, HTTPException, Header, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -17,20 +17,20 @@ from lib.exceptions import KBaseAuthException
 from lib.responses import error_response
 from lib.storage_model import StorageModel
 from lib.transform import orcid_api_url, raw_work_to_work
-from lib.utils import get_prop, get_int_prop, get_kbase_config
-from src.model_types import KBaseConfig, ORCIDProfile, LinkRecord, SimpleSuccess
-from src.routers import demos, works, linking_sessions, doiorg
+from lib.utils import get_int_prop, get_kbase_config, get_prop
+from model_types import KBaseConfig, LinkRecord, ORCIDProfile, SimpleSuccess
+from routers import doiorg, linking_sessions, works
+from routers.doi_forms import root
 
 app = FastAPI(
     docs_url=None,
     redoc_url=None,
-
 )
 
-app.include_router(demos.router)
 app.include_router(works.router)
 app.include_router(linking_sessions.router)
 app.include_router(doiorg.router)
+app.include_router(root.router)
 
 
 @app.exception_handler(RequestValidationError)

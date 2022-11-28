@@ -43,7 +43,7 @@ def exception_response(exception, data=None):
 
     return error_response(
         'exception',
-        'The service encountered and error which resulted in an Exception',
+        'The service encountered an error which resulted in an Exception',
         status_code=500,
         data=data)
 

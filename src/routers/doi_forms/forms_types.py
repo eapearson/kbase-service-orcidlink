@@ -1,20 +1,6 @@
-import uuid
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Header
-from lib.auth import get_username
-from lib.db import FileStorage
-from lib.json_file import get_json_file
-from lib.responses import error_response, exception_response
-from lib.utils import current_time_millis
 from pydantic import BaseModel, Field
-
-router = APIRouter(
-    prefix="/demos",
-    # tags=["items"],
-    # dependencies=[Depends(get_token_header)],
-    responses={404: {"description": "Not found"}},
-)
 
 
 #
@@ -23,19 +9,21 @@ router = APIRouter(
 # which eventually could be stored in the narrative itself.
 #
 
-# Step 1: Select narrative
+# Section: Select narrative
 
-class MinimalNarrativeInfo(BaseModel):
+class StaticNarrativeSummary(BaseModel):
     title: str = Field(...)
     workspaceId: int = Field(...)
     objectId: int = Field(...)
     version: int = Field(...)
     ref: str = Field(...)
     owner: str = Field(...)
+    staticNarrativeSavedAt: int = Field(...)
+    narrativeSavedAt: int = Field(...)
 
 
 class NarrativeSectionResult(BaseModel):
-    narrativeInfo: MinimalNarrativeInfo
+    staticNarrative: StaticNarrativeSummary
 
 
 class NarrativeSection(BaseModel):
@@ -44,42 +32,18 @@ class NarrativeSection(BaseModel):
     value: NarrativeSectionResult = Field(None)
 
 
-# class Affiliation(BaseModel):
-#     name: str
-#     role: str
-#     startYear: str
-#     endYear: str = Field(None)
+# Section: Import citations from narrative and apps
 
-# class ExternalId(BaseModel):
-#     type: str
-#     value:  str
-#     url:  str = Field(None)
-#     relationship:  str
+class ImportableCitation(BaseModel):
+    doi: Union[str, None] = Field(...)
+    url: Union[str, None] = Field(None)
+    citation: Union[str, None] = Field(...)
+    source: str = Field(...)
 
-# class Publication(BaseModel):
-#     putCode: str
-#     createdAt: int
-#     updatedAt: int
-#     source: str
-#     title: str
-#     journal: str
-#     date: str
-#     publicationType: str
-#     url: str = Field(None)
-#     citationType: str
-#     citation: str
-#     citationDescription: str
-#     externalIds: List(ExternalId)
 
-# class ORCIDProfile(BaseModel):
-#     orcidId: str
-#     firstName: str
-#     lastName: str
-#     bio: str
-#     affiliations: List(Affiliation) = Field([])
-#     publications: List(Publication) = Field([])
+class CitationsImportSectionParams(BaseModel):
+    staticNarrative: StaticNarrativeSummary
 
-# Step 2 - Citations
 
 class Citation(BaseModel):
     doi: Union[str, None] = Field(...)
@@ -87,8 +51,21 @@ class Citation(BaseModel):
     source: str = Field(...)
 
 
-class CitationSectionParams(BaseModel):
-    narrativeInfo: MinimalNarrativeInfo
+class CitationsImportSectionResult(BaseModel):
+    citations: List[Citation]
+
+
+class CitationsImportSection(BaseModel):
+    status: str
+    params: CitationsImportSectionParams = Field(None)
+    value: CitationsImportSectionResult = Field(None)
+
+
+# Section: add or edit citations.
+
+
+class CitationsSectionParams(BaseModel):
+    citations: List[Citation]
 
 
 class CitationsSectionResult(BaseModel):
@@ -97,7 +74,7 @@ class CitationsSectionResult(BaseModel):
 
 class CitationsSection(BaseModel):
     status: str
-    params: CitationSectionParams = Field(None)
+    params: CitationsSectionParams = Field(None)
     value: CitationsSectionResult = Field(None)
 
 
@@ -125,7 +102,7 @@ class ImportableAuthor(BaseModel):
 
 
 class AuthorsImportSectionParams(BaseModel):
-    narrativeInfo: MinimalNarrativeInfo
+    staticNarrative: StaticNarrativeSummary
 
 
 class AuthorsImportSectionResult(BaseModel):
@@ -141,12 +118,13 @@ class AuthorsImportSection(BaseModel):
 # Step 4 - Author
 
 class Author(BaseModel):
-    firstName: str
+    firstName: str = Field(...)
     middleName: str = Field(None)
-    lastName: str
-    emailAddress: str
+    lastName: str = Field(...)
+    emailAddress: str = Field(...)
     orcidId: str = Field(None)
-    institution: str
+    institution: str = Field(...)
+    contributorType: str = Field(...)
 
 
 class AuthorsSectionParams(BaseModel):
@@ -200,17 +178,23 @@ class GeolocationSection(BaseModel):
 # Step 7: Description
 
 class Description(BaseModel):
+    title: str = Field(...)
     keywords: List[str] = Field([])
-    abstract: str
+    abstract: str = Field(...)
+    researchOrganization: str = Field(...)
 
 
 class DescriptionSectionResult(BaseModel):
     description: Description
 
 
+class DescriptionParams(BaseModel):
+    narrativeTitle: str = Field(...)
+
+
 class DescriptionSection(BaseModel):
     status: str
-    params: Optional[None] = None
+    params: Optional[DescriptionParams] = None
     value: Optional[DescriptionSectionResult] = None
 
 
@@ -239,6 +223,7 @@ class OSTISubmission(BaseModel):
     publication_date: str = Field(...)
     # Primary DOE contract number(s), multiple values may be separated by semicolon.
     contract_nos: str = Field(...)
+    othnondoe_contract_nos: str | None = Field(None)
     # Detailed set of information for person(s) responsible for creation of the dataset
     #  content.Allows transmission of ORCID information and more detailed affiliations
     #  (see below).MAY NOT be used in the same record as the string format, <creators>.
@@ -264,7 +249,7 @@ class OSTISubmission(BaseModel):
     # If present, the site-selected DOI inset value for new DOIs.
     doi_infix: str = Field(None)
     # Site specific unique identifier for this data set.
-    accession_num: str = Field(None)
+    # accession_num: str = Field(None)
     # If credited, the organization name that sponsored / funded the research. For a list
     #  of sponsor organizations, see Sponsoring Organization Authority at
     #  https:#www.osti.gov/elink/authorities.jsp. Multiple codes may be semi-colon delimited.
@@ -273,12 +258,48 @@ class OSTISubmission(BaseModel):
     originating_research_org: str = Field(None)
 
 
+# Response from OSTI after requesting a DOI
+# Notes:
+# - site_url not returned
+class OSTIRecord(OSTISubmission):
+    hidden: str = Field(...)
+    osti_id: str = Field(...)
+    status: str = Field(...)
+    related_resource: str | None = Field(None)
+    product_nos: str | None = Field(None)
+    product_type: str = Field(...)
+    other_identifying_numbers: str | None = Field(None)
+    availability: str | None = Field(None)
+    collaboration_names: str | None = Field(None)
+    language: str = Field(...)
+    country: str = Field(...)
+    subject_categories_code: str | None = Field(None)
+    # Should be static narrative ref? wsid/version or wsid.version
+    accession_num: str | None = Field(...)
+    # Note string "none" if pending
+    date_first_submitted: str = Field(...)
+    date_last_submitted: str = Field(...)
+    entry_date: str = Field(...)
+    doi: str = Field(...)
+    doi_status: str = Field(...)
+    file_extension: str | None = Field(None)
+    # should be web browser?
+    software_needed: str | None = Field(None)
+    dataset_size: str | None = Field(None)
+    contact_name: str = Field(...)
+    contact_org: str = Field(...)
+    contact_email: str = Field(...)
+    # NB the leading "@" replaced with "_" for Python class compatibility
+    _status: str = Field(...)
+    _released: str = Field(...)
+
+
 class ReviewAndSubmitSectionParams(BaseModel):
     submission: OSTISubmission
 
 
 class ReviewAndSubmitSectionResult(BaseModel):
-    submission: OSTISubmission
+    requestId: str = Field(...)
 
 
 class ReviewAndSubmitSection(BaseModel):
@@ -291,118 +312,53 @@ class ReviewAndSubmitSection(BaseModel):
 
 class DOIFormSections(BaseModel):
     narrative: NarrativeSection
-    citations: CitationsSection
+    description: DescriptionSection
     orcidLink: ORCIDLinkSection
     authorsImport: AuthorsImportSection
     authors: AuthorsSection
+    citationsImport: CitationsImportSection
+    citations: CitationsSection
     contracts: ContractsSection
-    geolocation: GeolocationSection
-    description: DescriptionSection
+    # geolocation: GeolocationSection
     reviewAndSubmit: ReviewAndSubmitSection
 
 
 class DOIApplicationUpdate(BaseModel):
     form_id: str
     sections: DOIFormSections
+    status: str
 
 
 class InitialDOIApplication(BaseModel):
     sections: DOIFormSections
+    status: str
 
 
-@router.get("")
-async def get_doi_metadata():
-    return {
-        'description': 'ORCID Link Demo'
-    }
+class DOIFormRecord(BaseModel):
+    form_id: str = Field(...)
+    status: str = Field(...)
+    owner: str = Field(...)
+    created_at: int = Field(...)
+    updated_at: int = Field(...)
+    sections: DOIFormSections = Field(...)
 
 
-@router.post("/doi_application")
-async def create_doi_application(
-        doi_application: InitialDOIApplication, authorization: str | None = Header(default=None)
-):
-    db = FileStorage()
-    form_id = str(uuid.uuid4())
-    application = doi_application.dict(exclude_unset=True)
-    application['form_id'] = form_id
-    application['owner'] = get_username(authorization)
-    application['created_at'] = current_time_millis()
-    application['updated_at'] = current_time_millis()
-    db.create('doi-forms', form_id, application)
-    return application
+class PostDOIRequestParams(BaseModel):
+    form_id: str = Field(...)
+    submission: OSTISubmission = Field(...)
 
 
-@router.put("/doi_application")
-async def update_doi_application(
-        doi_application: DOIApplicationUpdate, authorization: str | None = Header(default=None)
-):
-    db = FileStorage()
-    application_update = doi_application.dict(exclude_unset=True)
-    application = db.get('doi-forms', doi_application.form_id)
-    application['sections'] = application_update['sections']
-    application['updated_at'] = current_time_millis()
-    db.update('doi-forms', doi_application.form_id, application)
-    return application
+class GetDOIRequestParams(BaseModel):
+    doi: str = Field(None)
+    # osti_id: str = Field(None)
 
 
-@router.get("/doi_application/{form_id}")
-async def get_doi_application(
-        form_id: str, authorization: str | None = Header(default=None)
-):
-    db = FileStorage()
-    username = get_username(authorization)
-
-    application = db.get('doi-forms', form_id)
-
-    if application['owner'] != username:
-        return error_response("auth", "You do not own this application", {})
-
-    return application
+class GetDOIRequestResult(BaseModel):
+    record: OSTIRecord
+    _start: str = Field(...)
+    _rows: str = Field(...)
+    _numFound: str = Field(...)
 
 
-@router.delete("/doi_application/{form_id}")
-async def delete_doi_application(
-        form_id: str, authorization: str | None = Header(default=None)
-):
-    username = get_username(authorization)
-
-    db = FileStorage()
-    application = db.get('doi-forms', form_id)
-
-    if application['owner'] != username:
-        return error_response("auth", "You do not own this application", {})
-
-    db.delete('doi-forms', form_id)
-
-
-@router.get("/doi_applications")
-async def get_doi_application(
-        authorization: str = Header(...)
-):
-    username = get_username(authorization)
-
-    db = FileStorage()
-    applications = db.list('doi-forms')
-    user_applications = [application for application in applications if application['owner'] == username]
-
-    def sorter(app):
-        return app['updated_at']
-
-    user_applications.sort(key=sorter, reverse=True)
-
-    return user_applications
-
-
-# @app.put("/update_narrative_metadata")
-# async def update_narrative_metadata(authorization: str | None = Header(default=None)):
-
-
-@router.get("/osti_contributor_types")
-async def get_osti_contributor_types():
-    try:
-        result = get_json_file('osti-contributor-types')
-        return {
-            "osti_contributor_types": result
-        }
-    except Exception as ex:
-        return exception_response(ex)
+class GetDOIRequestResponse(BaseModel):
+    result: GetDOIRequestResult

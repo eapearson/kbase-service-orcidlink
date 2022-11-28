@@ -10,6 +10,9 @@ from lib import utils
 # Database
 ################################
 
+def now():
+    return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+
 
 class FileStorage:
     def __init__(self, directory="work/data"):
@@ -47,14 +50,32 @@ class FileStorage:
         with open(file_path, "r") as db_file:
             return json.load(db_file)
 
-    def create_collection_index_entry(self, collection, name):
+    def create_collection_index_entry(self, collection, name, metadata={}):
         index = self.get_collection_index(collection)
         index['last_id'] += 1
         # TODO: add date created
         index['entities'][name] = {
             'id': index['last_id'],
-            'created': datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+            'metadata': metadata,
+            'events': [
+                {
+                    'event': 'created',
+                    'at': now()
+                }
+            ]
         }
+
+        self.save_collection_index(collection, index)
+
+        return index['last_id']
+
+    def create_collection_index_event(self, collection, name, event_name):
+        index = self.get_collection_index(collection)
+        entry = index['entities'][name]
+        entry['events'].append({
+            'event': event_name,
+            'at': now()
+        })
 
         self.save_collection_index(collection, index)
 
@@ -124,6 +145,7 @@ class FileStorage:
         file_path = self.get_collection_file_path(collection, str(entity_id), require_exists=False)
         with open(file_path, "w") as db_file:
             json.dump(value, db_file, indent=4)
+        self.create_collection_index_event(collection, name, 'updated')
 
     # TODO: manipulate index, manipulate entity; then as a unit save index, save entity.
     def create(self, collection, name, value):
