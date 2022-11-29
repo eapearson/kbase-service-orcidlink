@@ -4,21 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="bump version [CE-45]">
-      <change afterPath="$PROJECT_DIR$/src/lib/ostiapi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routers/doi_forms/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routers/doi_forms/forms.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routers/doi_forms/forms_types.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routers/doi_forms/root.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routers/doi_requests/doi_requests.py" afterDir="false" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="add basic admin support for doi forms [CE-45]">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/authclient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/authclient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/responses.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/demos.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routers/doi_forms/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routers/doi_forms/forms.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routers/doi_forms/forms_types.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routers/doi_forms/root.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routers/doi_requests/doi_requests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routers/doiorg.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,11 +69,11 @@
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/routers" />
       <recent name="$PROJECT_DIR$/_local" />
       <recent name="$PROJECT_DIR$/src/routers/doi_requests" />
       <recent name="$PROJECT_DIR$/src/routers/doi_forms" />
       <recent name="$PROJECT_DIR$/src/lib" />
-      <recent name="$PROJECT_DIR$/_attic" />
     </key>
   </component>
   <component name="RunManager">
@@ -161,28 +155,7 @@
       <workItem from="1668439299305" duration="41788000" />
       <workItem from="1668785469066" duration="3453000" />
       <workItem from="1669069799774" duration="541000" />
-      <workItem from="1669643920780" duration="1977000" />
-    </task>
-    <task id="LOCAL-00002" summary="working locally, will it deploy? [CE-70]">
-      <created>1662647119732</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1662647119732</updated>
-    </task>
-    <task id="LOCAL-00003" summary="add dynamic service config [CE-70]">
-      <created>1662647650670</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1662647650670</updated>
-    </task>
-    <task id="LOCAL-00004" summary="iterate on compilation stuff for kb-sdk [CE-70]">
-      <created>1662650609547</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1662650609547</updated>
+      <workItem from="1669643920780" duration="5286000" />
     </task>
     <task id="LOCAL-00005" summary="bury dockerize in entrypoint script [CE-70]">
       <created>1662651113447</created>
@@ -506,7 +479,28 @@
       <option name="project" value="LOCAL" />
       <updated>1668098505153</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="fix type [CE-45]">
+      <created>1669667624470</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1669667624471</updated>
+    </task>
+    <task id="LOCAL-00052" summary="update python dependencies [CE-45]">
+      <created>1669667728112</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1669667728112</updated>
+    </task>
+    <task id="LOCAL-00053" summary="add basic admin support for doi forms [CE-45]">
+      <created>1669668043111</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1669668043111</updated>
+    </task>
+    <option name="localTasksCounter" value="54" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -524,9 +518,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="refactor linking [CE-70]" />
-    <MESSAGE value="clean up, add env param for whether running as DS or not (defaults to yes!) [CE-70]" />
-    <MESSAGE value="rearrange some deck chairs [CE-70]" />
     <MESSAGE value="add empty line to make a commit to force a rebuild [CE-70]" />
     <MESSAGE value="fix config [CE-70]" />
     <MESSAGE value="minor refactoring to make more RESTish [CE-70]" />
@@ -549,6 +540,9 @@
     <MESSAGE value="clean up files [CE-45]" />
     <MESSAGE value="first init and checkin again [CE-45]" />
     <MESSAGE value="bump version [CE-45]" />
-    <option name="LAST_COMMIT_MESSAGE" value="bump version [CE-45]" />
+    <MESSAGE value="fix type [CE-45]" />
+    <MESSAGE value="update python dependencies [CE-45]" />
+    <MESSAGE value="add basic admin support for doi forms [CE-45]" />
+    <option name="LAST_COMMIT_MESSAGE" value="add basic admin support for doi forms [CE-45]" />
   </component>
 </project>

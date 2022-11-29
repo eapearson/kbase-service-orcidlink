@@ -19,18 +19,15 @@ from lib.storage_model import StorageModel
 from lib.transform import orcid_api_url, raw_work_to_work
 from lib.utils import get_int_prop, get_kbase_config, get_prop
 from model_types import KBaseConfig, LinkRecord, ORCIDProfile, SimpleSuccess
-from routers import doiorg, linking_sessions, works
-from routers.doi_forms import root
+from routers import linking_sessions, works
 
 app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
 
-app.include_router(works.router)
 app.include_router(linking_sessions.router)
-app.include_router(doiorg.router)
-app.include_router(root.router)
+app.include_router(works.router)
 
 
 @app.exception_handler(RequestValidationError)
