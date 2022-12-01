@@ -4,26 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="remove doi request support [CE-45]">
-      <change afterPath="$PROJECT_DIR$/docs/architecture.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/errors.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/start-dev-server.sh" afterDir="false" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="start adding docs, switch to yaml config, add title to errors [CE-45]">
+      <change afterPath="$PROJECT_DIR$/scripts/start-dev-bash.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dev/work/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/dev/work/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/entrypoint.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/entrypoint.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/prepare_deploy_cfg.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/start_server.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start_server.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/authclient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/authclient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/ostiapi.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/ostiapi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/responses.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/routers/linking_sessions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/works.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/routers/works.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/config.json.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/templates/config.yaml.tmpl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/poetry.lock" beforeDir="false" afterPath="$PROJECT_DIR$/poetry.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/start-dev-server.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start-dev-server.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +41,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-sdk-module-orcid-link/templates",
+    "last_opened_file_path": "/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-sdk-module-orcid-link/scripts",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -73,11 +61,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/scripts" />
       <recent name="$PROJECT_DIR$/templates" />
       <recent name="$PROJECT_DIR$/src/routers" />
       <recent name="$PROJECT_DIR$/src/routers/doi_forms" />
       <recent name="$PROJECT_DIR$/data" />
-      <recent name="$PROJECT_DIR$/dev/work/data" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/routers" />
@@ -166,14 +154,7 @@
       <workItem from="1668439299305" duration="41788000" />
       <workItem from="1668785469066" duration="3453000" />
       <workItem from="1669069799774" duration="541000" />
-      <workItem from="1669643920780" duration="32400000" />
-    </task>
-    <task id="LOCAL-00006" summary="try compilation report hack [CE-70]">
-      <created>1662651670120</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1662651670120</updated>
+      <workItem from="1669643920780" duration="33452000" />
     </task>
     <task id="LOCAL-00007" summary="try compilation report hack pt 2 [CE-70]">
       <created>1662652072676</created>
@@ -511,7 +492,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669738697421</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="start adding docs, switch to yaml config, add title to errors [CE-45]">
+      <created>1669898822290</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1669898822290</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -529,7 +517,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="fix config [CE-70]" />
     <MESSAGE value="minor refactoring to make more RESTish [CE-70]" />
     <MESSAGE value="refactor DOI demo api [CE-70]" />
     <MESSAGE value="iteration [CE-70]" />
@@ -554,6 +541,7 @@
     <MESSAGE value="update python dependencies [CE-45]" />
     <MESSAGE value="add basic admin support for doi forms [CE-45]" />
     <MESSAGE value="remove doi request support [CE-45]" />
-    <option name="LAST_COMMIT_MESSAGE" value="remove doi request support [CE-45]" />
+    <MESSAGE value="start adding docs, switch to yaml config, add title to errors [CE-45]" />
+    <option name="LAST_COMMIT_MESSAGE" value="start adding docs, switch to yaml config, add title to errors [CE-45]" />
   </component>
 </project>

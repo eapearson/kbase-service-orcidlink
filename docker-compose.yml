@@ -14,6 +14,7 @@ services:
     dns: 8.8.8.8
     volumes:
       # Update this to wherever you want VS Code to mount the folder of your project
+      #      - .:/kb/module
       - ./src:/kb/module/src
       - ./dev/work:/kb/module/work
       - ./templates:/kb/module/templates

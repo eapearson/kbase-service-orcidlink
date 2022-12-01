@@ -1,4 +1,4 @@
-FROM python:3.10.4-slim-bullseye
+FROM python:3.11.0-slim-bullseye
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
