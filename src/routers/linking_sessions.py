@@ -3,17 +3,16 @@ import uuid
 from urllib.parse import urlencode
 
 import requests
-from fastapi import APIRouter
-from fastapi import responses, Header, HTTPException
+from fastapi import APIRouter, HTTPException, Header, responses
 from lib.auth import get_username
 from lib.config import get_config, get_service_uri
-from lib.constants import ORCID_SCOPES, LINKING_SESSION_TTL
+from lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from lib.responses import ui_error_response
 from lib.storage_model import StorageModel
 from lib.utils import current_time_millis
 from pydantic import BaseModel, Field
 
-from src.model_types import SessionInfo, SimpleSuccess, LinkingSessionComplete
+from src.model_types import LinkingSessionComplete, SessionInfo, SimpleSuccess
 
 router = APIRouter(
     responses={404: {"description": "Not found"}}
@@ -39,12 +38,15 @@ def get_linking_session_record(session_id, authorization):
 
 #
 # Redirection target for linking.
+#
 # The provided "code" is very short-lived and must be exchanged for the
 # long-lived tokens without allowing the user to dawdle over it.
+#
 # Yet we do want the user to verify the linking with full account info first.
 # Even using the forced logout during ORCID authentication, the ORCID interface
 # does not identify the account after login. Since their user ids are cryptic,
-# it would be easy on a multi-user computer to use the wrong ORCID Id.
+#
+# it would be possible on a multi-user computer to use the wrong ORCID Id.
 # So what we do is save the response and issue our own temporary token.
 # Upon submitting that token to /finish-link link is made.
 #
@@ -64,27 +66,26 @@ async def continue_linking_session(
     # So we use the state to get the session id.
 
     if error is not None:
-        params = {"message": error}
-        return responses.RedirectResponse(
-            f"{get_config(['kbase', 'baseURL'])}?error={urlencode(json.dumps(params))}#orcidlink/error)",
-            status_code=302,
-        )
+        return ui_error_response("link.orcid_error",
+                                 "ORCID Error Linking",
+                                 error)
 
     if code is None:
-        params = {"error": "The 'code' query param is required but missing"}
-        error_url = f"{get_config(['kbase', 'baseURL'])}?message={urlencode(json.dumps(params))}#orcidlink/error)"
-        return responses.RedirectResponse(
-            error_url,
-            status_code=302,
-        )
+        return ui_error_response("link.code_missing",
+                                 "Linking code missing",
+                                 "The 'code' query param is required but missing")
 
     if state is None:
-        return ui_error_response("The 'state' query param is required but missing")
+        return ui_error_response("link.state_missing",
+                                 "Linking Error",
+                                 "The 'state' query param is required but missing")
 
     unpacked_state = json.loads(state)
 
     if 'session_id' not in unpacked_state:
-        return ui_error_response("The 'session_id' was not provided in the request")
+        return ui_error_response("link.session_id_missing",
+                                 "Linking Error",
+                                 "The 'session_id' was not provided in the 'state' query param")
 
     session_id = unpacked_state.get("session_id")
 
@@ -137,7 +138,7 @@ async def continue_linking_session(
         params["skip_prompt"] = session_record["skip_prompt"]
 
     return responses.RedirectResponse(
-        f"{get_config(['kbase', 'baseURL'])}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        f"{get_config(['kbase', 'uiOrigin'])}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )
 

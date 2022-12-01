@@ -2,11 +2,10 @@ import json
 from typing import List
 
 import requests
-from fastapi import APIRouter
-from fastapi import Header, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from lib.auth import get_username
 from lib.storage_model import StorageModel
-from lib.transform import orcid_api_url, raw_work_to_work, parse_date
+from lib.transform import orcid_api_url, parse_date, raw_work_to_work
 from lib.utils import get_prop
 from pydantic import BaseModel, Field
 
@@ -210,7 +209,6 @@ async def delete_work(put_code: str, authorization: str | None = Header(default=
     url = orcid_api_url(f"{orcid_id}/work/{put_code}")
 
     response = requests.delete(url, headers=header)
-    print('deleted', response.text)
     return {"ok": True}
 
 

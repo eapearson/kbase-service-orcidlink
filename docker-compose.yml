@@ -7,11 +7,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    #      args:
-    #        VARIANT: "3.10-bullseye"
-    #        NODE_VERSION: "lts/*"
-    # just use dev for the image tag so we can easily clean
-    # up afterwards.
 
     image: kbase/orcidlink:dev
 
@@ -23,35 +18,13 @@ services:
       - ./dev/work:/kb/module/work
       - ./templates:/kb/module/templates
       - ./data:/kb/module/data
-      # Uncomment the next line to use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker-compose for details.
-      # - /var/run/docker.sock:/var/run/docker.sock 
-
-      # Uncomment the next four lines if you will use a ptrace-based debugger like C++, Go, and Rust.
-      # cap_add:
-      #   - SYS_PTRACE
-      # security_opt:
-      #   - seccomp:unconfined
-      # volumes:
-      # - ${APP_DIR}:/kb/deployment/app
-      # Map local source into expected location within container
-      # - "${PWD}/react-app:/kb/deployment/app"
-      # # Map local configuration directory into expected location within container
-      # - "${PWD}/dev/gitlab-config:/kb/deployment/config"
-      # - ${PWD}/deployment/scripts:/kb/deployment/scripts
-      # # Map locally installed plugins into the expected location within container
-      # - ${PWD}/build/dist/deploy/plugins:/kb/deployment/app/public/deploy/plugins
-      # - ${SCRIPTS_DIR}:/kb/deployment/scripts
-
-      # just use dev for the image tag so we can easily clean
-      # up afterwards.
-      # image: kbase/kbase-ui:dev
+      - ./scripts:/kb/module/scripts
     networks:
       - kbase-dev
     ports:
       - "5001:5000"
     environment:
-      - KBASE_SECURE_CONFIG_PARAM_UI_HOST=${KBASE_SECURE_CONFIG_PARAM_UI_HOST}
-      - KBASE_SECURE_CONFIG_PARAM_SERVICE_HOST=${KBASE_SECURE_CONFIG_PARAM_SERVICE_HOST}
+      - KBASE_ENDPOINT=${KBASE_ENDPOINT}
       - KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID=${KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID}
       - KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET=${KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET}
       - KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE=${KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE}

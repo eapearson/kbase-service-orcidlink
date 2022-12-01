@@ -11,48 +11,43 @@ import time
 
 import requests
 
+global_cache = None
 
-class TokenCache(object):
-    """A basic cache for tokens."""
 
-    MAX_TIME_SEC = 5 * 60  # 5 min
+class Cache(object):
+    """A basic cache """
 
     lock = threading.RLock()
 
-    def __init__(self, maxsize=2000):
+    def __init__(self, maxsize: int, item_lifetime: int):
         self.cache = {}
+        self.item_lifetime = item_lifetime
         self.maxsize = maxsize
         self.halfmax = maxsize / 2  # int division to round down
 
-    def token_expired(self, cached_at):
-        if time.time() - cached_at > self.MAX_TIME_SEC:
-            return True
-        return False
+    def is_expired(self, cached_at: int):
+        return time.time() - cached_at > self.item_lifetime
 
-    def get_user(self, token):
+    def get(self, key: str):
+        encoded_key = self.encode_key(key)
         with self.lock:
-            token_info = self.cache.get(token)
-        if not token_info:
+            item = self.cache.get(encoded_key)
+
+        if not item:
+            return None
+        value, cached_at = item
+        if self.is_expired(cached_at):
             return None
 
-        username, cached_at = token_info
-        if self.token_expired(cached_at):
-            return None
+        return value
 
-        return username
+    def encode_key(self, value: str):
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
-    def encode_token(self, token):
-        return hashlib.sha256(token.encode("utf-8")).hexdigest()
-
-    def add_valid_token(self, token, username):
-        if not token:
-            raise ValueError("Must supply token")
-        if not username:
-            raise ValueError("Must supply username")
-
-        encoded_token = self.encode_token(token)
+    def add(self, key: str, value: str):
+        encoded_key = self.encode_key(key)
         with self.lock:
-            self.cache[encoded_token] = [username, time.time()]
+            self.cache[encoded_key] = [value, time.time()]
             if len(self.cache) > self.maxsize:
                 sorted_items = sorted(list(self.cache.items()), key=(lambda v: v[1][1]))
                 for i, (t, _) in enumerate(sorted_items):
@@ -67,39 +62,52 @@ class KBaseAuth(object):
     A very basic KBase auth client for the Python server.
     """
 
-    def __init__(self, auth_url=None):
+    def __init__(self, auth_url: str = None, cache_max_size: int = None, cache_lifetime: int = None):
         """
         Constructor
         """
         if auth_url is None:
-            raise ValueError("auth_url not provided to auth client")
+            raise TypeError("missing required named argument 'auth_url'")
+
+        if cache_max_size is None:
+            raise TypeError("missing required named argument 'cache_max_size'")
+
+        if cache_lifetime is None:
+            raise TypeError("missing required named argument 'cache_lifetime'")
 
         self.authurl = auth_url
 
-        self.cache = TokenCache()
+        global global_cache
 
-    def get_user(self, token: str):
+        if global_cache is None:
+            global_cache = Cache(cache_max_size, cache_lifetime)
+
+        self.cache = global_cache
+
+    def get_token_info(self, token: str):
         if not token:
-            raise ValueError("Must supply token")
+            raise TypeError("missing positional argument 'token'")
 
-        username = self.cache.get_user(token)
-        if username:
-            return username
+        token_info = self.cache.get(token)
+        if token_info:
+            return token_info
 
-        data = {"token": token, "fields": "user_id"}
-
-        response = requests.post(self.authurl, data=data)
+        response = requests.post(self.authurl, data={"token": token})
 
         if not response.ok:
             try:
                 err = response.json()
             except Exception:
+                # Note that here we are raising the default exception for the
+                # requests library in the case that a deep internal server error
+                # is thrown without an actual json response. In other words, the
+                # error is not a JSON-RPC error thrown by the auth2 service itself,
+                # but some truly internal server error.
+                # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
+                # are 500.
                 response.raise_for_status()
-            # message = "Error connecting to auth service: {} {}\n{}\n{}".format(
-            #     response.status_code, response.reason, err["error"]["message"], self.authurl
-            # )
-            # raise ValueError(message)
 
+            # Make an attempt to handle a specific auth error
             appcode = err['error']['appcode']
             if appcode == 10020:
                 raise KBaseAuthInvalidToken('Invalid token')
@@ -107,11 +115,13 @@ class KBaseAuth(object):
                 raise KBaseAuthMissingToken('Missing token')
             else:
                 raise KBaseAuthException(err['error']['message'])
-            # raise KBaseAuthException(err['error']['appcode'], err['error']['apperror'], err['error']['message'])
 
-        username = response.json()["user_id"]
-        self.cache.add_valid_token(token, username)
-        return username
+        token_info = response.json()
+        self.cache.add(token, token_info)
+        return token_info
+
+    def get_username(self, token: str):
+        return self.get_token_info(token)["user_id"]
 
 
 class KBaseAuthException(Exception):

@@ -201,8 +201,6 @@ def get(params={}, username=None, password=None):
     """
     request_url = this.url + '2416api?' + urlencode(params)
 
-    print("URL?", request_url)
-
     elink = requests.get(request_url,
                          auth=(username, password))
 

@@ -12,9 +12,10 @@ from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from lib.auth import get_username
+from lib.authclient import KBaseAuthMissingToken
 from lib.config import get_config, get_service_path
-from lib.exceptions import KBaseAuthException
-from lib.responses import error_response
+# from lib.exceptions import KBaseAuthException
+from lib.responses import error_response, exception_error_response
 from lib.storage_model import StorageModel
 from lib.transform import orcid_api_url, raw_work_to_work
 from lib.utils import get_int_prop, get_kbase_config, get_prop
@@ -30,6 +31,13 @@ app.include_router(linking_sessions.router)
 app.include_router(works.router)
 
 
+#
+# Custom exception handlers.
+#
+
+# Have this return JSON in our "standard", or at least uniform, format. We don't
+# want users of this api to need to accept FastAPI/Starlette error format.
+# These errors are returned when the API is misused; they should not occur in production.
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
@@ -45,54 +53,58 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+#
+# It is nice to let these exceptions propagate all the way up by default. There
+# are many calls to auth, and catching each one just muddles up the code.
+#
+@app.exception_handler(KBaseAuthMissingToken)
+async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
+    # TODO: this should reflect the nature of the auth error,
+    # probably either 401, 403, or 500.
+    return exception_error_response('auth_error', 'Error authenticating with KBase', exc,
+                                    status_code=401)
+
+
+#
+# This catches good ol' internal server errors. These are primarily due to internal programming
+# logic errors. The reason to catch them here is to override the default FastAPI
+# error structure.
+#
 @app.exception_handler(500)
 async def internal_server_error_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content=jsonable_encoder({
             'code': 'internal_server_error',
-            'message': 'An internal server error was detected'
-        })
-    )
-
-
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    if exc.status_code == 404:
-        return JSONResponse(
-            status_code=404,
-            content=jsonable_encoder({
-                'code': 'not_found',
-                'message': 'The requested resource was not found',
-                'data': {
-                    'path': request.url.path
-                }
-            })
-        )
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=jsonable_encoder({
-            'code': 'fastapi_exception',
-
-        })
-    )
-
-
-@app.exception_handler(KBaseAuthException)
-async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthException):
-    return JSONResponse(
-        # TODO: this should reflect the nature of the auth error,
-        # probably either 401, 403, or 500.
-        status_code=401,
-        content=jsonable_encoder({
-            'code': 'autherror',
-            'message': exc.message,
+            'title': 'Internal Server Error',
+            'message': 'An internal server error was detected',
             'data': {
-                'upstream_error': exc.upstream_error,
-                'exception_string': exc.exception_string
+                'original_message': str(exc)
             }
         })
     )
+
+
+#
+# Finally there are some other errors thrown by FastAPI which need overriding to return
+# a normalized JSON form.
+# This should be all of them.
+# See: https://fastapi.tiangolo.com/tutorial/handling-errors/
+#
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        return error_response('not_found', "Not Found HTTP Exception", 'The requested resource was not found',
+                              data={
+                                  'path': request.url.path
+                              },
+                              status_code=404)
+
+    return error_response('fastapi_exception', 'Other HTTP Exception', 'Internal FastAPI Exception',
+                          data={
+                              'detail': exc.detail
+                          },
+                          status_code=exc.status_code)
 
 
 ################################
@@ -120,12 +132,14 @@ async def get_status():
 @app.delete("/link", response_model=SimpleSuccess)
 async def delete_link(authorization: str | None = Header(default=None)):
     if authorization is None:
-        raise HTTPException(401, 'Authorization required')
+        return error_response('authentication_required', 'Authentication required',
+                              'Authentication required via the "Authorization" header',
+                              status_code=401)
 
+    # Will throw if
     username = get_username(authorization)
 
     model = StorageModel()
-
     user_record = model.get_user_record(username)
     # TODO error if user_record not found
     token = user_record["orcid_auth"]["access_token"]
@@ -140,6 +154,8 @@ async def delete_link(authorization: str | None = Header(default=None)):
         "client_secret": get_config(["env", "CLIENT_SECRET"]),
         "token": token,
     }
+    # TODO: determine all possible ORCID errors here, or the
+    # pattern with which we can return useful info
     response = requests.post(url, headers=header, data=data)
 
     model.remove_user_record(username)
@@ -149,6 +165,7 @@ async def delete_link(authorization: str | None = Header(default=None)):
 @app.get("/link", response_model=Union[LinkRecord, None])
 async def link(authorization: str | None = Header(default=None)):
     username = get_username(authorization)
+
     try:
         model = StorageModel()
         user_record = model.get_user_record(username)
@@ -296,10 +313,7 @@ async def is_linked(authorization: str | None = Header(default=None)):
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html(req: Request):
-    # root_path = req.scope.get("root_path", "").rstrip("/")
-
     root_path = get_service_path()
-    print('DOCS', root_path, app.openapi_url)
     openapi_url = root_path + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
