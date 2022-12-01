@@ -1,13 +1,14 @@
+# KBASE_ENDPOINT is like https://ci.kbase.us/services/
 {{ $kbaseEndpoint := split "/" .Env.KBASE_ENDPOINT }}
-{{ $serviceHost := $kbaseEndpoint._0 }}
+{{ $serviceHost := $kbaseEndpoint._2 }}
 kbase:
   services:
     Auth2:
-      url: https://{{ $serviceHost }}/services/auth/api/legacy/KBase/Sessions/Login
+      url: {{ .Env.KBASE_ENDPOINT }}auth/api/legacy/KBase/Sessions/Login
       tokenCacheLifetime: 300000
       tokenCacheMaxSize: 20000
     ServiceWizard:
-      url: https://{{ $serviceHost }}/services/service_wizard
+      url: {{ .Env.KBASE_ENDPOINT }}service_wizard
   # in prod the ui host is narrative.kbase.us, but in all others it
   # is X.kbase.us, where X is ci, next, appdev, narrative-dev
   uiOrigin: https://{{ eq $serviceHost "kbase.us" | ternary "narrative.kbase.us" $serviceHost }}

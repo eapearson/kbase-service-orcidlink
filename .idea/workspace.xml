@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="update to Python 11 [CE-45]">
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="fix endpoint and ui host [CE-45]">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/start-dev-server.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start-dev-server.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/config.yaml.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/templates/config.yaml.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -150,14 +149,7 @@
       <workItem from="1668439299305" duration="41788000" />
       <workItem from="1668785469066" duration="3453000" />
       <workItem from="1669069799774" duration="541000" />
-      <workItem from="1669643920780" duration="35551000" />
-    </task>
-    <task id="LOCAL-00008" summary="run on the expected port 5000 [CE-70]">
-      <created>1662656386754</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1662656386754</updated>
+      <workItem from="1669643920780" duration="37070000" />
     </task>
     <task id="LOCAL-00009" summary="add wget for dockerize installation [CE-70]">
       <created>1662656732009</created>
@@ -495,7 +487,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669899944519</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="fix endpoint and ui host [CE-45]">
+      <created>1669902554236</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1669902554236</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -513,7 +512,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="refactor DOI demo api [CE-70]" />
     <MESSAGE value="iteration [CE-70]" />
     <MESSAGE value="iteration, fix some broken things [CE-70]" />
     <MESSAGE value="some code reorganization [CE-70]" />
@@ -538,6 +536,7 @@
     <MESSAGE value="remove doi request support [CE-45]" />
     <MESSAGE value="start adding docs, switch to yaml config, add title to errors [CE-45]" />
     <MESSAGE value="update to Python 11 [CE-45]" />
-    <option name="LAST_COMMIT_MESSAGE" value="update to Python 11 [CE-45]" />
+    <MESSAGE value="fix endpoint and ui host [CE-45]" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix endpoint and ui host [CE-45]" />
   </component>
 </project>
