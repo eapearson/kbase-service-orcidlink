@@ -1,16 +1,16 @@
+{{ $kbaseEndpoint := split "/" .Env.KBASE_ENDPOINT }}
+{{ $serviceHost := $kbaseEndpoint._0 }}
 kbase:
   services:
     Auth2:
-      url: https://{{ .Env.KBASE_ENDPOINT }}/services/auth/api/legacy/KBase/Sessions/Login
+      url: https://{{ $serviceHost }}/services/auth/api/legacy/KBase/Sessions/Login
       tokenCacheLifetime: 300000
       tokenCacheMaxSize: 20000
     ServiceWizard:
-      url: https://{{ .Env.KBASE_ENDPOINT }}/services/service_wizard
-    ORCIDLink:
-      url: https://{{ .Env.KBASE_ENDPOINT }}/services/orcidlink
+      url: https://{{ $serviceHost }}/services/service_wizard
   # in prod the ui host is narrative.kbase.us, but in all others it
   # is X.kbase.us, where X is ci, next, appdev, narrative-dev
-  uiOrigin: https://{{ eq .Env.KBASE_ENDPOINT "kbase.us" | ternary "narrative.kbase.us" .Env.KBASE_ENDPOINT }}
+  uiOrigin: https://{{ eq $serviceHost "kbase.us" | ternary "narrative.kbase.us" $serviceHost }}
 orcid:
   tokenExchangeURL: https://sandbox.orcid.org/oauth/token
   tokenRevokeURL: https://sandbox.orcid.org/oauth/revoke
