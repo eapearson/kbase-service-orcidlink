@@ -13,6 +13,7 @@ kbase:
   # is X.kbase.us, where X is ci, next, appdev, narrative-dev
   uiOrigin: https://{{ eq $serviceHost "kbase.us" | ternary "narrative.kbase.us" $serviceHost }}
 orcid:
+  oauthBaseURL: https://sandbox.orcid.org/oauth
   tokenExchangeURL: https://sandbox.orcid.org/oauth/token
   tokenRevokeURL: https://sandbox.orcid.org/oauth/revoke
   baseURL: https://sandbox.orcid.org

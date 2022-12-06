@@ -5,3 +5,10 @@
 /lib/
 #.idea
 LOCAL_ONLY_README.md
+custom.env
+*.pyc
+.DS_Store
+/config/*
+!/config/README.md
+/work/*
+!/work/README.md

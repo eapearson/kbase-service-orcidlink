@@ -1,5 +1,6 @@
 import os
 import re
+from typing import List
 
 import yaml
 from lib.ServiceWizard import ServiceWizard
@@ -8,15 +9,20 @@ from lib.utils import get_prop, module_dir
 CONFIG = None
 
 
-def get_config(key_path, default_value=None):
+def ensure_config():
     global CONFIG
-    if CONFIG is None:
-        file_name = os.path.join(module_dir(), "config/config.yaml")
-        with open(file_name, "r") as in_file:
-            CONFIG = yaml.load(in_file, yaml.SafeLoader)
-            # CONFIG = json.load(in_file)
-    value = get_prop(CONFIG, key_path, default_value)
-    if value == None:
+    if CONFIG is not None:
+        return CONFIG
+
+    file_name = os.path.join(module_dir(), "config/config.yaml")
+    with open(file_name, "r") as in_file:
+        return yaml.load(in_file, yaml.SafeLoader)
+
+
+def get_config(key_path: List[str], default_value=None):
+    config = ensure_config()
+    value = get_prop(config, key_path, default_value)
+    if value is None:
         raise ValueError(f"Config not found on path: {'.'.join(key_path)}")
     return value
 

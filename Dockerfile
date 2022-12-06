@@ -19,13 +19,11 @@ ENV PATH="/root/.local/bin:$PATH"
 
 # dockerize for config
 # This version uses master; otherwise functionally equivalent other than style.
-RUN version=v0.15.1 && \
+RUN version=v0.16.5 && \
     wget -O - https://github.com/powerman/dockerize/releases/download/${version}/dockerize-`uname -s`-`uname -m` | install /dev/stdin /usr/local/bin/dockerize
 
 # SSH for development
 # RUN /etc/init.d/ssh start && /etc/init.d/ssh status
-
-
 
 RUN mkdir -p /kb/module/work
 RUN mkdir -p /kb/module/config
@@ -39,20 +37,12 @@ COPY ./deploy.cfg /kb/module
 COPY ./Makefile /kb/module
 COPY ./kbase.yml /kb/module
 COPY ./compile_report.json /kb/module
-#COPY ./sdk.cfg /kb/module
 
 WORKDIR /kb/module
 
 RUN poetry lock
 RUN poetry install
 
-# RUN make all
-
 ENTRYPOINT [ "sh", "./scripts/entrypoint.sh" ]
 
 CMD [ ]
-
-#ENTRYPOINT [ "dockerize" ]
-#
-#CMD [ "-template", "./templates/config.json.tmpl:./config/config.json", \
-#    "sh", "./scripts/entrypoint.sh" ]

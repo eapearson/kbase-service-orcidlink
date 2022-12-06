@@ -1,11 +1,7 @@
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-
-#
-# API Typing
-#
 
 class SimpleSuccess(BaseModel):
     ok: bool = Field(...)
@@ -67,6 +63,11 @@ class SessionInfo(BaseModel):
 class LinkRecord(BaseModel):
     created_at: int = Field(...)
     expires_at: int = Field(...)
+    orcid_auth: ORCIDAuth
+
+class LinkRecordPublic(BaseModel):
+    created_at: int = Field(...)
+    expires_at: int = Field(...)
     orcid_auth: ORCIDAuthPublic
 
 
@@ -77,7 +78,7 @@ class KBaseServiceConfig(BaseModel):
     dynamic_service: bool = Field(..., alias='dynamic-service')
 
 
-class KBaseConfig(BaseModel):
+class KBaseSDKConfig(BaseModel):
     module_name: str = Field(..., alias='module-name')
     module_description: str = Field(..., alias='module-description')
     service_language: str = Field(..., alias='service-language')

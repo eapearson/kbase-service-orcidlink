@@ -14,6 +14,7 @@ Misc variables:
 """
 
 import time
+
 from lib.GenericClient import GenericClient
 
 # Default timeout for upstream calls is 10 minutes; propagated to
@@ -45,6 +46,7 @@ class URLCache:
     ttl: Integer
         The "time to live", or lifetime, of a cache entry.
     """
+
     _url_cache = dict()
 
     def __init__(self, ttl=DEFAULT_CACHE_LIFETIME):
@@ -57,11 +59,7 @@ class URLCache:
         if ttl is None:
             ttl = self.ttl
 
-        self._url_cache.set(name, {
-            'created': time.time(),
-            'ttl': ttl,
-            'url': url
-        })
+        self._url_cache.set(name, {"created": time.time(), "ttl": ttl, "url": url})
 
     def get_url(self, name):
         """
@@ -71,11 +69,12 @@ class URLCache:
         cache_entry = self._url_cache.get(name)
         if cache_entry is None:
             return None
-        elapsed = time.time() - cache_entry['created']
-        if elapsed > cache_entry['ttl']:
+        elapsed = time.time() - cache_entry["created"]
+        if elapsed > cache_entry["ttl"]:
             del self._url_cache[name]
             return None
-        return cache_entry['url']
+        return cache_entry["url"]
+
 
 #
 #
@@ -95,10 +94,16 @@ class DynamicServiceClient:
     service to determine and cache the url for a given dynamic service, as identified
     by its module name, and otherwise operates just like the Generic Client.
     """
-    def __init__(self, url=None, module=None, token=None,
-                 service_ver=None,
-                 cache_lifetime=DEFAULT_CACHE_LIFETIME,
-                 timeout=None):
+
+    def __init__(
+        self,
+        url=None,
+        module=None,
+        token=None,
+        service_ver=None,
+        cache_lifetime=DEFAULT_CACHE_LIFETIME,
+        timeout=None,
+    ):
         self.service_wizard_url = url
         self.service_ver = service_ver
         self.module_name = module
@@ -115,10 +120,9 @@ class DynamicServiceClient:
         # the service wizard.
         service_url = self._get_url(timeout)
 
-        client = GenericClient(module=self.module_name,
-                               url=service_url,
-                               token=self.token,
-                               timeout=timeout)
+        client = GenericClient(
+            module=self.module_name, url=service_url, token=self.token, timeout=timeout
+        )
 
         return client.call_func(method, params)
 
@@ -131,14 +135,13 @@ class DynamicServiceClient:
         return url
 
     def _lookup_url(self, timeout):
-        service_wizard = GenericClient(module='ServiceWizard',
-                                       url=self.service_wizard_url,
-                                       token=self.token,
-                                       timeout=timeout)
+        service_wizard = GenericClient(
+            module="ServiceWizard",
+            url=self.service_wizard_url,
+            token=self.token,
+            timeout=timeout,
+        )
 
-        params = {
-            'module_name': self.module_name,
-            'version': self.service_ver
-        }
-        result = service_wizard.call_func('get_service_status', params)
-        return result['url']
+        params = {"module_name": self.module_name, "version": self.service_ver}
+        result = service_wizard.call_func("get_service_status", params)
+        return result["url"]

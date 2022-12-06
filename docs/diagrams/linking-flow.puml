@@ -1,0 +1,190 @@
+@startuml
+
+actor User #green
+boundary Browser #yellow
+control "KBase UI" as KBaseUI #aqua
+control "Linking UI" as LinkingUI #blue
+control "Linking Service" as LinkingService #red
+database "Linking Database" as LinkingDB #pink
+control "ORCID" as ORCID #black
+
+User -> Browser: Opens URL to kbase-ui#orcidlink
+Browser -> KBaseUI: GET https://ci.kbase.us#orcidlink
+KBaseUI --> Browser: display kbase-ui app
+Browser -> KBaseUI: load and run kbase-ui
+KBaseUI -> LinkingUI: runs ORCIDLink UI
+'Browser -> LinkingUI: runs
+'LinkingUI --> User: interface loading
+LinkingUI -> LinkingService: GET /link/is_linked
+note left
+is user account linked?
+end note
+LinkingService -> LinkingDB: look up user
+LinkingDB -->LinkingService: return link record or not
+LinkingService --> LinkingUI: return true if found, false if not
+
+alt linked
+LinkingUI --> User: show link info if linked (omitted from diagram))
+else not linked
+LinkingUI --> User: show link button if not linked
+end
+
+User -> LinkingUI: clicks link button
+LinkingUI -> LinkingService: POST /linking-sessions/create
+note left
+create linking session
+end note
+LinkingService --> LinkingUI: return with success or error
+note right
+success: session_id
+error: standard error obj
+end note
+
+alt error
+LinkingUI --> User: if error, show error message (omitted)
+else success
+LinkingUI --> User: if success, show continuation button
+end
+
+User -> LinkingUI: click continuation button
+LinkingUI ->  LinkingService:/linking-sessions/start/{session_id}
+note left
+initiates linking flow
+end note
+LinkingService --> Browser: 302 https://sandbox.orcid.org/oauth/authorize
+note right
+[query params]
+client_id
+scope
+redirect_url
+state
+response_type=code
+prompt=login
+end note
+
+== OAUTH Flow begins ==
+
+Browser -> ORCID: GET https://sandbox.orcid.org/oauth/authorize
+note left
+[query params]
+client_id
+scope
+redirect_url
+state
+response_type=code
+prompt=login
+end note
+
+ORCID -> ORCID: logged in?
+alt not logged in
+ORCID --> Browser: show login form
+Browser --> User: user views login form
+User -> Browser: user signs in
+Browser -> ORCID: sign in info
+end
+
+ORCID -> ORCID: permission granted to kbase?
+alt permission not yet granted
+ORCID --> Browser: show permissions form
+Browser --> User: user reads perm form
+User -> Browser: user completes perm form, or denies id_token
+Browser -> ORCID: permission granted info
+end
+
+ORCID --> Browser: 302 /linking-session/continue
+note right
+code
+state
+error
+end note
+
+Browser -> LinkingService: GET /linking-session/continue
+note left
+code
+state
+error
+end note
+
+alt error
+LinkingService --> Browser: #orcidlink/error
+Browser -> KBaseUI: load
+KBaseUI -> LinkingUI: run
+LinkingUI --> User: display error
+else success
+LinkingService -> ORCID: GET? /oauth/token
+note left
+client_id
+client_secret
+code
+redirect_url
+grant_type=authorization
+end note
+end
+
+ORCID --> LinkingService: returns
+note right
+access_token
+token_type
+refresh_token
+expires_in
+scope
+name
+orcid
+id_token
+end note
+
+== OAUTH Flow ends ==
+
+LinkingService --> Browser: 302 #orcidlink/continue/{session_id}
+note right
+code
+state
+error
+end note
+
+Browser -> KBaseUI: GET #orcidlink/continue/{session_id}
+note left
+code
+state
+error
+end note
+
+KBaseUI --> Browser: display kbaseui app
+Browser -> KBaseUI: load and run kbase-ui
+
+KBaseUI -> LinkingUI: run #orcidlink/continue/{session_id}
+
+LinkingUI -> LinkingService: GET /linking-sessions/{session_id}
+LinkingService -> LinkingDB: fetch linking session
+LinkingDB --> LinkingService: return linking session
+
+LinkingService --> LinkingUI: returns public session info
+note right
+expires_in
+scope
+name
+orcid
+end note
+
+LinkingUI --> User: Show final confirmation dialog
+note left
+Here the user must
+confirm before the link
+is saved.
+end note
+
+
+alt user confirms
+User -> LinkingUI: user clicks "Confirm" button"
+LinkingUI -> LinkingService: PUT /linking-sessions/{session_id}/finish
+LinkingService -> LinkingDB: create link record for user
+LinkingUI --> User: Show ORCID Link home page w/linking info
+else user cancels
+User -> LinkingUI: user cancels
+LinkingUI -> LinkingService: DELETE /linking-sessions/{session_id}
+LinkingService -> LinkingDB: delete linking session
+LinkingUI --> User: show deletion confirmation
+end
+
+
+@enduml

@@ -2,16 +2,20 @@ import json
 from typing import List
 
 import requests
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, Header, HTTPException, Path
+from pydantic import BaseModel, Field
+
 from lib.auth import get_username
+from lib.ORCIDClient import orcid_api
+from lib.responses import (ErrorException, ErrorResponse, ensure_authorization,
+                           error_response, make_error_exception, to_json)
 from lib.storage_model import StorageModel
 from lib.transform import orcid_api_url, parse_date, raw_work_to_work
 from lib.utils import get_prop
-from pydantic import BaseModel, Field
-
-from src.model_types import ExternalId, ORCIDWork, SimpleSuccess
+from src.model_types import ExternalId, LinkRecord, ORCIDWork, SimpleSuccess
 
 router = APIRouter(
+    prefix="/works",
     responses={404: {"description": "Not found"}}
 )
 
@@ -43,21 +47,69 @@ class NewWork(BaseModel):
 # Get a single work from the user linked to the KBase authentication token,
 # identified by the put_code.
 #
-@router.get("/works/{put_code}", response_model=ORCIDWork)
-async def get_works_entity(put_code: str, authorization: str | None = Header(default=None)):
+@router.get(
+    "/{put_code}", 
+    response_model=ORCIDWork, 
+    tags=["works"],
+    responses={
+        401: {"description": "Token missing or invalid"},
+        404: {"description": "Link not available for this user"},
+        # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
+        422: {"description": "Either input or output data does not comply with the API schema", "model": ErrorResponse}
+    }
+)
+async def get_works_entity(
+    put_code: str = Path(description="The ORCID `put code` for the work record to fetch"), 
+    authorization: str | None = Header(default=None, description="Kbase auth token")):
+    """
+    Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
+    """
+
+    authorization = ensure_authorization(authorization)
+    
     username = get_username(authorization)
+
     model = StorageModel()
     user_record = model.get_user_record(username)
-    # TODO error if user_record not found
-    token = user_record["orcid_auth"]["access_token"]
-    orcid_id = user_record["orcid_auth"]["orcid"]
+    if user_record is None:
+        return error_response("notFound", "User link record not found", status_code=404)
+
+    token = user_record.orcid_auth.access_token
+    orcid_id = user_record.orcid_auth.orcid
+
+    # TODO: wrap this into an api class!
+
     header = {
         "Accept": "application/vnd.orcid+json",
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearerx {token}",
     }
     url = orcid_api_url(f"{orcid_id}/work/{put_code}")
     response = requests.get(url, headers=header)
-    return raw_work_to_work(json.loads(response.text))
+    if response.status_code != 200:
+        data = {
+            "originalStatusCode": response.status_code,
+        }
+        try:
+            json_response = json.loads(response.text)
+            # Remove potentially revealing information
+            # TODO: send note to the ORCID folks asking them to omit the 
+            # token from the error response.
+            if response.status_code == 401 or response.status_code == 403:
+                del json_response['error_description']
+            data['originalResponseJSON'] = json_response
+        except Exception:
+            data['originalResponseText'] = response.text
+        raise ErrorException(
+            error=ErrorResponse(
+                code="upstreamError",
+                title="Error",
+                message="Error fetching Work record",
+                data=data
+            ),
+            status_code=400
+        )
+
+    return raw_work_to_work(to_json(response.text))
 
 
 ##
@@ -65,31 +117,60 @@ async def get_works_entity(put_code: str, authorization: str | None = Header(def
 #
 
 class GetWorksResult(BaseModel):
+    # TODO: more fields, or is this enough?
     result: List[ORCIDWork]
 
-
-@router.get("/works", response_model=GetWorksResult)
-async def get_works(authorization: str | None = Header(default=None)):
-    username = get_username(authorization)
+def get_link_record(username: str, ignore_errors=False) -> LinkRecord:
     model = StorageModel()
     user_record = model.get_user_record(username)
-    # TODO error if user_record not found
-    token = user_record["orcid_auth"]["access_token"]
-    orcid_id = user_record["orcid_auth"]["orcid"]
-    header = {
-        "Accept": "application/vnd.orcid+json",
-        "Authorization": f"Bearer {token}",
-    }
-    # header = {"Accept": "application/vnd.orcid+xml", "Authorization": f"Bearer {token}"}
-    url = orcid_api_url(f"{orcid_id}/works")
-    response = requests.get(url, headers=header)
-    # works_json = xmltodict.parse(response.text)
-    # profile_xml = ET.fromstring(response.text)
-    # profile_json = xmltodict.parse(response.text)
-    # probably should translate into something much simpler...
-    # also maybe have a method per major chunk of profile?
+    if user_record is None:
+        if ignore_errors:
+            return None
+        raise make_error_exception("notFound", "Not Found", "User link record not found", status_code=404)
+    
+    return user_record
 
-    return {"result": json.loads(response.text)}
+
+def get_pubic_link_record(username: str) -> LinkRecord:
+    model = StorageModel()
+    user_record = model.get_user_record_public(username)
+    if user_record is None:
+        raise make_error_exception("notFound", "Not Found", "User link record not found", status_code=404)
+    
+    return user_record
+
+@router.get(
+    "", 
+    response_model=GetWorksResult, 
+    tags=["works"],
+    responses={
+        401: {"description": "Token missing or invalid"},
+        404: {"description": "Link not available for this user"},
+        # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
+        422: {"description": "Either input or output data does not comply with the API schema", "model": ErrorResponse}
+    }
+)
+async def get_works(
+    authorization: str | None = Header(default=None, description="Kbase auth token")
+):
+    """
+    Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
+    """
+    authorization = ensure_authorization(authorization)
+    
+    username = get_username(authorization)
+    
+    link_record = get_link_record(username)
+
+    token = link_record.orcid_auth.access_token
+    orcid_id = link_record.orcid_auth.orcid
+
+    full_result = orcid_api(token).get_works(orcid_id)
+    result = []
+    for group in full_result['group']:
+        result.append(raw_work_to_work(group['work-summary'][0]))
+
+    return {"result": result}
 
 
 # @router.get("/get_work_raw/{put_code}")
@@ -109,16 +190,35 @@ async def get_works(authorization: str | None = Header(default=None)):
 #     return {"result": json.loads(response.text)}
 
 
-@router.put("/works", response_model=ORCIDWork)
+@router.put(
+    "", 
+    response_model=ORCIDWork, 
+    tags=["works"],
+    responses={
+        401: {"description": "Token missing or invalid"},
+        404: {"description": "Link not available for this user"},
+        # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
+        422: {"description": "Either input or output data does not comply with the API schema", "model": ErrorResponse}
+    })
 async def save_work(
-        work_update: WorkUpdate, authorization: str | None = Header(default=None)
+        work_update: WorkUpdate, 
+        authorization: str | None = Header(default=None, description="Kbase auth token")
 ):
+    """
+    Update a work record; the `work_update` contains the `put code`.
+    """
+    authorization = ensure_authorization(authorization)
+
     username = get_username(authorization)
+
     model = StorageModel()
     user_record = model.get_user_record(username)
-    # TODO error if user_record not found
-    token = user_record["orcid_auth"]["access_token"]
-    orcid_id = user_record["orcid_auth"]["orcid"]
+    if user_record is None:
+        return error_response("notFound", "User link record not found", status_code=404)
+    
+    token = user_record.orcid_auth.access_token
+    orcid_id = user_record.orcid_auth.orcid
+
     header = {
         "Accept": "application/vnd.orcid+json",
         "Authorization": f"Bearer {token}",
@@ -179,15 +279,17 @@ async def save_work(
                     }
                 )
 
-    url = orcid_api_url(f"{orcid_id}/work/{put_code}")
-    header = {
-        "Accept": "application/vnd.orcid+json",
-        "Content-Type": "application/vnd.orcid+json",
-        "Authorization": f"Bearer {token}",
-    }
-    response = requests.put(url, headers=header, data=json.dumps(work_record))
+    raw_work_record = orcid_api(token).save_work(orcid_id, put_code, work_record)
 
-    return raw_work_to_work(json.loads(response.text))
+    # url = orcid_api_url(f"{orcid_id}/work/{put_code}")
+    # header = {
+    #     "Accept": "application/vnd.orcid+json",
+    #     "Content-Type": "application/vnd.orcid+json",
+    #     "Authorization": f"Bearer {token}",
+    # }
+    # response = requests.put(url, headers=header, data=json.dumps(work_record))
+
+    return raw_work_to_work(raw_work_record)
 
 
 def get_orcid_auth(kbase_token):
@@ -197,11 +299,18 @@ def get_orcid_auth(kbase_token):
     return user_record
 
 
-@router.delete("/works/{put_code}", response_model=SimpleSuccess)
-async def delete_work(put_code: str, authorization: str | None = Header(default=None)):
+@router.delete("/{put_code}", response_model=SimpleSuccess, tags=["works"])
+async def delete_work(
+    put_code: str, 
+    authorization: str | None = Header(default=None, description="Kbase auth token")
+):
+    authorization = ensure_authorization(authorization)
+
     user_record = get_orcid_auth(authorization)
-    token = user_record["orcid_auth"]["access_token"]
-    orcid_id = user_record["orcid_auth"]["orcid"]
+
+    token = user_record.orcid_auth.access_token
+    orcid_id = user_record.orcid_auth.orcid
+
     header = {
         "Accept": "application/vnd.orcid+json",
         "Authorization": f"Bearer {token}",
@@ -212,16 +321,18 @@ async def delete_work(put_code: str, authorization: str | None = Header(default=
     return {"ok": True}
 
 
-@router.post("/works", response_model=ORCIDWork)
+@router.post("", response_model=ORCIDWork, tags=["works"])
 async def create_work(
         new_work: NewWork, authorization: str | None = Header(default=None)
 ):
     username = get_username(authorization)
     model = StorageModel()
     user_record = model.get_user_record(username)
-    # TODO error if user_record not found
-    token = user_record["orcid_auth"]["access_token"]
-    orcid_id = user_record["orcid_auth"]["orcid"]
+    if user_record is None:
+        return error_response("notFound", "User link record not found", status_code=404)
+
+    token = user_record.orcid_auth.access_token
+    orcid_id = user_record.orcid_auth.orcid
 
     #
     # Create initial work record

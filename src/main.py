@@ -1,38 +1,93 @@
 import json
-from typing import Union
+from datetime import datetime, timezone
+from urllib.parse import urlencode
 
 import requests
 import yaml
-from fastapi import FastAPI, HTTPException, Header, Request, status
-from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from fastapi.responses import RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from lib.auth import get_username
-from lib.authclient import KBaseAuthMissingToken
-from lib.config import get_config, get_service_path
-# from lib.exceptions import KBaseAuthException
-from lib.responses import error_response, exception_error_response
+from api_types import InfoResponse, StatusResponse
+from lib.authclient import (KBaseAuthException, KBaseAuthInvalidToken,
+                            KBaseAuthMissingToken)
+from lib.config import (ensure_config, get_config, get_service_path,
+                        get_service_uri)
+from lib.responses import (ErrorException, error_response,
+                           exception_error_response, ui_error_response)
 from lib.storage_model import StorageModel
-from lib.transform import orcid_api_url, raw_work_to_work
-from lib.utils import get_int_prop, get_kbase_config, get_prop
-from model_types import KBaseConfig, LinkRecord, ORCIDProfile, SimpleSuccess
-from routers import linking_sessions, works
+from lib.utils import get_kbase_config
+from routers import link, linking_sessions, orcid, works
+from routers.linking_sessions import get_linking_session_record
 
+#
+# Set up FastAPI top level app with associated metadata for documentation purposes.
+#
+
+description = """
+The *ORCID Link Service* provides an API to enable the creation of an interface for a KBase
+ user to link their KBase account to their ORCID account.
+
+Once connected, *ORCID Link* enables certain integrations, including:
+
+- syncing your KBase profile from your ORCID profile
+- creating and managing KBase public Narratives within your ORCID profile 
+"""
+
+tags_metadata = [
+    {
+        "name": "misc",
+        "description": "Miscellaneous operations"},
+    {
+        "name": "link",
+        "description": "Add and remove KBase-ORCID linking; includes OAuth integration and API",
+    },
+    {
+        "name": "orcid",
+        "description": "Direct access to ORCID via ORCID Link"
+    },
+    {
+        "name": "works",
+        "description": "Add, remove, update 'works' records for a user's ORCID Account",
+    },
+]
+
+# TODO: add fancy FastAPI configuration https://fastapi.tiangolo.com/tutorial/metadata/
 app = FastAPI(
     docs_url=None,
     redoc_url=None,
+    title="ORCID Link Service",
+    description=description,
+    terms_of_service="https://www.kbase.us/about/terms-and-conditions-v2/",
+    contact={
+        "name": "KBase, Lawrence Berkeley National Laboratory, DOE",
+        "url": "https://www.kbase.us",
+        "email": "engage@kbase.us",
+    },
+    license_info={
+        "name": "The MIT License",
+        "url": "https://github.com/kbase/kb_sdk/blob/develop/LICENSE.md",
+    },
+    openapi_tags=tags_metadata,
 )
 
+#
+# All paths are included here as routers. Each router is defined in the "routers" directory.
+#
+app.include_router(link.router)
 app.include_router(linking_sessions.router)
 app.include_router(works.router)
+app.include_router(orcid.router)
 
 
 #
 # Custom exception handlers.
+# Exceptions caught by FastAPI result in a variety of error responses, using
+# a specific JSON format. However, we want to return all errors using our
+# error format, which mimics JSON-RPC 2.0 and is compatible with the way
+# our JSON-RPC 1.1 APIs operate (though not wrapped in an array).
 #
 
 # Have this return JSON in our "standard", or at least uniform, format. We don't
@@ -40,17 +95,25 @@ app.include_router(works.router)
 # These errors are returned when the API is misused; they should not occur in production.
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=jsonable_encoder({
-            'code': 'unprocessable_entity',
-            'message': 'This request does not comply with the schema for this endpoint',
-            "data": {
-                "detail": exc.errors(),
-                "body": exc.body
-            }
-        }),
-    )
+    return error_response(
+        "requestParametersInvalid",
+        "Request Parameters Invalid",
+        "This request does not comply with the schema for this endpoint",
+        data={
+            "detail": exc.errors(),
+            "body": exc.body
+        })
+
+    # return JSONResponse(
+    #     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    #     content=jsonable_encoder(
+    #         {
+    #             "code": "unprocessableEntity",
+    #             "message": "This request does not comply with the schema for this endpoint",
+    #             "data": {"detail": exc.errors(), "body": exc.body},
+    #         }
+    #     ),
+    # )
 
 
 #
@@ -61,8 +124,43 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
-    return exception_error_response('auth_error', 'Error authenticating with KBase', exc,
-                                    status_code=401)
+    return exception_error_response(
+        "authMissingToken", "Error authenticating with KBase", exc, status_code=401
+    )
+
+
+@app.exception_handler(KBaseAuthInvalidToken)
+async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
+    # TODO: this should reflect the nature of the auth error,
+    # probably either 401, 403, or 500.
+    return exception_error_response(
+        "authInvalidToken", "Error authenticating with KBase", exc, status_code=401
+    )
+
+
+@app.exception_handler(KBaseAuthException)
+async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
+    # TODO: this should reflect the nature of the auth error,
+    # probably either 401, 403, or 500.
+    return exception_error_response(
+        "authError", "Unknown error authenticating with KBase", exc, status_code=500
+    )
+
+
+@app.exception_handler(ErrorException)
+async def kbase_error_exception_handler(request: Request, exc: ErrorException):
+    print('HERE', exc.status_code, exc.error)
+    return exc.get_response()
+
+
+# Raised by requests for "raise_for_error"
+@app.exception_handler(requests.HTTPError)
+async def kbase_http_error_exception_handler(request: Request, exc: requests.HTTPError):
+    # TODO: this should reflect the nature of the auth error,
+    # probably either 401, 403, or 500.
+    return exception_error_response(
+        "httpError", "General HTTP Error (requests)", exc, status_code=exc.status_code
+    )
 
 
 #
@@ -72,17 +170,23 @@ async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingTo
 #
 @app.exception_handler(500)
 async def internal_server_error_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content=jsonable_encoder({
-            'code': 'internal_server_error',
-            'title': 'Internal Server Error',
-            'message': 'An internal server error was detected',
-            'data': {
-                'original_message': str(exc)
-            }
-        })
+    return exception_error_response(
+        "internalServerError",
+        "Internal Server Error",
+        exc
     )
+
+    # return JSONResponse(
+    #     status_code=500,
+    #     content=jsonable_encoder(
+    #         {
+    #             "code": "internalServerError",
+    #             "title": "Internal Server Error",
+    #             "message": "An internal server error was detected",
+    #             "data": {"original_message": str(exc)},
+    #         }
+    #     ),
+    # )
 
 
 #
@@ -94,17 +198,21 @@ async def internal_server_error_handler(request: Request, exc: Exception):
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
-        return error_response('not_found', "Not Found HTTP Exception", 'The requested resource was not found',
-                              data={
-                                  'path': request.url.path
-                              },
-                              status_code=404)
+        return error_response(
+            "not_found",
+            "Not Found HTTP Exception",
+            "The requested resource was not found",
+            data={"path": request.url.path},
+            status_code=404,
+        )
 
-    return error_response('fastapi_exception', 'Other HTTP Exception', 'Internal FastAPI Exception',
-                          data={
-                              'detail': exc.detail
-                          },
-                          status_code=exc.status_code)
+    return error_response(
+        "fastapi_exception",
+        "Other HTTP Exception",
+        "Internal FastAPI Exception",
+        data={"detail": exc.detail},
+        status_code=exc.status_code,
+    )
 
 
 ################################
@@ -112,210 +220,174 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 ################################
 
 
-class StatusResponse(BaseModel):
-    status: str = Field(...)
-    kbase_config: KBaseConfig = Field(...)
+##
+# /status - The status of the service.
+#
+
+# Also, most services and all KB-SDK apps have a /status endpoint.
+# As a side benefit, it also returns non-private configuration.
+# TODO: perhaps non-private configuration should be accessible via an
+# "/info" endpoint.
+#
 
 
-@app.get("/status", response_model=StatusResponse)
+@app.get("/status", response_model=StatusResponse, tags=["misc"])
 async def get_status():
-    with open(get_kbase_config(), 'r') as kbase_config_file:
-        kbase_config = yaml.load(kbase_config_file, yaml.SafeLoader)
-        return {"status": "ok", "kbase_config": kbase_config}
+    """
+    The status of the service.
+
+    The intention of this endpoint is as a lightweight way to call to ping the
+    service, e.g. for health check, latency tests, etc.
+    """
+    return StatusResponse(status="ok", time=datetime.now(timezone.utc).isoformat())
+    # or return {"status": "ok"}
 
 
-#
-# Link management
-#
-
-
-@app.delete("/link", response_model=SimpleSuccess)
-async def delete_link(authorization: str | None = Header(default=None)):
-    if authorization is None:
-        return error_response('authentication_required', 'Authentication required',
-                              'Authentication required via the "Authorization" header',
-                              status_code=401)
-
-    # Will throw if
-    username = get_username(authorization)
-
-    model = StorageModel()
-    user_record = model.get_user_record(username)
-    # TODO error if user_record not found
-    token = user_record["orcid_auth"]["access_token"]
-
-    url = f"{get_config(['orcid', 'tokenRevokeURL'])}"
-    header = {
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-    data = {
-        "client_id": get_config(["env", "CLIENT_ID"]),
-        "client_secret": get_config(["env", "CLIENT_SECRET"]),
-        "token": token,
-    }
-    # TODO: determine all possible ORCID errors here, or the
-    # pattern with which we can return useful info
-    response = requests.post(url, headers=header, data=data)
-
-    model.remove_user_record(username)
-    return {"ok": True}
-
-
-@app.get("/link", response_model=Union[LinkRecord, None])
-async def link(authorization: str | None = Header(default=None)):
-    username = get_username(authorization)
-
-    try:
-        model = StorageModel()
-        user_record = model.get_user_record(username)
-    except Exception as ex:
-        raise HTTPException(400, {
-            "code": "abc",
-            "message": "Error fetching user record",
-            "detail": str(ex)
-        })
-
-    if user_record is None:
-        return None
-    else:
-        return user_record
-
-
-@app.get("/profile", response_model=ORCIDProfile)
-async def get_profile(authorization: str | None = Header(default=None)):
-    username = get_username(authorization)
-
-    #
-    # Fetch the user's ORCID record from KBase.
-    #
-    model = StorageModel()
-    user_record = model.get_user_record(username)
-    if user_record is None:
-        return error_response("notfound", "User record not found", status_code=404)
-
-    # Extract our simplified, flattened form of the
-    # profile.
-    token = user_record["orcid_auth"]["access_token"]
-    orcid_id = user_record["orcid_auth"]["orcid"]
-
-    #
-    # Get the user's profile from ORCID
-    #
-    header = {
-        "Accept": "application/vnd.orcid+json",
-        "Authorization": f"Bearer {token}",
-    }
-    url = orcid_api_url(f"{orcid_id}/record")
-    response = requests.get(url, headers=header)
-
-    profile_json = json.loads(response.text)
-
-    url = orcid_api_url(f"{orcid_id}/email")
-    response = requests.get(url, headers=header)
-    email_json = json.loads(response.text)
-    emails = get_prop(email_json, ['email'])
-    email_addresses = []
-    for email in emails:
-        email_addresses.append(get_prop(email, ['email']))
-
-    # probably should translate into something much simpler...
-    # also maybe have a method per major chunk of profile?
-
-    first_name = get_prop(
-        profile_json,
-        ["person", "name", "given-names", "value"],
-    )
-    last_name = get_prop(
-        profile_json,
-        ["person", "name", "family-name", "value"],
-    )
-
-    bio = get_prop(
-        profile_json,
-        [
-            "person",
-            "biography",
-            "content",
-        ],
-    )
-
-    # Organizations / Employment!
-
-    affiliation_group = get_prop(
-        profile_json, ["activities-summary", "employments", "affiliation-group"], []
-    )
-
-    affiliations = []
-    # is an array if more than one, otherwise just a single instance
-    if isinstance(affiliation_group, dict):
-        affiliation_group = [affiliation_group]
-
-    for affiliation in affiliation_group:
-        # employment_summary = get_prop(affiliationaffiliation["employment-summary"]
-
-        #
-        # For some reason there is a list of summaries here, but I don't
-        # see such a structure in the XML, so just take the first element.
-        #
-        employment_summary = get_prop(
-            affiliation, ["summaries", 0, "employment-summary"]
-        )
-
-        name = get_prop(employment_summary, ["organization", "name"])
-        role = get_prop(employment_summary, ["role-title"])
-        start_year = get_int_prop(employment_summary, ["start-date", "year", "value"])
-        end_year = get_int_prop(employment_summary, ["end-date", "year", "value"])
-
-        affiliations.append(
-            {
-                "name": name,
-                "role": role,
-                "startYear": start_year,
-                "endYear": end_year,
-            }
-        )
-
-    #
-    # Publications
-    works = []
-    activity_works = get_prop(profile_json, ["activities-summary", "works", "group"], [])
-    for work in activity_works:
-        work_summary = get_prop(work, ["work-summary", 0], None)
-        works.append(raw_work_to_work(work_summary))
-
-    profile = {
-        "orcidId": orcid_id,
-        "firstName": first_name,
-        "lastName": last_name,
-        "bio": bio,
-        "affiliations": affiliations,
-        "works": works,
-        "emailAddresses": email_addresses
-    }
-
-    return profile
-
-
-class GetIsLinkedResult(BaseModel):
-    result: bool = Field(...)
-
-
-@app.get("/is_linked", response_model=GetIsLinkedResult)
-async def is_linked(authorization: str | None = Header(default=None)):
-    username = get_username(authorization)
-    model = StorageModel()
-    user_record = model.get_user_record(username)
-    return {"result": user_record is not None}
+@app.get("/info", response_model=InfoResponse, tags=["misc"])
+async def get_info():
+    """
+    Returns basic information about the service and its runtime configuration.
+    """
+    with open(get_kbase_config(), "r") as kbase_config_file:
+        kbase_sdk_config = yaml.load(kbase_config_file, yaml.SafeLoader)
+        result = {"kbase_sdk_config": kbase_sdk_config, "config": ensure_config()}
+        result["config"]["env"]["CLIENT_ID"] = "REDACTED"
+        result["config"]["env"]["CLIENT_SECRET"] = "REDACTED"
+        return result
+        # result = InfoResponse(
+        #     kbase_sdk_config=kbase_sdk_config,
+        #     config=ensure_config()
+        # )
+        # return result.dict(exclude={'config': {'env': {'CLIENT_ID', 'CLIENT_SECRET'}}})
 
 
 # Docs
 
-@app.get("/docs", include_in_schema=False)
+
+@app.get("/docs", include_in_schema=True, tags=["misc"])
 async def custom_swagger_ui_html(req: Request):
+    """
+    Provides a web interface to the auto-generated API docs.
+    """
     root_path = get_service_path()
     openapi_url = root_path + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",
+    )
+
+
+#
+# Redirection target for linking.
+#
+# The provided "code" is very short-lived and must be exchanged for the
+# long-lived tokens without allowing the user to dawdle over it.
+#
+# Yet we do want the user to verify the linking with full account info first.
+# Even using the forced logout during ORCID authentication, the ORCID interface
+# does not identify the account after login. Since their user ids are cryptic,
+#
+# it would be possible on a multi-user computer to use the wrong ORCID Id.
+# So what we do is save the response and issue our own temporary token.
+# Upon submitting that token to /finish-link link is made.
+#
+@app.get(
+    "/continue-linking-session",
+    responses={
+        302: {"description": "Redirect to the continuation page; or error page"}
+    },
+    tags=["link"],
+)
+async def continue_linking_session(
+        code: str | None = None,
+        state: str | None = None,
+        error: str | None = None
+):
+    """
+    The redirect endpoint for the ORCID OAuth flow we use for linking.
+    """
+    # Note that this is the target for redirection from ORCID,
+    # and we don't have an Authorization header. We don't
+    # (necessarily) have an auth cookie.
+    # So we use the state to get the session id.
+
+    if error is not None:
+        return ui_error_response("link.orcid_error", "ORCID Error Linking", error)
+
+    if code is None:
+        return ui_error_response(
+            "link.code_missing",
+            "Linking code missing",
+            "The 'code' query param is required but missing",
+        )
+
+    if state is None:
+        return ui_error_response(
+            "link.state_missing",
+            "Linking Error",
+            "The 'state' query param is required but missing",
+        )
+
+    unpacked_state = json.loads(state)
+
+    if "session_id" not in unpacked_state:
+        return ui_error_response(
+            "link.session_id_missing",
+            "Linking Error",
+            "The 'session_id' was not provided in the 'state' query param",
+        )
+
+    session_id = unpacked_state.get("session_id")
+
+    session_record = get_linking_session_record(session_id, None)
+
+    #
+    # Exchange the temporary token from ORCID for the authorized token.
+    #
+    header = {
+        "accept": "application/json",
+        "content-type": "application/x-www-form-urlencoded",
+    }
+    # Note that the redirect uri below is just for the api - it is not actually used
+    # for redirection in this case.
+    # TODO: investigate and point to the docs, because this is weird.
+    data = {
+        "client_id": get_config(["env", "CLIENT_ID"]),
+        "client_secret": get_config(["env", "CLIENT_SECRET"]),
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": f"{get_service_uri()}/continue-linking-session",
+    }
+    response = requests.post(
+        get_config(["orcid", "tokenExchangeURL"]), headers=header, data=data
+    )
+    orcid_auth = json.loads(response.text)
+
+    #
+    # Now we store the response from ORCID in our session.
+    # We still need the user to finalize the linking, now that it has succeeded
+    # which is done in finalize-linking-session.
+    #
+
+    # Note that this is approximate, as it uses our time, not the
+    # ORCID server time.
+    session_record["orcid_auth"] = orcid_auth
+    model = StorageModel()
+    model.update_linking_session(session_id, session_record)
+
+    #
+    # Redirect back to the orcidlink interface, with some
+    # options that support integration into workflows.
+    #
+    params = {}
+
+    if "return_link" in session_record and session_record["return_link"] is not None:
+        params["return_link"] = session_record["return_link"]
+
+    if "skip_prompt" in session_record and session_record["skip_prompt"] is not None:
+        params["skip_prompt"] = session_record["skip_prompt"]
+
+    return RedirectResponse(
+        f"{get_config(['kbase', 'uiOrigin'])}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        status_code=302,
     )

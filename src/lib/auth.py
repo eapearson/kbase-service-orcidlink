@@ -1,9 +1,8 @@
+from lib import authclient
 from lib.config import get_config
 
-from lib import authclient
 
-
-def get_username(kbase_auth_token):
+def get_username(kbase_auth_token: str) -> str:
     auth = authclient.KBaseAuth(
         auth_url=get_config(["kbase", "services", "Auth2", "url"]),
         cache_lifetime=get_config(["kbase", "services", "Auth2", "tokenCacheLifetime"]) / 1000,

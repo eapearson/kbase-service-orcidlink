@@ -120,7 +120,7 @@ class KBaseAuth(object):
         self.cache.add(token, token_info)
         return token_info
 
-    def get_username(self, token: str):
+    def get_username(self, token: str) -> str:
         return self.get_token_info(token)["user_id"]
 
 

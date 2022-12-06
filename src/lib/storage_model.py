@@ -1,6 +1,8 @@
 import uuid
+from typing import Optional
 
 from lib.db import FileStorage
+from model_types import LinkRecord
 
 
 class StorageModel:
@@ -13,8 +15,11 @@ class StorageModel:
     # The user record is the primary linking document, providing a linkage between
     # a username and an ORCID Id.
     #
-    def get_user_record(self, username):
-        return self.db.get('users', username)
+    def get_user_record(self, username: str) -> Optional[LinkRecord]:
+        record = self.db.get('users', username)
+        if record is None:
+            return record
+        return LinkRecord.parse_obj(record)
 
     def save_user_record(self, username, record):
         self.db.save('users', username, record)
