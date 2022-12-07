@@ -4,38 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="fix endpoint [CE-45]">
-      <change afterPath="$PROJECT_DIR$/config/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/deployment.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/development.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/diagrams/linking-flow.puml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/fastapi-checklist.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/api_types.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/route_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routers/link.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/work/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/kbase-sdk-module-orcid-link.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/kbase-sdk-module-orcid-link.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="strengthen types, expand type usage, add string comments, add descriptions, light refactoring [CE-134]">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/architecture.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/architecture.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/poetry.lock" beforeDir="false" afterPath="$PROJECT_DIR$/poetry.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/start_server.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start_server.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/DynamicServiceClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/DynamicServiceClient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/authclient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/authclient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/responses.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/storage_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/storage_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/model_types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/routers/linking_sessions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/works.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/routers/works.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/config.yaml.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/templates/config.yaml.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,14 +151,7 @@
       <workItem from="1669643920780" duration="58573000" />
       <workItem from="1670013285354" duration="1006000" />
       <workItem from="1670284382052" duration="39000" />
-      <workItem from="1670288752952" duration="18644000" />
-    </task>
-    <task id="LOCAL-00010" summary="use &quot;secret&quot; param prefix in config [CE-70]">
-      <created>1662665040851</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1662665040851</updated>
+      <workItem from="1670288752952" duration="19496000" />
     </task>
     <task id="LOCAL-00011" summary="more parameterization, add service wizard mini-client, fetch own url from s.w. [CE-70]">
       <created>1662768907313</created>
@@ -526,7 +489,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669904454620</updated>
     </task>
-    <option name="localTasksCounter" value="59" />
+    <task id="LOCAL-00059" summary="strengthen types, expand type usage, add string comments, add descriptions, light refactoring [CE-134]">
+      <created>1670370643918</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1670370643919</updated>
+    </task>
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,7 +514,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="iteration, fix some broken things [CE-70]" />
     <MESSAGE value="some code reorganization [CE-70]" />
     <MESSAGE value="light refactoring" />
     <MESSAGE value="add error response that handles exceptions [CE-45]" />
@@ -569,6 +538,7 @@
     <MESSAGE value="update to Python 11 [CE-45]" />
     <MESSAGE value="fix endpoint and ui host [CE-45]" />
     <MESSAGE value="fix endpoint [CE-45]" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix endpoint [CE-45]" />
+    <MESSAGE value="strengthen types, expand type usage, add string comments, add descriptions, light refactoring [CE-134]" />
+    <option name="LAST_COMMIT_MESSAGE" value="strengthen types, expand type usage, add string comments, add descriptions, light refactoring [CE-134]" />
   </component>
 </project>
