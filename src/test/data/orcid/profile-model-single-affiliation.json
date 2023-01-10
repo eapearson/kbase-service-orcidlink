@@ -1,0 +1,139 @@
+{
+  "orcidId": "0000-0003-4997-3076",
+  "firstName": "Erik",
+  "lastName": "Pearson",
+  "bio": "I am a test account created by Sir Erik.",
+  "affiliations": [
+    {
+      "name": "Lawrence Berkeley National Laboratory",
+      "role": "Web Developer Assistant Tester",
+      "startYear": "2022",
+      "endYear": null
+    }
+  ],
+  "works": [
+    {
+      "putCode": "1487805",
+      "createdAt": 1659133744594,
+      "updatedAt": 1659404653025,
+      "source": "Erik Pearson",
+      "title": "Test Publication",
+      "journal": "KBase / LBNL / DOE",
+      "date": "2022/7/29",
+      "workType": "online-resource",
+      "url": "https://kbase.us/n/67335/259/",
+      "externalIds": [
+        {
+          "type": "other-id",
+          "value": "67335/259/",
+          "url": "https://kbase.us/n/67335/259/",
+          "relationship": "self"
+        },
+        {
+          "type": "uri",
+          "value": "kbase_web_services",
+          "url": "https://kbase.us",
+          "relationship": "part-of"
+        }
+      ]
+    },
+    {
+      "putCode": "1537385",
+      "createdAt": 1664904423849,
+      "updatedAt": 1664918958139,
+      "source": "KBase CI",
+      "title": "book1x",
+      "journal": "pub",
+      "date": "2022/3/4",
+      "workType": "book",
+      "url": "https://example.com",
+      "externalIds": [
+        {
+          "type": "doi",
+          "value": "book1",
+          "url": "https://example.com",
+          "relationship": "self"
+        }
+      ]
+    },
+    {
+      "putCode": "1547701",
+      "createdAt": 1666277418439,
+      "updatedAt": 1666277418439,
+      "source": "KBase CI",
+      "title": "A KBase Case Study on Genome-wide Transcriptomics and Plant Primary Metabolism in Sorghum",
+      "journal": "Cold Spring Harbor Laboratory Cold Spring Harbor, NY (United States)",
+      "date": "2021",
+      "workType": "data-set",
+      "url": "https://doi.org/10.25982/101788.79/1828290",
+      "externalIds": [
+        {
+          "type": "doi",
+          "value": "10.25982/101788.79/1828290",
+          "url": "https://doi.org/10.25982/101788.79/1828290",
+          "relationship": "self"
+        }
+      ]
+    },
+    {
+      "putCode": "1526002",
+      "createdAt": 1663706262725,
+      "updatedAt": 1671119638386,
+      "source": "KBase CI",
+      "title": "Some Data Set, yo, bro, whoa",
+      "journal": "Me myself and I and me",
+      "date": "2021",
+      "workType": "online-resource",
+      "url": "https://kbase.us",
+      "externalIds": [
+        {
+          "type": "doi",
+          "value": "123",
+          "url": "https://example.com",
+          "relationship": "self"
+        }
+      ]
+    },
+    {
+      "putCode": "1489307",
+      "createdAt": 1659394003991,
+      "updatedAt": 1659394003991,
+      "source": "Erik Pearson",
+      "title": "KBase Educators Overview",
+      "journal": null,
+      "date": "2020",
+      "workType": "data-set",
+      "url": "https://www.osti.gov/servlets/purl/1668075/",
+      "externalIds": [
+        {
+          "type": "doi",
+          "value": "10.25982/1668075",
+          "url": "https://doi.org/10.25982/1668075",
+          "relationship": "self"
+        }
+      ]
+    },
+    {
+      "putCode": "1591568",
+      "createdAt": 1671117599336,
+      "updatedAt": 1671117599336,
+      "source": "KBase CI",
+      "title": "foo",
+      "journal": "bar",
+      "date": "2002/1/1",
+      "workType": "book",
+      "url": "https://www.kbase.us",
+      "externalIds": [
+        {
+          "type": "doi",
+          "value": "foo",
+          "url": "https://www.kbase.us",
+          "relationship": "self"
+        }
+      ]
+    }
+  ],
+  "emailAddresses": [
+    "eaptest40@mailinator.com"
+  ]
+}

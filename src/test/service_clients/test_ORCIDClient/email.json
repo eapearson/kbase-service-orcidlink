@@ -1,0 +1,36 @@
+{
+  "last-modified-date": {
+    "value": 1664287075086
+  },
+  "email": [
+    {
+      "created-date": {
+        "value": 1659028428691
+      },
+      "last-modified-date": {
+        "value": 1664287075086
+      },
+      "source": {
+        "source-orcid": {
+          "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+          "path": "0000-0003-4997-3076",
+          "host": "sandbox.orcid.org"
+        },
+        "source-client-id": null,
+        "source-name": {
+          "value": "Erik Pearson"
+        },
+        "assertion-origin-orcid": null,
+        "assertion-origin-client-id": null,
+        "assertion-origin-name": null
+      },
+      "email": "eaptest40@mailinator.com",
+      "path": null,
+      "visibility": "limited",
+      "verified": true,
+      "primary": true,
+      "put-code": null
+    }
+  ],
+  "path": "/0000-0003-4997-3076/email"
+}

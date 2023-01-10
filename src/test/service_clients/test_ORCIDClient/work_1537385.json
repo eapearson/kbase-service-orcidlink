@@ -1,0 +1,75 @@
+{
+  "created-date": {
+    "value": 1664904423849
+  },
+  "last-modified-date": {
+    "value": 1664918958139
+  },
+  "source": {
+    "source-orcid": null,
+    "source-client-id": {
+      "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+      "path": "APP-RC3PM3KSMMV3GKWS",
+      "host": "sandbox.orcid.org"
+    },
+    "source-name": {
+      "value": "KBase CI"
+    },
+    "assertion-origin-orcid": null,
+    "assertion-origin-client-id": null,
+    "assertion-origin-name": null
+  },
+  "put-code": 1537385,
+  "path": "/0000-0003-4997-3076/work/1537385",
+  "title": {
+    "title": {
+      "value": "book1x"
+    },
+    "subtitle": null,
+    "translated-title": null
+  },
+  "journal-title": {
+    "value": "pub"
+  },
+  "short-description": null,
+  "citation": null,
+  "type": "book",
+  "publication-date": {
+    "year": {
+      "value": "2022"
+    },
+    "month": {
+      "value": "03"
+    },
+    "day": {
+      "value": "04"
+    }
+  },
+  "external-ids": {
+    "external-id": [
+      {
+        "external-id-type": "doi",
+        "external-id-value": "book1",
+        "external-id-normalized": null,
+        "external-id-normalized-error": {
+          "error-code": "8001",
+          "error-message": "Cannot normalize identifier value doi:book1",
+          "transient": true
+        },
+        "external-id-url": {
+          "value": "https://example.com"
+        },
+        "external-id-relationship": "self"
+      }
+    ]
+  },
+  "url": {
+    "value": "https://example.com"
+  },
+  "contributors": {
+    "contributor": []
+  },
+  "language-code": null,
+  "country": null,
+  "visibility": "public"
+}

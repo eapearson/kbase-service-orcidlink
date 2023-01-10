@@ -6,7 +6,7 @@ fi
 
 if [ $# -eq 0 ] ; then
   dockerize -template ./templates/config.yaml.tmpl:./config/config.yaml
-  sh ./scripts/start_server.sh
+  sh ./scripts/start-server.sh
 elif [ "${1}" = "test" ] ; then
   echo "Run Tests"
   make test

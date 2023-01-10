@@ -91,14 +91,14 @@ User -> Browser: user completes perm form, or denies id_token
 Browser -> ORCID: permission granted info
 end
 
-ORCID --> Browser: 302 /linking-session/continue
+ORCID --> Browser: 302 /linking-sessions/continue
 note right
 code
 state
 error
 end note
 
-Browser -> LinkingService: GET /linking-session/continue
+Browser -> LinkingService: GET /linking-sessions/continue
 note left
 code
 state

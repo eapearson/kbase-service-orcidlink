@@ -16,10 +16,10 @@ RUN apt update && apt install -y curl wget
 RUN curl -sSL https://install.python-poetry.org | python3 -
 # Annoyingly it puts it here.
 ENV PATH="/root/.local/bin:$PATH"
+ENV PYTHONPATH="/kb/module/src"
 
 # dockerize for config
-# This version uses master; otherwise functionally equivalent other than style.
-RUN version=v0.16.5 && \
+RUN version=v0.17.0 && \
     wget -O - https://github.com/powerman/dockerize/releases/download/${version}/dockerize-`uname -s`-`uname -m` | install /dev/stdin /usr/local/bin/dockerize
 
 # SSH for development
@@ -40,8 +40,8 @@ COPY ./compile_report.json /kb/module
 
 WORKDIR /kb/module
 
-RUN poetry lock
-RUN poetry install
+# RUN poetry lock
+RUN poetry config virtualenvs.create false && poetry install
 
 ENTRYPOINT [ "sh", "./scripts/entrypoint.sh" ]
 

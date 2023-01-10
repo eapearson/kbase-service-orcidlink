@@ -4,11 +4,21 @@
 /dev/work/data
 /lib/
 #.idea
+
+# Development artifacts
 LOCAL_ONLY_README.md
 custom.env
 *.pyc
 .DS_Store
+./devcontainer.does.not.work
+
+# Placeholder directories
 /config/*
 !/config/README.md
 /work/*
 !/work/README.md
+
+# Testing
+/htmlcov/
+.coverage
+.pytest_cache

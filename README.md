@@ -30,3 +30,45 @@ docker compose run --entrypoint sh orcidlink
 ```shell
 docker compose up
 ```
+
+## Development 2
+
+This workflow works well with pycharm:
+
+> Had to set up poetry to work without a virtual env; although it worked once, 
+> for some reason I couldn't set the interpreter within the virtualenv.
+
+- create new interpreter for docker compose
+
+- make sure the environment variables are set, you can copy paste the following:
+```text
+KBASE_ENDPOINT=https://ci.kbase.us/services/;KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE=yes;KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID={{OMITTED}} ;KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET={{OMITTED}}
+```
+
+- make sure interpreter paths are set:
+```text
+/usr/local/lib/python3.11/site-packages  (added by user)
+/kb/module/src  (added by user)
+/usr/local/lib/python3.11  (added by user)
+/usr/local/lib/python3.11/lib-dynload
+/root/.local/lib/python3.11/site-packages
+```
+
+- make sure the interpreter is:
+
+```text
+/usr/local/bin/python3.11
+```
+
+if in doubt shell into the container (using start-dev-bash.sh) and issue
+
+```shell
+poetry env info
+```
+
+
+
+## Testing
+
+- shell into container
+- run `pytest --cov src --cov-report=html src`

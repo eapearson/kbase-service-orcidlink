@@ -4,21 +4,23 @@
 kbase:
   services:
     Auth2:
-      url: {{ .Env.KBASE_ENDPOINT }}auth/api/legacy/KBase/Sessions/Login
+      url: {{ .Env.KBASE_ENDPOINT }}auth/api/V2/token
       tokenCacheLifetime: 300000
       tokenCacheMaxSize: 20000
     ServiceWizard:
-      url: {{ .Env.KBASE_ENDPOINT }}service_wizard
+      url: {{ .Env.KBASE_ENDPOINT }}service_wizard/rpc
   # in prod the ui host is narrative.kbase.us, but in all others it
   # is X.kbase.us, where X is ci, next, appdev, narrative-dev
+  defaults:
+    serviceRequestTimeout: 60000
   uiOrigin: https://{{ eq $serviceHost "kbase.us" | ternary "narrative.kbase.us" $serviceHost }}
 orcid:
   oauthBaseURL: https://sandbox.orcid.org/oauth
-  tokenExchangeURL: https://sandbox.orcid.org/oauth/token
-  tokenRevokeURL: https://sandbox.orcid.org/oauth/revoke
+  # tokenExchangeURL: https://sandbox.orcid.org/oauth/token
+  # tokenRevokeURL: https://sandbox.orcid.org/oauth/revoke
+  # authorizeURL: https://sandbox.orcid.org/oauth/authorize
   baseURL: https://sandbox.orcid.org
   apiBaseURL: https://api.sandbox.orcid.org/v3.0
-  authorizeURL: https://sandbox.orcid.org/oauth/authorize
 env:
   CLIENT_ID: '{{ .Env.KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID }}'
   CLIENT_SECRET: '{{ .Env.KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET }}'

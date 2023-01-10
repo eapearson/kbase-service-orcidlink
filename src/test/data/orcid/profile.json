@@ -1,0 +1,1021 @@
+{
+  "orcid-identifier": {
+    "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+    "path": "0000-0003-4997-3076",
+    "host": "sandbox.orcid.org"
+  },
+  "preferences": {
+    "locale": "en"
+  },
+  "history": {
+    "creation-method": "MEMBER_REFERRED",
+    "completion-date": null,
+    "submission-date": {
+      "value": 1659028428333
+    },
+    "last-modified-date": {
+      "value": 1671119703405
+    },
+    "claimed": true,
+    "source": null,
+    "deactivation-date": null,
+    "verified-email": true,
+    "verified-primary-email": true
+  },
+  "person": {
+    "last-modified-date": {
+      "value": 1664287075086
+    },
+    "name": {
+      "created-date": {
+        "value": 1659028428753
+      },
+      "last-modified-date": {
+        "value": 1659046553216
+      },
+      "given-names": {
+        "value": "Erik"
+      },
+      "family-name": {
+        "value": "Pearson"
+      },
+      "credit-name": null,
+      "source": null,
+      "visibility": "public",
+      "path": "0000-0003-4997-3076"
+    },
+    "other-names": {
+      "last-modified-date": null,
+      "other-name": [],
+      "path": "/0000-0003-4997-3076/other-names"
+    },
+    "biography": {
+      "created-date": {
+        "value": 1659043263547
+      },
+      "last-modified-date": {
+        "value": 1659047493368
+      },
+      "content": "I am a test account created by Sir Erik.",
+      "visibility": "limited",
+      "path": "/0000-0003-4997-3076/biography"
+    },
+    "researcher-urls": {
+      "last-modified-date": null,
+      "researcher-url": [],
+      "path": "/0000-0003-4997-3076/researcher-urls"
+    },
+    "emails": {
+      "last-modified-date": {
+        "value": 1664287075086
+      },
+      "email": [
+        {
+          "created-date": {
+            "value": 1659028428691
+          },
+          "last-modified-date": {
+            "value": 1664287075086
+          },
+          "source": {
+            "source-orcid": {
+              "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+              "path": "0000-0003-4997-3076",
+              "host": "sandbox.orcid.org"
+            },
+            "source-client-id": null,
+            "source-name": {
+              "value": "Erik Pearson"
+            },
+            "assertion-origin-orcid": null,
+            "assertion-origin-client-id": null,
+            "assertion-origin-name": null
+          },
+          "email": "eaptest40@mailinator.com",
+          "path": null,
+          "visibility": "limited",
+          "verified": true,
+          "primary": true,
+          "put-code": null
+        }
+      ],
+      "path": "/0000-0003-4997-3076/email"
+    },
+    "addresses": {
+      "last-modified-date": null,
+      "address": [],
+      "path": "/0000-0003-4997-3076/address"
+    },
+    "keywords": {
+      "last-modified-date": null,
+      "keyword": [],
+      "path": "/0000-0003-4997-3076/keywords"
+    },
+    "external-identifiers": {
+      "last-modified-date": null,
+      "external-identifier": [],
+      "path": "/0000-0003-4997-3076/external-identifiers"
+    },
+    "path": "/0000-0003-4997-3076/person"
+  },
+  "activities-summary": {
+    "last-modified-date": {
+      "value": 1671119638386
+    },
+    "distinctions": {
+      "last-modified-date": null,
+      "affiliation-group": [],
+      "path": "/0000-0003-4997-3076/distinctions"
+    },
+    "educations": {
+      "last-modified-date": null,
+      "affiliation-group": [],
+      "path": "/0000-0003-4997-3076/educations"
+    },
+    "employments": {
+      "last-modified-date": {
+        "value": 1659047268252
+      },
+      "affiliation-group": [
+        {
+          "last-modified-date": {
+            "value": 1659043785330
+          },
+          "external-ids": {
+            "external-id": []
+          },
+          "summaries": [
+            {
+              "employment-summary": {
+                "created-date": {
+                  "value": 1659043785330
+                },
+                "last-modified-date": {
+                  "value": 1659043785330
+                },
+                "source": {
+                  "source-orcid": {
+                    "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+                    "path": "0000-0003-4997-3076",
+                    "host": "sandbox.orcid.org"
+                  },
+                  "source-client-id": null,
+                  "source-name": {
+                    "value": "Erik Pearson"
+                  },
+                  "assertion-origin-orcid": null,
+                  "assertion-origin-client-id": null,
+                  "assertion-origin-name": null
+                },
+                "put-code": 48711,
+                "department-name": "KBase",
+                "role-title": "Web Developer Assistant Tester",
+                "start-date": {
+                  "year": {
+                    "value": "2022"
+                  },
+                  "month": {
+                    "value": "07"
+                  },
+                  "day": {
+                    "value": "27"
+                  }
+                },
+                "end-date": null,
+                "organization": {
+                  "name": "Lawrence Berkeley National Laboratory",
+                  "address": {
+                    "city": "CA",
+                    "region": "CA",
+                    "country": "US"
+                  },
+                  "disambiguated-organization": {
+                    "disambiguated-organization-identifier": "http://dx.doi.org/10.13039/100006235",
+                    "disambiguation-source": "FUNDREF"
+                  }
+                },
+                "url": {
+                  "value": "https://www.kbase.us"
+                },
+                "external-ids": null,
+                "display-index": "1",
+                "visibility": "public",
+                "path": "/0000-0003-4997-3076/employment/48711"
+              }
+            }
+          ]
+        },
+        {
+          "last-modified-date": {
+            "value": 1659047268252
+          },
+          "external-ids": {
+            "external-id": []
+          },
+          "summaries": [
+            {
+              "employment-summary": {
+                "created-date": {
+                  "value": 1659043965311
+                },
+                "last-modified-date": {
+                  "value": 1659047268252
+                },
+                "source": {
+                  "source-orcid": {
+                    "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+                    "path": "0000-0003-4997-3076",
+                    "host": "sandbox.orcid.org"
+                  },
+                  "source-client-id": null,
+                  "source-name": {
+                    "value": "Erik Pearson"
+                  },
+                  "assertion-origin-orcid": null,
+                  "assertion-origin-client-id": null,
+                  "assertion-origin-name": null
+                },
+                "put-code": 48712,
+                "department-name": "Testing",
+                "role-title": "Test Ninja",
+                "start-date": {
+                  "year": {
+                    "value": "1914"
+                  },
+                  "month": {
+                    "value": "01"
+                  },
+                  "day": {
+                    "value": "01"
+                  }
+                },
+                "end-date": {
+                  "year": {
+                    "value": "2022"
+                  },
+                  "month": {
+                    "value": "01"
+                  },
+                  "day": {
+                    "value": "01"
+                  }
+                },
+                "organization": {
+                  "name": "Test Innovations",
+                  "address": {
+                    "city": "San Juan",
+                    "region": null,
+                    "country": "PR"
+                  },
+                  "disambiguated-organization": {
+                    "disambiguated-organization-identifier": "229510",
+                    "disambiguation-source": "RINGGOLD"
+                  }
+                },
+                "url": null,
+                "external-ids": null,
+                "display-index": "1",
+                "visibility": "public",
+                "path": "/0000-0003-4997-3076/employment/48712"
+              }
+            }
+          ]
+        }
+      ],
+      "path": "/0000-0003-4997-3076/employments"
+    },
+    "fundings": {
+      "last-modified-date": null,
+      "group": [],
+      "path": "/0000-0003-4997-3076/fundings"
+    },
+    "invited-positions": {
+      "last-modified-date": null,
+      "affiliation-group": [],
+      "path": "/0000-0003-4997-3076/invited-positions"
+    },
+    "memberships": {
+      "last-modified-date": {
+        "value": 1663813132017
+      },
+      "affiliation-group": [
+        {
+          "last-modified-date": {
+            "value": 1663813132017
+          },
+          "external-ids": {
+            "external-id": []
+          },
+          "summaries": [
+            {
+              "membership-summary": {
+                "created-date": {
+                  "value": 1663813132017
+                },
+                "last-modified-date": {
+                  "value": 1663813132017
+                },
+                "source": {
+                  "source-orcid": {
+                    "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+                    "path": "0000-0003-4997-3076",
+                    "host": "sandbox.orcid.org"
+                  },
+                  "source-client-id": null,
+                  "source-name": {
+                    "value": "Erik Pearson"
+                  },
+                  "assertion-origin-orcid": null,
+                  "assertion-origin-client-id": null,
+                  "assertion-origin-name": null
+                },
+                "put-code": 49975,
+                "department-name": "KBase",
+                "role-title": "employee",
+                "start-date": {
+                  "year": {
+                    "value": "2014"
+                  },
+                  "month": null,
+                  "day": null
+                },
+                "end-date": null,
+                "organization": {
+                  "name": "Lawrence Berkeley National Laboratory",
+                  "address": {
+                    "city": "Berkeley",
+                    "region": null,
+                    "country": "US"
+                  },
+                  "disambiguated-organization": {
+                    "disambiguated-organization-identifier": "https://ror.org/02jbv0t02",
+                    "disambiguation-source": "ROR"
+                  }
+                },
+                "url": {
+                  "value": "https://www.kbase.us"
+                },
+                "external-ids": null,
+                "display-index": "1",
+                "visibility": "public",
+                "path": "/0000-0003-4997-3076/membership/49975"
+              }
+            }
+          ]
+        }
+      ],
+      "path": "/0000-0003-4997-3076/memberships"
+    },
+    "peer-reviews": {
+      "last-modified-date": null,
+      "group": [],
+      "path": "/0000-0003-4997-3076/peer-reviews"
+    },
+    "qualifications": {
+      "last-modified-date": null,
+      "affiliation-group": [],
+      "path": "/0000-0003-4997-3076/qualifications"
+    },
+    "research-resources": {
+      "last-modified-date": null,
+      "group": [],
+      "path": "/0000-0003-4997-3076/research-resources"
+    },
+    "services": {
+      "last-modified-date": null,
+      "affiliation-group": [],
+      "path": "/0000-0003-4997-3076/services"
+    },
+    "works": {
+      "last-modified-date": {
+        "value": 1671119638386
+      },
+      "group": [
+        {
+          "last-modified-date": {
+            "value": 1659404653025
+          },
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "other-id",
+                "external-id-value": "67335/259/",
+                "external-id-normalized": {
+                  "value": "67335/259/",
+                  "transient": true
+                },
+                "external-id-normalized-error": null,
+                "external-id-url": {
+                  "value": "https://kbase.us/n/67335/259/"
+                },
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "work-summary": [
+            {
+              "put-code": 1487805,
+              "created-date": {
+                "value": 1659133744594
+              },
+              "last-modified-date": {
+                "value": 1659404653025
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+                  "path": "0000-0003-4997-3076",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "Erik Pearson"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "Test Publication"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "other-id",
+                    "external-id-value": "67335/259/",
+                    "external-id-normalized": {
+                      "value": "67335/259/",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://kbase.us/n/67335/259/"
+                    },
+                    "external-id-relationship": "self"
+                  },
+                  {
+                    "external-id-type": "uri",
+                    "external-id-value": "kbase_web_services",
+                    "external-id-normalized": {
+                      "value": "http://kbase_web_services",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://kbase.us"
+                    },
+                    "external-id-relationship": "part-of"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://kbase.us/n/67335/259/"
+              },
+              "type": "online-resource",
+              "publication-date": {
+                "year": {
+                  "value": "2022"
+                },
+                "month": {
+                  "value": "07"
+                },
+                "day": {
+                  "value": "29"
+                }
+              },
+              "journal-title": {
+                "value": "KBase / LBNL / DOE"
+              },
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1487805",
+              "display-index": "1"
+            }
+          ]
+        },
+        {
+          "last-modified-date": {
+            "value": 1664918958139
+          },
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "doi",
+                "external-id-value": "book1",
+                "external-id-normalized": null,
+                "external-id-normalized-error": {
+                  "error-code": "8001",
+                  "error-message": "Cannot normalize identifier value doi:book1",
+                  "transient": true
+                },
+                "external-id-url": {
+                  "value": "https://example.com"
+                },
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "work-summary": [
+            {
+              "put-code": 1537385,
+              "created-date": {
+                "value": 1664904423849
+              },
+              "last-modified-date": {
+                "value": 1664918958139
+              },
+              "source": {
+                "source-orcid": null,
+                "source-client-id": {
+                  "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+                  "path": "APP-RC3PM3KSMMV3GKWS",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-name": {
+                  "value": "KBase CI"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "book1x"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "book1",
+                    "external-id-normalized": null,
+                    "external-id-normalized-error": {
+                      "error-code": "8001",
+                      "error-message": "Cannot normalize identifier value doi:book1",
+                      "transient": true
+                    },
+                    "external-id-url": {
+                      "value": "https://example.com"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://example.com"
+              },
+              "type": "book",
+              "publication-date": {
+                "year": {
+                  "value": "2022"
+                },
+                "month": {
+                  "value": "03"
+                },
+                "day": {
+                  "value": "04"
+                }
+              },
+              "journal-title": {
+                "value": "pub"
+              },
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1537385",
+              "display-index": "0"
+            }
+          ]
+        },
+        {
+          "last-modified-date": {
+            "value": 1666277418439
+          },
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "doi",
+                "external-id-value": "10.25982/101788.79/1828290",
+                "external-id-normalized": {
+                  "value": "10.25982/101788.79/1828290",
+                  "transient": true
+                },
+                "external-id-normalized-error": null,
+                "external-id-url": {
+                  "value": "https://doi.org/10.25982/101788.79/1828290"
+                },
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "work-summary": [
+            {
+              "put-code": 1547701,
+              "created-date": {
+                "value": 1666277418439
+              },
+              "last-modified-date": {
+                "value": 1666277418439
+              },
+              "source": {
+                "source-orcid": null,
+                "source-client-id": {
+                  "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+                  "path": "APP-RC3PM3KSMMV3GKWS",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-name": {
+                  "value": "KBase CI"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "A KBase Case Study on Genome-wide Transcriptomics and Plant Primary Metabolism in Sorghum"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.25982/101788.79/1828290",
+                    "external-id-normalized": {
+                      "value": "10.25982/101788.79/1828290",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://doi.org/10.25982/101788.79/1828290"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://doi.org/10.25982/101788.79/1828290"
+              },
+              "type": "data-set",
+              "publication-date": {
+                "year": {
+                  "value": "2021"
+                },
+                "month": null,
+                "day": null
+              },
+              "journal-title": {
+                "value": "Cold Spring Harbor Laboratory Cold Spring Harbor, NY (United States)"
+              },
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1547701",
+              "display-index": "0"
+            }
+          ]
+        },
+        {
+          "last-modified-date": {
+            "value": 1671119638386
+          },
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "doi",
+                "external-id-value": "123",
+                "external-id-normalized": null,
+                "external-id-normalized-error": {
+                  "error-code": "8001",
+                  "error-message": "Cannot normalize identifier value doi:123",
+                  "transient": true
+                },
+                "external-id-url": {
+                  "value": "https://example.com"
+                },
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "work-summary": [
+            {
+              "put-code": 1526002,
+              "created-date": {
+                "value": 1663706262725
+              },
+              "last-modified-date": {
+                "value": 1671119638386
+              },
+              "source": {
+                "source-orcid": null,
+                "source-client-id": {
+                  "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+                  "path": "APP-RC3PM3KSMMV3GKWS",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-name": {
+                  "value": "KBase CI"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "Some Data Set, yo, bro, whoa"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "123",
+                    "external-id-normalized": null,
+                    "external-id-normalized-error": {
+                      "error-code": "8001",
+                      "error-message": "Cannot normalize identifier value doi:123",
+                      "transient": true
+                    },
+                    "external-id-url": {
+                      "value": "https://example.com"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://kbase.us"
+              },
+              "type": "online-resource",
+              "publication-date": {
+                "year": {
+                  "value": "2021"
+                },
+                "month": null,
+                "day": null
+              },
+              "journal-title": {
+                "value": "Me myself and I and me"
+              },
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1526002",
+              "display-index": "0"
+            }
+          ]
+        },
+        {
+          "last-modified-date": {
+            "value": 1663707129598
+          },
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "doi",
+                "external-id-value": "10.25982/1668075",
+                "external-id-normalized": {
+                  "value": "10.25982/1668075",
+                  "transient": true
+                },
+                "external-id-normalized-error": null,
+                "external-id-url": {
+                  "value": "https://doi.org/10.25982/1668075"
+                },
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "work-summary": [
+            {
+              "put-code": 1489307,
+              "created-date": {
+                "value": 1659394003991
+              },
+              "last-modified-date": {
+                "value": 1659394003991
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://sandbox.orcid.org/0000-0003-4997-3076",
+                  "path": "0000-0003-4997-3076",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "Erik Pearson"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "KBase Educators Overview"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.25982/1668075",
+                    "external-id-normalized": {
+                      "value": "10.25982/1668075",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://doi.org/10.25982/1668075"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://www.osti.gov/servlets/purl/1668075/"
+              },
+              "type": "data-set",
+              "publication-date": {
+                "year": {
+                  "value": "2020"
+                },
+                "month": null,
+                "day": null
+              },
+              "journal-title": null,
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1489307",
+              "display-index": "1"
+            },
+            {
+              "put-code": 1526014,
+              "created-date": {
+                "value": 1663707129598
+              },
+              "last-modified-date": {
+                "value": 1663707129598
+              },
+              "source": {
+                "source-orcid": null,
+                "source-client-id": {
+                  "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+                  "path": "APP-RC3PM3KSMMV3GKWS",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-name": {
+                  "value": "KBase CI"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "TEST TITLE HERE"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.25982/1668075",
+                    "external-id-normalized": {
+                      "value": "10.25982/1668075",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://kbase.us/n/67335/259/"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://ci.kbase.us/narrative/68208"
+              },
+              "type": "online-resource",
+              "publication-date": {
+                "year": {
+                  "value": "2022"
+                },
+                "month": null,
+                "day": null
+              },
+              "journal-title": {
+                "value": "Testing Services, Inc."
+              },
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1526014",
+              "display-index": "0"
+            }
+          ]
+        },
+        {
+          "last-modified-date": {
+            "value": 1671117599336
+          },
+          "external-ids": {
+            "external-id": [
+              {
+                "external-id-type": "doi",
+                "external-id-value": "foo",
+                "external-id-normalized": null,
+                "external-id-normalized-error": {
+                  "error-code": "8001",
+                  "error-message": "Cannot normalize identifier value doi:foo",
+                  "transient": true
+                },
+                "external-id-url": {
+                  "value": "https://www.kbase.us"
+                },
+                "external-id-relationship": "self"
+              }
+            ]
+          },
+          "work-summary": [
+            {
+              "put-code": 1591568,
+              "created-date": {
+                "value": 1671117599336
+              },
+              "last-modified-date": {
+                "value": 1671117599336
+              },
+              "source": {
+                "source-orcid": null,
+                "source-client-id": {
+                  "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+                  "path": "APP-RC3PM3KSMMV3GKWS",
+                  "host": "sandbox.orcid.org"
+                },
+                "source-name": {
+                  "value": "KBase CI"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "title": {
+                "title": {
+                  "value": "foo"
+                },
+                "subtitle": null,
+                "translated-title": null
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "foo",
+                    "external-id-normalized": null,
+                    "external-id-normalized-error": {
+                      "error-code": "8001",
+                      "error-message": "Cannot normalize identifier value doi:foo",
+                      "transient": true
+                    },
+                    "external-id-url": {
+                      "value": "https://www.kbase.us"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "url": {
+                "value": "https://www.kbase.us"
+              },
+              "type": "book",
+              "publication-date": {
+                "year": {
+                  "value": "2002"
+                },
+                "month": {
+                  "value": "01"
+                },
+                "day": {
+                  "value": "01"
+                }
+              },
+              "journal-title": {
+                "value": "bar"
+              },
+              "visibility": "public",
+              "path": "/0000-0003-4997-3076/work/1591568",
+              "display-index": "0"
+            }
+          ]
+        }
+      ],
+      "path": "/0000-0003-4997-3076/works"
+    },
+    "path": "/0000-0003-4997-3076/activities"
+  },
+  "path": "/0000-0003-4997-3076"
+}

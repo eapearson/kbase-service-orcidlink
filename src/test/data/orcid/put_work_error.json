@@ -1,0 +1,7 @@
+{
+  "response-code": 400,
+  "developer-message": "400 Bad request: invalid JSON - Unrecognized field \"xput-code\" (class org.orcid.jaxb.model.v3.release.record.Work), not marked as ignorable (17 known properties: \"journal-title\", \"path\", \"citation\", \"put-code\", \"publication-date\", \"visibility\", \"created-date\", \"external-ids\", \"title\", \"type\", \"last-modified-date\", \"language-code\", \"short-description\", \"url\", \"country\", \"contributors\", \"source\"])\n at [Source: (org.apache.catalina.connector.CoyoteInputStream); line: 22, column: 22] (through reference chain: org.orcid.jaxb.model.v3.release.record.Work[\"xput-code\"])",
+  "user-message": "Invalid JSON.",
+  "error-code": 9047,
+  "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+}

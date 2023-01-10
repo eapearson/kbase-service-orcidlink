@@ -1,0 +1,7 @@
+{
+  "response-code": 404,
+  "developer-message": "404 Not Found: The resource was not found. Full validation error: ORCID iD 0000-0003-4997-3076x not found",
+  "user-message": "The resource was not found.",
+  "error-code": 9016,
+  "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+}

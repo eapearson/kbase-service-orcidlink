@@ -1,0 +1,10 @@
+{
+  "type": "Login",
+  "id": "da5f0e71-06c9-4f95-b3c2-687eb33ea9d7",
+  "expires": 1671665405604,
+  "created": 1670455805604,
+  "name": null,
+  "user": "foo",
+  "custom": {},
+  "cachefor": 300000
+}
