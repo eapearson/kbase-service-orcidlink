@@ -1,0 +1,24 @@
+kbase:
+  services:
+    Auth2:
+      url: https://ci.kbase.us/services/auth/api/V2/token
+      tokenCacheLifetime: 300000
+      tokenCacheMaxSize: 20000
+    ServiceWizard:
+      url: https://ci.kbase.us/services/service_wizard
+    ORCIDLink:
+      url: https://ci.kbase.us/services/ORCIDLink
+  uiOrigin: https://ci.kbase.us
+  defaults:
+    serviceRequestTimeout: 60000
+orcid:
+  oauthBaseURL: https://sandbox.orcid.org/oauth
+  baseURL: https://sandbox.orcid.org
+  apiBaseURL: https://api.sandbox.orcid.org/v3.0
+module:
+  CLIENT_ID: 'REDACTED-CLIENT-ID'
+  CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
+  IS_DYNAMIC_SERVICE: 'no'
+  MONGO_USERNAME: 'dev'
+  MONGO_PASSWORD: 'd3v'
+  STORAGE_MODEL: 'mongo'

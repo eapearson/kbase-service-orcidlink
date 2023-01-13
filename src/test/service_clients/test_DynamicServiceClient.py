@@ -16,65 +16,6 @@ def mock_services():
             yield url
 
 
-# TODO: perhaps make the service wizard mock more flexible - able to take a
-# set of services to respond to, perhaps.
-# class MockServiceWizardService2(MockServiceWizardService):
-#     def __init__(self, *args, servers={}):
-#         super().__init__(*args)
-#         self.servers = servers
-#
-#
-#     def send_service_status(self, method: str, module_name: str, version: str | None):
-#         if module_name in self.servers:
-#         # if module_name == "ImaginaryService":
-#             module = self.servers[module_name]
-#             if version == "dev" or version is None:
-#                 self.increment_method_call_count(method, "success")
-#                 self.send_json(self.success_response({
-#                     "git_commit_hash": "HASH",
-#                     "status": "active",
-#                     "hash": "HASH",
-#                     "release_tags": [
-#                         "dev"
-#                     ],
-#                     "url": f"{imaginary_service_server.base_url()}/services/imaginary_service",
-#                     "module_name": "ImaginaryService",
-#                     "health": "healthy",
-#                     "up": 1
-#                 }))
-#             else:
-#                 self.increment_method_call_count(method, "error")
-#                 self.send_json(self.error_response(
-#                     SERVER_ERROR_MIN, "Server error",
-#                     message="'No module version found that matches your criteria!'"
-#                 ))
-#         else:
-#             self.increment_method_call_count(method, "error")
-#             self.send_json(self.error_response(
-#                 SERVER_ERROR_MIN, "Server error",
-#                 message="'Module cannot be found based on module_name or git_url parameters.'"
-#             ))
-#
-# @contextlib.contextmanager
-# def mock_service_wizard_service2():
-#     server = MockServer("127.0.0.1", MockServiceWizardService2)
-#     MockServiceWizardService.reset_call_counts()
-#     try:
-#         server.start_service()
-#         url = f"{server.base_url()}/services/service_wizard/rpc"
-#         config.set_config(["kbase", "services", "ServiceWizard", "url"],
-#                           url)
-#         yield [server, MockServiceWizardService, url]
-#     finally:
-#         server.stop_service()
-#
-# @contextlib.contextmanager
-# def mock_services2():
-#     with no_stderr():
-#         with mock_service_wizard_service() as [_, _, service_wizard_url]:
-#             with mock_imaginary_service() as [_, _, imaginary_service_url]:
-#                 yield [mock_imaginary_service, imaginary_service_url]
-
 def test_DynamicServiceClient_constructor():
     # happy paths.
     client = DynamicServiceClient(url="foo", module="bar", timeout=1)

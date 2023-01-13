@@ -1,49 +1,22 @@
 import json
 
 import pytest
-from orcidlink.lib import utils
 from orcidlink.lib.config import ensure_config
 from orcidlink.lib.responses import ErrorException
 from orcidlink.service_clients.ORCIDClient import ORCIDAPIClient, ORCIDOAuthClient, orcid_api, orcid_api_url, \
     orcid_oauth
+from test.data.utils import load_data_file, load_test_data
 from test.mocks.mock_contexts import mock_orcid_api_service, mock_orcid_api_service_with_errors, \
     mock_orcid_oauth_service, \
     mock_orcid_oauth_service2, no_stderr
 
-
-# from test.mocks.mock_orcid import MockORCIDAPI, MockORCIDAPIWithErrors, MockORCIDOAuth2
-
-
-def load_test_data(filename: str):
-    test_data_path = f"{utils.module_dir()}/src/test/service_clients/test_ORCIDClient/{filename}.json"
-    with open(test_data_path) as fin:
-        return json.load(fin)
+config_yaml = load_data_file('config1.yaml')
 
 
-@pytest.fixture(scope="function")
-def test_filesystem(fs):
-    fake_config = """
-kbase:
-  services:
-    Auth2:
-      url: http://127.0.0.1:9999/services/auth/api/V2/token
-      tokenCacheLifetime: 300000
-      tokenCacheMaxSize: 20000
-    ServiceWizard:
-      url: http://127.0.0.1:9999/services/service_wizard
-  uiOrigin: https://ci.kbase.us
-  defaults:
-    serviceRequestTimeout: 60000
-orcid:
-  oauthBaseURL: https://sandbox.orcid.org/oauth
-  baseURL: https://sandbox.orcid.org
-  apiBaseURL: https://api.sandbox.orcid.org/v3.0
-env:
-  CLIENT_ID: 'REDACTED-CLIENT-ID'
-  CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
-  IS_DYNAMIC_SERVICE: 'yes'
-    """
-    fs.create_file("/kb/module/config/config.yaml", contents=fake_config)
+@pytest.fixture
+def fake_fs(fs):
+    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
 
@@ -52,7 +25,7 @@ def my_fs(fs):
     yield fs
 
 
-def test_orcid_api_url(test_filesystem):
+def test_orcid_api_url(fake_fs):
     ensure_config(reload=True)
     value = orcid_api_url("path")
     assert isinstance(value, str)
@@ -302,7 +275,7 @@ def test_ORCIDAPI_save_work():
             # )
             # TODO: external ids too!
             put_code = 1526002
-            work_update = load_test_data(f"work_{str(put_code)}")
+            work_update = load_test_data('orcid', f"work_{str(put_code)}")
             # don't change anything for now
             result = client.save_work(orcid_id, put_code, work_update)
             assert isinstance(result, dict)
@@ -327,7 +300,7 @@ def test_ORCIDAPI_save_work_error():
             )
             with pytest.raises(ErrorException, match="Error fetching data from ORCID Auth api") as ex:
                 put_code = 1526002
-                work_update = load_test_data(f"work_{str(put_code)}")
+                work_update = load_test_data('orcid', f"work_{str(put_code)}")
                 # don't change anything for now
                 client.save_work(orcid_id, put_code, work_update)
             assert ex.value.error.data['originalResponseJSON']['response-code'] == 400

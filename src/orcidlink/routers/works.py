@@ -1,12 +1,12 @@
 import json
-from typing import List
+from typing import List, Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException, Header, Path
-from orcidlink.lib.config import get_config
+from orcidlink.lib.config import config
 from orcidlink.lib.responses import (ErrorException, ErrorResponse, ensure_authorization,
                                      error_response, make_error_exception)
-from orcidlink.lib.storage_model import StorageModel
+from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.transform import parse_date, raw_work_to_work
 from orcidlink.lib.utils import get_raw_prop, get_string_prop
 from orcidlink.model_types import ExternalId, LinkRecord, ORCIDWork, SimpleSuccess
@@ -43,15 +43,17 @@ class NewWork(BaseModel):
 # Utils
 #
 
-def get_orcid_auth(kbase_token: str) -> LinkRecord:
+def get_orcid_auth(kbase_token: str) -> Optional[LinkRecord]:
     username = get_username(kbase_token)
-    return get_link_record(username)
+    model = storage_model()
+    return model.get_link_record(username)
+    # return get_link_record(username)
 
 
-def get_link_record(username: str) -> LinkRecord:
-    model = StorageModel()
-    user_record = model.get_user_record(username)
-    return user_record
+# def get_link_record(username: str) -> LinkRecord:
+#     model = storage_model()
+#     user_record = model.get_user_record(username)
+#     return user_record
 
 
 #
@@ -308,7 +310,7 @@ async def create_work(
     }
     # TODO: propagate everywhere. Or, perhaps better,
     # wrap this common use case into a function or class.
-    timeout = get_config(["kbase", "defaults", "serviceRequestTimeout"]) / 1000
+    timeout = config().kbase.defaults.serviceRequestTimeout / 1000
     try:
         response = httpx.post(url,
                               timeout=timeout,

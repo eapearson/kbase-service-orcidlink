@@ -48,12 +48,12 @@ class LinkingSessionInitial(BaseModel):
 
 
 class LinkingSessionStarted(LinkingSessionInitial):
-    return_link: str = Field(None)
-    skip_prompt: str = Field(None)
+    return_link: str | None = Field(...)
+    skip_prompt: str = Field(...)
 
 
 class LinkingSessionComplete(LinkingSessionStarted):
-    orcid_auth: ORCIDAuthPublic = Field(...)
+    orcid_auth: ORCIDAuth = Field(...)
 
 
 class SessionInfo(BaseModel):
@@ -63,12 +63,14 @@ class SessionInfo(BaseModel):
 # The Link itself
 
 class LinkRecord(BaseModel):
+    username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
     orcid_auth: ORCIDAuth
 
 
 class LinkRecordPublic(BaseModel):
+    username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
     orcid_auth: ORCIDAuthPublic

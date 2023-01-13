@@ -2,11 +2,11 @@
 
 Two types of errors may be encountered: api and interaction
 
-API errors are by far the most numerous. They may occur during any API call. When under our control, they follow schema that is documented below. So, errors may be thrown by FastAPI itself, which follows a different pattern, also documented below. In all API errors, the front end (browser) will detect the error and display it in a uniform manner.
+API errors are by far the most numerous. They may occur during any API call to this service. They follow schema that is documented below. With API errors, the front end (browser) will detect the error and display it in a uniform manner.
 
-There are only a few interaction errors. These occur during linking when the OAuth flow requires that the browser actually follow links to this service and to ORCID. These errors cannot be captured by the front end code. They are reported to the user by way of a redirect containing query parameters with the error informationThe front end hosts a view (page) which displays the error infoation from the ur.
+Interaction errors occur during linking when the OAuth flow requires that the browser  follow links to this service and to ORCID. These errors cannot be captured by the front end code, since the "front end" is provided by this service. However, that "front end" is only meant to be interstitial -- that is, it is not meant to be displayed to the user but rather immediately redirects to the ORCID Link front end. Errors encountered in this interstitial process are reported to the user by way of a redirect containing query parameters with the error information. The front end hosts a view (page) which displays the error information contained in this url.
 
-All unique errors are identified by an ... identifier. The identifiers are cataloged in the codebase to ease diagnosis, and also may be located in the codebase.
+All unique errors or types of errors are identified by an error code. The identifiers are cataloged in the codebase to ease diagnosis, and also may be located in the codebase.
 
 Error ids are strings.
 

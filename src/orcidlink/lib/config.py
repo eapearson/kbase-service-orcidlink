@@ -1,55 +1,94 @@
 import os
 import re
 import threading
-from typing import Any, List
+from typing import Optional
 
 import yaml
-from orcidlink.lib.utils import get_prop, module_dir, set_prop
+from orcidlink.lib.utils import module_dir
 from orcidlink.service_clients.ServiceWizard import ServiceWizard
+from pydantic import BaseModel, Field
 
 
-class Config:
+class KBaseService(BaseModel):
+    url: str = Field(...)
+
+
+class Auth2Service(KBaseService):
+    tokenCacheLifetime: int = Field(...)
+    tokenCacheMaxSize: int = Field(...)
+
+
+class ORCIDLinkService(KBaseService):
+    pass
+
+
+class ServiceWizardService(KBaseService):
+    pass
+
+
+class ORCIDConfig(BaseModel):
+    oauthBaseURL: str = Field(...)
+    baseURL: str = Field(...)
+    apiBaseURL: str = Field(...)
+
+
+class ModuleConfig(BaseModel):
+    CLIENT_ID: str = Field(...)
+    CLIENT_SECRET: str = Field(...)
+    IS_DYNAMIC_SERVICE: str = Field(...)
+    MONGO_USERNAME: str = Field(...)
+    MONGO_PASSWORD: str = Field(...)
+    STORAGE_MODEL: str = Field(...)
+
+
+class Services(BaseModel):
+    Auth2: Auth2Service
+    ServiceWizard: ServiceWizardService
+    ORCIDLink: Optional[ORCIDLinkService] = Field(None)
+
+
+class Defaults(BaseModel):
+    serviceRequestTimeout: int = Field(...)
+
+
+class KBaseConfig(BaseModel):
+    services: Services
+    uiOrigin: str = Field(...)
+    defaults: Defaults
+
+
+class Config(BaseModel):
+    kbase: KBaseConfig
+    orcid: ORCIDConfig
+    module: ModuleConfig
+
+
+class ConfigManager:
     def __init__(self, config_path: str):
         self.config_path = config_path
-        self.config = None
         self.service_info = None
         self.lock = threading.RLock()
+        self.config_data: Optional[Config] = None
 
-    def ensure_config(self, reload: bool = False):
-        if self.config is None or reload:
+    def config(self, reload: bool = False) -> Config:
+        if self.config_data is None or reload:
             with self.lock:
                 file_name = self.config_path
                 with open(file_name, "r") as in_file:
-                    self.config = yaml.load(in_file, yaml.SafeLoader)
+                    self.config_data = Config.parse_obj(yaml.load(in_file, yaml.SafeLoader))
 
-        return self.config
+        return self.config_data
 
-    def get_config(self, key_path: List[str], reload: bool = False):
-        config = self.ensure_config(reload=reload)
-        value, found = get_prop(config, key_path)
-        if not found:
-            raise ValueError(f"Config not found on path: {'.'.join(key_path)}")
-        return value
-
-    def set_config(self, key_path: List[str], new_value: Any, reload: bool = False):
-        config = self.ensure_config(reload=reload)
-        existing_value, found = get_prop(config, key_path)
-        if not found:
-            raise ValueError(f"Config not found on path: {'.'.join(key_path)}")
-
-        if existing_value == new_value:
-            return
-
-        set_prop(config, key_path, new_value)
-        return
+    def ensure_config(self, reload: bool = False) -> Config:
+        return self.config(reload)
 
     def get_service_info(self):
         # TODO: cache this.
         if self.service_info is None:
             service_wizard = ServiceWizard(
-                url=self.get_config(["kbase", "services", "ServiceWizard", "url"]),
+                url=self.config_data.kbase.services.ServiceWizard.url,
                 token=None,
-                timeout=self.get_config(["kbase", "defaults", "serviceRequestTimeout"]) / 1000
+                timeout=self.config_data.kbase.defaults.serviceRequestTimeout / 1000
             )
             self.service_info = service_wizard.get_service_status('ORCIDLink', None)
 
@@ -58,20 +97,21 @@ class Config:
     def clear(self):
         with self.lock:
             self.service_info = None
-            self.config = None
+            self.config_data = None
 
-    def get_service_url(self):
-        if self.get_config(["env", "IS_DYNAMIC_SERVICE"]) == "yes":
+    def get_service_url(self) -> str:
+        self.config()
+        if self.config_data.module.IS_DYNAMIC_SERVICE == "yes":
             return re.sub(r"https://(.*?)(?::\d*)?/", r"https://\1/", self.get_service_info()['url'])
-        return self.get_config(["kbase", "services", "ORCIDLink", "url"])
+        return self.config_data.kbase.services.ORCIDLink.url
 
-    def get_service_path(self):
+    def get_service_path(self) -> str:
         match = re.match(r"^https://(.*?)(/.*)$", self.get_service_url())
         # we assume that the service provides correct responses!
         return match.group(2)
 
 
-GLOBAL_CONFIG = Config(os.path.join(module_dir(), "config/config.yaml"))
+GLOBAL_CONFIG = ConfigManager(os.path.join(module_dir(), "config/config.yaml"))
 
 
 # CONFIG = None
@@ -83,14 +123,9 @@ def ensure_config(reload: bool = False):
     return GLOBAL_CONFIG.ensure_config(reload)
 
 
-def get_config(key_path: List[str], reload: bool = False):
+def config(reload: bool = False) -> Config:
     global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.get_config(key_path, reload=reload)
-
-
-def set_config(key_path: List[str], new_value: Any, reload: bool = False):
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.set_config(key_path, new_value, reload=reload)
+    return GLOBAL_CONFIG.config(reload)
 
 
 #
@@ -116,3 +151,9 @@ def get_service_url():
 def get_service_path():
     global GLOBAL_CONFIG
     return GLOBAL_CONFIG.get_service_path()
+
+
+def get_kbase_config():
+    config_path = os.path.join(module_dir(), './kbase.yml')
+    with open(config_path, "r") as kbase_config_file:
+        return yaml.load(kbase_config_file, yaml.SafeLoader)

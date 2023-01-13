@@ -2,7 +2,7 @@ import json
 from json import JSONDecodeError
 
 import httpx
-from orcidlink.lib.config import get_config
+from orcidlink.lib.config import config
 from orcidlink.lib.responses import ErrorException, ErrorResponse
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class AuthorizeParams(BaseModel):
 
 
 def orcid_api_url(path):
-    return f"{get_config(['orcid', 'apiBaseURL'])}/{path}"
+    return f"{config().orcid.apiBaseURL}/{path}"
 
 
 class ORCIDClientBase:
@@ -134,8 +134,8 @@ class ORCIDOAuthClient(ORCIDClientBase):
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {
-            "client_id": get_config(["env", "CLIENT_ID"]),
-            "client_secret": get_config(["env", "CLIENT_SECRET"]),
+            "client_id": config().module.CLIENT_ID,
+            "client_secret": config().module.CLIENT_SECRET,
             "token": self.access_token,
         }
         # TODO: determine all possible ORCID errors here, or the
@@ -154,7 +154,7 @@ def orcid_api(token: str) -> ORCIDAPIClient:
     than OAuth flow and OAuth/Auth interactions below.
     """
     return ORCIDAPIClient(
-        url=get_config(['orcid', 'apiBaseURL']),
+        url=config().orcid.apiBaseURL,
         access_token=token
     )
 
@@ -167,6 +167,6 @@ def orcid_oauth(token: str) -> ORCIDOAuthClient:
     simply Auth services.
     """
     return ORCIDOAuthClient(
-        url=get_config(['orcid', 'oauthBaseURL']),
+        url=config().orcid.oauthBaseURL,
         access_token=token
     )

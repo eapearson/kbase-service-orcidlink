@@ -3,78 +3,50 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
+from orcidlink.lib import storage_model
 from orcidlink.main import app
+from orcidlink.model_types import LinkRecord
+from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, mock_orcid_api_service, no_stderr
+
+config_yaml = load_data_file('config1.yaml')
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fake_config = """
-kbase:
-  services:
-    Auth2:
-      url: http://127.0.0.1:9999/services/auth/api/V2/token
-      tokenCacheLifetime: 300000
-      tokenCacheMaxSize: 20000
-    ServiceWizard:
-      url: http://127.0.0.1:9999/services/service_wizard
-  uiOrigin: https://ci.kbase.us
-  defaults:
-    serviceRequestTimeout: 500
-orcid:
-  oauthBaseURL: https://sandbox.orcid.org/oauth
-  baseURL: https://sandbox.orcid.org
-  apiBaseURL: https://api.sandbox.orcid.org/v3.0
-env:
-  CLIENT_ID: 'REDACTED-CLIENT-ID'
-  CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
-  IS_DYNAMIC_SERVICE: 'yes'
-    """
-    fs.create_file("/kb/module/config/config.yaml", contents=fake_config)
-
-    fake_index = """
-    {
-    "last_id": 9,
-    "entities": {
-        "foo": {
-            "id": 9,
-            "metadata": {},
-            "events": [
-                {
-                    "event": "created",
-                    "at": "2022-12-02T01:13:36.533017+00:00"
-                }
-            ]
-        }
-    }
-}
-    """
-    fs.create_file("/kb/module/work/data/users/index.json", contents=fake_index)
-
-    fake_link_record = """
-    {
-    "orcid_auth": {
-        "access_token": "1eef6e01-62be-467c-b140-973011ef0cb7",
-        "token_type": "bearer",
-        "refresh_token": "0111ac66-c9a8-42ef-9e71-109ae091b8df",
-        "expires_in": 631138518,
-        "scope": "/read-limited openid /activities/update",
-        "name": "Erik Pearson",
-        "orcid": "0000-0003-4997-3076",
-        "id_token": "eyJraWQiOiJzYW5kYm94LW9yY2lkLW9yZy0zaHBnb3NsM2I2bGFwZW5oMWV3c2dkb2IzZmF3ZXBvaiIsImFsZyI6IlJTMjU2In0.eyJhdF9oYXNoIjoiRGsyR01qZ1FTdVYwZFJ5SUZMYmd3dyIsImF1ZCI6IkFQUC1SQzNQTTNLU01NVjNHS1dTIiwic3ViIjoiMDAwMC0wMDAzLTQ5OTctMzA3NiIsImF1dGhfdGltZSI6MTY2OTk0MzYxMiwiYW1yIjoicHdkIiwiaXNzIjoiaHR0cHM6XC9cL3NhbmRib3gub3JjaWQub3JnIiwiZXhwIjoxNjcwMDMwMDE0LCJnaXZlbl9uYW1lIjoiRXJpayIsImlhdCI6MTY2OTk0MzYxNCwiZmFtaWx5X25hbWUiOiJQZWFyc29uIiwianRpIjoiMjU3Y2U3MjItMzZhYS00ZjJjLTllN2YtMDJlZWEzZGIzZDk2In0.mMIWYtPCq52YQYugff57tejpZhnL_8J9_eARgd-niVHtA-lFnrVGaoL-oVzr5gqjWFvCuAyZU78pKxFaSczcwDViW2UeBmgFjFyj0hokmoXc6iH51XQUc_X3hwCod67oY8dyMPMy_awAIgUQ3ZK3Se64Pd1_odoLZi4O7oSba5dMnQ2tD0s-57BcPfittp6vqXVGE00K1M-qyrR72Lmj6ML2xfORPfUOZW6M3zLyX_ipBE36tQk1cjQhveNwUgDFlsiA1p6V1s1L7vpIiNpB1y9lOmUZQJICnusKMQ35EHPtS7saybwvXH7EwqwN9kvMfEOekbwHgYvsPrAbHHh06g"
-    },
-    "created_at": 1669943616532,
-    "expires_at": 2301082134532
-}
-    """
-    fs.create_file("/kb/module/work/data/users/9.json", contents=fake_link_record)
-
+    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
 
+TEST_LINK = load_data_json('link1.json')
+
+TEST_LINK = {
+    "orcid_auth": {
+        "access_token": "access-token",
+        "token_type": "bearer",
+        "refresh_token": "refresh-token",
+        "expires_in": 631138518,
+        "scope": "/read-limited openid /activities/update",
+        "name": "Foo bar",
+        "orcid": "0000-0003-4997-3076",
+        "id_token": "id-token"
+    },
+    "created_at": 1669943616532,
+    "expires_at": 2301082134532,
+    "username": "foo"
+}
+
+
+def create_link():
+    sm = storage_model.storage_model()
+    sm.db.links.drop()
+    sm.create_link_record(LinkRecord.parse_obj(TEST_LINK))
+
+
 @contextlib.contextmanager
 def mock_services():
+    # config(True)
     with no_stderr():
         with mock_auth_service():
             with mock_orcid_api_service():
@@ -83,11 +55,11 @@ def mock_services():
 
 def test_get_work(fake_fs):
     with mock_services():
+        create_link()
         put_code = 1526002
         client = TestClient(app)
         response = client.get(f"/works/{put_code}",
-                              headers={"Authorization": "foo"}
-                              )
+                              headers={"Authorization": "foo"})
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
@@ -132,6 +104,7 @@ def test_get_work_errors(fake_fs):
 
 def test_get_works(fake_fs):
     with mock_services():
+        create_link()
         client = TestClient(app)
         response = client.get(f"/works",
                               headers={"Authorization": "foo"}
@@ -172,9 +145,8 @@ def test_get_works_errors(fake_fs):
 # put_work.
 def test_create_work(fake_fs):
     with mock_services():
-        # Note that we do not need to launch a mock server here,
-        # though we might want to later as that really tests the API
-        # front to back.
+        create_link()
+
         client = TestClient(app)
 
         # TODO: get from file.
@@ -197,7 +169,7 @@ def test_create_work(fake_fs):
                 }
             ]
         }
-        response = client.post(f"/works",
+        response = client.post("/works",
                                headers={"Authorization": "foo"},
                                content=json.dumps(new_work_data)
                                )
@@ -278,6 +250,8 @@ def test_create_work_errors(fake_fs):
 
 def test_save_work(fake_fs):
     with mock_services():
+        create_link()
+
         client = TestClient(app)
 
         # TODO: get from file.
@@ -347,6 +321,7 @@ def test_save_work_errors(fake_fs):
 
 def test_delete_work(fake_fs):
     with mock_services():
+        create_link()
         put_code = 1526002
         client = TestClient(app)
         response = client.delete(f"/works/{put_code}",

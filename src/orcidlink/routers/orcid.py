@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from orcidlink.lib.responses import ensure_authorization, error_response
-from orcidlink.lib.route_utils import AUTHORIZATION_HEADER, AUTH_RESPONSES, STD_RESPONSES
-from orcidlink.lib.storage_model import StorageModel
+from orcidlink.lib.responses import AUTHORIZATION_HEADER, AUTH_RESPONSES, STD_RESPONSES, ensure_authorization, \
+    error_response
+from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.transform import raw_work_to_work
 from orcidlink.lib.utils import get_int_prop, get_raw_prop, get_string_prop
 from orcidlink.model_types import ORCIDProfile
@@ -135,8 +135,8 @@ async def get_profile(
     #
     # Fetch the user's ORCID Link record from KBase.
     #
-    model = StorageModel()
-    user_link_record = model.get_user_record(username)
+    model = storage_model()
+    user_link_record = model.get_link_record(username)
     if user_link_record is None:
         return error_response("notfound", "Not Found", "User link record not found", status_code=404)
 

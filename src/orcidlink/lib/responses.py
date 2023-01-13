@@ -1,13 +1,17 @@
 # from fastapi import HTTPException
-import json
 from traceback import extract_tb
 from urllib.parse import urlencode
 
+from fastapi import Header
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
-from orcidlink.lib.config import get_config
+from orcidlink.lib.config import config
 from pydantic import BaseModel, Field
 
+
+##
+# Common http responses, implemented as response-generating functions.
+#
 
 class ErrorResponse(BaseModel):
     code: str = Field(...)
@@ -47,8 +51,13 @@ def error_response(code: str, title: str, message: str, data=None, status_code=4
     )
 
 
-def make_error_response_from_exception(exception, code: str = None, title: str = None,
-                                       message: str = None, data: dict = None):
+def error_response_not_found(message: str) -> JSONResponse:
+    return error_response('not-found', 'Not Found', message, status_code=404)
+
+
+def exception_error_response(code: str, title: str, exception: Exception,
+                             data: dict = None,
+                             status_code=400) -> JSONResponse:
     traceback = []
     for tb in extract_tb(exception.__traceback__):
         traceback.append({
@@ -66,18 +75,12 @@ def make_error_response_from_exception(exception, code: str = None, title: str =
         'traceback': traceback
     })
 
-    return ErrorResponse(
+    response = ErrorResponse(
         code=code or 'exception',
         title=title or 'Exception',
-        message=message or str(exception),
+        message=str(exception),
         data=data
     )
-
-
-def exception_error_response(code: str, title: str, exception: Exception,
-                             data: dict = {},
-                             status_code=400) -> JSONResponse:
-    response = make_error_response_from_exception(exception, code=code, title=title, data=data)
 
     return JSONResponse(
         status_code=status_code,
@@ -92,7 +95,7 @@ def ui_error_response(code: str, title: str, message: str) -> RedirectResponse:
         "message": message
     })
     return RedirectResponse(
-        f"{get_config(['kbase', 'uiOrigin'])}?{error_params}#orcidlink/error",
+        f"{config().kbase.uiOrigin}?{error_params}#orcidlink/error",
         status_code=302
     )
 
@@ -134,14 +137,14 @@ def ensure_authorization(authorization: str | None) -> str:
     return authorization
 
 
-def text_to_jsonable(hopefully_jsonable: str):
-    try:
-        return json.loads(hopefully_jsonable)
-    except Exception as ex:
-        response = make_error_response_from_exception(
-            ex,
-            code="parseError",
-            title="Error Parsing JSON",
-            message="An error was encountered parsing a string into a jsonable value"
-        )
-        raise ErrorException(response, 500)
+AUTHORIZATION_HEADER = Header(default=None, description="KBase auth token")
+
+AUTH_RESPONSES = {
+    401: {"description": "KBase auth token absent"},
+    403: {"description": "KBase auth token invalid"},
+}
+
+STD_RESPONSES = {
+    422: {"description": "Either input or output data does not comply with the API schema",
+          "model": ErrorResponse}
+}

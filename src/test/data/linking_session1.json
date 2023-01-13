@@ -1,0 +1,6 @@
+{
+  "session_id": "bar",
+  "username": "foo",
+  "created_at": 123,
+  "expires_at": 456
+}

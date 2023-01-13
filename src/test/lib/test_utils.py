@@ -12,16 +12,6 @@ def test_current_time_millis():
     assert now - 1000 * time.time() < 1
 
 
-def test_get_kbase_config():
-    config = utils.get_kbase_config()
-    assert config is not None
-    assert config.get('module-name') == 'ORCIDLink'
-    assert config.get('service-language') == 'python'
-    assert isinstance(config.get("module-description"), str)
-    assert isinstance(config.get("module-version"), str)
-    assert config.get('service-config').get('dynamic-service') is True
-
-
 def test_make_date():
     # just year
     assert utils.make_date(1234) == "1234"

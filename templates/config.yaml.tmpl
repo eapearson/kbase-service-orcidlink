@@ -16,12 +16,12 @@ kbase:
   uiOrigin: https://{{ eq $serviceHost "kbase.us" | ternary "narrative.kbase.us" $serviceHost }}
 orcid:
   oauthBaseURL: https://sandbox.orcid.org/oauth
-  # tokenExchangeURL: https://sandbox.orcid.org/oauth/token
-  # tokenRevokeURL: https://sandbox.orcid.org/oauth/revoke
-  # authorizeURL: https://sandbox.orcid.org/oauth/authorize
   baseURL: https://sandbox.orcid.org
   apiBaseURL: https://api.sandbox.orcid.org/v3.0
-env:
+module:
   CLIENT_ID: '{{ .Env.KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID }}'
   CLIENT_SECRET: '{{ .Env.KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET }}'
   IS_DYNAMIC_SERVICE: '{{ default "yes" .Env.KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE }}'
+  MONGO_USERNAME: '{{ .Env.KBASE_SECURE_CONFIG_PARAM_MONGO_USERNAME }}'
+  MONGO_PASSWORD: '{{ .Env.KBASE_SECURE_CONFIG_PARAM_MONGO_PASSWORD }}'
+  STORAGE_MODEL: 'mongo'

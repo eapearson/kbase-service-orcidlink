@@ -306,10 +306,11 @@ def test_call_func_connection_error():
         timeout=1,
     )
 
-    with pytest.raises(ServiceError) as ex:
-        client.call_func("no_params")
+    with no_stderr():
+        with pytest.raises(ServiceError) as ex:
+            client.call_func("no_params")
 
-    assert ex.value.code == 1402
+        assert ex.value.code == 1402
 
 
 def test_call_func_timeout_error():

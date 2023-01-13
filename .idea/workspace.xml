@@ -4,104 +4,69 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="add missing file [CE-134]">
-      <change afterPath="$PROJECT_DIR$/.coveragerc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose-test.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/ClientBase.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/ServiceClientBase.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/ServiceWizard.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/authclient2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/email.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/orcid-works-error.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/profile-model-single-affiliation.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/profile-model.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/profile-single-affiliation.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/profile.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/put_work_error.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/work_1526002.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/work_1526002_normalized.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/work_1537385.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/works.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/orcid/works_x.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/data/utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_config_module.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_responses.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_storage_model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_transform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_transform/work_1526002.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_transform/work_1526002_transformed.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/lib/test_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/mocks/mock_auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/mocks/mock_contexts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/mocks/mock_imaginary_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/mocks/mock_orcid.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/mocks/mock_server.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/mocks/mock_service_wizard_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/routers/test_link.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/routers/test_linking_sessions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/routers/test_orcid.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/routers/test_orcid/orcid_profile.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/routers/test_works.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_DynamicServiceClient.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_GenericClient.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/email.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/orcid-profile.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/orcid-works-error.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/put_work_error.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/work_1526002.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/work_1537385.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/works.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient/works_x.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ServiceClientBase.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_ServiceWizardClient.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_auth/get-token-foo.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_authclient2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_authclient2/get-token-bar.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/service_clients/test_authclient2/get-token-foo.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/test_main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/kbase-sdk-module-orcid-link.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/kbase-sdk-module-orcid-link.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/docs/configuration.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/docker-entrypoint-initdb.d/initialize.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/orcidlink/lib/storage_model_mongo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/config1.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/config2.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/link1.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/link2.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/link3.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/linking_session1.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/linking_session_record2.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/data/linking_session_record_final.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/lib/test_storage_model_mongo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/diagrams/linking-flow.puml" beforeDir="false" afterPath="$PROJECT_DIR$/docs/diagrams/linking-flow.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/architecture.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/architecture.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/errors.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/errors.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/poetry.lock" beforeDir="false" afterPath="$PROJECT_DIR$/poetry.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/entrypoint.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/entrypoint.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/start-dev-bash.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start-dev-bash.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/start-dev-server.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start-dev-server.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/start_server.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/start-server.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/api_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/api_types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/DynamicServiceClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/DynamicServiceClient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/error.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/GenericClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/GenericClient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/GenericClient2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/GenericClient2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/ORCIDClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/ORCIDClient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/RESTClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/RESTClient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/ServiceUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/ServiceUtils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/ServiceWizard.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/authclient.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/exceptions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/json_file.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/json_file.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/ostiapi.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/other_clients/ostiapi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/responses.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/route_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/route_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/storage_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/storage_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/transform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/model_types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/link.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/link.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/linking_sessions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/orcid.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/orcid.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routers/works.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/works.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/api_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/api_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/db.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/responses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/route_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/storage_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/storage_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/model_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/model_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/routers/link.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/link.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/routers/linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/linking_sessions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/routers/orcid.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/orcid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/routers/works.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/works.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/ClientBase.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/DynamicServiceClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/DynamicServiceClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/GenericClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/GenericClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/GenericClient2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/ORCIDClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/ORCIDClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/ServiceClientBase.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/ServiceWizard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/ServiceWizard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/error.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/service_clients/error.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/data/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/data/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/lib/test_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/lib/test_config_module.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_config_module.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/lib/test_responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_responses.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/lib/test_storage_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_storage_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/lib/test_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/mocks/mock_contexts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/mocks/mock_contexts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/routers/test_link.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_link.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/routers/test_linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_linking_sessions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/routers/test_orcid.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_orcid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/routers/test_works.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_works.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_DynamicServiceClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_DynamicServiceClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_GenericClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_GenericClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_ServiceClientBase.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_GenericClientSubclass.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_auth/get-token-foo.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_authclient2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_authclient2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/test_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/test_main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/config.yaml.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/templates/config.yaml.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -129,23 +94,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "TODO_SCOPE": "All Places",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-sdk-module-orcid-link/src/test",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;TODO_SCOPE&quot;: &quot;All Places&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-sdk-module-orcid-link/src/orcidlink/lib&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings module-name="kbase-sdk-module-orcid-link" is-module-sdk="true">
@@ -156,11 +121,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/orcidlink/lib" />
+      <recent name="$PROJECT_DIR$/src/test/lib" />
       <recent name="$PROJECT_DIR$/src/test" />
       <recent name="$PROJECT_DIR$/src/test/routers" />
       <recent name="$PROJECT_DIR$/src/test/data/orcid" />
-      <recent name="$PROJECT_DIR$/src/test/service_clients/test_authclient2" />
-      <recent name="$PROJECT_DIR$/src/test/lib/test_utils" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/_local" />
@@ -266,14 +231,8 @@
       <workItem from="1671464173755" duration="466000" />
       <workItem from="1671464865253" duration="12899000" />
       <workItem from="1671571489991" duration="12100000" />
-      <workItem from="1672781384128" duration="91679000" />
-    </task>
-    <task id="LOCAL-00013" summary="remove dead code [CE-70]">
-      <created>1662997527570</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1662997527570</updated>
+      <workItem from="1672781384128" duration="119614000" />
+      <workItem from="1673440365844" duration="47147000" />
     </task>
     <task id="LOCAL-00014" summary="fix redirect url [CE-70]">
       <created>1662997998972</created>
@@ -611,7 +570,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670373601763</updated>
     </task>
-    <option name="localTasksCounter" value="62" />
+    <task id="LOCAL-00062" summary="many changes to support testing, as well as changes in response to getting 100% coverage [CE-143]">
+      <created>1673365426014</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1673365426014</updated>
+    </task>
+    <option name="localTasksCounter" value="63" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -640,7 +606,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="add error response that handles exceptions [CE-45]" />
     <MESSAGE value="add docker compose for local development [CE-45]" />
     <MESSAGE value="add devcontainer for VSC [CE-45]" />
     <MESSAGE value="add data volume mount for loal dev [CE-45]" />
@@ -665,14 +630,15 @@
     <MESSAGE value="strengthen types, expand type usage, add string comments, add descriptions, light refactoring [CE-134]" />
     <MESSAGE value="remove work directory, it may be a problem [CE-134]" />
     <MESSAGE value="add missing file [CE-134]" />
-    <option name="LAST_COMMIT_MESSAGE" value="add missing file [CE-134]" />
+    <MESSAGE value="many changes to support testing, as well as changes in response to getting 100% coverage [CE-143]" />
+    <option name="LAST_COMMIT_MESSAGE" value="many changes to support testing, as well as changes in response to getting 100% coverage [CE-143]" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/test/lib/test_utils.py</url>
-          <line>149</line>
+          <line>139</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -681,23 +647,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/test/service_clients/test_GenericClient.py</url>
-          <line>330</line>
+          <line>331</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/test/routers/test_linking_sessions.py</url>
-          <line>110</line>
+          <line>71</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/test/service_clients/test_DynamicServiceClient.py</url>
-          <line>141</line>
+          <line>82</line>
           <option name="timeStamp" value="10" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/test/test_main.py</url>
-          <line>109</line>
-          <option name="timeStamp" value="11" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

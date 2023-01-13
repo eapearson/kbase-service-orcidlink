@@ -21,7 +21,7 @@ def mock_auth_service():
     try:
         service.start_service()
         url = f"{service.base_url()}/services/auth/api/V2/token"
-        config.set_config(["kbase", "services", "Auth2", "url"], url)
+        config.config().kbase.services.Auth2.url = url
 
         yield [service, MockAuthService, url]
     finally:
@@ -34,7 +34,7 @@ def mock_orcid_oauth_service():
     try:
         service.start_service()
         url = service.base_url()
-        config.set_config(["orcid", "oauthBaseURL"], url)
+        config.config().orcid.oauthBaseURL = url
         yield [service, MockORCIDOAuth, url]
     finally:
         service.stop_service()
@@ -46,7 +46,7 @@ def mock_orcid_oauth_service2():
     try:
         service.start_service()
         url = service.base_url()
-        config.set_config(["orcid", "oauthBaseURL"], url)
+        config.config().orcid.oauthBaseURL = url
         yield [service, MockORCIDOAuth2, url]
     finally:
         service.stop_service()
@@ -58,7 +58,7 @@ def mock_orcid_api_service():
     try:
         service.start_service()
         url = service.base_url()
-        config.set_config(["orcid", "apiBaseURL"], url)
+        config.config().orcid.apiBaseURL = url
         yield [service, MockORCIDAPI, url]
     finally:
         service.stop_service()
@@ -70,7 +70,7 @@ def mock_orcid_api_service_with_errors():
     try:
         service.start_service()
         url = service.base_url()
-        config.set_config(["orcid", "apiBaseURL"], url)
+        config.config().orcid.apiBaseURL = url
         yield [service, MockORCIDAPIWithErrors, url]
     finally:
         service.stop_service()
@@ -83,8 +83,7 @@ def mock_service_wizard_service():
     try:
         server.start_service()
         url = f"{server.base_url()}/services/service_wizard/rpc"
-        config.set_config(["kbase", "services", "ServiceWizard", "url"],
-                          url)
+        config.config().kbase.services.ServiceWizard.url = url
         yield [server, MockServiceWizardService, url]
     finally:
         server.stop_service()

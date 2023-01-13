@@ -1,27 +1,19 @@
 """
 A client for KBase Dynamic Services.
 
-It utilizes a KBase "Generic Client" to implement the actual JSON-RPC calls,
-focussing on the obtaining and caching the URL for a given service module.
+It utilizes a KBase "Generic Client" to implement JSON-RPC calls to services
+whose services are registered with the dynamic service service.
 
 Classes:
     URLCache
     DynamicServiceClient
 
 Misc variables:
-    DEFAULT_TIMEOUT
     DEFAULT_CACHE_TTL
 """
 
 from cache3 import SafeCache
 from orcidlink.service_clients.GenericClient import GenericClient
-
-# Default timeout for upstream calls is 10 minutes; propagated to
-# the generic client. This may seem like a long time (and it is!), but
-# sometimes our services can be very slow. Generally timeouts across
-# KBase seem to converge on 1 minute, so it is likely that the call
-# will return with an error before DEFAULT_TIMEOUT.
-DEFAULT_TIMEOUT = 600
 
 # Default lifetime for cached urls is 5 minutes.
 DEFAULT_CACHE_TTL = 300

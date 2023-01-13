@@ -1,8 +1,7 @@
 import os
 import time
+from datetime import datetime, timezone
 from typing import List
-
-import yaml
 
 
 def module_dir():
@@ -85,6 +84,11 @@ def current_time_millis():
     return int(round(time.time() * 1000))
 
 
+def epoch_time_millis():
+    epoch_time = datetime.now(tz=timezone.utc).timestamp()
+    return int(epoch_time * 1000)
+
+
 def make_date(year: int | None = None, month: int | None = None, day: int | None = None):
     if year is not None:
         if month is not None:
@@ -96,9 +100,3 @@ def make_date(year: int | None = None, month: int | None = None, day: int | None
             return f"{year}"
     else:
         return "** invalid date **"
-
-
-def get_kbase_config():
-    config_path = os.path.join(module_dir(), './kbase.yml')
-    with open(config_path, "r") as kbase_config_file:
-        return yaml.load(kbase_config_file, yaml.SafeLoader)

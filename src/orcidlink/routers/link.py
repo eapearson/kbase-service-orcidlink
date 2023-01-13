@@ -1,14 +1,19 @@
+from typing import Optional
+
 from fastapi import APIRouter, Response
-from orcidlink.lib.responses import (ensure_authorization, error_response,
-                                     success_response_no_data)
-from orcidlink.lib.route_utils import AUTHORIZATION_HEADER, AUTH_RESPONSES, STD_RESPONSES
-from orcidlink.lib.storage_model import StorageModel
-from orcidlink.model_types import (LinkRecordPublic, ORCIDAuthPublic)
-from orcidlink.routers.works import get_link_record
+from orcidlink.lib.responses import AUTHORIZATION_HEADER, AUTH_RESPONSES, STD_RESPONSES, ensure_authorization, \
+    error_response, error_response_not_found, success_response_no_data
+from orcidlink.lib.storage_model import storage_model
+from orcidlink.model_types import (LinkRecord, LinkRecordPublic, ORCIDAuthPublic)
 from orcidlink.service_clients.ORCIDClient import orcid_oauth
 from orcidlink.service_clients.auth import get_username
 
 router = APIRouter(prefix="/link", responses={404: {"description": "Not found"}})
+
+
+def get_link_record(username: str) -> Optional[LinkRecord]:
+    model = storage_model()
+    return model.get_link_record(username)
 
 
 #
@@ -23,6 +28,7 @@ router = APIRouter(prefix="/link", responses={404: {"description": "Not found"}}
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         204: {"description": "Successfully deleted the link"},
+        404: {"description": "Not Found"}
     }
 )
 async def delete_link(
@@ -37,16 +43,15 @@ async def delete_link(
     link_record = get_link_record(username)
 
     if link_record is None:
-        # idempotent, so don't throw error
-        return success_response_no_data()
+        return error_response_not_found('User does not have an ORCID Link')
 
     # TODO: handle error? or propagate?
     orcid_oauth(link_record.orcid_auth.access_token).revoke_token()
 
-    model = StorageModel()
+    model = storage_model()
 
     # TODO: handle error? or propagate?
-    model.remove_user_record(username)
+    model.delete_link_record(username)
 
     return success_response_no_data()
 
@@ -77,6 +82,7 @@ async def link(
         return error_response("notFound", "Not Linked", "No link record was found for this user", status_code=404)
 
     return LinkRecordPublic(
+        username=link_record.username,
         created_at=link_record.created_at,
         expires_at=link_record.expires_at,
         orcid_auth=ORCIDAuthPublic(

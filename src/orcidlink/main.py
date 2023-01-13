@@ -1,5 +1,4 @@
 import json
-from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 import httpx
@@ -8,12 +7,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import RedirectResponse
 from orcidlink.api_types import InfoResponse, StatusResponse
-from orcidlink.lib.config import (ensure_config, get_config, get_service_path,
-                                  get_service_url)
+from orcidlink.lib.config import (config, get_kbase_config, get_service_path, get_service_url)
 from orcidlink.lib.responses import (ErrorException, error_response,
                                      exception_error_response, ui_error_response)
-from orcidlink.lib.storage_model import StorageModel
-from orcidlink.lib.utils import get_kbase_config
+from orcidlink.lib.storage_model import storage_model
+from orcidlink.lib.utils import epoch_time_millis
+from orcidlink.model_types import ORCIDAuth
 from orcidlink.routers import link, linking_sessions, orcid, works
 from orcidlink.routers.linking_sessions import get_linking_session_record
 from orcidlink.service_clients.authclient2 import (KBaseAuthException, KBaseAuthInvalidToken,
@@ -210,6 +209,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 #
 
 
+STARTED = epoch_time_millis()
+
+
 @app.get("/status", response_model=StatusResponse, tags=["misc"])
 async def get_status():
     """
@@ -218,7 +220,10 @@ async def get_status():
     The intention of this endpoint is as a lightweight way to call to ping the
     service, e.g. for health check, latency tests, etc.
     """
-    return StatusResponse(status="ok", time=datetime.now(timezone.utc).isoformat())
+    return StatusResponse(
+        status="ok",
+        start_time=STARTED,
+        time=epoch_time_millis())
 
 
 @app.get("/info", response_model=InfoResponse, tags=["misc"])
@@ -227,10 +232,10 @@ async def get_info():
     Returns basic information about the service and its runtime configuration.
     """
     kbase_sdk_config = get_kbase_config()
-    result = {"kbase_sdk_config": kbase_sdk_config, "config": ensure_config()}
-    result["config"]["env"]["CLIENT_ID"] = "REDACTED"
-    result["config"]["env"]["CLIENT_SECRET"] = "REDACTED"
-    return result
+    config_copy = config().dict()
+    config_copy['module']['CLIENT_ID'] = "REDACTED"
+    config_copy['module']['CLIENT_SECRET'] = "REDACTED"
+    return {"kbase_sdk_config": kbase_sdk_config, "config": config_copy}
     # result = InfoResponse(
     #     kbase_sdk_config=kbase_sdk_config,
     #     config=ensure_config()
@@ -276,12 +281,9 @@ async def custom_swagger_ui_html(req: Request):
     tags=["link"],
 )
 async def continue_linking_session(
-
         request: Request,
-
         kbase_session: str = Cookie(default=None, description="KBase auth token taken from a cookie"),
         kbase_session_backup: str = Cookie(default=None, description="KBase auth token taken from a cookie"),
-
         code: str | None = None,
         state: str | None = None,
         error: str | None = None
@@ -293,7 +295,6 @@ async def continue_linking_session(
     # and we don't have an Authorization header. We don't
     # (necessarily) have an auth cookie.
     # So we use the state to get the session id.
-    print('REQUEST', request.headers)
     if kbase_session is None:
         if kbase_session_backup is None:
             # TODO: this should be our own exception, otherwise it will be caught by
@@ -344,17 +345,18 @@ async def continue_linking_session(
     # Note that the redirect uri below is just for the api - it is not actually used
     # for redirection in this case.
     # TODO: investigate and point to the docs, because this is weird.
+    # TODO: put in orcid client!
     data = {
-        "client_id": get_config(["env", "CLIENT_ID"]),
-        "client_secret": get_config(["env", "CLIENT_SECRET"]),
+        "client_id": config().module.CLIENT_ID,
+        "client_secret": config().module.CLIENT_SECRET,
         "grant_type": "authorization_code",
         "code": code,
         "redirect_uri": f"{get_service_url()}/continue-linking-session",
     }
     response = httpx.post(
-        f'{get_config(["orcid", "oauthBaseURL"])}/token', headers=header, data=data
+        f'{config().orcid.oauthBaseURL}/token', headers=header, data=data
     )
-    orcid_auth = json.loads(response.text)
+    orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
 
     #
     # Now we store the response from ORCID in our session.
@@ -364,9 +366,9 @@ async def continue_linking_session(
 
     # Note that this is approximate, as it uses our time, not the
     # ORCID server time.
-    session_record["orcid_auth"] = orcid_auth
-    model = StorageModel()
-    model.update_linking_session(session_id, session_record)
+    # session_record.orcid_auth = orcid_auth
+    model = storage_model()
+    model.update_linking_session_to_finished(session_id, orcid_auth)
 
     #
     # Redirect back to the orcidlink interface, with some
@@ -374,13 +376,12 @@ async def continue_linking_session(
     #
     params = {}
 
-    if "return_link" in session_record and session_record["return_link"] is not None:
-        params["return_link"] = session_record["return_link"]
+    if session_record.return_link is not None:
+        params["return_link"] = session_record.return_link
 
-    if "skip_prompt" in session_record and session_record["skip_prompt"] is not None:
-        params["skip_prompt"] = session_record["skip_prompt"]
+    params["skip_prompt"] = session_record.skip_prompt
 
     return RedirectResponse(
-        f"{get_config(['kbase', 'uiOrigin'])}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        f"{config().kbase.uiOrigin}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )

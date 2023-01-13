@@ -4,33 +4,16 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from orcidlink.lib import responses
-from orcidlink.lib.responses import ErrorException
+from orcidlink.lib.responses import ErrorException, error_response_not_found
+from test.data.utils import load_data_file
+
+config_yaml = load_data_file('config1.yaml')
 
 
 @pytest.fixture
-def my_config_file(fs):
-    fake_config = """
-kbase:
-  services:
-    Auth2:
-      url: https://ci.kbase.us/services/auth/api/V2/token
-      tokenCacheLifetime: 300000
-      tokenCacheMaxSize: 20000
-    ServiceWizard:
-      url: http://127.0.0.1:9999/services/service_wizard
-  uiOrigin: https://ci.kbase.us
-  defaults:
-    serviceRequestTimeout: 60000
-orcid:
-  oauthBaseURL: https://sandbox.orcid.org/oauth
-  baseURL: https://sandbox.orcid.org
-  apiBaseURL: https://api.sandbox.orcid.org/v3.0
-env:
-  CLIENT_ID: 'REDACTED-CLIENT-ID'
-  CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
-  IS_DYNAMIC_SERVICE: 'yes'
-    """
-    fs.create_file("/kb/module/config/config.yaml", contents=fake_config)
+def fake_fs(fs):
+    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
 
@@ -78,10 +61,31 @@ def test_exception_error_response():
         assert data["title"] == "title"
         assert data["message"] == "I am exceptional"
         assert data["data"]["some"] == "data"
+        assert data["data"]['exception'] == "I am exceptional"
         assert isinstance(data["data"]["traceback"], list)
 
 
-def test_ui_error_response(my_config_file):
+def test_exception_error_response_no_data():
+    try:
+        raise Exception("I am exceptional")
+    except Exception as ex:
+        value = responses.exception_error_response("code", "title", ex, status_code=123)
+        assert isinstance(value, JSONResponse)
+        assert value.status_code == 123
+        # The JSONResponse structure is not in scope for this project; it is simply provided to
+        # fastapi which utilizes it for the response.
+        # Still, the whole point of testing this is to assure ourselves that the response is as we expect,
+        # so ... here we go.
+        assert value.body is not None
+        data = json.loads(value.body)
+        assert data["code"] == "code"
+        assert data["title"] == "title"
+        assert data["message"] == "I am exceptional"
+        assert data["data"]['exception'] == "I am exceptional"
+        assert isinstance(data["data"]["traceback"], list)
+
+
+def test_ui_error_response(fake_fs):
     value = responses.ui_error_response("code", "title", "message")
     assert isinstance(value, RedirectResponse)
     assert value.status_code == 302
@@ -119,9 +123,15 @@ def test_ensure_authorization():
         responses.ensure_authorization(None)
 
 
-def test_text_to_jsonable():
-    value = responses.text_to_jsonable('["hello"]')
-    assert value == ["hello"]
+def test_error_response_not_found():
+    value = error_response_not_found("Foo not found")
 
-    with pytest.raises(ErrorException, match="An error was encountered parsing a string into a jsonable value"):
-        responses.text_to_jsonable("foo")
+    assert isinstance(value, JSONResponse)
+    assert value.status_code == 404
+    # the response body is bytes, which we can convert
+    # back to a dict...
+    body_json = json.loads(value.body)
+    assert isinstance(body_json, dict)
+    assert body_json['code'] == 'not-found'
+    assert body_json['title'] == 'Not Found'
+    assert body_json['message'] == 'Foo not found'

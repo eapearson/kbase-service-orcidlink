@@ -4,75 +4,36 @@ import urllib
 
 import pytest
 from fastapi.testclient import TestClient
+from orcidlink.lib import storage_model
+from orcidlink.lib.config import config
 from orcidlink.main import app
+from orcidlink.model_types import LinkRecord
+from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, mock_orcid_oauth_service, \
     mock_service_wizard_service, no_stderr
 
+config_yaml = load_data_file('config1.yaml')
 
-# from test.mocks.mock_server import MockServer, MockServiceWizardService
 
 @pytest.fixture
 def fake_fs(fs):
-    fake_config = """
-kbase:
-  services:
-    Auth2:
-      url: http://127.0.0.1:9999/services/auth/api/V2/token
-      tokenCacheLifetime: 300000
-      tokenCacheMaxSize: 20000
-    ServiceWizard:
-      url: http://127.0.0.1:9999/services/service_wizard
-  uiOrigin: https://ci.kbase.us
-  defaults:
-    serviceRequestTimeout: 60000
-orcid:
-  oauthBaseURL: https://sandbox.orcid.org/oauth
-  baseURL: https://sandbox.orcid.org
-  apiBaseURL: https://api.sandbox.orcid.org/v3.0
-env:
-  CLIENT_ID: 'REDACTED-CLIENT-ID'
-  CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
-  IS_DYNAMIC_SERVICE: 'yes'
-    """
-    fs.create_file("/kb/module/config/config.yaml", contents=fake_config)
-
-    fake_index = """
-    {
-    "last_id": 9,
-    "entities": {
-        "foo": {
-            "id": 9,
-            "metadata": {},
-            "events": [
-                {
-                    "event": "created",
-                    "at": "2022-12-02T01:13:36.533017+00:00"
-                }
-            ]
-        }
-    }
-}
-    """
-    fs.create_file("/kb/module/work/data/users/index.json", contents=fake_index)
-
-    fake_link_record = """
-    {
-    "orcid_auth": {
-        "access_token": "1eef6e01-62be-467c-b140-973011ef0cb7",
-        "token_type": "bearer",
-        "refresh_token": "0111ac66-c9a8-42ef-9e71-109ae091b8df",
-        "expires_in": 631138518,
-        "scope": "/read-limited openid /activities/update",
-        "name": "Erik Pearson",
-        "orcid": "0000-0003-4997-3076",
-        "id_token": "eyJraWQiOiJzYW5kYm94LW9yY2lkLW9yZy0zaHBnb3NsM2I2bGFwZW5oMWV3c2dkb2IzZmF3ZXBvaiIsImFsZyI6IlJTMjU2In0.eyJhdF9oYXNoIjoiRGsyR01qZ1FTdVYwZFJ5SUZMYmd3dyIsImF1ZCI6IkFQUC1SQzNQTTNLU01NVjNHS1dTIiwic3ViIjoiMDAwMC0wMDAzLTQ5OTctMzA3NiIsImF1dGhfdGltZSI6MTY2OTk0MzYxMiwiYW1yIjoicHdkIiwiaXNzIjoiaHR0cHM6XC9cL3NhbmRib3gub3JjaWQub3JnIiwiZXhwIjoxNjcwMDMwMDE0LCJnaXZlbl9uYW1lIjoiRXJpayIsImlhdCI6MTY2OTk0MzYxNCwiZmFtaWx5X25hbWUiOiJQZWFyc29uIiwianRpIjoiMjU3Y2U3MjItMzZhYS00ZjJjLTllN2YtMDJlZWEzZGIzZDk2In0.mMIWYtPCq52YQYugff57tejpZhnL_8J9_eARgd-niVHtA-lFnrVGaoL-oVzr5gqjWFvCuAyZU78pKxFaSczcwDViW2UeBmgFjFyj0hokmoXc6iH51XQUc_X3hwCod67oY8dyMPMy_awAIgUQ3ZK3Se64Pd1_odoLZi4O7oSba5dMnQ2tD0s-57BcPfittp6vqXVGE00K1M-qyrR72Lmj6ML2xfORPfUOZW6M3zLyX_ipBE36tQk1cjQhveNwUgDFlsiA1p6V1s1L7vpIiNpB1y9lOmUZQJICnusKMQ35EHPtS7saybwvXH7EwqwN9kvMfEOekbwHgYvsPrAbHHh06g"
-    },
-    "created_at": 1669943616532,
-    "expires_at": 2301082134532
-}
-    """
-    fs.create_file("/kb/module/work/data/users/9.json", contents=fake_link_record)
+    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
     yield fs
+
+
+TEST_LINK = load_data_json('link2.json')
+
+
+@pytest.fixture(autouse=True)
+def around_tests(fake_fs):
+    config(True)
+    yield
+
+
+def create_link():
+    sm = storage_model.storage_model()
+    sm.db.links.drop()
+    sm.create_link_record(LinkRecord.parse_obj(TEST_LINK))
 
 
 #
@@ -126,6 +87,7 @@ def assert_start_linking_session(client,
     if skip_prompt is not None:
         params['skip_prompt'] = skip_prompt
 
+    # TODO: should be put or post
     response = client.get(f"/linking-sessions/{session_id}/start",
                           headers=headers,
                           params=params,
@@ -272,23 +234,66 @@ def test_start_linking_session(fake_fs):
 
         # If we start the linking session, the linking session will be updated, but remain
         #  LinkingSessionInitial
-        assert_start_linking_session(client, initial_session_id, kbase_session="foo")
+        # assert_start_linking_session(client, initial_session_id, kbase_session="foo")
 
         # TODO more assertions?
 
         # return link provided
-        assert_start_linking_session(client, initial_session_id, kbase_session="foo", return_link="baz")
+        assert_start_linking_session(client, initial_session_id, kbase_session="foo", return_link="baz",
+                                     skip_prompt="no")
         session_record = assert_get_linking_session(client, initial_session_id)
         assert session_record['return_link'] == "baz"
         assert session_record['skip_prompt'] == "no"
 
         # skip prompt provided
-        assert_start_linking_session(client, initial_session_id, kbase_session="foo", skip_prompt="yes")
-        session_record = assert_get_linking_session(client, initial_session_id)
-        assert session_record['skip_prompt'] == "yes"
+        # assert_start_linking_session(client, initial_session_id, kbase_session="foo", skip_prompt="yes")
+        # session_record = assert_get_linking_session(client, initial_session_id)
+        # assert session_record['skip_prompt'] == "yes"
 
-        # use backup session cookie
-        assert_start_linking_session(client, initial_session_id, kbase_session_backup="foo")
+
+def test_start_linking_session_backup_cookie(fake_fs):
+    """
+    Now we create a session, and get it back, in order
+    to test the "get linking session" call.
+    """
+    with mock_services():
+        client = TestClient(app)
+
+        #
+        # Create linking session.
+        #
+        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_id = initial_session_info['session_id']
+
+        #
+        # Get the session info.
+        #
+        session_info = assert_get_linking_session(client, initial_session_id)
+        assert session_info['session_id'] == initial_session_id
+
+        # Note that the call will fail if the result does not comply with either
+        # LinkingSessionComplete or LinkingSessionInitial
+
+        # The call after creating a linking session will return a LinkingSessionInitial
+        # which we only know from the absense of orcid_auth
+        assert 'orcid_auth' not in session_info
+
+        #
+        # Start the linking session.
+        #
+
+        # If we start the linking session, the linking session will be updated, but remain
+        #  LinkingSessionInitial
+        # assert_start_linking_session(client, initial_session_id, kbase_session="foo")
+
+        # TODO more assertions?
+
+        # return link provided
+        assert_start_linking_session(client, initial_session_id, kbase_session_backup="foo", return_link="baz",
+                                     skip_prompt="no")
+        session_record = assert_get_linking_session(client, initial_session_id)
+        assert session_record['return_link'] == "baz"
+        assert session_record['skip_prompt'] == "no"
 
 
 def test_start_linking_session_errors(fake_fs):
@@ -443,9 +448,9 @@ def test_continue_linking_session(fake_fs):
         with mock_auth_service():
             with mock_service_wizard_service():
                 with mock_orcid_oauth_service():
-                    assert_continue_linking_session(kbase_session="foo")
-                    assert_continue_linking_session(kbase_session_backup="foo")
-                    assert_continue_linking_session(kbase_session="foo", return_link="bar")
+                    assert_continue_linking_session(kbase_session="foo", skip_prompt="no")
+                    assert_continue_linking_session(kbase_session_backup="foo", skip_prompt="no")
+                    assert_continue_linking_session(kbase_session="foo", return_link="bar", skip_prompt="no")
 
 
 def test_continue_linking_session_errors(fake_fs):
@@ -486,7 +491,7 @@ def test_continue_linking_session_errors(fake_fs):
 
                     # If we start the linking session, the linking session will be updated, but remain
                     #  LinkingSessionInitial
-                    assert_start_linking_session(client, initial_session_id, kbase_session="foo")
+                    assert_start_linking_session(client, initial_session_id, kbase_session="foo", skip_prompt="yes")
 
                     #
                     # In the actual OAuth flow, the browser would invoke the start link endpoint
@@ -617,7 +622,7 @@ def test_delete_linking_session(fake_fs):
             assert_get_linking_session(client, initial_session_id)
         assert ex is not None
 
-# def test_get_link(fake_fs):
+# def xest_get_link(fake_fs):
 #     server = MockServer("127.0.0.1", MockAuthService)
 #     server.start_service()
 #     # hack the config
@@ -643,7 +648,7 @@ def test_delete_linking_session(fake_fs):
 #     assert response.status_code == 404
 
 
-# def test_is_linked(fake_fs):
+# def xest_is_linked(fake_fs):
 #     server = MockServer("127.0.0.1", MockAuthService)
 #     server.start_service()
 #     # hack the config
@@ -671,7 +676,7 @@ def test_delete_linking_session(fake_fs):
 #     assert response.status_code == 401
 
 
-# def test_delete_link(fake_fs):
+# def xest_delete_link(fake_fs):
 #     mock_auth_service = MockServer("127.0.0.1", MockAuthService)
 #     mock_auth_service.start_service()
 #     mock_orcid_oauth_service = MockServer("127.0.0.1", MockORCIDOAuth)

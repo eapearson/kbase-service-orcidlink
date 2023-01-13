@@ -31,3 +31,41 @@ Another way of stating this could be that external data is untrusted, internal d
 
 Still, given that one of the purposes of using Python is to create a lower barrier of entry for developer participation, having a gatekeeper for api output serves the same preventative purpose as unit testing ... it makes it harder to emit data that violates the intended kind, whether intentional or not.
 
+## Configuration
+
+Several features require information from the service configuration in order to function. As with all KBase services, this service has a configuration template which is used to generate a configuration file in the context of certain configuration variables.
+
+Overall, however, the following attributes are important for the nature of this service:
+
+- configuration depends on a set of environment variables
+- configuration is required for all api calls to external services
+- configuration is required for usage of the storage mechanism (database)
+
+### Environment Variables
+
+The configuration template (`templates/config.yaml.tmpl`) requires a set of environment variables in order to render to a resulting configuration file.
+
+See [the configuration doc](./configuration.md) for details. 
+
+### External Services
+
+This service contacts the following external services:
+- KBase authentication (auth2)
+- ORCID API
+- ORCID OAuth
+
+Each of these services has its own unique API technique (although all are http-based), types of error handling, and error responses.
+
+Service code should be designed to recognize the fact of an error, unpack the error information, and raise an internal exception object which provides an error as defined by this service, but which captures some or all of the original error information.
+
+Generally the service does not attempt to determine the cause of the external error, but rather capture the error information so that it may be reported back to the user, logged, etc.
+
+In some cases we do need to interpret the nature of the error. 
+
+### Storage Model
+
+The service requires some way of storing data persistently - a temporary linking session and a permanent link record. 
+
+The service was originally developed with a simple file-based storage model, to reduce the number of dependencies and to be able to directly observe the data as it was being populated. However, the mature service uses mongodb, and for a time both mechanisms were supported. In fact, for a time a mock mongo client (`mongomock`) was utilized, we there were three available storage mechanisms. Thus, the `storage model` is actually a shell which returns the desired storage model.
+ 
+Although it is not anticipated that a different storage mechanism will be utilized, the abili

@@ -1,13 +1,14 @@
 import contextlib
 
 import pytest
-from orcidlink.service_clients.ServiceClientBase import ServiceClientBase
+from orcidlink.service_clients.GenericClient import GenericClient
 from orcidlink.service_clients.error import ServiceError
 from test.mocks.mock_contexts import mock_imaginary_service, no_stderr
 
 
-class ImaginaryServiceClient(ServiceClientBase):
-    module = "ImaginaryService"
+class ImaginaryServiceClient(GenericClient):
+    def __init__(self, url=None, token=None, timeout=None):
+        super().__init__(url, "ImaginaryService", token, timeout)
 
     def status(self):
         return self.call_func(

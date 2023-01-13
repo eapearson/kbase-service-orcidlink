@@ -1,3 +1,4 @@
+from orcidlink.lib.config import Config
 from orcidlink.model_types import KBaseSDKConfig
 from pydantic import BaseModel, Field
 
@@ -17,45 +18,47 @@ from pydantic import BaseModel, Field
 #
 class StatusResponse(BaseModel):
     status: str = Field(...)
-    time: str = Field(...)
+    time: int = Field(...)
+    start_time: int = Field(...)
 
 
-class ServiceConfig(BaseModel):
-    url: str = Field(...)
-
-
-class Auth2Config(ServiceConfig):
-    tokenCacheLifetime: int = Field(...)
-    tokenCacheMaxSize: int = Field(...)
-
-
-class ServicesConfig(BaseModel):
-    Auth2: Auth2Config = Field(...)
-    ServiceWizard: ServiceConfig = Field(...)
-
-
-class KBaseConfig(BaseModel):
-    services: ServicesConfig = Field(...)
-    # services: Any
-    uiOrigin: str = Field(...)
-
-
-class ORCIDConfig(BaseModel):
-    oauthBaseURL: str = Field(...)
-    baseURL: str = Field(...)
-    apiBaseURL: str = Field(...)
-
-
-class EnvConfig(BaseModel):
-    CLIENT_ID: str = Field(...)
-    CLIENT_SECRET: str = Field(...)
-    IS_DYNAMIC_SERVICE: str = Field(...)
-
-
-class Config(BaseModel):
-    kbase: KBaseConfig = Field(...)
-    orcid: ORCIDConfig = Field(...)
-    env: EnvConfig = Field(...)
+# class ServiceConfig(BaseModel):
+#     url: str = Field(...)
+#
+#
+# class Auth2Config(ServiceConfig):
+#     tokenCacheLifetime: int = Field(...)
+#     tokenCacheMaxSize: int = Field(...)
+#
+#
+# class ServicesConfig(BaseModel):
+#     Auth2: Auth2Config = Field(...)
+#     ServiceWizard: ServiceConfig = Field(...)
+#
+#
+# class KBaseConfig(BaseModel):
+#     services: ServicesConfig = Field(...)
+#     uiOrigin: str = Field(...)
+#
+#
+# class ORCIDConfig(BaseModel):
+#     oauthBaseURL: str = Field(...)
+#     baseURL: str = Field(...)
+#     apiBaseURL: str = Field(...)
+#
+#
+# class EnvConfig(BaseModel):
+#     CLIENT_ID: str = Field(...)
+#     CLIENT_SECRET: str = Field(...)
+#     IS_DYNAMIC_SERVICE: str = Field(...)
+#     MONGO_USERNAME: str = Field(...)
+#     MONGO_PASSWORD: str = Field(...)
+#
+#
+# class Config(BaseModel):
+#     kbase: KBaseConfig = Field(...)
+#     orcid: ORCIDConfig = Field(...)
+#     env: EnvConfig = Field(...)
 
 
 class InfoResponse(BaseModel):
