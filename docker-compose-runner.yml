@@ -1,0 +1,21 @@
+version: '3.6'
+networks:
+  kbase-dev:
+    name: kbase-dev
+services:
+  orcidlink:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kbase/orcidlink:dev
+    container_name: ORCIDLink
+    volumes:
+      - .:/kb/module
+    networks:
+      - kbase-dev
+    ports:
+      - "5001:5000"
+    environment:
+      - DEV=${DEV:-}
+    entrypoint:
+      - bash

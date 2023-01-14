@@ -12,7 +12,7 @@ Misc variables:
     DEFAULT_CACHE_TTL
 """
 
-from cache3 import SafeCache
+from cache3 import SafeCache  # type: ignore
 from orcidlink.service_clients.GenericClient import GenericClient
 
 # Default lifetime for cached urls is 5 minutes.
@@ -37,16 +37,16 @@ class DynamicServiceClient:
     """
 
     def __init__(
-            self,
-            # required
-            url=None,
-            module=None,
-            timeout=None,
-            # optional
-            token=None,
-            version=None,
-            cache_ttl=DEFAULT_CACHE_TTL,
-            cache_max_size=DEFAULT_CACHE_MAX_SIZE
+        self,
+        # required
+        url=None,
+        module=None,
+        timeout=None,
+        # optional
+        token=None,
+        version=None,
+        cache_ttl=DEFAULT_CACHE_TTL,
+        cache_max_size=DEFAULT_CACHE_MAX_SIZE,
     ):
         #
         # Required parameters
@@ -87,7 +87,9 @@ class DynamicServiceClient:
     def _initialize_cache(self, force=False):
         global GLOBAL_URL_CACHE
         if GLOBAL_URL_CACHE is None or force:
-            GLOBAL_URL_CACHE = SafeCache(max_size=self.cache_max_size, timeout=self.cache_ttl)
+            GLOBAL_URL_CACHE = SafeCache(
+                max_size=self.cache_max_size, timeout=self.cache_ttl
+            )
 
     def _get_url(self, timeout):
         key = f"{self.module_name}:{self.version or 'null'}"

@@ -9,6 +9,8 @@ kbase:
       tokenCacheMaxSize: 20000
     ServiceWizard:
       url: {{ .Env.KBASE_ENDPOINT }}service_wizard/rpc
+    ORCIDLink:
+      url: {{ .Env.KBASE_ENDPOINT }}orcidlink
   # in prod the ui host is narrative.kbase.us, but in all others it
   # is X.kbase.us, where X is ci, next, appdev, narrative-dev
   defaults:

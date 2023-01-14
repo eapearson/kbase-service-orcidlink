@@ -21,7 +21,7 @@ class MockAuthServiceBase(MockService):
                 "apperror": "No authentication token",
                 "message": "10010 No authentication token: No user token provided",
                 "callid": "abc",
-                "time": 123
+                "time": 123,
             }
         }
 
@@ -35,7 +35,7 @@ class MockAuthServiceBase(MockService):
                 "apperror": "Invalid Token",
                 "message": "10020 Invalid Token",
                 "callid": "123",
-                "time": 123
+                "time": 123,
             }
         }
 
@@ -48,7 +48,7 @@ class MockAuthService(MockAuthServiceBase):
     def do_GET(self):
         # TODO: Reminder - switch to normal auth2 endpoint in config and here.
         if self.path == "/services/auth/api/V2/token":
-            authorization = self.headers.get('authorization')
+            authorization = self.headers.get("authorization")
             if authorization is None:
                 self.send_json_error(self.error_no_token())
             else:
@@ -65,12 +65,12 @@ class MockAuthService(MockAuthServiceBase):
                 elif authorization == "exception":
                     self.send_json_error(self.error_no_token())
                 elif authorization == "bad_json":
-                    self.send_text('Bad JSON!')
+                    self.send_text("Bad JSON!")
                 elif authorization == "something_bad":
                     # just do something bad:
                     x = 1 / 0
                     print(x)
                 elif authorization == "internal_server_error":
-                    self.send_text_error('Internal Server Error')
+                    self.send_text_error("Internal Server Error")
                 else:
                     self.send_json_error(self.error_invalid_token())

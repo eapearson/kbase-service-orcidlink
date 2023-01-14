@@ -2,7 +2,11 @@ import contextlib
 
 import pytest
 from orcidlink.service_clients.GenericClient import GenericClient
-from orcidlink.service_clients.error import INVALID_PARAMS, METHOD_NOT_FOUND, ServiceError
+from orcidlink.service_clients.error import (
+    INVALID_PARAMS,
+    METHOD_NOT_FOUND,
+    ServiceError,
+)
 from test.mocks.mock_contexts import mock_jsonrpc11_service, no_stderr
 
 
@@ -14,11 +18,7 @@ def mock_services():
 
 
 def test_constructor():
-    client = GenericClient(
-        module="foo",
-        url="bar",
-        timeout=1
-    )
+    client = GenericClient(module="foo", url="bar", timeout=1)
     assert client is not None
 
 
@@ -28,79 +28,47 @@ def test_constructor_errors():
         assert ex is not None
 
     with pytest.raises(TypeError) as ex:
-        GenericClient(
-            module="foo"
-        )
+        GenericClient(module="foo")
 
     with pytest.raises(TypeError) as ex:
-        GenericClient(
-            module="foo",
-            url="bar"
-        )
+        GenericClient(module="foo", url="bar")
 
     with pytest.raises(TypeError) as ex:
-        GenericClient(
-            module="foo",
-            timeout=1
-        )
+        GenericClient(module="foo", timeout=1)
 
     with pytest.raises(TypeError) as ex:
-        GenericClient(
-            url="bar"
-        )
+        GenericClient(url="bar")
 
     with pytest.raises(TypeError) as ex:
-        GenericClient(
-            url="bar",
-            timeout=1
-        )
+        GenericClient(url="bar", timeout=1)
 
     with pytest.raises(TypeError) as ex:
-        GenericClient(
-            timeout=1
-        )
+        GenericClient(timeout=1)
 
 
 def test_call_func():
     with mock_services() as url:
-        client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token=None
-        )
-        result = client.call_func("foo", params={
-            "foo": "bar"
-        })
+        client = GenericClient(module="MyServiceModule", url=url, timeout=1, token=None)
+        result = client.call_func("foo", params={"foo": "bar"})
         assert result is not None
         assert isinstance(result, dict)
-        assert 'result'
-        assert result['bar'] == 'baz'
+        assert "result"
+        assert result["bar"] == "baz"
 
 
 def test_call_func_no_params():
     with mock_services() as url:
-        client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token=None
-        )
+        client = GenericClient(module="MyServiceModule", url=url, timeout=1, token=None)
         result = client.call_func("no_params")
         assert result is not None
         assert isinstance(result, dict)
-        assert 'result'
-        assert result['bar'] == 'baz'
+        assert "result"
+        assert result["bar"] == "baz"
 
 
 def test_call_func_no_params_has_params():
     with mock_services() as url:
-        client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token=None
-        )
+        client = GenericClient(module="MyServiceModule", url=url, timeout=1, token=None)
         # with pytest.raises(ServiceError, match="Invalid params") as ex:
         #     client.call_func("no_params", {"foo": "bar"})
         # assert ex.value.code == INVALID_PARAMS
@@ -116,16 +84,9 @@ def test_call_func_no_params_has_params():
 
 def test_call_func_method_not_found():
     with mock_services() as url:
-        client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token=None
-        )
+        client = GenericClient(module="MyServiceModule", url=url, timeout=1, token=None)
         with pytest.raises(ServiceError) as ex:
-            client.call_func("fooey", params={
-                "foo": "bar"
-            })
+            client.call_func("fooey", params={"foo": "bar"})
 
         assert ex.value.code == METHOD_NOT_FOUND
         assert ex.value.message == "Method not found"
@@ -134,10 +95,7 @@ def test_call_func_method_not_found():
 def test_call_func_with_authorization():
     with mock_services() as url:
         client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token="mytoken"
+            module="MyServiceModule", url=url, timeout=1, token="mytoken"
         )
         # Honestly, there is no way to tell if a service which
         # accepts authorization got it ... other than its behavior
@@ -152,10 +110,7 @@ def test_call_func_with_authorization():
 def test_call_func_with_authorization_invalid():
     with mock_services() as url:
         client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token="mytokenx"
+            module="MyServiceModule", url=url, timeout=1, token="mytokenx"
         )
         # Honestly, there is no way to tell if a service which
         # accepts authorization got it ... other than its behavior
@@ -242,45 +197,35 @@ def test_call_func_error_returns_json_text():
 
 def test_call_func_empty_result():
     """
-     When a service method has no results to return, an empty list is used.
-     This is nice, because it allows the result to be truly void.
-     The caller should just ignore the result, but it is returned as null (None)
-     in the client (to be consistent with the next case -- actually
-     returning null!)
+    When a service method has no results to return, an empty list is used.
+    This is nice, because it allows the result to be truly void.
+    The caller should just ignore the result, but it is returned as null (None)
+    in the client (to be consistent with the next case -- actually
+    returning null!)
     """
 
     with mock_services() as url:
-        client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token=None
-        )
+        client = GenericClient(module="MyServiceModule", url=url, timeout=1, token=None)
         result = client.call_func("empty_result")
         assert result is None
 
 
 def test_call_func_null_result():
     """
-     Similar to the above case, but some service methods, and the SDK-based apps in general,
-     will return `null` rather than `[]`.
+    Similar to the above case, but some service methods, and the SDK-based apps in general,
+    will return `null` rather than `[]`.
     """
 
     with mock_services() as url:
-        client = GenericClient(
-            module="MyServiceModule",
-            url=url,
-            timeout=1,
-            token=None
-        )
+        client = GenericClient(module="MyServiceModule", url=url, timeout=1, token=None)
         result = client.call_func("null_result")
         assert result is None
 
 
 def test_call_func_invalid_result():
     """
-     Similar to the above case, but some service methods, and the SDK-based apps in general,
-     will return `null` rather than `[]`.
+    Similar to the above case, but some service methods, and the SDK-based apps in general,
+    will return `null` rather than `[]`.
     """
 
     with mock_services() as url:
@@ -297,8 +242,8 @@ def test_call_func_invalid_result():
 
 def test_call_func_connection_error():
     """
-     Similar to the above case, but some service methods, and the SDK-based apps in general,
-     will return `null` rather than `[]`.
+    Similar to the above case, but some service methods, and the SDK-based apps in general,
+    will return `null` rather than `[]`.
     """
     client = GenericClient(
         module="MyServiceModule",
@@ -315,8 +260,8 @@ def test_call_func_connection_error():
 
 def test_call_func_timeout_error():
     """
-     Similar to the above case, but some service methods, and the SDK-based apps in general,
-     will return `null` rather than `[]`.
+    Similar to the above case, but some service methods, and the SDK-based apps in general,
+    will return `null` rather than `[]`.
     """
     with mock_services() as url:
         client = GenericClient(

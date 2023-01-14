@@ -4,9 +4,10 @@ The SDK version has been modified to integrate with this codebase, such as
 using httpx, pydantic models.
 """
 import json
+from typing import Optional
 
 import httpx
-from cache3 import SafeCache
+from cache3 import SafeCache  # type: ignore
 from pydantic import BaseModel, Field
 
 global_cache = None
@@ -28,28 +29,33 @@ class KBaseAuth(object):
     A very basic KBase auth client for the Python server.
     """
 
-    def __init__(self,
-                 auth_url: str = None,
-                 cache_max_size: int = None,
-                 cache_lifetime: int = None):
+    def __init__(
+        self,
+        auth_url: Optional[str] = None,
+        cache_max_size: Optional[int] = None,
+        cache_lifetime: Optional[int] = None,
+    ):
         """
         Constructor
         """
         if auth_url is None:
             raise TypeError("missing required named argument 'auth_url'")
+        self.auth_url: str = auth_url
 
         if cache_max_size is None:
             raise TypeError("missing required named argument 'cache_max_size'")
+        self.cache_max_size: int = cache_max_size
 
         if cache_lifetime is None:
             raise TypeError("missing required named argument 'cache_lifetime'")
-
-        self.auth_url = auth_url
+        self.cache_lifetime: int = cache_lifetime
 
         global global_cache
 
         if global_cache is None:
-            global_cache = SafeCache(max_size=cache_max_size, timeout=cache_lifetime)
+            global_cache = SafeCache(
+                max_size=self.cache_max_size, timeout=self.cache_lifetime
+            )
 
         self.cache = global_cache
 
@@ -60,7 +66,9 @@ class KBaseAuth(object):
 
         # TODO: timeout needs to be configurable
         try:
-            response = httpx.get(self.auth_url, headers={"authorization": token}, timeout=10000)
+            response = httpx.get(
+                self.auth_url, headers={"authorization": token}, timeout=10000
+            )
             # except httpx.HTTPStatusError:
             #     # Note that here we are raising the default exception for the
             #     # httpx library in the case that a deep internal server error
@@ -86,11 +94,11 @@ class KBaseAuth(object):
         if not response.is_success:
             # The auth service should return a 500 for all errors
             # Make an attempt to handle a specific auth error
-            appcode = json_response['error']['appcode']
+            appcode = json_response["error"]["appcode"]
             if appcode == 10020:
-                raise KBaseAuthInvalidToken('Invalid token')
+                raise KBaseAuthInvalidToken("Invalid token")
             else:
-                raise KBaseAuthException(json_response['error']['message'])
+                raise KBaseAuthException(json_response["error"]["message"])
 
         token_info = TokenInfo.parse_obj(json_response)
         self.cache.set(token, token_info)
@@ -110,6 +118,7 @@ class KBaseAuthMissingToken(KBaseAuthException):
 
 class KBaseAuthInvalidToken(KBaseAuthException):
     pass
+
 
 # class KBaseAuthException(Exception):
 #     def __init__(self, code: int, message: str, long_message: str):

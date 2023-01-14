@@ -7,7 +7,7 @@ from orcidlink.lib import responses
 from orcidlink.lib.responses import ErrorException, error_response_not_found
 from test.data.utils import load_data_file
 
-config_yaml = load_data_file('config1.yaml')
+config_yaml = load_data_file("config1.yaml")
 
 
 @pytest.fixture
@@ -36,7 +36,9 @@ def test_make_error():
 
 
 def test_error_response():
-    value = responses.error_response("code", "title", "message", data={"some": "data"}, status_code=123)
+    value = responses.error_response(
+        "code", "title", "message", data={"some": "data"}, status_code=123
+    )
     assert isinstance(value, JSONResponse)
     assert value.status_code == 123
     # The JSONResponse structure is not in scope for this project; it is simply provided to
@@ -48,7 +50,9 @@ def test_exception_error_response():
     try:
         raise Exception("I am exceptional")
     except Exception as ex:
-        value = responses.exception_error_response("code", "title", ex, data={"some": "data"}, status_code=123)
+        value = responses.exception_error_response(
+            "code", "title", ex, data={"some": "data"}, status_code=123
+        )
         assert isinstance(value, JSONResponse)
         assert value.status_code == 123
         # The JSONResponse structure is not in scope for this project; it is simply provided to
@@ -61,7 +65,7 @@ def test_exception_error_response():
         assert data["title"] == "title"
         assert data["message"] == "I am exceptional"
         assert data["data"]["some"] == "data"
-        assert data["data"]['exception'] == "I am exceptional"
+        assert data["data"]["exception"] == "I am exceptional"
         assert isinstance(data["data"]["traceback"], list)
 
 
@@ -81,7 +85,7 @@ def test_exception_error_response_no_data():
         assert data["code"] == "code"
         assert data["title"] == "title"
         assert data["message"] == "I am exceptional"
-        assert data["data"]['exception'] == "I am exceptional"
+        assert data["data"]["exception"] == "I am exceptional"
         assert isinstance(data["data"]["traceback"], list)
 
 
@@ -89,9 +93,9 @@ def test_ui_error_response(fake_fs):
     value = responses.ui_error_response("code", "title", "message")
     assert isinstance(value, RedirectResponse)
     assert value.status_code == 302
-    assert 'location' in value.headers
-    assert value.headers.get('location').endswith('#orcidlink/error')
-    url = urlparse(value.headers.get('location'))
+    assert "location" in value.headers
+    assert value.headers.get("location").endswith("#orcidlink/error")
+    url = urlparse(value.headers.get("location"))
     assert url.scheme == "https"
     assert url.path == ""
     assert url.hostname == "ci.kbase.us"
@@ -108,7 +112,9 @@ def test_ui_error_response(fake_fs):
 
 def test_make_error_exception():
     with pytest.raises(ErrorException, match="message") as ex:
-        raise responses.make_error_exception("code", "title", "message", data={"foo": "bar"}, status_code=123)
+        raise responses.make_error_exception(
+            "code", "title", "message", data={"foo": "bar"}, status_code=123
+        )
 
     response = ex.value.get_response()
     assert response is not None
@@ -119,7 +125,9 @@ def test_ensure_authorization():
     value = responses.ensure_authorization("foo")
     assert value == "foo"
 
-    with pytest.raises(ErrorException, match="API call requires a KBase auth token") as ex:
+    with pytest.raises(
+        ErrorException, match="API call requires a KBase auth token"
+    ) as ex:
         responses.ensure_authorization(None)
 
 
@@ -132,6 +140,6 @@ def test_error_response_not_found():
     # back to a dict...
     body_json = json.loads(value.body)
     assert isinstance(body_json, dict)
-    assert body_json['code'] == 'not-found'
-    assert body_json['title'] == 'Not Found'
-    assert body_json['message'] == 'Foo not found'
+    assert body_json["code"] == "not-found"
+    assert body_json["title"] == "Not Found"
+    assert body_json["message"] == "Foo not found"

@@ -8,11 +8,15 @@ from orcidlink.main import app
 from orcidlink.model_types import LinkRecord, ORCIDProfile
 from orcidlink.routers.orcid import orcid_profile_to_normalized
 from test.data.utils import load_data_file, load_data_json, load_test_data
-from test.mocks.mock_contexts import mock_auth_service, mock_orcid_api_service, no_stderr
+from test.mocks.mock_contexts import (
+    mock_auth_service,
+    mock_orcid_api_service,
+    no_stderr,
+)
 
 client = TestClient(app)
 
-config_yaml = load_data_file('config1.yaml')
+config_yaml = load_data_file("config1.yaml")
 
 
 @pytest.fixture
@@ -22,7 +26,7 @@ def fake_fs(fs):
     yield fs
 
 
-TEST_LINK = load_data_json('link2.json')
+TEST_LINK = load_data_json("link2.json")
 
 
 @contextlib.contextmanager
@@ -49,22 +53,27 @@ def create_link():
 # Tests
 #
 
+
 def test_router_profile_to_normalized():
-    orcid_id = '0000-0003-4997-3076'
-    raw_profile = load_test_data('orcid', 'profile')
-    model_profile = load_test_data('orcid', 'profile-model')
-    email = load_test_data('orcid', 'email')
-    assert orcid_profile_to_normalized(orcid_id, raw_profile, email).dict() == ORCIDProfile.parse_obj(
-        model_profile).dict()
+    orcid_id = "0000-0003-4997-3076"
+    raw_profile = load_test_data("orcid", "profile")
+    model_profile = load_test_data("orcid", "profile-model")
+    email = load_test_data("orcid", "email")
+    assert (
+        orcid_profile_to_normalized(orcid_id, raw_profile, email).dict()
+        == ORCIDProfile.parse_obj(model_profile).dict()
+    )
 
 
 def test_router_profile_to_normalized_single_affiliation():
-    orcid_id = '0000-0003-4997-3076'
-    raw_profile = load_test_data('orcid', 'profile-single-affiliation')
-    model_profile = load_test_data('orcid', 'profile-model-single-affiliation')
-    email = load_test_data('orcid', 'email')
-    assert orcid_profile_to_normalized(orcid_id, raw_profile, email).dict() == ORCIDProfile.parse_obj(
-        model_profile).dict()
+    orcid_id = "0000-0003-4997-3076"
+    raw_profile = load_test_data("orcid", "profile-single-affiliation")
+    model_profile = load_test_data("orcid", "profile-model-single-affiliation")
+    email = load_test_data("orcid", "email")
+    assert (
+        orcid_profile_to_normalized(orcid_id, raw_profile, email).dict()
+        == ORCIDProfile.parse_obj(model_profile).dict()
+    )
 
 
 # def test_get_profile():
@@ -86,13 +95,15 @@ def test_router_profile_to_normalized_single_affiliation():
 def test_get_profile(fake_fs):
     with mock_services():
         create_link()
-        response = TestClient(app).get("/orcid/profile",
-                                       headers={"Authorization": "foo"})
+        response = TestClient(app).get(
+            "/orcid/profile", headers={"Authorization": "foo"}
+        )
         assert response.status_code == 200
 
 
 def test_get_profile_not_found(fake_fs):
     with mock_services():
-        response = TestClient(app).get("/orcid/profile",
-                                       headers={"Authorization": "bar"})
+        response = TestClient(app).get(
+            "/orcid/profile", headers={"Authorization": "bar"}
+        )
         assert response.status_code == 404

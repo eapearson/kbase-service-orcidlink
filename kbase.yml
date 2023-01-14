@@ -15,4 +15,4 @@ owners:
   [ eapearson ]
 
 service-config:
-  dynamic-service: true
+  dynamic-service: false

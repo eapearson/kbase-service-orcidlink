@@ -7,9 +7,13 @@ from orcidlink.lib import storage_model
 from orcidlink.main import app
 from orcidlink.model_types import LinkRecord
 from test.data.utils import load_data_file, load_data_json
-from test.mocks.mock_contexts import mock_auth_service, mock_orcid_api_service, no_stderr
+from test.mocks.mock_contexts import (
+    mock_auth_service,
+    mock_orcid_api_service,
+    no_stderr,
+)
 
-config_yaml = load_data_file('config1.yaml')
+config_yaml = load_data_file("config1.yaml")
 
 
 @pytest.fixture
@@ -19,7 +23,7 @@ def fake_fs(fs):
     yield fs
 
 
-TEST_LINK = load_data_json('link1.json')
+TEST_LINK = load_data_json("link1.json")
 
 TEST_LINK = {
     "orcid_auth": {
@@ -30,11 +34,11 @@ TEST_LINK = {
         "scope": "/read-limited openid /activities/update",
         "name": "Foo bar",
         "orcid": "0000-0003-4997-3076",
-        "id_token": "id-token"
+        "id_token": "id-token",
     },
     "created_at": 1669943616532,
     "expires_at": 2301082134532,
-    "username": "foo"
+    "username": "foo",
 }
 
 
@@ -58,12 +62,11 @@ def test_get_work(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.get(f"/works/{put_code}",
-                              headers={"Authorization": "foo"})
+        response = client.get(f"/works/{put_code}", headers={"Authorization": "foo"})
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
-        assert work['putCode'] == '1526002'
+        assert work["putCode"] == "1526002"
 
 
 def test_get_work_errors(fake_fs):
@@ -71,44 +74,37 @@ def test_get_work_errors(fake_fs):
         client = TestClient(app)
 
         #
-        # An unlinked user gets a 404 from us.
+        # An unlinked user gets a 422, since fastapi validates the url param
+        # and it should be int.
         #
-        response = client.get(f"/works/bar",
-                              headers={"Authorization": "bar"}
-                              )
-        assert response.status_code == 404
+        response = client.get(f"/works/bar", headers={"Authorization": "bar"})
+        assert response.status_code == 422
 
         #
         # An api misuse which penetrates the call; ideally
         # there should not be anything like this.
         # In this case, the mock orcid server is set up
-        # to return a 200 text response for the "bar" putCode, which
+        # to return a 200 text response for the "123" putCode, which
         # triggers a parse error.
         #
-        response = client.get(f"/works/bar",
-                              headers={"Authorization": "foo"}
-                              )
+        response = client.get(f"/works/123", headers={"Authorization": "foo"})
         assert response.status_code == 400
 
         #
         # A bad put code results in a 400 from ORCID
         #
-        response = client.get(f"/works/foo",
-                              headers={"Authorization": "foo"}
-                              )
+        response = client.get(f"/works/456", headers={"Authorization": "foo"})
         assert response.status_code == 400
         error = response.json()
-        assert error['data']['originalStatusCode'] == 400
-        assert error['data']['originalResponseJSON']['error-code'] == 9006
+        assert error["data"]["originalStatusCode"] == 400
+        assert error["data"]["originalResponseJSON"]["error-code"] == 9006
 
 
 def test_get_works(fake_fs):
     with mock_services():
         create_link()
         client = TestClient(app)
-        response = client.get(f"/works",
-                              headers={"Authorization": "foo"}
-                              )
+        response = client.get(f"/works", headers={"Authorization": "foo"})
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, list)
@@ -122,22 +118,8 @@ def test_get_works_errors(fake_fs):
         #
         # An unlinked user gets a 404 from us.
         #
-        response = client.get(f"/works",
-                              headers={"Authorization": "bar"}
-                              )
+        response = client.get(f"/works", headers={"Authorization": "bar"})
         assert response.status_code == 404
-
-        #
-        # An api misuse which penetrates the call; ideally
-        # there should not be anything like this.
-        # In this case, the mock orcid server is set up
-        # to return a 200 text response for the "bar" putCode, which
-        # triggers a parse error.
-        #
-        # response = client.get(f"/works",
-        #                       headers={"Authorization": "foo"}
-        #                       )
-        # assert response.status_code == 400
 
 
 # TODO: left off here, copied from test_get_work - added work_1526002_normalized.json to
@@ -165,18 +147,19 @@ def test_create_work(fake_fs):
                     "type": "doi",
                     "value": "123",
                     "url": "https://example.com",
-                    "relationship": "self"
+                    "relationship": "self",
                 }
-            ]
+            ],
         }
-        response = client.post("/works",
-                               headers={"Authorization": "foo"},
-                               content=json.dumps(new_work_data)
-                               )
+        response = client.post(
+            "/works",
+            headers={"Authorization": "foo"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
-        assert work['putCode'] == '1526002'
+        assert work["putCode"] == "1526002"
 
 
 def test_create_work_errors(fake_fs):
@@ -198,9 +181,9 @@ def test_create_work_errors(fake_fs):
                     "type": "doi",
                     "value": "123",
                     "url": "https://example.com",
-                    "relationship": "self"
+                    "relationship": "self",
                 }
-            ]
+            ],
         }
         # client.headers['authorization'] = 'foo'
         # response = client.post(f"/works",
@@ -214,37 +197,41 @@ def test_create_work_errors(fake_fs):
 
         # Error: link_record not found
         # client.headers['authorization'] = 'bar'
-        response = client.post(f"/works",
-                               headers={"Authorization": "bar"},
-                               content=json.dumps(new_work_data)
-                               )
+        response = client.post(
+            f"/works",
+            headers={"Authorization": "bar"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 404
 
         # Error: exception saving work record to orcid; i.e.
         # thrown by the http call.
-        new_work_data['title'] = "trigger-http-exception"
-        response = client.post(f"/works",
-                               headers={"Authorization": "foo"},
-                               content=json.dumps(new_work_data)
-                               )
+        new_work_data["title"] = "trigger-http-exception"
+        response = client.post(
+            f"/works",
+            headers={"Authorization": "foo"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 400
 
         # Error: 500 returned from orcid
         # Invoke this with a special put code
-        new_work_data['title'] = "trigger-500"
-        response = client.post(f"/works",
-                               headers={"Authorization": "foo"},
-                               content=json.dumps(new_work_data)
-                               )
+        new_work_data["title"] = "trigger-500"
+        response = client.post(
+            f"/works",
+            headers={"Authorization": "foo"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 500
         # assert response.text == "AN ERROR"
 
         # Error: Any other non-200 returned from orcid
-        new_work_data['title'] = "trigger-400"
-        response = client.post(f"/works",
-                               headers={"Authorization": "foo"},
-                               content=json.dumps(new_work_data)
-                               )
+        new_work_data["title"] = "trigger-400"
+        response = client.post(
+            f"/works",
+            headers={"Authorization": "foo"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 400
 
 
@@ -267,7 +254,7 @@ def test_save_work(fake_fs):
                     "type": "doi",
                     "value": "123",
                     "url": "https://example.com",
-                    "relationship": "self"
+                    "relationship": "self",
                 },
                 # adds an extra one
                 # TODO: should model differnt relationship
@@ -277,18 +264,19 @@ def test_save_work(fake_fs):
                     "type": "doi",
                     "value": "1234",
                     "url": "https://example.com",
-                    "relationship": "self"
-                }
-            ]
+                    "relationship": "self",
+                },
+            ],
         }
-        response = client.put(f"/works",
-                              headers={"Authorization": "foo"},
-                              content=json.dumps(new_work_data)
-                              )
+        response = client.put(
+            f"/works",
+            headers={"Authorization": "foo"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
-        assert work['putCode'] == '1526002'
+        assert work["putCode"] == "1526002"
 
 
 def test_save_work_errors(fake_fs):
@@ -308,14 +296,15 @@ def test_save_work_errors(fake_fs):
                     "type": "doi",
                     "value": "123",
                     "url": "https://example.com",
-                    "relationship": "self"
+                    "relationship": "self",
                 }
-            ]
+            ],
         }
-        response = client.put(f"/works",
-                              headers={"Authorization": "bar"},
-                              content=json.dumps(new_work_data)
-                              )
+        response = client.put(
+            f"/works",
+            headers={"Authorization": "bar"},
+            content=json.dumps(new_work_data),
+        )
         assert response.status_code == 404
 
 
@@ -324,10 +313,8 @@ def test_delete_work(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.delete(f"/works/{put_code}",
-                                 headers={"Authorization": "foo"}
-                                 )
+        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
         assert response.status_code == 200
         result = response.json()
         assert isinstance(result, dict)
-        assert result['ok'] is True
+        assert result["ok"] is True

@@ -7,16 +7,23 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import RedirectResponse
 from orcidlink.api_types import InfoResponse, StatusResponse
-from orcidlink.lib.config import (config, get_kbase_config, get_service_path, get_service_url)
-from orcidlink.lib.responses import (ErrorException, error_response,
-                                     exception_error_response, ui_error_response)
+from orcidlink.lib.config import config, get_kbase_config
+from orcidlink.lib.responses import (
+    ErrorException,
+    error_response,
+    exception_error_response,
+    ui_error_response,
+)
 from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.utils import epoch_time_millis
-from orcidlink.model_types import ORCIDAuth
+from orcidlink.model_types import LinkingSessionStarted, ORCIDAuth
 from orcidlink.routers import link, linking_sessions, orcid, works
 from orcidlink.routers.linking_sessions import get_linking_session_record
-from orcidlink.service_clients.authclient2 import (KBaseAuthException, KBaseAuthInvalidToken,
-                                                   KBaseAuthMissingToken)
+from orcidlink.service_clients.authclient2 import (
+    KBaseAuthException,
+    KBaseAuthInvalidToken,
+    KBaseAuthMissingToken,
+)
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -35,17 +42,12 @@ Once connected, *ORCID Link* enables certain integrations, including:
 """
 
 tags_metadata = [
-    {
-        "name": "misc",
-        "description": "Miscellaneous operations"},
+    {"name": "misc", "description": "Miscellaneous operations"},
     {
         "name": "link",
         "description": "Add and remove KBase-ORCID linking; includes OAuth integration and API",
     },
-    {
-        "name": "orcid",
-        "description": "Direct access to ORCID via ORCID Link"
-    },
+    {"name": "orcid", "description": "Direct access to ORCID via ORCID Link"},
     {
         "name": "works",
         "description": "Add, remove, update 'works' records for a user's ORCID Account",
@@ -97,11 +99,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         "requestParametersInvalid",
         "Request Parameters Invalid",
         "This request does not comply with the schema for this endpoint",
-        data={
-            "detail": exc.errors(),
-            "body": exc.body
-        },
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        data={"detail": exc.errors(), "body": exc.body},
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    )
 
 
 #
@@ -118,7 +118,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 @app.exception_handler(KBaseAuthInvalidToken)
-async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
+async def kbase_auth_invalid_token_handler(
+    request: Request, exc: KBaseAuthMissingToken
+):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
     return exception_error_response(
@@ -163,7 +165,7 @@ async def internal_server_error_handler(request: Request, exc: Exception):
         "internalServerError",
         "Internal Server Error",
         exc,
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
 
@@ -220,10 +222,7 @@ async def get_status():
     The intention of this endpoint is as a lightweight way to call to ping the
     service, e.g. for health check, latency tests, etc.
     """
-    return StatusResponse(
-        status="ok",
-        start_time=STARTED,
-        time=epoch_time_millis())
+    return StatusResponse(status="ok", start_time=STARTED, time=epoch_time_millis())
 
 
 @app.get("/info", response_model=InfoResponse, tags=["misc"])
@@ -233,8 +232,8 @@ async def get_info():
     """
     kbase_sdk_config = get_kbase_config()
     config_copy = config().dict()
-    config_copy['module']['CLIENT_ID'] = "REDACTED"
-    config_copy['module']['CLIENT_SECRET'] = "REDACTED"
+    config_copy["module"]["CLIENT_ID"] = "REDACTED"
+    config_copy["module"]["CLIENT_SECRET"] = "REDACTED"
     return {"kbase_sdk_config": kbase_sdk_config, "config": config_copy}
     # result = InfoResponse(
     #     kbase_sdk_config=kbase_sdk_config,
@@ -251,8 +250,14 @@ async def custom_swagger_ui_html(req: Request):
     """
     Provides a web interface to the auto-generated API docs.
     """
-    root_path = get_service_path()
-    openapi_url = root_path + app.openapi_url
+    if app.openapi_url is None:
+        return ui_error_response(
+            "docs.no_url",
+            "No DOCS URL",
+            "The 'openapi_url' is 'None'",
+        )
+
+    openapi_url = config().kbase.services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",
@@ -281,12 +286,15 @@ async def custom_swagger_ui_html(req: Request):
     tags=["link"],
 )
 async def continue_linking_session(
-        request: Request,
-        kbase_session: str = Cookie(default=None, description="KBase auth token taken from a cookie"),
-        kbase_session_backup: str = Cookie(default=None, description="KBase auth token taken from a cookie"),
-        code: str | None = None,
-        state: str | None = None,
-        error: str | None = None
+    kbase_session: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    kbase_session_backup: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
 ):
     """
     The redirect endpoint for the ORCID OAuth flow we use for linking.
@@ -335,6 +343,14 @@ async def continue_linking_session(
 
     session_record = get_linking_session_record(session_id, authorization)
 
+    # if 'skip_prompt' not in session_record:
+    if not isinstance(session_record, LinkingSessionStarted):
+        return ui_error_response(
+            "linking_session.wrong_state",
+            "Linking Error",
+            "The session is not in 'started' state",
+        )
+
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
@@ -351,10 +367,10 @@ async def continue_linking_session(
         "client_secret": config().module.CLIENT_SECRET,
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": f"{get_service_url()}/continue-linking-session",
+        "redirect_uri": f"{config().kbase.services.ORCIDLink.url}/continue-linking-session",
     }
     response = httpx.post(
-        f'{config().orcid.oauthBaseURL}/token', headers=header, data=data
+        f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
     )
     orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
 

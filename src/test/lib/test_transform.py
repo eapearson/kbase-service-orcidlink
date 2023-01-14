@@ -12,17 +12,33 @@ def load_test_data(filename: str):
 
 # Test raw_work_to_work when we have the API running and can generate some test data.
 
+
 def test_parse_date():
     assert parse_date("2000") == {"year": {"value": "2000"}}
     assert parse_date("2000/1") == {"year": {"value": "2000"}, "month": {"value": "01"}}
-    assert parse_date("2000/12") == {"year": {"value": "2000"}, "month": {"value": "12"}}
-    assert parse_date("2000/1/2") == {"year": {"value": "2000"}, "month": {"value": "01"}, "day": {"value": "02"}}
-    assert parse_date("2000/12/3") == {"year": {"value": "2000"}, "month": {"value": "12"}, "day": {"value": "03"}}
-    assert parse_date("2000/12/34") == {"year": {"value": "2000"}, "month": {"value": "12"}, "day": {"value": "34"}}
+    assert parse_date("2000/12") == {
+        "year": {"value": "2000"},
+        "month": {"value": "12"},
+    }
+    assert parse_date("2000/1/2") == {
+        "year": {"value": "2000"},
+        "month": {"value": "01"},
+        "day": {"value": "02"},
+    }
+    assert parse_date("2000/12/3") == {
+        "year": {"value": "2000"},
+        "month": {"value": "12"},
+        "day": {"value": "03"},
+    }
+    assert parse_date("2000/12/34") == {
+        "year": {"value": "2000"},
+        "month": {"value": "12"},
+        "day": {"value": "34"},
+    }
 
 
 def test_raw_work_to_work():
-    test_work = load_test_data('work_1526002')
-    test_work_transformed = load_test_data('work_1526002_transformed')
+    test_work = load_test_data("work_1526002")
+    test_work_transformed = load_test_data("work_1526002_transformed")
     value = raw_work_to_work(test_work)
     assert value == test_work_transformed

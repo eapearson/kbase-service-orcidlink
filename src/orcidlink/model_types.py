@@ -62,6 +62,7 @@ class SessionInfo(BaseModel):
 
 # The Link itself
 
+
 class LinkRecord(BaseModel):
     username: str = Field(...)
     created_at: int = Field(...)
@@ -80,19 +81,20 @@ class LinkRecordPublic(BaseModel):
 
 
 class KBaseServiceConfig(BaseModel):
-    dynamic_service: bool = Field(..., alias='dynamic-service')
+    dynamic_service: bool = Field(..., alias="dynamic-service")
 
 
 class KBaseSDKConfig(BaseModel):
-    module_name: str = Field(..., alias='module-name')
-    module_description: str = Field(..., alias='module-description')
-    service_language: str = Field(..., alias='service-language')
-    module_version: str = Field(..., alias='module-version')
+    module_name: str = Field(..., alias="module-name")
+    module_description: str = Field(..., alias="module-description")
+    service_language: str = Field(..., alias="service-language")
+    module_version: str = Field(..., alias="module-version")
     owners: List[str] = Field(...)
-    service_config: KBaseServiceConfig = Field(..., alias='service-config')
+    service_config: KBaseServiceConfig = Field(..., alias="service-config")
 
 
 # API
+
 
 class ORCIDWork(BaseModel):
     putCode: str = Field(...)

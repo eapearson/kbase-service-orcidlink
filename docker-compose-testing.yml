@@ -1,0 +1,47 @@
+version: '3.6'
+networks:
+  kbase-dev:
+    name: kbase-dev
+services:
+  orcidlink:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: kbase/orcidlink:dev
+
+    container_name: ORCIDLink
+    # We like to use the service module name here.
+    hostname: ORCIDLink
+    dns: 8.8.8.8
+    volumes:
+      # Update this to wherever you want VS Code to mount the folder of your project
+      - .:/kb/module
+    networks:
+      - kbase-dev
+    ports:
+      - "5001:5000"
+    environment:
+      - DEV=${DEV:-}
+      - KBASE_ENDPOINT=${KBASE_ENDPOINT}
+      - KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID=FOO
+      - KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET=BAR
+      - KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE=${KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE}
+      - KBASE_SECURE_CONFIG_PARAM_MONGO_USERNAME=${KBASE_SECURE_CONFIG_PARAM_MONGO_USERNAME}
+      - KBASE_SECURE_CONFIG_PARAM_MONGO_PASSWORD=${KBASE_SECURE_CONFIG_PARAM_MONGO_PASSWORD}
+    depends_on:
+      - mongo
+    entrypoint:
+      - bash
+  mongo:
+    image: mongo
+    restart: always
+    networks:
+      - kbase-dev
+    volumes:
+      - ./scripts/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev_root
+      MONGO_INITDB_ROOT_PASSWORD: dev_r00t

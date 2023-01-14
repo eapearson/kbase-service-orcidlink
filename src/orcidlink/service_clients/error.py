@@ -1,24 +1,33 @@
+from typing import Any, Optional
+
+
 class ServiceError(Exception):
     """
     A general purpose exception mechanism mirroring the
     """
 
-    def __init__(self, code: int = None, name: str = None, message: str = None, data: str = None):
+    def __init__(
+        self,
+        code: Optional[int] = None,
+        name: Optional[str] = None,
+        message: Optional[str] = None,
+        data: Optional[Any] = None,
+    ):
         super().__init__(message)
         if code is None:
             raise ValueError('The "code" named argument is required')
-        self.code = code
+        self.code: int = code
 
         if name is None:
             raise ValueError('The "name" named argument is required')
-        self.name = name
+        self.name: str = name
 
         if message is None:
             raise ValueError('The "message" named argument is required')
-        self.message = message
+        self.message: str = message
 
         # Data is optional.
-        self.data = data
+        self.data: Any = data
 
 
 # Standard JSON-RPC 2.0 errors

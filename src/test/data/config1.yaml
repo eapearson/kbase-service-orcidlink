@@ -6,6 +6,8 @@ kbase:
       tokenCacheMaxSize: 20000
     ServiceWizard:
       url: http://127.0.0.1:9999/services/service_wizard
+    ORCIDLink:
+      url: http://127.0.0.1:9999/services/orcidlink
   uiOrigin: https://ci.kbase.us
   defaults:
     serviceRequestTimeout: 60000

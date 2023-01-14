@@ -31,30 +31,42 @@ def set_prop(value, path: List[str | int], new_value):
     for name in head:
         if isinstance(temp, dict):
             if name not in temp:
-                raise ValueError(f"Cannot set prop; cannot get path element '{name}' in dict")
+                raise ValueError(
+                    f"Cannot set prop; cannot get path element '{name}' in dict"
+                )
             temp = temp.get(name)
         elif isinstance(temp, list):
             if isinstance(name, int):
                 if name >= len(temp) or name < 0:
-                    raise ValueError(f"Cannot set prop; cannot get path element '{name}' in array")
+                    raise ValueError(
+                        f"Cannot set prop; cannot get path element '{name}' in array"
+                    )
                 temp = temp[name]
             else:
-                raise ValueError(f"Cannot set prop; path element '{name}' is not int for array")
+                raise ValueError(
+                    f"Cannot set prop; path element '{name}' is not int for array"
+                )
         else:
             raise ValueError("Cannot set prop; reached leaf too early")
 
     # should be on a leaf node. what is it?
     if isinstance(temp, dict):
         if tail not in temp:
-            raise ValueError(f"Cannot set prop; cannot get leaf element '{tail}' in dict")
+            raise ValueError(
+                f"Cannot set prop; cannot get leaf element '{tail}' in dict"
+            )
         temp[tail] = new_value
     elif isinstance(temp, list):
         if isinstance(tail, int):
             if tail >= len(temp) or tail < 0:
-                raise ValueError(f"Cannot set prop; cannot get leaf element '{tail}' in array")
+                raise ValueError(
+                    f"Cannot set prop; cannot get leaf element '{tail}' in array"
+                )
             temp[tail] = new_value
         else:
-            raise ValueError(f"Cannot set prop; leaf path element '{tail}' is not int for array")
+            raise ValueError(
+                f"Cannot set prop; leaf path element '{tail}' is not int for array"
+            )
     else:
         raise ValueError("Cannot set prop; leaf is not a dict or list")
 
@@ -89,7 +101,9 @@ def epoch_time_millis():
     return int(epoch_time * 1000)
 
 
-def make_date(year: int | None = None, month: int | None = None, day: int | None = None):
+def make_date(
+    year: int | None = None, month: int | None = None, day: int | None = None
+):
     if year is not None:
         if month is not None:
             if day is not None:

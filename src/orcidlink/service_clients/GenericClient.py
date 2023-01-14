@@ -70,7 +70,10 @@ class GenericClient(object):
         # to this method.
         try:
             response = httpx.post(
-                self.url, headers=header, content=json.dumps(call_params), timeout=timeout
+                self.url,
+                headers=header,
+                content=json.dumps(call_params),
+                timeout=timeout,
             )
         except httpx.ReadTimeout as rte:
             raise ServiceError(
@@ -121,7 +124,7 @@ class GenericClient(object):
                                 "headers": header,
                                 "decoding_error": str(err),
                                 "response_text": response.content,
-                                "status_code": response.status_code
+                                "status_code": response.status_code,
                             },
                         )
                     else:
@@ -235,6 +238,6 @@ class GenericClient(object):
                         "headers": header,
                         "response_text": response.content,
                         "status_code": response.status_code,
-                        "content_type": response.headers.get("content-type")
+                        "content_type": response.headers.get("content-type"),
                     },
                 )

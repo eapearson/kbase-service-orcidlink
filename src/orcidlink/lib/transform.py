@@ -62,29 +62,15 @@ def raw_work_to_work(work_summary):
 def parse_date(date_string):
     date_parts = date_string.split("/")
     if len(date_parts) == 1:
-        return {
-            "year": {
-                "value": date_parts[0]
-            }
-        }
+        return {"year": {"value": date_parts[0]}}
     elif len(date_parts) == 2:
         return {
-            "year": {
-                "value": date_parts[0]
-            },
-            "month": {
-                "value": date_parts[1].rjust(2, "0")
-            }
+            "year": {"value": date_parts[0]},
+            "month": {"value": date_parts[1].rjust(2, "0")},
         }
     elif len(date_parts) == 3:
         return {
-            "year": {
-                "value": date_parts[0]
-            },
-            "month": {
-                "value": date_parts[1].rjust(2, "0")
-            },
-            "day": {
-                "value": date_parts[2].rjust(2, "0")
-            },
+            "year": {"value": date_parts[0]},
+            "month": {"value": date_parts[1].rjust(2, "0")},
+            "day": {"value": date_parts[2].rjust(2, "0")},
         }

@@ -4,7 +4,12 @@ import os
 from orcidlink.lib import config
 from test.mocks.mock_auth import MockAuthService
 from test.mocks.mock_imaginary_service import MockImaginaryService
-from test.mocks.mock_orcid import MockORCIDAPI, MockORCIDAPIWithErrors, MockORCIDOAuth, MockORCIDOAuth2
+from test.mocks.mock_orcid import (
+    MockORCIDAPI,
+    MockORCIDAPIWithErrors,
+    MockORCIDOAuth,
+    MockORCIDOAuth2,
+)
 from test.mocks.mock_server import MockSDKJSON11Service, MockServer
 from test.mocks.mock_service_wizard_service import MockServiceWizardService
 

@@ -1,6 +1,11 @@
 from fastapi import APIRouter
-from orcidlink.lib.responses import AUTHORIZATION_HEADER, AUTH_RESPONSES, STD_RESPONSES, ensure_authorization, \
-    error_response
+from orcidlink.lib.responses import (
+    AUTHORIZATION_HEADER,
+    AUTH_RESPONSES,
+    STD_RESPONSES,
+    ensure_authorization,
+    error_response,
+)
 from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.transform import raw_work_to_work
 from orcidlink.lib.utils import get_int_prop, get_raw_prop, get_string_prop
@@ -27,7 +32,9 @@ from orcidlink.service_clients.auth import get_username
 router = APIRouter(prefix="/orcid", responses={404: {"description": "Not found"}})
 
 
-def orcid_profile_to_normalized(orcid_id: str, profile_json, email_json) -> ORCIDProfile:
+def orcid_profile_to_normalized(
+    orcid_id: str, profile_json, email_json
+) -> ORCIDProfile:
     emails = get_raw_prop(email_json, ["email"])
     email_addresses = []
     for email in emails:
@@ -110,6 +117,15 @@ def orcid_profile_to_normalized(orcid_id: str, profile_json, email_json) -> ORCI
     )
 
 
+# GET_PROFILE_RESPONSES: ResponseMapping = {
+#     404: {"description": "User not linked or ORCID profile not available."},
+#     200: {"description": ""}
+# }
+
+
+# GET_PROFILE_RESPONSES | AUTH_RESPONSES | STD_RESPONSES
+
+
 @router.get(
     "/profile",
     response_model=ORCIDProfile,
@@ -118,12 +134,11 @@ def orcid_profile_to_normalized(orcid_id: str, profile_json, email_json) -> ORCI
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         404: {"description": "User not linked or ORCID profile not available."},
-        200: {"description": ""}
+        200: {"description": ""},
     }
+    # responses={**GET_PROFILE_RESPONSES, **AUTH_RESPONSES, **STD_RESPONSES}
 )
-async def get_profile(
-        authorization: str | None = AUTHORIZATION_HEADER
-):
+async def get_profile(authorization: str | None = AUTHORIZATION_HEADER):
     """
     Get the ORCID profile for the user associated with the current auth token.
 
@@ -138,7 +153,9 @@ async def get_profile(
     model = storage_model()
     user_link_record = model.get_link_record(username)
     if user_link_record is None:
-        return error_response("notfound", "Not Found", "User link record not found", status_code=404)
+        return error_response(
+            "notfound", "Not Found", "User link record not found", status_code=404
+        )
 
     # Extract our simplified, flattened form of the profile.
     access_token = user_link_record.orcid_auth.access_token

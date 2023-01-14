@@ -4,8 +4,13 @@ from typing import List, Optional
 import httpx
 from fastapi import APIRouter, HTTPException, Header, Path
 from orcidlink.lib.config import config
-from orcidlink.lib.responses import (ErrorException, ErrorResponse, ensure_authorization,
-                                     error_response, make_error_exception)
+from orcidlink.lib.responses import (
+    ErrorException,
+    ErrorResponse,
+    ensure_authorization,
+    error_response,
+    make_error_exception,
+)
 from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.transform import parse_date, raw_work_to_work
 from orcidlink.lib.utils import get_raw_prop, get_string_prop
@@ -13,11 +18,9 @@ from orcidlink.model_types import ExternalId, LinkRecord, ORCIDWork, SimpleSucce
 from orcidlink.service_clients.ORCIDClient import orcid_api, orcid_api_url
 from orcidlink.service_clients.auth import get_username
 from pydantic import BaseModel, Field
+from starlette.responses import JSONResponse
 
-router = APIRouter(
-    prefix="/works",
-    responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/works", responses={404: {"description": "Not found"}})
 
 
 class WorkUpdate(BaseModel):
@@ -43,17 +46,17 @@ class NewWork(BaseModel):
 # Utils
 #
 
-def get_orcid_auth(kbase_token: str) -> Optional[LinkRecord]:
+
+def get_link_record(kbase_token: str) -> Optional[LinkRecord]:
     username = get_username(kbase_token)
     model = storage_model()
     return model.get_link_record(username)
-    # return get_link_record(username)
 
 
-# def get_link_record(username: str) -> LinkRecord:
-#     model = storage_model()
-#     user_record = model.get_user_record(username)
-#     return user_record
+def link_record_not_found() -> JSONResponse:
+    return error_response(
+        "notFound", "Not Found", "ORCID link record not found for user", status_code=404
+    )
 
 
 #
@@ -72,37 +75,45 @@ def get_orcid_auth(kbase_token: str) -> Optional[LinkRecord]:
         401: {"description": "Token missing or invalid"},
         404: {"description": "Link not available for this user"},
         # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
-        422: {"description": "Either input or output data does not comply with the API schema", "model": ErrorResponse}
-    }
+        422: {
+            "description": "Either input or output data does not comply with the API schema",
+            "model": ErrorResponse,
+        },
+    },
 )
 async def get_work(
-        put_code: str = Path(description="The ORCID `put code` for the work record to fetch"),
-        authorization: str | None = Header(default=None, description="Kbase auth token")):
+    put_code: int = Path(
+        description="The ORCID `put code` for the work record to fetch"
+    ),
+    authorization: str | None = Header(default=None, description="Kbase auth token"),
+):
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
     """
     authorization = ensure_authorization(authorization)
 
-    user_record = get_orcid_auth(authorization)
+    link_record = get_link_record(authorization)
 
-    if user_record is None:
-        return error_response("notFound", "Not Found", "User link record not found", status_code=404)
+    if link_record is None:
+        return link_record_not_found()
 
-    token = user_record.orcid_auth.access_token
-    orcid_id = user_record.orcid_auth.orcid
+    token = link_record.orcid_auth.access_token
+    orcid_id = link_record.orcid_auth.orcid
 
     try:
         raw_work = orcid_api(token).get_work(orcid_id, put_code)
-        hmm = raw_work_to_work(raw_work['bulk'][0]['work'])
+        hmm = raw_work_to_work(raw_work["bulk"][0]["work"])
         return hmm
     except ErrorException as errx:
         return errx.get_response()
     except Exception as ex:
-        raise make_error_exception("upstreamError", "Error", "Exception calling ORCID endpoint",
-                                   status_code=400,
-                                   data={
-                                       "exception": str(ex)
-                                   })
+        raise make_error_exception(
+            "upstreamError",
+            "Error",
+            "Exception calling ORCID endpoint",
+            status_code=400,
+            data={"exception": str(ex)},
+        )
 
 
 @router.get(
@@ -113,29 +124,32 @@ async def get_work(
         401: {"description": "Token missing or invalid"},
         404: {"description": "Link not available for this user"},
         # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
-        422: {"description": "Either input or output data does not comply with the API schema", "model": ErrorResponse}
-    }
+        422: {
+            "description": "Either input or output data does not comply with the API schema",
+            "model": ErrorResponse,
+        },
+    },
 )
 async def get_works(
-        authorization: str | None = Header(default=None, description="Kbase auth token")
+    authorization: str | None = Header(default=None, description="Kbase auth token")
 ):
     """
     Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
     """
     authorization = ensure_authorization(authorization)
 
-    link_record = get_orcid_auth(authorization)
+    link_record = get_link_record(authorization)
 
     if link_record is None:
-        return error_response("notFound", "Not Linked", "No link record was found for this user", status_code=404)
+        return link_record_not_found()
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
 
     full_result = orcid_api(token).get_works(orcid_id)
     result = []
-    for group in full_result['group']:
-        result.append(raw_work_to_work(group['work-summary'][0]))
+    for group in full_result["group"]:
+        result.append(raw_work_to_work(group["work-summary"][0]))
 
     return result
 
@@ -148,22 +162,25 @@ async def get_works(
         401: {"description": "Token missing or invalid"},
         404: {"description": "Link not available for this user"},
         # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
-        422: {"description": "Either input or output data does not comply with the API schema", "model": ErrorResponse}
-    })
+        422: {
+            "description": "Either input or output data does not comply with the API schema",
+            "model": ErrorResponse,
+        },
+    },
+)
 async def save_work(
-        work_update: WorkUpdate,
-        authorization: str | None = Header(default=None, description="Kbase auth token")
+    work_update: WorkUpdate,
+    authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
     """
     Update a work record; the `work_update` contains the `put code`.
     """
     authorization = ensure_authorization(authorization)
 
-    link_record = get_orcid_auth(authorization)
+    link_record = get_link_record(authorization)
 
     if link_record is None:
-        return error_response("notFound", "User link record not found", "No link record was found for this user",
-                              status_code=404)
+        return link_record_not_found()
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -179,7 +196,7 @@ async def save_work(
     # First, get the work record.
     #
     response = orcid_api(token).get_work(orcid_id, put_code)
-    work_record = response['bulk'][0]['work']
+    work_record = response["bulk"][0]["work"]
 
     #
     # TODO: detected error (status code) HERE
@@ -242,15 +259,18 @@ async def save_work(
 
 @router.delete("/{put_code}", response_model=SimpleSuccess, tags=["works"])
 async def delete_work(
-        put_code: str,
-        authorization: str | None = Header(default=None, description="Kbase auth token")
+    put_code: str,
+    authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
     authorization = ensure_authorization(authorization)
 
-    user_record = get_orcid_auth(authorization)
+    link_record = get_link_record(authorization)
 
-    token = user_record.orcid_auth.access_token
-    orcid_id = user_record.orcid_auth.orcid
+    if link_record is None:
+        return link_record_not_found()
+
+    token = link_record.orcid_auth.access_token
+    orcid_id = link_record.orcid_auth.orcid
 
     header = {
         "Accept": "application/vnd.orcid+json",
@@ -264,14 +284,14 @@ async def delete_work(
 
 @router.post("", response_model=ORCIDWork, tags=["works"])
 async def create_work(
-        new_work: NewWork,
-        authorization: str | None = Header(default=None)
+    new_work: NewWork, authorization: str | None = Header(default=None)
 ):
-    link_record = get_orcid_auth(authorization)
+    authorization = ensure_authorization(authorization)
+
+    link_record = get_link_record(authorization)
 
     if link_record is None:
-        return error_response("notFound", "User link record not found", "No link record was found for this user",
-                              status_code=404)
+        return link_record_not_found()
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -284,16 +304,17 @@ async def create_work(
         "title": {"title": {"value": new_work.title}},
         "journal-title": {"value": new_work.journal},
         "publication-date": {},
-        "url": {"value": new_work.url},
-        "external-ids": {"external-id": []}
+        "url": {"value": new_work.url}
+        # "external-ids": {"external-id": []}
     }
 
     if new_work.date is not None:
         work_record["publication-date"] = parse_date(new_work.date)
 
     if new_work.externalIds is not None:
+        external_ids: List[dict] = []
         for index, externalId in enumerate(new_work.externalIds):
-            work_record["external-ids"]["external-id"].append(
+            external_ids.append(
                 {
                     "external-id-type": externalId.type,
                     "external-id-value": externalId.value,
@@ -301,6 +322,9 @@ async def create_work(
                     "external-id-relationship": externalId.relationship,
                 }
             )
+        # NOTE: yes, it is odd that "external-ids" takes a single property
+        # "external-id" which itself is the collection of external ids!
+        work_record["external-ids"] = {"external-id": external_ids}
 
     url = orcid_api_url(f"{orcid_id}/works")
     header = {
@@ -312,33 +336,44 @@ async def create_work(
     # wrap this common use case into a function or class.
     timeout = config().kbase.defaults.serviceRequestTimeout / 1000
     try:
-        response = httpx.post(url,
-                              timeout=timeout,
-                              headers=header,
-                              content=json.dumps({"bulk": [{"work": work_record}]}))
+        response = httpx.post(
+            url,
+            timeout=timeout,
+            headers=header,
+            content=json.dumps({"bulk": [{"work": work_record}]}),
+        )
     except httpx.HTTPError as ex:
-        raise HTTPException(400, {
-            "code": "foo",
-            "message": "An error was encountered saving the work record",
-            "description": str(ex)
-        })
+        raise HTTPException(
+            400,
+            {
+                "code": "foo",
+                "message": "An error was encountered saving the work record",
+                "description": str(ex),
+            },
+        )
     if response.status_code == 200:
         json_response = json.loads(response.text)
         # TODO: handle errors here; they are not always
-        new_work_record = raw_work_to_work(get_raw_prop(json_response, ["bulk", 0, "work"]))
+        new_work_record = raw_work_to_work(
+            get_raw_prop(json_response, ["bulk", 0, "work"])
+        )
         return new_work_record
     else:
         if response.status_code == 500:
-            raise HTTPException(500, {
-                "code": "internalserver",
-                "message": "Internal Server Error",
-                "data": {
-                    "responseText": response.text
-                }
-            })
+            raise HTTPException(
+                500,
+                {
+                    "code": "internalserver",
+                    "message": "Internal Server Error",
+                    "data": {"responseText": response.text},
+                },
+            )
         error = json.loads(response.text)
-        raise HTTPException(400, {
-            "code": "fastapi",
-            "message": get_string_prop(error, ["user-message"]),
-            "data": error
-        })
+        raise HTTPException(
+            400,
+            {
+                "code": "fastapi",
+                "message": get_string_prop(error, ["user-message"]),
+                "data": error,
+            },
+        )

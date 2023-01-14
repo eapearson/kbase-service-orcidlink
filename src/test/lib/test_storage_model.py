@@ -5,7 +5,7 @@ from orcidlink.lib.storage_model_mongo import StorageModelMongo
 from orcidlink.model_types import LinkRecord, LinkingSessionInitial, ORCIDAuth
 from test.data.utils import load_data_file, load_data_json
 
-config_yaml = load_data_file('config1.yaml')
+config_yaml = load_data_file("config1.yaml")
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_constructor_errors(temp_config):
 # User records
 #
 
-EXAMPLE_LINK_RECORD_1 = load_data_json('link3.json')
+EXAMPLE_LINK_RECORD_1 = load_data_json("link3.json")
 
 
 def test_create_link_record(fake_fs):
@@ -89,13 +89,15 @@ def test_delete_link_record(fake_fs):
 # LInking session records
 #
 
-EXAMPLE_LINKING_SESSION_RECORD_1 = load_data_json('linking_session_record2.json')
+EXAMPLE_LINKING_SESSION_RECORD_1 = load_data_json("linking_session_record2.json")
 
 
 def test_create_linking_session(fake_fs):
     sm = storage_model()
     sm.reset_database()
-    sm.create_linking_session(LinkingSessionInitial.parse_obj(EXAMPLE_LINKING_SESSION_RECORD_1))
+    sm.create_linking_session(
+        LinkingSessionInitial.parse_obj(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
     record = sm.get_linking_session("bar")
     assert record is not None
     assert record.session_id == "bar"
@@ -104,7 +106,9 @@ def test_create_linking_session(fake_fs):
 def test_save_linking_record(fake_fs):
     sm = storage_model()
     sm.reset_database()
-    sm.create_linking_session(LinkingSessionInitial.parse_obj(EXAMPLE_LINKING_SESSION_RECORD_1))
+    sm.create_linking_session(
+        LinkingSessionInitial.parse_obj(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
     record = sm.get_linking_session("bar")
     assert record is not None
     assert record.session_id == "bar"
@@ -124,7 +128,7 @@ def test_save_linking_record(fake_fs):
         scope="d",
         name="e",
         orcid="f",
-        id_token="g"
+        id_token="g",
     )
 
     sm.update_linking_session_to_finished("bar", orcid_auth)
@@ -136,7 +140,9 @@ def test_save_linking_record(fake_fs):
 def test_delete_linking_record(fake_fs):
     sm = storage_model()
     sm.reset_database()
-    sm.create_linking_session(LinkingSessionInitial.parse_obj(EXAMPLE_LINKING_SESSION_RECORD_1))
+    sm.create_linking_session(
+        LinkingSessionInitial.parse_obj(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
     record = sm.get_linking_session("bar")
     assert record is not None
     assert record.session_id == "bar"

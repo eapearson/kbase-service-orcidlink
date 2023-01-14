@@ -19,13 +19,25 @@ default: compile
 all: compile build # build-startup-script build-executable-script build-test-script
 
 compile:
-	kb-sdk compile $(SPEC_FILE) \
-		--out $(LIB_DIR) \
-		--pysrvname $(SERVICE_CAPS).$(SERVICE_CAPS)Server \
-		--pyimplname $(SERVICE_CAPS).$(SERVICE_CAPS)Impl;
+	# kb-sdk compile $(SPEC_FILE) \
+	#		--out $(LIB_DIR) \
+	#		--pysrvname $(SERVICE_CAPS).$(SERVICE_CAPS)Server \
+	#		--pyimplname $(SERVICE_CAPS).$(SERVICE_CAPS)Impl;
 
 build:
 	chmod +x $(SCRIPTS_DIR)/entrypoint.sh
+
+run-mypy:
+	bash scripts/run-dev-mypy.sh
+
+run-tests:
+	bash scripts/run-dev-tests.sh
+
+black-check:
+	bash scripts/run-dev-black.sh check src
+
+black-format:
+	bash scripts/run-dev-black.sh format $1
 
 # build-executable-script:
 # 	mkdir -p $(LBIN_DIR)

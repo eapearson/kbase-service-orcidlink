@@ -3,7 +3,7 @@ from orcidlink.service_clients import auth
 from test.data.utils import load_data_file
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
-config_yaml = load_data_file('config1.yaml')
+config_yaml = load_data_file("config1.yaml")
 
 
 @pytest.fixture

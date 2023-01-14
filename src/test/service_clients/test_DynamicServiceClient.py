@@ -4,7 +4,11 @@ import time
 import pytest
 from orcidlink.service_clients.DynamicServiceClient import DynamicServiceClient
 from orcidlink.service_clients.error import SERVER_ERROR_MIN
-from test.mocks.mock_contexts import mock_imaginary_service, mock_service_wizard_service, no_stderr
+from test.mocks.mock_contexts import (
+    mock_imaginary_service,
+    mock_service_wizard_service,
+    no_stderr,
+)
 from test.mocks.mock_server import MockServer
 from test.mocks.mock_service_wizard_service import MockServiceWizardService
 
@@ -48,12 +52,7 @@ def test_DynamicServiceClient_constructor():
 def test_DynamicServiceClient_lookup_url():
     with mock_services() as url:
         client = DynamicServiceClient(
-            url=url,
-            timeout=1,
-            module="ORCIDLink",
-            version="dev",
-            token=None
-
+            url=url, timeout=1, module="ORCIDLink", version="dev", token=None
         )
         client._initialize_cache(force=True)
 
@@ -88,7 +87,7 @@ def test_DynamicServiceClient_lookup_url_with_ttl():
             module="ORCIDLink",
             version="dev",
             token=None,
-            cache_ttl=1
+            cache_ttl=1,
         )
         client._initialize_cache(force=True)
 
@@ -119,35 +118,46 @@ def test_DynamicServiceClient_lookup_url_with_ttl():
 def test_DynamicServiceClient_call_func():
     with no_stderr():
         with mock_imaginary_service() as [_, mock_imaginary_service_class, url]:
+
             class MockServiceWizardService2(MockServiceWizardService):
-                def send_service_status(self, method: str, module_name: str, version: str | None):
+                def send_service_status(
+                    self, method: str, module_name: str, version: str | None
+                ):
                     if module_name == "ImaginaryService":
                         if version == "dev" or version is None:
                             self.increment_method_call_count(method, "success")
-                            self.send_json(self.success_response({
-                                "git_commit_hash": "HASH",
-                                "status": "active",
-                                "hash": "HASH",
-                                "release_tags": [
-                                    "dev"
-                                ],
-                                "url": url,
-                                "module_name": "ImaginaryService",
-                                "health": "healthy",
-                                "up": 1
-                            }))
+                            self.send_json(
+                                self.success_response(
+                                    {
+                                        "git_commit_hash": "HASH",
+                                        "status": "active",
+                                        "hash": "HASH",
+                                        "release_tags": ["dev"],
+                                        "url": url,
+                                        "module_name": "ImaginaryService",
+                                        "health": "healthy",
+                                        "up": 1,
+                                    }
+                                )
+                            )
                         else:
                             self.increment_method_call_count(method, "error")
-                            self.send_json(self.error_response(
-                                SERVER_ERROR_MIN, "Server error",
-                                message="'No module version found that matches your criteria!'"
-                            ))
+                            self.send_json(
+                                self.error_response(
+                                    SERVER_ERROR_MIN,
+                                    "Server error",
+                                    message="'No module version found that matches your criteria!'",
+                                )
+                            )
                     else:
                         self.increment_method_call_count(method, "error")
-                        self.send_json(self.error_response(
-                            SERVER_ERROR_MIN, "Server error",
-                            message="'Module cannot be found based on module_name or git_url parameters.'"
-                        ))
+                        self.send_json(
+                            self.error_response(
+                                SERVER_ERROR_MIN,
+                                "Server error",
+                                message="'Module cannot be found based on module_name or git_url parameters.'",
+                            )
+                        )
 
             service_wizard_server = MockServer("127.0.0.1", MockServiceWizardService2)
             try:
@@ -160,7 +170,7 @@ def test_DynamicServiceClient_call_func():
                     timeout=1,
                     module="ImaginaryService",
                     version="dev",
-                    token=None
+                    token=None,
                 )
 
                 result = client.call_func("status")

@@ -3,28 +3,40 @@ import uuid
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Cookie, HTTPException, Query, responses
-from orcidlink.lib.config import config, get_service_url
+from orcidlink.lib.config import config
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
-from orcidlink.lib.responses import AUTHORIZATION_HEADER, AUTH_RESPONSES, STD_RESPONSES, ensure_authorization, \
-    success_response_no_data
+from orcidlink.lib.responses import (
+    AUTHORIZATION_HEADER,
+    AUTH_RESPONSES,
+    STD_RESPONSES,
+    ensure_authorization,
+    error_response,
+    success_response_no_data,
+)
 from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.utils import current_time_millis
-from orcidlink.model_types import LinkRecord, LinkingSessionComplete, LinkingSessionInitial, LinkingSessionStarted, \
-    SimpleSuccess
+from orcidlink.model_types import (
+    LinkRecord,
+    LinkingSessionComplete,
+    LinkingSessionInitial,
+    LinkingSessionStarted,
+    SimpleSuccess,
+)
 from orcidlink.service_clients.ORCIDClient import AuthorizeParams
 from orcidlink.service_clients.auth import get_username
 from pydantic import BaseModel, Field
 
 router = APIRouter(
-    prefix="/linking-sessions",
-    responses={404: {"description": "Not found"}}
+    prefix="/linking-sessions", responses={404: {"description": "Not found"}}
 )
 
 
 ##
 # Convenience functions
 #
-def get_linking_session_record(session_id: str, authorization: str) -> LinkingSessionInitial | LinkingSessionStarted:
+def get_linking_session_record(
+    session_id: str, authorization: str
+) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete:
     username = get_username(authorization)
 
     model = storage_model()
@@ -32,10 +44,10 @@ def get_linking_session_record(session_id: str, authorization: str) -> LinkingSe
     session_record = model.get_linking_session(session_id)
 
     if session_record is None:
-        raise HTTPException(404, 'Linking session not found')
+        raise HTTPException(404, "Linking session not found")
 
     if not session_record.username == username:
-        raise HTTPException(403, 'Username does not match linking session')
+        raise HTTPException(403, "Username does not match linking session")
 
     return session_record
 
@@ -44,15 +56,19 @@ def get_linking_session_record(session_id: str, authorization: str) -> LinkingSe
 # Commonly used fields
 #
 SESSION_ID_FIELD = Field(..., description="The linking session id")
-RETURN_LINK_QUERY = Query(default=None,
-                          description="A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url")
-SKIP_PROMPT_QUERY = Query(default=None,
-                          description="Whether to prompt for confirmation of linking; setting")
+RETURN_LINK_QUERY = Query(
+    default=None,
+    description="A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url",
+)
+SKIP_PROMPT_QUERY = Query(
+    default=None, description="Whether to prompt for confirmation of linking; setting"
+)
 
 
 #
 # The initial call to create a linking session.
 #
+
 
 class CreateLinkingSessionResult(BaseModel):
     session_id: str = Field(...)
@@ -65,12 +81,11 @@ class CreateLinkingSessionResult(BaseModel):
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        201: {"description": "The linking session has been successfully created"}
+        201: {"description": "The linking session has been successfully created"},
     },
-    tags=["link"])
-async def create_linking_session(
-        authorization: str | None = AUTHORIZATION_HEADER
-):
+    tags=["link"],
+)
+async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADER):
     """
     Creates a new "linking session"; resulting in a linking session created in the database, and the id for it
     returned for usage in an interactive linking session.
@@ -87,7 +102,7 @@ async def create_linking_session(
         session_id=session_id,
         username=username,
         created_at=created_at,
-        expires_at=expires_at
+        expires_at=expires_at,
     )
     model = storage_model()
     model.create_linking_session(linking_record)
@@ -104,22 +119,23 @@ async def create_linking_session(
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        302: {
-            "description": "Redirect to ORCID if a valid linking session"
-        },
+        302: {"description": "Redirect to ORCID if a valid linking session"},
         404: {
             "description": "Response when a linking session not found for the supplied session id"
-        }
+        },
     },
-    tags=["link"]
+    tags=["link"],
 )
 async def start_linking_session(
-        session_id: str = SESSION_ID_FIELD,
-        return_link: str | None = RETURN_LINK_QUERY,
-        skip_prompt: str = SKIP_PROMPT_QUERY,
-        kbase_session: str = Cookie(default=None, description="KBase auth token taken from a cookie"),
-        kbase_session_backup: str = Cookie(default=None, description="KBase auth token taken from a cookie"),
-
+    session_id: str = SESSION_ID_FIELD,
+    return_link: str | None = RETURN_LINK_QUERY,
+    skip_prompt: str = SKIP_PROMPT_QUERY,
+    kbase_session: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    kbase_session_backup: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
 ):
     """
     Starts a "linking session", an interactive OAuth flow the end result of which is an access_token stored at
@@ -177,9 +193,9 @@ async def start_linking_session(
         client_id=config().module.CLIENT_ID,
         response_type="code",
         scope=scope,
-        redirect_uri=f"{get_service_url()}/continue-linking-session",
+        redirect_uri=f"{config().kbase.services.ORCIDLink.url}/continue-linking-session",
         prompt="login",
-        state=json.dumps({"session_id": session_id})
+        state=json.dumps({"session_id": session_id}),
     )
     url = f"{config().orcid.oauthBaseURL}/authorize?{urlencode(params.dict())}"
     return responses.RedirectResponse(url, status_code=302)
@@ -196,21 +212,28 @@ async def start_linking_session(
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        200: {"description": "The linking session has been finished successfully"}
+        200: {"description": "The linking session has been finished successfully"},
     },
-    tags=["link"]
+    tags=["link"],
 )
 async def finish_linking_session(
-        session_id: str = SESSION_ID_FIELD,
-        authorization: str | None = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
 ):
     """
     The final stage of the interactive linking session; called when the user confirms the creation
     of the link, after OAuth flow has finished.
     """
-    ensure_authorization(authorization)
+    authorization = ensure_authorization(authorization)
 
     session_record = get_linking_session_record(session_id, authorization)
+
+    if not isinstance(session_record, LinkingSessionComplete):
+        return error_response(
+            "invalidState",
+            "Invalid Linking Session State",
+            "The linking session must be in 'complete' state, but is not",
+            status_code=400,
+        )
 
     username = get_username(authorization)
     created_at = current_time_millis()
@@ -221,7 +244,7 @@ async def finish_linking_session(
         username=username,
         orcid_auth=session_record.orcid_auth,
         created_at=created_at,
-        expires_at=expires_at
+        expires_at=expires_at,
     )
     model.create_link_record(link_record)
 
@@ -236,53 +259,24 @@ async def finish_linking_session(
 
 @router.get(
     "/{session_id}",
-    response_model=LinkingSessionComplete | LinkingSessionStarted | LinkingSessionInitial,
+    response_model=LinkingSessionComplete
+    | LinkingSessionStarted
+    | LinkingSessionInitial,
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        200: {"description": "Returns the current linking session, scrubbed of private info"}
+        200: {
+            "description": "Returns the current linking session, scrubbed of private info"
+        },
     },
-    tags=["link"]
+    tags=["link"],
 )
 async def get_linking_sessions(
-        session_id: str = SESSION_ID_FIELD,
-        authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
 ):
     ensure_authorization(authorization)
 
     return get_linking_session_record(session_id, authorization)
-
-    # if 'orcid_auth' in session_record:
-    #     return LinkingSessionComplete(
-    #         session_id=session_id,
-    #         username=session_record.username.,
-    #         created_at=session_record['created_at'],
-    #         expires_at=session_record['expires_at'],
-    #         orcid_auth=ORCIDAuthPublic(
-    #             scope=session_record['orcid_auth']['scope'],
-    #             name=session_record['orcid_auth']['name'],
-    #             orcid=session_record['orcid_auth']['orcid'],
-    #             expires_in=session_record['orcid_auth']['expires_in']
-    #         )
-    #     )
-    # elif 'skip_prompt' in session_record:
-    #     linking_session_started = LinkingSessionStarted(
-    #         session_id=session_id,
-    #         username=session_record['username'],
-    #         skip_prompt=session_record['skip_prompt'],
-    #         created_at=session_record['created_at'],
-    #         expires_at=session_record['expires_at']
-    #     )
-    #     if 'return_link' in session_record:
-    #         linking_session_started.return_link = session_record['return_link']
-    #     return linking_session_started
-    # else:
-    #     return LinkingSessionInitial(
-    #         session_id=session_id,
-    #         username=session_record['username'],
-    #         created_at=session_record['created_at'],
-    #         expires_at=session_record['expires_at']
-    #     )
 
 
 @router.delete(
@@ -291,14 +285,14 @@ async def get_linking_sessions(
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        204: {"description": "Successfully deleted the session"}
+        204: {"description": "Successfully deleted the session"},
     },
-    tags=["link"])
+    tags=["link"],
+)
 async def delete_linking_session(
-        session_id: str = SESSION_ID_FIELD,
-        authorization: str | None = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
 ):
-    ensure_authorization(authorization)
+    authorization = ensure_authorization(authorization)
 
     session_record = get_linking_session_record(session_id, authorization)
 

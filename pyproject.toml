@@ -11,16 +11,19 @@ fastapi = "0.88.0"
 uvicorn = "0.20.0"
 xmltodict = "0.13.0"
 pymongo = "4.3.3"
-mongomock = "4.1.2"
 PyYAML = "6.0"
 httpx = "0.23.3"
-pytest = "7.2.0"
-pytest-cov = "4.0.0"
-pyfakefs = "5.0.0"
 cache3 = "0.3.1"
 
 
 [tool.poetry.dev-dependencies]
+pytest = "7.2.0"
+pytest-cov = "4.0.0"
+pyfakefs = "5.0.0"
+mongomock = "4.1.2"
+mypy = "0.991"
+types-python-dateutil = "2.8.19.5"
+types-PyYAML = "6.0.12.2"
 
 [tool.poetry.group.dev.dependencies]
 black = { version = "^22.10.0", allow-prereleases = true }
