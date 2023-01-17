@@ -81,6 +81,13 @@ def test_get_work_errors(fake_fs):
         assert response.status_code == 422
 
         #
+        # An unlinked user gets a 422, since fastapi validates the url param
+        # and it should be int.
+        #
+        response = client.get(f"/works/1526002", headers={"Authorization": "bar"})
+        assert response.status_code == 404
+
+        #
         # An api misuse which penetrates the call; ideally
         # there should not be anything like this.
         # In this case, the mock orcid server is set up
@@ -313,8 +320,58 @@ def test_delete_work(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
-        assert response.status_code == 200
+        response = client.delete(f"/works/{put_code}",
+                                 headers={"Authorization": "foo"})
+        assert response.status_code == 204
+
+
+def test_delete_work_bad_no_link(fake_fs):
+    with mock_services():
+        create_link()
+        put_code = 1526002
+        client = TestClient(app)
+        response = client.delete(f"/works/{put_code}",
+                                 headers={"Authorization": "bar"})
+        assert response.status_code == 404
+
+
+def test_delete_work_not_source(fake_fs):
+    with mock_services():
+        create_link()
+        # Use a put code not in the mock service, in this case we
+        # transpose the final 2 with 3.
+        client = TestClient(app)
+        put_code = 123
+        response = client.delete(f"/works/{put_code}",
+                                 headers={"Authorization": "foo"})
+        assert response.status_code == 400
         result = response.json()
         assert isinstance(result, dict)
-        assert result["ok"] is True
+        assert result["code"] == "orcid-api-error"
+        assert result["title"] == "ORCID API Error"
+        assert result["message"] == "The ORCID API reported an error fo this request, see 'data' for cause"
+        assert result["data"]["response-code"] == 403
+        assert result["data"]["error-code"] == 9010
+        # # Tha actual messages may change over time, and are not used
+        # # programmatically
+
+
+def test_delete_work_put_code_not_found(fake_fs):
+    with mock_services():
+        create_link()
+        # Use a put code not in the mock service, in this case we
+        # transpose the final 2 with 3.
+        client = TestClient(app)
+        put_code = 456
+        response = client.delete(f"/works/{put_code}",
+                                 headers={"Authorization": "foo"})
+        assert response.status_code == 400
+        result = response.json()
+        assert isinstance(result, dict)
+        assert result["code"] == "orcid-api-error"
+        assert result["title"] == "ORCID API Error"
+        assert result["message"] == "The ORCID API reported an error fo this request, see 'data' for cause"
+        assert result["data"]["response-code"] == 404
+        assert result["data"]["error-code"] == 9016
+        # # Tha actual messages may change over time, and are not used
+        # # programmatically

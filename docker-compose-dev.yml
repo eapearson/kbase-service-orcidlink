@@ -7,9 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
     image: kbase/orcidlink:dev
-
     container_name: ORCIDLink
     # We like to use the service module name here.
     hostname: ORCIDLink
@@ -17,35 +15,20 @@ services:
     volumes:
       # Update this to wherever you want VS Code to mount the folder of your project
       - .:/kb/module
-    #      - ./src:/kb/module/src
-    #      - ./dev/work:/kb/module/work
-    #      - ./templates:/kb/module/templates
-    #      - ./data:/kb/module/data
-    #      - ./scripts:/kb/module/scripts
     networks:
       - kbase-dev
     ports:
       - "5001:5000"
     environment:
-      - DEV=${DEV:-}
+      - DEV=yes
       - KBASE_ENDPOINT=${KBASE_ENDPOINT}
       - KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID=${KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID}
       - KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET=${KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET}
-      - KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE=${KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE}
       - KBASE_SECURE_CONFIG_PARAM_MONGO_USERNAME=${KBASE_SECURE_CONFIG_PARAM_MONGO_USERNAME}
       - KBASE_SECURE_CONFIG_PARAM_MONGO_PASSWORD=${KBASE_SECURE_CONFIG_PARAM_MONGO_PASSWORD}
     depends_on:
       - mongo
       - mongo-express
-
-    # environment:
-    #   # - PORT=80
-    #   - DEPLOY_ENV=${DEPLOY_ENV}
-  #    command: /bin/sh -c "while sleep 1000; do :; done"
-  #    entrypoint:
-  #      - sh
-  #      - ./scripts/entrypoint.sh
-
   mongo:
     image: mongo
     restart: always
@@ -59,10 +42,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: dev_root
       MONGO_INITDB_ROOT_PASSWORD: dev_r00t
-  #      MONGO_INITDB_DATABASE: orcidlink
-  #      MONGO_NON_ROOT_USERNAME: dev
-  #      MONGO_NON_ROOT_PASSWORD: d3v
-
   mongo-express:
     image: mongo-express
     restart: always

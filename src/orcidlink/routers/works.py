@@ -9,7 +9,7 @@ from orcidlink.lib.responses import (
     ErrorResponse,
     ensure_authorization,
     error_response,
-    make_error_exception,
+    make_error_exception, success_response_no_data,
 )
 from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.transform import parse_date, raw_work_to_work
@@ -82,10 +82,10 @@ def link_record_not_found() -> JSONResponse:
     },
 )
 async def get_work(
-    put_code: int = Path(
-        description="The ORCID `put code` for the work record to fetch"
-    ),
-    authorization: str | None = Header(default=None, description="Kbase auth token"),
+        put_code: int = Path(
+            description="The ORCID `put code` for the work record to fetch"
+        ),
+        authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
@@ -131,7 +131,7 @@ async def get_work(
     },
 )
 async def get_works(
-    authorization: str | None = Header(default=None, description="Kbase auth token")
+        authorization: str | None = Header(default=None, description="Kbase auth token")
 ):
     """
     Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
@@ -169,8 +169,8 @@ async def get_works(
     },
 )
 async def save_work(
-    work_update: WorkUpdate,
-    authorization: str | None = Header(default=None, description="Kbase auth token"),
+        work_update: WorkUpdate,
+        authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
     """
     Update a work record; the `work_update` contains the `put code`.
@@ -259,8 +259,8 @@ async def save_work(
 
 @router.delete("/{put_code}", response_model=SimpleSuccess, tags=["works"])
 async def delete_work(
-    put_code: str,
-    authorization: str | None = Header(default=None, description="Kbase auth token"),
+        put_code: int,
+        authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
     authorization = ensure_authorization(authorization)
 
@@ -279,12 +279,18 @@ async def delete_work(
     url = orcid_api_url(f"{orcid_id}/work/{put_code}")
 
     response = httpx.delete(url, headers=header)
-    return {"ok": True}
+
+    if response.status_code == 204:
+        return success_response_no_data()
+
+    return error_response("orcid-api-error", "ORCID API Error",
+                          "The ORCID API reported an error fo this request, see 'data' for cause",
+                          data=response.json())
 
 
 @router.post("", response_model=ORCIDWork, tags=["works"])
 async def create_work(
-    new_work: NewWork, authorization: str | None = Header(default=None)
+        new_work: NewWork, authorization: str | None = Header(default=None)
 ):
     authorization = ensure_authorization(authorization)
 

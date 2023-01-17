@@ -50,7 +50,6 @@ class StatusResponse(BaseModel):
 # class EnvConfig(BaseModel):
 #     CLIENT_ID: str = Field(...)
 #     CLIENT_SECRET: str = Field(...)
-#     IS_DYNAMIC_SERVICE: str = Field(...)
 #     MONGO_USERNAME: str = Field(...)
 #     MONGO_PASSWORD: str = Field(...)
 #

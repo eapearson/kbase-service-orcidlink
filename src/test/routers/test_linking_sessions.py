@@ -12,7 +12,6 @@ from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_oauth_service,
-    mock_service_wizard_service,
     no_stderr,
 )
 
@@ -75,12 +74,12 @@ def assert_get_linking_session(client, session_id: str):
 
 
 def assert_start_linking_session(
-    client,
-    session_id: str,
-    kbase_session: str = None,
-    kbase_session_backup: str = None,
-    return_link: str = None,
-    skip_prompt: str = None,
+        client,
+        session_id: str,
+        kbase_session: str = None,
+        kbase_session_backup: str = None,
+        return_link: str = None,
+        skip_prompt: str = None,
 ):
     headers = {}
     if kbase_session is not None:
@@ -135,8 +134,7 @@ def assert_location_params(response, params):
 def mock_services():
     with no_stderr():
         with mock_auth_service():
-            with mock_service_wizard_service():
-                yield
+            yield
 
 
 #
@@ -243,12 +241,6 @@ def test_start_linking_session(fake_fs):
         #
         # Start the linking session.
         #
-
-        # If we start the linking session, the linking session will be updated, but remain
-        #  LinkingSessionInitial
-        # assert_start_linking_session(client, initial_session_id, kbase_session="foo")
-
-        # TODO more assertions?
 
         # return link provided
         assert_start_linking_session(
@@ -387,10 +379,10 @@ def test_continue_linking_session(fake_fs):
     """
 
     def assert_continue_linking_session(
-        kbase_session: str = None,
-        kbase_session_backup: str = None,
-        return_link: str = None,
-        skip_prompt: str = None,
+            kbase_session: str = None,
+            kbase_session_backup: str = None,
+            return_link: str = None,
+            skip_prompt: str = None,
     ):
         client = TestClient(app)
 
@@ -479,17 +471,16 @@ def test_continue_linking_session(fake_fs):
     # function above.
     with no_stderr():
         with mock_auth_service():
-            with mock_service_wizard_service():
-                with mock_orcid_oauth_service():
-                    assert_continue_linking_session(
-                        kbase_session="foo", skip_prompt="no"
-                    )
-                    assert_continue_linking_session(
-                        kbase_session_backup="foo", skip_prompt="no"
-                    )
-                    assert_continue_linking_session(
-                        kbase_session="foo", return_link="bar", skip_prompt="no"
-                    )
+            with mock_orcid_oauth_service():
+                assert_continue_linking_session(
+                    kbase_session="foo", skip_prompt="no"
+                )
+                assert_continue_linking_session(
+                    kbase_session_backup="foo", skip_prompt="no"
+                )
+                assert_continue_linking_session(
+                    kbase_session="foo", return_link="bar", skip_prompt="no"
+                )
 
 
 def test_continue_linking_session_errors(fake_fs):
@@ -501,137 +492,333 @@ def test_continue_linking_session_errors(fake_fs):
     """
     with no_stderr():
         with mock_auth_service():
-            with mock_service_wizard_service():
-                with mock_orcid_oauth_service():
-                    client = TestClient(app)
+            with mock_orcid_oauth_service():
+                client = TestClient(app)
 
-                    #
-                    # Create linking session.
-                    #
-                    initial_session_info = assert_create_linking_session(client, "foo")
-                    initial_session_id = initial_session_info["session_id"]
+                #
+                # Create linking session.
+                #
+                initial_session_info = assert_create_linking_session(client, "foo")
+                initial_session_id = initial_session_info["session_id"]
 
-                    #
-                    # Get the session info.
-                    #
-                    session_info = assert_get_linking_session(
-                        client, initial_session_id
-                    )
-                    assert session_info["session_id"] == initial_session_id
+                #
+                # Get the session info.
+                #
+                session_info = assert_get_linking_session(
+                    client, initial_session_id
+                )
+                assert session_info["session_id"] == initial_session_id
 
-                    # Note that the call will fail if the result does not comply with either
-                    # LinkingSessionComplete or LinkingSessionInitial
+                # Note that the call will fail if the result does not comply with either
+                # LinkingSessionComplete or LinkingSessionInitial
 
-                    # The call after creating a linking session will return a LinkingSessionInitial
-                    # which we only know from the absense of orcid_auth
-                    assert "orcid_auth" not in session_info
+                # The call after creating a linking session will return a LinkingSessionInitial
+                # which we only know from the absense of orcid_auth
+                assert "orcid_auth" not in session_info
 
-                    #
-                    # Start the linking session.
-                    #
+                #
+                # Start the linking session.
+                #
 
-                    # If we start the linking session, the linking session will be updated, but remain
-                    #  LinkingSessionInitial
-                    assert_start_linking_session(
-                        client,
-                        initial_session_id,
-                        kbase_session="foo",
-                        skip_prompt="yes",
-                    )
+                # If we start the linking session, the linking session will be updated, but remain
+                # LinkingSessionInitial
+                assert_start_linking_session(
+                    client,
+                    initial_session_id,
+                    kbase_session="foo",
+                    skip_prompt="yes",
+                )
 
-                    #
-                    # In the actual OAuth flow, the browser would invoke the start link endpoint
-                    # above, and naturally follow the redirect to ORCID OAuth.
-                    # We can't do that here, but we can simulate it via the mock oauth
-                    # service. That service also has a non-interactive endpoint "/authorize"
-                    # which exchanges the code for an access_token (amongst other things)
-                    #
-                    params = {
-                        "code": "foo",
-                        "state": json.dumps({"session_id": initial_session_id}),
-                    }
+                #
+                # In the actual OAuth flow, the browser would invoke the start link endpoint
+                # above, and naturally follow the redirect to ORCID OAuth.
+                # We can't do that here, but we can simulate it via the mock oauth
+                # service. That service also has a non-interactive endpoint "/authorize"
+                # which exchanges the code for an access_token (amongst other things)
+                #
+                params = {
+                    "code": "foo",
+                    "state": json.dumps({"session_id": initial_session_id}),
+                }
 
-                    # response = client.get(f"/continue-linking-session",
-                    #                       headers={
-                    #                           "Cookie": "kbase_session=foo"
-                    #                       },
-                    #                       params=params,
-                    #                       follow_redirects=False)
-                    # assert response.status_code == 302
+                # No auth cookie: no kbase_session or kbase_session_backup
+                response = client.get(
+                    f"/continue-linking-session",
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 401
 
-                    # No auth cookie: no kbase_session or kbase_session_backup
-                    response = client.get(
-                        f"/continue-linking-session",
-                        params=params,
-                        follow_redirects=False,
-                    )
-                    assert response.status_code == 401
+                # Error returned from orcid
+                # TODO: double check the ORCID error structure; here we assume it is a string.
+                params = {"error": "foo"}
+                response = client.get(
+                    f"/continue-linking-session",
+                    headers={"Cookie": "kbase_session=foo"},
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+                # TODO: test the response Location and the location info.
 
-                    # Error returned from orcid
-                    # TODO: double check the ORCID error structure; here we assume it is a string.
-                    params = {"error": "foo"}
-                    response = client.get(
-                        f"/continue-linking-session",
-                        headers={"Cookie": "kbase_session=foo"},
-                        params=params,
-                        follow_redirects=False,
-                    )
-                    assert response.status_code == 302
-                    # TODO: test the response Location and the location info.
+                # No code
+                params = {"state": json.dumps({"session_id": initial_session_id})}
+                response = client.get(
+                    f"/continue-linking-session",
+                    headers={"Cookie": "kbase_session=foo"},
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+                assert_location_params(
+                    response,
+                    {
+                        "code": "link.code_missing",
+                        "title": "Linking code missing",
+                        "message": "The 'code' query param is required but missing",
+                    },
+                )
 
-                    # No code
-                    params = {"state": json.dumps({"session_id": initial_session_id})}
-                    response = client.get(
-                        f"/continue-linking-session",
-                        headers={"Cookie": "kbase_session=foo"},
-                        params=params,
-                        follow_redirects=False,
-                    )
-                    assert response.status_code == 302
-                    assert_location_params(
-                        response,
-                        {
-                            "code": "link.code_missing",
-                            "title": "Linking code missing",
-                            "message": "The 'code' query param is required but missing",
-                        },
-                    )
+                # No state
+                params = {"code": "foo"}
+                response = client.get(
+                    f"/continue-linking-session",
+                    headers={"Cookie": "kbase_session=foo"},
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+                assert_location_params(
+                    response,
+                    {
+                        "code": "link.state_missing",
+                        "title": "Linking state missing",
+                        "message": "The 'state' query param is required but missing",
+                    },
+                )
 
-                    # No state
-                    params = {"code": "foo"}
-                    response = client.get(
-                        f"/continue-linking-session",
-                        headers={"Cookie": "kbase_session=foo"},
-                        params=params,
-                        follow_redirects=False,
-                    )
-                    assert response.status_code == 302
-                    assert_location_params(
-                        response,
-                        {
-                            "code": "link.state_missing",
-                            "title": "Linking state missing",
-                            "message": "The 'state' query param is required but missing",
-                        },
-                    )
+                # No session_id
+                params = {"code": "foo", "state": json.dumps({})}
+                response = client.get(
+                    f"/continue-linking-session",
+                    headers={"Cookie": "kbase_session=foo"},
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+                assert_location_params(
+                    response,
+                    {
+                        "code": "link.session_id_missing",
+                        "title": "Linking Error",
+                        "message": "The 'session_id' was not provided in the 'state' query param",
+                    },
+                )
 
-                    # No session_id
-                    params = {"code": "foo", "state": json.dumps({})}
-                    response = client.get(
-                        f"/continue-linking-session",
-                        headers={"Cookie": "kbase_session=foo"},
-                        params=params,
-                        follow_redirects=False,
-                    )
-                    assert response.status_code == 302
-                    assert_location_params(
-                        response,
-                        {
-                            "code": "link.session_id_missing",
-                            "title": "Linking Error",
-                            "message": "The 'session_id' was not provided in the 'state' query param",
-                        },
-                    )
+
+def test_continue_linking_session_error_already_continued(fake_fs):
+    """
+    Here we simulate the oauth flow with ORCID - in which
+    we redirect the browser to ORCID, which ends up returning
+    to our return url which in turn may ask the user to confirm
+    the linking, after which we exchange the code for an access token.
+    """
+    with no_stderr():
+        with mock_auth_service():
+            with mock_orcid_oauth_service():
+                client = TestClient(app)
+
+                #
+                # Create linking session.
+                #
+                initial_session_info = assert_create_linking_session(client, "foo")
+                initial_session_id = initial_session_info["session_id"]
+
+                #
+                # Get the session info.
+                #
+                session_info = assert_get_linking_session(
+                    client, initial_session_id
+                )
+                assert session_info["session_id"] == initial_session_id
+
+                # Note that the call will fail if the result does not comply with either
+                # LinkingSessionComplete or LinkingSessionInitial
+
+                # The call after creating a linking session will return a LinkingSessionInitial
+                # which we only know from the absense of orcid_auth
+                assert "orcid_auth" not in session_info
+
+                #
+                # Start the linking session.
+                #
+
+                # If we start the linking session, the linking session will be updated, but remain
+                # LinkingSessionInitial
+                assert_start_linking_session(
+                    client,
+                    initial_session_id,
+                    kbase_session="foo",
+                    skip_prompt="yes",
+                )
+
+                #
+                # In the actual OAuth flow, the browser would invoke the start link endpoint
+                # above, and naturally follow the redirect to ORCID OAuth.
+                # We can't do that here, but we can simulate it via the mock oauth
+                # service. That service also has a non-interactive endpoint "/authorize"
+                # which exchanges the code for an access_token (amongst other things)
+                #
+                params = {
+                    "code": "foo",
+                    "state": json.dumps({"session_id": initial_session_id}),
+                }
+
+                headers = {
+                    "Cookie": "kbase_session=foo",
+                }
+
+                # First time, it should be fine, returning a 302 as expected, with a
+                # location to ORCID
+                response = client.get(
+                    "/continue-linking-session",
+                    headers=headers,
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+
+                # Second time it should produce an error
+                response = client.get(
+                    "/continue-linking-session",
+                    headers=headers,
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+                assert_location_params(
+                    response,
+                    {
+                        "code": "linking_session.wrong_state",
+                        "title": "Linking Error",
+                        "message": "The session is not in 'started' state",
+                    },
+                )
+
+
+def test_finish_linking_session_error_already_finished(fake_fs):
+    """
+    Here we simulate the oauth flow with ORCID - in which
+    we redirect the browser to ORCID, which ends up returning
+    to our return url which in turn may ask the user to confirm
+    the linking, after which we exchange the code for an access token.
+    """
+    with no_stderr():
+        with mock_auth_service():
+            with mock_orcid_oauth_service():
+                client = TestClient(app)
+
+                #
+                # Create linking session.
+                #
+                initial_session_info = assert_create_linking_session(client, "foo")
+                initial_session_id = initial_session_info["session_id"]
+
+                #
+                # Get the session info.
+                #
+                session_info = assert_get_linking_session(
+                    client, initial_session_id
+                )
+                assert session_info["session_id"] == initial_session_id
+
+                # Note that the call will fail if the result does not comply with either
+                # LinkingSessionComplete or LinkingSessionInitial
+
+                # The call after creating a linking session will return a LinkingSessionInitial
+                # which we only know from the absense of orcid_auth
+                assert "orcid_auth" not in session_info
+
+                #
+                # If we try to finish before starting, we should get a 400 error
+                #
+                response = client.put(
+                    f"/linking-sessions/{initial_session_id}/finish",
+                    headers={"Authorization": "foo"},
+                )
+                assert response.status_code == 400
+
+                # "invalidState",
+                # "Invalid Linking Session State",
+                # "The linking session must be in 'complete' state, but is not",
+                assert response.json() == {
+                    "code": "invalidState",
+                    "title": "Invalid Linking Session State",
+                    "message": "The linking session must be in 'complete' state, but is not"
+                }
+
+                #
+                # Start the linking session.
+                #
+
+                # If we start the linking session, the linking session will be updated, but remain
+                # LinkingSessionInitial
+                assert_start_linking_session(
+                    client,
+                    initial_session_id,
+                    kbase_session="foo",
+                    skip_prompt="yes",
+                )
+
+                #
+                # In the actual OAuth flow, the browser would invoke the start link endpoint
+                # above, and naturally follow the redirect to ORCID OAuth.
+                # We can't do that here, but we can simulate it via the mock oauth
+                # service. That service also has a non-interactive endpoint "/authorize"
+                # which exchanges the code for an access_token (amongst other things)
+                #
+                params = {
+                    "code": "foo",
+                    "state": json.dumps({"session_id": initial_session_id}),
+                }
+
+                headers = {
+                    "Cookie": "kbase_session=foo",
+                }
+
+                # First time, it should be fine, returning a 302 as expected, with a
+                # location to ORCID
+                response = client.get(
+                    "/continue-linking-session",
+                    headers=headers,
+                    params=params,
+                    follow_redirects=False,
+                )
+                assert response.status_code == 302
+
+                #
+                # Get the session info post-continuation, which will complete the
+                # ORCID OAuth.
+                #
+                session_info = assert_get_linking_session(client, initial_session_id)
+                assert session_info["session_id"] == initial_session_id
+                assert "orcid_auth" in session_info
+
+                #
+                # Finish the linking session; first time, ok.
+                #
+                response = client.put(
+                    f"/linking-sessions/{initial_session_id}/finish",
+                    headers={"Authorization": "foo"},
+                )
+                assert response.status_code == 200
+
+                # Second time it should produce a 404 since it will have been deleted!
+                response = client.put(
+                    f"/linking-sessions/{initial_session_id}/finish",
+                    headers={"Authorization": "foo"},
+                )
+                assert response.status_code == 404
 
 
 def test_delete_linking_session(fake_fs):
@@ -665,7 +852,6 @@ def test_delete_linking_session(fake_fs):
         with pytest.raises(Exception) as ex:
             assert_get_linking_session(client, initial_session_id)
         assert ex is not None
-
 
 # def xest_get_link(fake_fs):
 #     server = MockServer("127.0.0.1", MockAuthService)

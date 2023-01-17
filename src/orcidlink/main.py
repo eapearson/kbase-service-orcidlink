@@ -11,7 +11,7 @@ from orcidlink.lib.config import config, get_kbase_config
 from orcidlink.lib.responses import (
     ErrorException,
     error_response,
-    exception_error_response,
+    error_response_not_found, exception_error_response,
     ui_error_response,
 )
 from orcidlink.lib.storage_model import storage_model
@@ -119,7 +119,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-    request: Request, exc: KBaseAuthMissingToken
+        request: Request, exc: KBaseAuthMissingToken
 ):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
@@ -245,17 +245,30 @@ async def get_info():
 # Docs
 
 
-@app.get("/docs", include_in_schema=True, tags=["misc"])
-async def custom_swagger_ui_html(req: Request):
+@app.get("/docs",
+         include_in_schema=True, tags=["misc"],
+         responses={
+             200: {"description": "Successfully returned the api docs"},
+             302: {"description": "Not configured; should never occur"},
+         })
+async def docs(req: Request):
     """
     Provides a web interface to the auto-generated API docs.
     """
     if app.openapi_url is None:
-        return ui_error_response(
-            "docs.no_url",
-            "No DOCS URL",
-            "The 'openapi_url' is 'None'",
-        )
+        # FastAPI is obstinate - I initially wanted to handle this case
+        # with a "redirect error" to kbase-ui, but even though I regurned
+        # 302, it resulted in a 404 in tests! I don't know about real life.
+        # So lets just make this a 404, which is reasonable in any case.
+        return error_response_not_found("The 'openapi_url' is 'None'")
+
+        # response = ui_error_response(
+        #     "docs.no_url",
+        #     "No DOCS URL",
+        #     "The 'openapi_url' is 'None'",
+        # )
+        # print('RESPONSE IS', response.status_code)
+        # return response
 
     openapi_url = config().kbase.services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(
@@ -286,15 +299,15 @@ async def custom_swagger_ui_html(req: Request):
     tags=["link"],
 )
 async def continue_linking_session(
-    kbase_session: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
-    kbase_session_backup: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
-    code: str | None = None,
-    state: str | None = None,
-    error: str | None = None,
+        kbase_session: str = Cookie(
+            default=None, description="KBase auth token taken from a cookie"
+        ),
+        kbase_session_backup: str = Cookie(
+            default=None, description="KBase auth token taken from a cookie"
+        ),
+        code: str | None = None,
+        state: str | None = None,
+        error: str | None = None,
 ):
     """
     The redirect endpoint for the ORCID OAuth flow we use for linking.
@@ -343,8 +356,7 @@ async def continue_linking_session(
 
     session_record = get_linking_session_record(session_id, authorization)
 
-    # if 'skip_prompt' not in session_record:
-    if not isinstance(session_record, LinkingSessionStarted):
+    if not type(session_record) == LinkingSessionStarted:
         return ui_error_response(
             "linking_session.wrong_state",
             "Linking Error",

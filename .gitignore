@@ -10,7 +10,6 @@ LOCAL_ONLY_README.md
 custom.env
 *.pyc
 .DS_Store
-./devcontainer.does.not.work
 
 # Placeholder directories
 /config/*
@@ -21,4 +20,6 @@ custom.env
 # Testing
 /htmlcov/
 .coverage
+coverage.lcov
 .pytest_cache
+.mypy_cache

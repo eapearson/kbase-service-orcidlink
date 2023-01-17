@@ -47,6 +47,16 @@ def test_docs():
     assert response.status_code == 200
 
 
+def test_docs_error():
+    openapi_url = app.openapi_url
+    app.openapi_url = None
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.get("/docs")
+    assert response.status_code == 404
+    # TODO: test assertions about this..
+    app.openapi_url = openapi_url
+
+
 # Error conditions
 
 
@@ -63,8 +73,8 @@ def test_validation_exception_handler():
     assert content["code"] == "requestParametersInvalid"
     assert content["title"] == "Request Parameters Invalid"
     assert (
-        content["message"]
-        == "This request does not comply with the schema for this endpoint"
+            content["message"]
+            == "This request does not comply with the schema for this endpoint"
     )
 
 

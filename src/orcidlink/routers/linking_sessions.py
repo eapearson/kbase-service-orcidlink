@@ -35,7 +35,7 @@ router = APIRouter(
 # Convenience functions
 #
 def get_linking_session_record(
-    session_id: str, authorization: str
+        session_id: str, authorization: str
 ) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete:
     username = get_username(authorization)
 
@@ -127,15 +127,15 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     tags=["link"],
 )
 async def start_linking_session(
-    session_id: str = SESSION_ID_FIELD,
-    return_link: str | None = RETURN_LINK_QUERY,
-    skip_prompt: str = SKIP_PROMPT_QUERY,
-    kbase_session: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
-    kbase_session_backup: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
+        session_id: str = SESSION_ID_FIELD,
+        return_link: str | None = RETURN_LINK_QUERY,
+        skip_prompt: str = SKIP_PROMPT_QUERY,
+        kbase_session: str = Cookie(
+            default=None, description="KBase auth token taken from a cookie"
+        ),
+        kbase_session_backup: str = Cookie(
+            default=None, description="KBase auth token taken from a cookie"
+        ),
 ):
     """
     Starts a "linking session", an interactive OAuth flow the end result of which is an access_token stored at
@@ -188,7 +188,6 @@ async def start_linking_session(
     # I think we just need to assume we are running on the "most released"; I don't think
     # there is a way for a dynamic service to know where it is running...
     # service_wizard = ServiceWizard(get_config(["kbase", "services", "ServiceWizard", "url"]), None)
-    # service_info, error = service_wizard.get_service_status('ORCIDLink', None)
     params = AuthorizeParams(
         client_id=config().module.CLIENT_ID,
         response_type="code",
@@ -217,7 +216,7 @@ async def start_linking_session(
     tags=["link"],
 )
 async def finish_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+        session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
 ):
     """
     The final stage of the interactive linking session; called when the user confirms the creation
@@ -227,7 +226,7 @@ async def finish_linking_session(
 
     session_record = get_linking_session_record(session_id, authorization)
 
-    if not isinstance(session_record, LinkingSessionComplete):
+    if not type(session_record) == LinkingSessionComplete:
         return error_response(
             "invalidState",
             "Invalid Linking Session State",
@@ -260,8 +259,8 @@ async def finish_linking_session(
 @router.get(
     "/{session_id}",
     response_model=LinkingSessionComplete
-    | LinkingSessionStarted
-    | LinkingSessionInitial,
+                   | LinkingSessionStarted
+                   | LinkingSessionInitial,
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -272,7 +271,7 @@ async def finish_linking_session(
     tags=["link"],
 )
 async def get_linking_sessions(
-    session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
+        session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
 ):
     ensure_authorization(authorization)
 
@@ -290,7 +289,7 @@ async def get_linking_sessions(
     tags=["link"],
 )
 async def delete_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+        session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
 ):
     authorization = ensure_authorization(authorization)
 

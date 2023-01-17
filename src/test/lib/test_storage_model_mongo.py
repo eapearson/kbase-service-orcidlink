@@ -15,36 +15,6 @@ def fake_fs(fs):
     yield fs
 
 
-# @pytest.fixture
-# def my_fs(fs):
-#     fake_config = """
-# kbase:
-#   services:
-#     Auth2:
-#       url: https://ci.kbase.us/services/auth/api/V2/token
-#       tokenCacheLifetime: 300000
-#       tokenCacheMaxSize: 20000
-#     ServiceWizard:
-#       url: http://127.0.0.1:9999/services/service_wizard
-#   uiOrigin: https://ci.kbase.us
-#   defaults:
-#     serviceRequestTimeout: 60000
-# orcid:
-#   oauthBaseURL: https://sandbox.orcid.org/oauth
-#   baseURL: https://sandbox.orcid.org
-#   apiBaseURL: https://api.sandbox.orcid.org/v3.0
-# module:
-#   CLIENT_ID: 'REDACTED-CLIENT-ID'
-#   CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
-#   IS_DYNAMIC_SERVICE: 'yes'
-#   MONGO_USERNAME: 'dev'
-#   MONGO_PASSWORD: 'd3v'
-#   STORAGE_MODEL: 'mongo'
-#     """
-#     fs.create_file("/kb/module/config/config.yaml", contents=fake_config)
-#     yield fs
-
-
 def test_constructor():
     model = storage_model()
     assert model is not None

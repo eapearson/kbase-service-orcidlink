@@ -27,7 +27,6 @@ def test_get_config(my_config_file2):
     c = config.ConfigManager(os.path.join(module_dir(), "config/config.yaml"))
     assert c.config().module.CLIENT_ID == "REDACTED-CLIENT-ID"
     assert c.config().module.CLIENT_SECRET == "REDACTED-CLIENT-SECRET"
-    assert c.config().module.IS_DYNAMIC_SERVICE == "no"
     assert (
         c.config().kbase.services.Auth2.url
         == "https://ci.kbase.us/services/auth/api/V2/token"

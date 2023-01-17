@@ -32,7 +32,7 @@ def test_KBaseAuth_constructor_minimal(fake_fs):
     assert client is not None
 
 
-def xest_KBaseAuth_constructor_parameter_errors(fake_fs):
+def test_KBaseAuth_constructor_parameter_errors(fake_fs):
     with pytest.raises(TypeError) as e:
         assert authclient2.KBaseAuth()
         assert str(e) == "missing required named argument 'auth_url'"
@@ -46,7 +46,7 @@ def xest_KBaseAuth_constructor_parameter_errors(fake_fs):
         assert str(e) == "missing required named argument 'cache_lifetime'"
 
 
-def xest_KBaseAuth_get_token_info(fake_fs):
+def test_KBaseAuth_get_token_info(fake_fs):
     with mock_services() as url:
         client = authclient2.KBaseAuth(auth_url=url, cache_max_size=3, cache_lifetime=3)
         assert client is not None
@@ -65,7 +65,7 @@ def xest_KBaseAuth_get_token_info(fake_fs):
         assert token_info.user == "foo"
 
 
-def xest_KBaseAuth_get_token_info_missing_token(fake_fs):
+def test_KBaseAuth_get_token_info_missing_token(fake_fs):
     with mock_services() as url:
         client = authclient2.KBaseAuth(auth_url=url, cache_max_size=3, cache_lifetime=3)
         assert client is not None
@@ -76,7 +76,7 @@ def xest_KBaseAuth_get_token_info_missing_token(fake_fs):
             client.get_token_info("x")
 
 
-def xest_KBaseAuth_get_token_info_other_error(fake_fs):
+def test_KBaseAuth_get_token_info_other_error(fake_fs):
     with mock_services() as url:
         client = authclient2.KBaseAuth(auth_url=url, cache_max_size=3, cache_lifetime=3)
         assert client is not None
@@ -87,7 +87,7 @@ def xest_KBaseAuth_get_token_info_other_error(fake_fs):
             client.get_token_info("exception")
 
 
-def xest_KBaseAuth_get_token_info_internal_error(fake_fs):
+def test_KBaseAuth_get_token_info_internal_error(fake_fs):
     with mock_services() as url:
         client = authclient2.KBaseAuth(auth_url=url, cache_max_size=3, cache_lifetime=3)
         assert client is not None
@@ -100,7 +100,7 @@ def xest_KBaseAuth_get_token_info_internal_error(fake_fs):
             client.get_token_info("internal_server_error")
 
 
-def xest_KBaseAuth_get_token_info_param_errors(fake_fs):
+def test_KBaseAuth_get_token_info_param_errors(fake_fs):
     client = authclient2.KBaseAuth(
         auth_url="http://foo/services/auth/api/V2/token",
         cache_max_size=1,
@@ -111,7 +111,7 @@ def xest_KBaseAuth_get_token_info_param_errors(fake_fs):
         client.get_token_info()
 
 
-def xest_KBaseAuth_get_username(fake_fs):
+def test_KBaseAuth_get_username(fake_fs):
     with mock_services() as url:
         client = authclient2.KBaseAuth(auth_url=url, cache_max_size=3, cache_lifetime=3)
         assert client is not None

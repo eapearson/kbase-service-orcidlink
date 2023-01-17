@@ -3,7 +3,6 @@ import threading
 
 import yaml
 from orcidlink.lib.utils import module_dir
-from orcidlink.service_clients.ServiceWizard import ServiceWizard
 from pydantic import BaseModel, Field
 
 
@@ -33,7 +32,6 @@ class ORCIDConfig(BaseModel):
 class ModuleConfig(BaseModel):
     CLIENT_ID: str = Field(...)
     CLIENT_SECRET: str = Field(...)
-    IS_DYNAMIC_SERVICE: str = Field(...)
     MONGO_USERNAME: str = Field(...)
     MONGO_PASSWORD: str = Field(...)
     STORAGE_MODEL: str = Field(...)
@@ -64,7 +62,6 @@ class Config(BaseModel):
 class ConfigManager:
     def __init__(self, config_path: str):
         self.config_path = config_path
-        self.service_info = None
         self.lock = threading.RLock()
         # self.config_data: Optional[Config] = None
         self.config_data = self.get_config_data()
@@ -85,41 +82,12 @@ class ConfigManager:
     def ensure_config(self, reload: bool = False) -> Config:
         return self.config(reload)
 
-    def get_service_info(self):
-        # TODO: cache this.
-        if self.service_info is None:
-            service_wizard = ServiceWizard(
-                url=self.config_data.kbase.services.ServiceWizard.url,
-                token=None,
-                timeout=self.config_data.kbase.defaults.serviceRequestTimeout / 1000,
-            )
-            self.service_info = service_wizard.get_service_status("ORCIDLink", None)
-
-        return self.service_info
-
     def clear(self):
         with self.lock:
-            self.service_info = None
             self.config_data = None
-
-    # def get_service_url(self) -> str:
-    #     self.config()
-    #     if self.config_data.module.IS_DYNAMIC_SERVICE == "yes":
-    #         return re.sub(r"https://(.*?)(?::\d*)?/", r"https://\1/", self.get_service_info()['url'])
-    #     return self.config_data.kbase.services.ORCIDLink.url
-    #
-    # def get_service_path(self) -> str:
-    #     match = re.match(r"^https://(.*?)(/.*)$", self.get_service_url())
-    #     # we assume that the service provides correct responses!
-    #
-    #     return match.group(2)
 
 
 GLOBAL_CONFIG = ConfigManager(os.path.join(module_dir(), "config/config.yaml"))
-
-
-# CONFIG = None
-# lock = threading.RLock()
 
 
 def ensure_config(reload: bool = False):
@@ -133,28 +101,11 @@ def config(reload: bool = False) -> Config:
 
 
 #
-# # TODO: add a lock around t.his.
-# SERVICE_INFO = None
 #
-#
-def get_service_info():
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.get_service_info()
-
 
 def clear():
     global GLOBAL_CONFIG
     return GLOBAL_CONFIG.clear()
-
-
-def get_service_url():
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.get_service_url()
-
-
-def get_service_path():
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.get_service_path()
 
 
 def get_kbase_config():

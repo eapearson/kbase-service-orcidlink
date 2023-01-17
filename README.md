@@ -42,7 +42,7 @@ This workflow works well with pycharm:
 
 - make sure the environment variables are set, you can copy paste the following:
 ```text
-KBASE_ENDPOINT=https://ci.kbase.us/services/;KBASE_SECURE_CONFIG_PARAM_IS_DYNAMIC_SERVICE=yes;KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID={{OMITTED}} ;KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET={{OMITTED}}
+KBASE_ENDPOINT=https://ci.kbase.us/services/;KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_ID={{OMITTED}} ;KBASE_SECURE_CONFIG_PARAM_ORCID_CLIENT_SECRET={{OMITTED}}
 ```
 
 - make sure interpreter paths are set:

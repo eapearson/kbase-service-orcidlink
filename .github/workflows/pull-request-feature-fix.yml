@@ -1,11 +1,14 @@
 ---
-name: Manual
+name: PR to develop opened
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - feature-*
+      - fix-*
 jobs:
   test:
     uses: ./.github/workflows/reusable_test.yml
-  build-push:
+  build:
     needs: test
     uses: ./.github/workflows/reusable_build-push.yml
     with:

@@ -27,7 +27,6 @@ def test_get_config(my_config_file2):
     config.ensure_config(reload=True)
     assert config.config().module.CLIENT_ID == "REDACTED-CLIENT-ID"
     assert config.config().module.CLIENT_SECRET == "REDACTED-CLIENT-SECRET"
-    assert config.config().module.IS_DYNAMIC_SERVICE == "no"
     assert (
         config.config().kbase.services.Auth2.url
         == "https://ci.kbase.us/services/auth/api/V2/token"

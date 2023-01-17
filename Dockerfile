@@ -18,7 +18,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-# dockerize for config
+# dockerize for config generation
 RUN version=v0.17.0 && \
     wget -O - https://github.com/powerman/dockerize/releases/download/${version}/dockerize-`uname -s`-`uname -m` | install /dev/stdin /usr/local/bin/dockerize
 
@@ -36,13 +36,14 @@ COPY ./pyproject.toml /kb/module
 COPY ./deploy.cfg /kb/module
 COPY ./Makefile /kb/module
 COPY ./kbase.yml /kb/module
-COPY ./compile_report.json /kb/module
 
 WORKDIR /kb/module
 
 # RUN poetry lock
 RUN poetry config virtualenvs.create false && poetry install
 
-ENTRYPOINT [ "sh", "./scripts/entrypoint.sh" ]
 
-CMD [ ]
+ENTRYPOINT [ "dockerize" ]
+
+CMD ["-template", "/kb/module/templates/config.yaml.tmpl:/kb/module/config/config.yaml", \
+    "bash", "/kb/module/scripts/start-server.sh" ]
