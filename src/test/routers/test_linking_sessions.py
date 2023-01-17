@@ -74,12 +74,12 @@ def assert_get_linking_session(client, session_id: str):
 
 
 def assert_start_linking_session(
-        client,
-        session_id: str,
-        kbase_session: str = None,
-        kbase_session_backup: str = None,
-        return_link: str = None,
-        skip_prompt: str = None,
+    client,
+    session_id: str,
+    kbase_session: str = None,
+    kbase_session_backup: str = None,
+    return_link: str = None,
+    skip_prompt: str = None,
 ):
     headers = {}
     if kbase_session is not None:
@@ -379,10 +379,10 @@ def test_continue_linking_session(fake_fs):
     """
 
     def assert_continue_linking_session(
-            kbase_session: str = None,
-            kbase_session_backup: str = None,
-            return_link: str = None,
-            skip_prompt: str = None,
+        kbase_session: str = None,
+        kbase_session_backup: str = None,
+        return_link: str = None,
+        skip_prompt: str = None,
     ):
         client = TestClient(app)
 
@@ -472,9 +472,7 @@ def test_continue_linking_session(fake_fs):
     with no_stderr():
         with mock_auth_service():
             with mock_orcid_oauth_service():
-                assert_continue_linking_session(
-                    kbase_session="foo", skip_prompt="no"
-                )
+                assert_continue_linking_session(kbase_session="foo", skip_prompt="no")
                 assert_continue_linking_session(
                     kbase_session_backup="foo", skip_prompt="no"
                 )
@@ -504,9 +502,7 @@ def test_continue_linking_session_errors(fake_fs):
                 #
                 # Get the session info.
                 #
-                session_info = assert_get_linking_session(
-                    client, initial_session_id
-                )
+                session_info = assert_get_linking_session(client, initial_session_id)
                 assert session_info["session_id"] == initial_session_id
 
                 # Note that the call will fail if the result does not comply with either
@@ -637,9 +633,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
                 #
                 # Get the session info.
                 #
-                session_info = assert_get_linking_session(
-                    client, initial_session_id
-                )
+                session_info = assert_get_linking_session(client, initial_session_id)
                 assert session_info["session_id"] == initial_session_id
 
                 # Note that the call will fail if the result does not comply with either
@@ -727,9 +721,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 #
                 # Get the session info.
                 #
-                session_info = assert_get_linking_session(
-                    client, initial_session_id
-                )
+                session_info = assert_get_linking_session(client, initial_session_id)
                 assert session_info["session_id"] == initial_session_id
 
                 # Note that the call will fail if the result does not comply with either
@@ -754,7 +746,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 assert response.json() == {
                     "code": "invalidState",
                     "title": "Invalid Linking Session State",
-                    "message": "The linking session must be in 'complete' state, but is not"
+                    "message": "The linking session must be in 'complete' state, but is not",
                 }
 
                 #
@@ -852,6 +844,7 @@ def test_delete_linking_session(fake_fs):
         with pytest.raises(Exception) as ex:
             assert_get_linking_session(client, initial_session_id)
         assert ex is not None
+
 
 # def xest_get_link(fake_fs):
 #     server = MockServer("127.0.0.1", MockAuthService)

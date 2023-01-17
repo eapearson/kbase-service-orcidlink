@@ -11,7 +11,8 @@ from orcidlink.lib.config import config, get_kbase_config
 from orcidlink.lib.responses import (
     ErrorException,
     error_response,
-    error_response_not_found, exception_error_response,
+    error_response_not_found,
+    exception_error_response,
     ui_error_response,
 )
 from orcidlink.lib.storage_model import storage_model
@@ -119,7 +120,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-        request: Request, exc: KBaseAuthMissingToken
+    request: Request, exc: KBaseAuthMissingToken
 ):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
@@ -245,12 +246,15 @@ async def get_info():
 # Docs
 
 
-@app.get("/docs",
-         include_in_schema=True, tags=["misc"],
-         responses={
-             200: {"description": "Successfully returned the api docs"},
-             302: {"description": "Not configured; should never occur"},
-         })
+@app.get(
+    "/docs",
+    include_in_schema=True,
+    tags=["misc"],
+    responses={
+        200: {"description": "Successfully returned the api docs"},
+        302: {"description": "Not configured; should never occur"},
+    },
+)
 async def docs(req: Request):
     """
     Provides a web interface to the auto-generated API docs.
@@ -299,15 +303,15 @@ async def docs(req: Request):
     tags=["link"],
 )
 async def continue_linking_session(
-        kbase_session: str = Cookie(
-            default=None, description="KBase auth token taken from a cookie"
-        ),
-        kbase_session_backup: str = Cookie(
-            default=None, description="KBase auth token taken from a cookie"
-        ),
-        code: str | None = None,
-        state: str | None = None,
-        error: str | None = None,
+    kbase_session: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    kbase_session_backup: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
 ):
     """
     The redirect endpoint for the ORCID OAuth flow we use for linking.

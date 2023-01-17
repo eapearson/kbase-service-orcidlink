@@ -103,6 +103,7 @@ def config(reload: bool = False) -> Config:
 #
 #
 
+
 def clear():
     global GLOBAL_CONFIG
     return GLOBAL_CONFIG.clear()

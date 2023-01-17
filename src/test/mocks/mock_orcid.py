@@ -44,11 +44,11 @@ class MockORCIDAPI(MockService):
                 "developer-message": "403 Forbidden: You are not the source of the work, so you are not allowed to update it.",
                 "user-message": "The client application is not the source of the resource it is trying to access.",
                 "error-code": 9010,
-                "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+                "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
             self.send_json_error(error, status_code=403)
         else:
-            raise Exception('Not a supported mock case')
+            raise Exception("Not a supported mock case")
 
     def do_DELETE(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
@@ -61,7 +61,7 @@ class MockORCIDAPI(MockService):
                 "developer-message": "403 Forbidden: You are not the source of the work, so you are not allowed to update it.",
                 "user-message": "The client application is not the source of the resource it is trying to access.",
                 "error-code": 9010,
-                "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+                "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
             self.send_json_error(error, status_code=403)
         elif self.path == "/0000-0003-4997-3076/work/456":
@@ -70,7 +70,7 @@ class MockORCIDAPI(MockService):
                 "developer-message": "404 Not Found: The resource was not found. Full validation error: No entity found for query",
                 "user-message": "The resource was not found.",
                 "error-code": 9016,
-                "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+                "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
             self.send_json_error(error, status_code=404)
 
@@ -90,13 +90,13 @@ class MockORCIDAPI(MockService):
             if new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-500":
                 self.send_text_error("AN ERROR", status_code=500)
             elif (
-                    new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-400"
+                new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-400"
             ):
                 error_data = {"user-message": "This is another error"}
                 self.send_json_error(error_data, status_code=400)
             elif (
-                    new_work["bulk"][0]["work"]["title"]["title"]["value"]
-                    == "trigger-http-exception"
+                new_work["bulk"][0]["work"]["title"]["title"]["value"]
+                == "trigger-http-exception"
             ):
                 # Note that this assumes the client timeout is < 1 sec. Tests
                 # should set the timeout to 0.5sec.

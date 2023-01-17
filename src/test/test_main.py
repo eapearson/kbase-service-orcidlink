@@ -73,8 +73,8 @@ def test_validation_exception_handler():
     assert content["code"] == "requestParametersInvalid"
     assert content["title"] == "Request Parameters Invalid"
     assert (
-            content["message"]
-            == "This request does not comply with the schema for this endpoint"
+        content["message"]
+        == "This request does not comply with the schema for this endpoint"
     )
 
 

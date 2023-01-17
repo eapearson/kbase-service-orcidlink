@@ -320,8 +320,7 @@ def test_delete_work(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.delete(f"/works/{put_code}",
-                                 headers={"Authorization": "foo"})
+        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
         assert response.status_code == 204
 
 
@@ -330,8 +329,7 @@ def test_delete_work_bad_no_link(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.delete(f"/works/{put_code}",
-                                 headers={"Authorization": "bar"})
+        response = client.delete(f"/works/{put_code}", headers={"Authorization": "bar"})
         assert response.status_code == 404
 
 
@@ -342,14 +340,16 @@ def test_delete_work_not_source(fake_fs):
         # transpose the final 2 with 3.
         client = TestClient(app)
         put_code = 123
-        response = client.delete(f"/works/{put_code}",
-                                 headers={"Authorization": "foo"})
+        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
         assert response.status_code == 400
         result = response.json()
         assert isinstance(result, dict)
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
-        assert result["message"] == "The ORCID API reported an error fo this request, see 'data' for cause"
+        assert (
+            result["message"]
+            == "The ORCID API reported an error fo this request, see 'data' for cause"
+        )
         assert result["data"]["response-code"] == 403
         assert result["data"]["error-code"] == 9010
         # # Tha actual messages may change over time, and are not used
@@ -363,14 +363,16 @@ def test_delete_work_put_code_not_found(fake_fs):
         # transpose the final 2 with 3.
         client = TestClient(app)
         put_code = 456
-        response = client.delete(f"/works/{put_code}",
-                                 headers={"Authorization": "foo"})
+        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
         assert response.status_code == 400
         result = response.json()
         assert isinstance(result, dict)
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
-        assert result["message"] == "The ORCID API reported an error fo this request, see 'data' for cause"
+        assert (
+            result["message"]
+            == "The ORCID API reported an error fo this request, see 'data' for cause"
+        )
         assert result["data"]["response-code"] == 404
         assert result["data"]["error-code"] == 9016
         # # Tha actual messages may change over time, and are not used
