@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="black fmt [CE-155, CE-154]">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/reusable_build.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/reusable_build.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/reusable_test.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/reusable_test.yml" afterDir="false" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="update GHA action versions [CE-155, CE-154]">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/reusable_build-push.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/reusable_build-push.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -174,14 +173,7 @@
       <workItem from="1672781384128" duration="119614000" />
       <workItem from="1673440365844" duration="81568000" />
       <workItem from="1673795684043" duration="15393000" />
-      <workItem from="1673965150248" duration="6474000" />
-    </task>
-    <task id="LOCAL-00020" summary="debug missing query params [CE-70]">
-      <created>1663005093946</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1663005093946</updated>
+      <workItem from="1673965150248" duration="7041000" />
     </task>
     <task id="LOCAL-00021" summary="debug missing query params [CE-70]">
       <created>1663005315591</created>
@@ -519,7 +511,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673971445638</updated>
     </task>
-    <option name="localTasksCounter" value="69" />
+    <task id="LOCAL-00069" summary="update GHA action versions [CE-155, CE-154]">
+      <created>1673972040239</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1673972040239</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -548,7 +547,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update to PyCharm IDE config [CE-45]" />
     <MESSAGE value="remove dev time error trigger [CE-45]" />
     <MESSAGE value="refactor little json db [CE-45]" />
     <MESSAGE value="add osti contributor type lookup [CE-45]" />
@@ -573,7 +571,8 @@
     <MESSAGE value="black formatting [CE-155, CE-154]" />
     <MESSAGE value="fix tests [CE-155, CE-154]" />
     <MESSAGE value="black fmt [CE-155, CE-154]" />
-    <option name="LAST_COMMIT_MESSAGE" value="black fmt [CE-155, CE-154]" />
+    <MESSAGE value="update GHA action versions [CE-155, CE-154]" />
+    <option name="LAST_COMMIT_MESSAGE" value="update GHA action versions [CE-155, CE-154]" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
