@@ -24,13 +24,31 @@ def my_config_file2(fs):
 
 
 def test_get_config(my_config_file2):
-    config.ensure_config(reload=True)
+    # Force reload of the mock config to a pristine state.
+    config.config(reload=True)
     assert config.config().module.CLIENT_ID == "REDACTED-CLIENT-ID"
     assert config.config().module.CLIENT_SECRET == "REDACTED-CLIENT-SECRET"
     assert (
-        config.config().kbase.services.Auth2.url
-        == "https://ci.kbase.us/services/auth/api/V2/token"
+            config.config().kbase.services.Auth2.url
+            == "https://ci.kbase.us/services/auth/api/V2/token"
     )
+
+
+def test_config_initially_none(my_config_file2):
+    """
+    Various
+    It is difficult to test this in the natural state, in which the
+    global config manager in the config module starts life as None, but
+    is initialized upon first usage. That lifecycle depends upon the
+    application lifecycle, and with tests we don't
+    have control over that. So we simulate that by resetting it to None first.
+    """
+    # Force reload of the mock config to a pristine state.
+    config.GLOBAL_CONFIG_MANAGER = None
+    assert config.GLOBAL_CONFIG_MANAGER is None
+    config.config()
+    assert config.GLOBAL_CONFIG_MANAGER is not None
+    assert config.config().kbase.uiOrigin == "https://ci.kbase.us"
 
 
 def test_set_config(my_config_file):
@@ -38,12 +56,10 @@ def test_set_config(my_config_file):
         with mock_service_wizard_service() as [_, mock_class, _]:
             mock_class.reset_call_counts()
 
-            # modify the service wizard url to use the dynamically allocated
             # server address.
-            config.ensure_config()
+            config.config()
 
-            config.clear()
-            config.ensure_config(reload=True)
+            config.config(reload=True)
 
             # Set to different value, should be changed.
             config.config().kbase.services.ServiceWizard.url = "FOO"

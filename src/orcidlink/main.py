@@ -236,11 +236,6 @@ async def get_info():
     config_copy["module"]["CLIENT_ID"] = "REDACTED"
     config_copy["module"]["CLIENT_SECRET"] = "REDACTED"
     return {"kbase_sdk_config": kbase_sdk_config, "config": config_copy}
-    # result = InfoResponse(
-    #     kbase_sdk_config=kbase_sdk_config,
-    #     config=ensure_config()
-    # )
-    # return result.dict(exclude={'config': {'env': {'CLIENT_ID', 'CLIENT_SECRET'}}})
 
 
 # Docs

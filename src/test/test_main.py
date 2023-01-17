@@ -9,11 +9,13 @@ from test.mocks.mock_contexts import mock_auth_service, no_stderr
 client = TestClient(app, raise_server_exceptions=False)
 
 config_yaml = load_data_file("config1.yaml")
+kbase_yaml = load_data_file("kbase1.yml")
 
 
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.create_file("/kb/module/kbase.yml", contents=kbase_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -24,7 +26,7 @@ TEST_LINK = load_data_json("link1.json")
 # Happy paths
 
 
-def test_main_status():
+def test_main_status(fake_fs):
     response = client.get("/status")
     assert response.status_code == 200
     json_response = response.json()
@@ -37,17 +39,17 @@ def test_main_status():
     assert abs(time_diff.total_seconds()) < 1
 
 
-def test_main_info():
+def test_main_info(fake_fs):
     response = client.get("/info")
     assert response.status_code == 200
 
 
-def test_docs():
+def test_docs(fake_fs):
     response = client.get("/docs")
     assert response.status_code == 200
 
 
-def test_docs_error():
+def test_docs_error(fake_fs):
     openapi_url = app.openapi_url
     app.openapi_url = None
     client = TestClient(app, raise_server_exceptions=False)
@@ -60,12 +62,12 @@ def test_docs_error():
 # Error conditions
 
 
-def test_main_404():
+def test_main_404(fake_fs):
     response = client.get("/foo")
     assert response.status_code == 404
 
 
-def test_validation_exception_handler():
+def test_validation_exception_handler(fake_fs):
     response = client.post("/works", json={"foo": "bar"})
     assert response.status_code == 422
     assert response.headers["content-type"] == "application/json"
@@ -78,7 +80,7 @@ def test_validation_exception_handler():
     )
 
 
-def test_kbase_auth_exception_handler(fs):
+def test_kbase_auth_exception_handler(fake_fs):
     with no_stderr():
         with mock_auth_service() as [_, _, url]:
             # call with missing token

@@ -79,34 +79,17 @@ class ConfigManager:
 
         return self.config_data
 
-    def ensure_config(self, reload: bool = False) -> Config:
-        return self.config(reload)
 
-    def clear(self):
-        with self.lock:
-            self.config_data = None
-
-
-GLOBAL_CONFIG = ConfigManager(os.path.join(module_dir(), "config/config.yaml"))
-
-
-def ensure_config(reload: bool = False):
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.ensure_config(reload)
+GLOBAL_CONFIG_MANAGER = None
 
 
 def config(reload: bool = False) -> Config:
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.config(reload)
-
-
-#
-#
-
-
-def clear():
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG.clear()
+    global GLOBAL_CONFIG_MANAGER
+    if GLOBAL_CONFIG_MANAGER is None:
+        GLOBAL_CONFIG_MANAGER = ConfigManager(
+            os.path.join(module_dir(), "config/config.yaml")
+        )
+    return GLOBAL_CONFIG_MANAGER.config(reload)
 
 
 def get_kbase_config():

@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from orcidlink.lib.config import ensure_config
+from orcidlink.lib.config import config
 from orcidlink.lib.responses import ErrorException
 from orcidlink.service_clients.ORCIDClient import (
     ORCIDAPIClient,
@@ -35,7 +35,7 @@ def my_fs(fs):
 
 
 def test_orcid_api_url(fake_fs):
-    ensure_config(reload=True)
+    config(reload=True)
     value = orcid_api_url("path")
     assert isinstance(value, str)
     assert value == "https://api.sandbox.orcid.org/v3.0/path"

@@ -4,8 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="fix tests after mypy changes, add GHA support (wip), Taskfile, remove kb_sdk artifacts [CE-155, CE-154]">
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="black formatting [CE-155, CE-154]">
+      <change afterPath="$PROJECT_DIR$/src/test/data/kbase1.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kbase.yml" beforeDir="false" afterPath="$PROJECT_DIR$/kbase.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/orcidlink/service_clients/DynamicServiceClient.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/lib/test_config_module.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_config_module.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_DynamicServiceClient.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/test_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/test_main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -172,14 +181,7 @@
       <workItem from="1672781384128" duration="119614000" />
       <workItem from="1673440365844" duration="81568000" />
       <workItem from="1673795684043" duration="15393000" />
-      <workItem from="1673965150248" duration="1734000" />
-    </task>
-    <task id="LOCAL-00017" summary="fix redirect uri [CE-70]">
-      <created>1663001160286</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1663001160286</updated>
+      <workItem from="1673965150248" duration="5310000" />
     </task>
     <task id="LOCAL-00018" summary="fix redirect uri [CE-70]">
       <created>1663002418402</created>
@@ -517,7 +519,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673965525686</updated>
     </task>
-    <option name="localTasksCounter" value="66" />
+    <task id="LOCAL-00066" summary="black formatting [CE-155, CE-154]">
+      <created>1673967336490</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1673967336490</updated>
+    </task>
+    <option name="localTasksCounter" value="67" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -546,7 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="add small api for doi.org [CE-45]" />
     <MESSAGE value="improve error handling [CE-45]" />
     <MESSAGE value="ignore local only read me [CE-45]" />
     <MESSAGE value="update to PyCharm IDE config [CE-45]" />
@@ -571,7 +579,8 @@
     <MESSAGE value="initial support for switching to mongodb, including testing [CE-153]" />
     <MESSAGE value="added mypy support, mypy fixes, black-format files [CE-155]" />
     <MESSAGE value="fix tests after mypy changes, add GHA support (wip), Taskfile, remove kb_sdk artifacts [CE-155, CE-154]" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix tests after mypy changes, add GHA support (wip), Taskfile, remove kb_sdk artifacts [CE-155, CE-154]" />
+    <MESSAGE value="black formatting [CE-155, CE-154]" />
+    <option name="LAST_COMMIT_MESSAGE" value="black formatting [CE-155, CE-154]" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -596,7 +605,7 @@
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/test/service_clients/test_DynamicServiceClient.py</url>
+          <url>file://$PROJECT_DIR$/_local/test_DynamicServiceClient.py</url>
           <line>81</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
