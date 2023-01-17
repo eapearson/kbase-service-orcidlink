@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="fix tests [CE-155, CE-154]" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="black fmt [CE-155, CE-154]">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/reusable_build.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/reusable_build.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/reusable_test.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/reusable_test.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -170,14 +174,7 @@
       <workItem from="1672781384128" duration="119614000" />
       <workItem from="1673440365844" duration="81568000" />
       <workItem from="1673795684043" duration="15393000" />
-      <workItem from="1673965150248" duration="5829000" />
-    </task>
-    <task id="LOCAL-00019" summary="add error message for missing query params [CE-70]">
-      <created>1663003625596</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1663003625596</updated>
+      <workItem from="1673965150248" duration="6474000" />
     </task>
     <task id="LOCAL-00020" summary="debug missing query params [CE-70]">
       <created>1663005093946</created>
@@ -515,7 +512,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673971064859</updated>
     </task>
-    <option name="localTasksCounter" value="68" />
+    <task id="LOCAL-00068" summary="black fmt [CE-155, CE-154]">
+      <created>1673971445638</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1673971445638</updated>
+    </task>
+    <option name="localTasksCounter" value="69" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,7 +548,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="ignore local only read me [CE-45]" />
     <MESSAGE value="update to PyCharm IDE config [CE-45]" />
     <MESSAGE value="remove dev time error trigger [CE-45]" />
     <MESSAGE value="refactor little json db [CE-45]" />
@@ -569,7 +572,8 @@
     <MESSAGE value="fix tests after mypy changes, add GHA support (wip), Taskfile, remove kb_sdk artifacts [CE-155, CE-154]" />
     <MESSAGE value="black formatting [CE-155, CE-154]" />
     <MESSAGE value="fix tests [CE-155, CE-154]" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix tests [CE-155, CE-154]" />
+    <MESSAGE value="black fmt [CE-155, CE-154]" />
+    <option name="LAST_COMMIT_MESSAGE" value="black fmt [CE-155, CE-154]" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
