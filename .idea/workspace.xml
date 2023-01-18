@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="reviewing codebase; refactor config; adjust some paths; reorganize files and import paths, etc  [CE-160]">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/reusable_build-push.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/reusable_build-push.yml" afterDir="false" />
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="remove dependency on now-defunct Makefile  [CE-160]">
+      <change afterPath="$PROJECT_DIR$/.github/CODEOWNERS" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile-dev-interpreter" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/config.yaml.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/templates/config.yaml.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +17,11 @@
     <option name="myRunOnSave" value="true" />
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -177,14 +179,7 @@
       <workItem from="1673440365844" duration="81568000" />
       <workItem from="1673795684043" duration="15393000" />
       <workItem from="1673965150248" duration="7041000" />
-      <workItem from="1673973842810" duration="26515000" />
-    </task>
-    <task id="LOCAL-00022" summary="remove debugging lines [CE-70]">
-      <created>1663098701577</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1663098701577</updated>
+      <workItem from="1673973842810" duration="26767000" />
     </task>
     <task id="LOCAL-00023" summary="keep adding minimal docs [CE-70]">
       <created>1663099320747</created>
@@ -522,7 +517,14 @@
       <option name="project" value="LOCAL" />
       <updated>1674067343756</updated>
     </task>
-    <option name="localTasksCounter" value="71" />
+    <task id="LOCAL-00071" summary="remove dependency on now-defunct Makefile  [CE-160]">
+      <created>1674068657224</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1674068657224</updated>
+    </task>
+    <option name="localTasksCounter" value="72" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -551,7 +553,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="refactor little json db [CE-45]" />
     <MESSAGE value="add osti contributor type lookup [CE-45]" />
     <MESSAGE value="clean up files [CE-45]" />
     <MESSAGE value="first init and checkin again [CE-45]" />
@@ -576,7 +577,8 @@
     <MESSAGE value="black fmt [CE-155, CE-154]" />
     <MESSAGE value="update GHA action versions [CE-155, CE-154]" />
     <MESSAGE value="reviewing codebase; refactor config; adjust some paths; reorganize files and import paths, etc  [CE-160]" />
-    <option name="LAST_COMMIT_MESSAGE" value="reviewing codebase; refactor config; adjust some paths; reorganize files and import paths, etc  [CE-160]" />
+    <MESSAGE value="remove dependency on now-defunct Makefile  [CE-160]" />
+    <option name="LAST_COMMIT_MESSAGE" value="remove dependency on now-defunct Makefile  [CE-160]" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
