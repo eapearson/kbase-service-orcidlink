@@ -14,12 +14,12 @@ from test.mocks.mock_contexts import (
     no_stderr,
 )
 
-config_yaml = load_data_file("config1.yaml")
+config_yaml = load_data_file("config1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -348,8 +348,8 @@ def test_delete_work_not_source(fake_fs):
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
         assert (
-            result["message"]
-            == "The ORCID API reported an error fo this request, see 'data' for cause"
+                result["message"]
+                == "The ORCID API reported an error fo this request, see 'data' for cause"
         )
         assert result["data"]["response-code"] == 403
         assert result["data"]["error-code"] == 9010
@@ -371,8 +371,8 @@ def test_delete_work_put_code_not_found(fake_fs):
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
         assert (
-            result["message"]
-            == "The ORCID API reported an error fo this request, see 'data' for cause"
+                result["message"]
+                == "The ORCID API reported an error fo this request, see 'data' for cause"
         )
         assert result["data"]["response-code"] == 404
         assert result["data"]["error-code"] == 9016

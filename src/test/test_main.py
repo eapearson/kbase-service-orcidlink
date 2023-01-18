@@ -6,13 +6,13 @@ from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
 client = TestClient(app, raise_server_exceptions=False)
 
-config_yaml = load_data_file("config1.yaml")
+config_yaml = load_data_file("config1.toml")
 kbase_yaml = load_data_file("kbase1.yml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
     fs.create_file("/kb/module/kbase.yml", contents=kbase_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
@@ -55,8 +55,8 @@ def test_validation_exception_handler(fake_fs):
     assert content["code"] == "requestParametersInvalid"
     assert content["title"] == "Request Parameters Invalid"
     assert (
-        content["message"]
-        == "This request does not comply with the schema for this endpoint"
+            content["message"]
+            == "This request does not comply with the schema for this endpoint"
     )
 
 

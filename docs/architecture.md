@@ -43,7 +43,7 @@ Overall, however, the following attributes are important for the nature of this 
 
 ### Environment Variables
 
-The configuration template (`templates/config.yaml.tmpl`) requires a set of environment variables in order to render to a resulting configuration file.
+The configuration template (`templates/config.tmpl.toml`) requires a set of environment variables in order to render to a resulting configuration file.
 
 See [the configuration doc](./configuration.md) for details. 
 

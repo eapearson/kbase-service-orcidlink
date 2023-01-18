@@ -7,12 +7,12 @@ from orcidlink.lib import responses
 from orcidlink.lib.responses import ErrorException, error_response_not_found
 from test.data.utils import load_data_file
 
-config_yaml = load_data_file("config1.yaml")
+config_yaml = load_data_file("config1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -126,7 +126,7 @@ def test_ensure_authorization():
     assert value == "foo"
 
     with pytest.raises(
-        ErrorException, match="API call requires a KBase auth token"
+            ErrorException, match="API call requires a KBase auth token"
     ) as ex:
         responses.ensure_authorization(None)
 

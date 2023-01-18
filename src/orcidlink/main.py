@@ -110,7 +110,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-    request: Request, exc: KBaseAuthMissingToken
+        request: Request, exc: KBaseAuthMissingToken
 ):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
@@ -230,7 +230,7 @@ async def docs(req: Request):
         # print('RESPONSE IS', response.status_code)
         # return response
 
-    openapi_url = config().kbase.services.ORCIDLink.url + app.openapi_url
+    openapi_url = config().services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",

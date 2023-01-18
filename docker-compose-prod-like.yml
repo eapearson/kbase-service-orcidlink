@@ -30,6 +30,7 @@ services:
       - MONGO_PASSWORD=${MONGO_PASSWORD}
     depends_on:
       - mongo
+    command: [ "scripts/run-server.sh" ]
   mongo:
     image: mongo
     restart: always

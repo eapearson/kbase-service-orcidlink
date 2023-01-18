@@ -16,12 +16,12 @@ from test.mocks.mock_contexts import (
 
 client = TestClient(app)
 
-config_yaml = load_data_file("config1.yaml")
+config_yaml = load_data_file("config1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -60,8 +60,8 @@ def test_router_profile_to_normalized():
     model_profile = load_test_data("orcid", "profile-model")
     email = load_test_data("orcid", "email")
     assert (
-        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
-        == ORCIDProfile.parse_obj(model_profile).dict()
+            get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
+            == ORCIDProfile.parse_obj(model_profile).dict()
     )
 
 
@@ -71,8 +71,8 @@ def test_router_profile_to_normalized_single_affiliation():
     model_profile = load_test_data("orcid", "profile-model-single-affiliation")
     email = load_test_data("orcid", "email")
     assert (
-        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
-        == ORCIDProfile.parse_obj(model_profile).dict()
+            get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
+            == ORCIDProfile.parse_obj(model_profile).dict()
     )
 
 

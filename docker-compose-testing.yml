@@ -31,8 +31,6 @@ services:
       - MONGO_PASSWORD=${MONGO_PASSWORD}
     depends_on:
       - mongo
-    entrypoint:
-      - bash
   mongo:
     image: mongo
     restart: always

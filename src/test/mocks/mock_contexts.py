@@ -25,7 +25,7 @@ def mock_auth_service():
     try:
         service.start_service()
         url = f"{service.base_url()}/services/auth/api/V2/token"
-        config.config().kbase.services.Auth2.url = url
+        config.config().services.Auth2.url = url
 
         yield [service, MockAuthService, url]
     finally:

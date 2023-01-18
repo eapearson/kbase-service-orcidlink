@@ -2,22 +2,20 @@ import pytest
 from orcidlink.lib import config
 from test.data.utils import load_data_file
 
-config_yaml = load_data_file("config1.yaml")
-
-config_yaml = load_data_file("config1.yaml")
-config_yaml2 = load_data_file("config2.yaml")
+config_yaml = load_data_file("config1.toml")
+config_yaml2 = load_data_file("config2.toml")
 
 
 @pytest.fixture
 def my_config_file(fs):
-    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml)
+    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
 
 @pytest.fixture
 def my_config_file2(fs):
-    fs.create_file("/kb/module/config/config.yaml", contents=config_yaml2)
+    fs.create_file("/kb/module/config/config.toml", contents=config_yaml2)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -28,8 +26,8 @@ def test_get_config(my_config_file2):
     assert config.config().orcid.clientId == "REDACTED-CLIENT-ID"
     assert config.config().orcid.clientSecret == "REDACTED-CLIENT-SECRET"
     assert (
-        config.config().kbase.services.Auth2.url
-        == "https://ci.kbase.us/services/auth/api/V2/token"
+            config.config().services.Auth2.url
+            == "https://ci.kbase.us/services/auth/api/V2/token"
     )
 
 
@@ -47,19 +45,19 @@ def test_config_initially_none(my_config_file2):
     assert config.GLOBAL_CONFIG_MANAGER is None
     config.config()
     assert config.GLOBAL_CONFIG_MANAGER is not None
-    assert config.config().kbase.uiOrigin == "https://ci.kbase.us"
+    assert config.config().ui.origin == "https://ci.kbase.us"
 
 
 def test_set_config(my_config_file):
     config.config()
 
-    config.config().kbase.services.ORCIDLink.url = "BAR"
-    assert config.config().kbase.services.ORCIDLink.url == "BAR"
+    config.config().services.ORCIDLink.url = "BAR"
+    assert config.config().services.ORCIDLink.url == "BAR"
 
     # Set to different value, should be changed.
-    config.config().kbase.services.ORCIDLink.url = "FOO"
-    assert config.config().kbase.services.ORCIDLink.url == "FOO"
+    config.config().services.ORCIDLink.url = "FOO"
+    assert config.config().services.ORCIDLink.url == "FOO"
 
     # Set to same value, nothing should change
-    config.config().kbase.services.ORCIDLink.url = "FOO"
-    assert config.config().kbase.services.ORCIDLink.url == "FOO"
+    config.config().services.ORCIDLink.url = "FOO"
+    assert config.config().services.ORCIDLink.url == "FOO"

@@ -39,7 +39,7 @@ def make_error(code: str, title: str, message: str, data=None) -> ErrorResponse:
 
 
 def error_response(
-    code: str, title: str, message: str, data=None, status_code=400
+        code: str, title: str, message: str, data=None, status_code=400
 ) -> JSONResponse:
     response = ErrorResponse(
         code=code,
@@ -59,11 +59,11 @@ def error_response_not_found(message: str) -> JSONResponse:
 
 
 def exception_error_response(
-    code: str,
-    title: str,
-    exception: Exception,
-    data: Optional[dict] = None,
-    status_code=400,
+        code: str,
+        title: str,
+        exception: Exception,
+        data: Optional[dict] = None,
+        status_code=400,
 ) -> JSONResponse:
     traceback = []
     for tb in extract_tb(exception.__traceback__):
@@ -96,7 +96,7 @@ def exception_error_response(
 def ui_error_response(code: str, title: str, message: str) -> RedirectResponse:
     error_params = urlencode({"code": code, "title": title, "message": message})
     return RedirectResponse(
-        f"{config().kbase.uiOrigin}?{error_params}#orcidlink/error", status_code=302
+        f"{config().ui.origin}?{error_params}#orcidlink/error", status_code=302
     )
 
 
@@ -119,7 +119,7 @@ class ErrorException(Exception):
 
 
 def make_error_exception(
-    code: str, title: str, message: str, data=None, status_code=400
+        code: str, title: str, message: str, data=None, status_code=400
 ) -> ErrorException:
     return ErrorException(
         error=make_error(code, title, message, data), status_code=status_code
