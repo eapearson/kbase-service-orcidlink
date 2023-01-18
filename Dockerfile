@@ -22,24 +22,24 @@ ENV PYTHONPATH="/kb/module/src"
 RUN version=v0.17.0 && \
     wget -O - https://github.com/powerman/dockerize/releases/download/${version}/dockerize-`uname -s`-`uname -m` | install /dev/stdin /usr/local/bin/dockerize
 
-# SSH for development
-# RUN /etc/init.d/ssh start && /etc/init.d/ssh status
 
 RUN mkdir -p /kb/module/work
 RUN mkdir -p /kb/module/config
 RUN chmod -R a+rw /kb/module
-COPY ./src /kb/module/src
+
+# Copying only files needed for service runtime.
+# Other usages of this image, e.g. testing, mount the project root at /kb/module
+# and have access to everything.
 COPY ./scripts /kb/module/scripts
+COPY ./src /kb/module/src
 COPY ./templates /kb/module/templates
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
 COPY ./deploy.cfg /kb/module
-COPY ./Makefile /kb/module
 COPY ./kbase.yml /kb/module
 
 WORKDIR /kb/module
 
-# RUN poetry lock
 RUN poetry config virtualenvs.create false && poetry install
 
 
