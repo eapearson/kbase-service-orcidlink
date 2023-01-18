@@ -60,8 +60,8 @@ def test_router_profile_to_normalized():
     model_profile = load_test_data("orcid", "profile-model")
     email = load_test_data("orcid", "email")
     assert (
-            get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
-            == ORCIDProfile.parse_obj(model_profile).dict()
+        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
+        == ORCIDProfile.parse_obj(model_profile).dict()
     )
 
 
@@ -71,8 +71,8 @@ def test_router_profile_to_normalized_single_affiliation():
     model_profile = load_test_data("orcid", "profile-model-single-affiliation")
     email = load_test_data("orcid", "email")
     assert (
-            get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
-            == ORCIDProfile.parse_obj(model_profile).dict()
+        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
+        == ORCIDProfile.parse_obj(model_profile).dict()
     )
 
 

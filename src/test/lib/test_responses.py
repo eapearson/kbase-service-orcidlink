@@ -126,7 +126,7 @@ def test_ensure_authorization():
     assert value == "foo"
 
     with pytest.raises(
-            ErrorException, match="API call requires a KBase auth token"
+        ErrorException, match="API call requires a KBase auth token"
     ) as ex:
         responses.ensure_authorization(None)
 

@@ -110,7 +110,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-        request: Request, exc: KBaseAuthMissingToken
+    request: Request, exc: KBaseAuthMissingToken
 ):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.

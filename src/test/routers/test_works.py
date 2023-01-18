@@ -348,8 +348,8 @@ def test_delete_work_not_source(fake_fs):
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
         assert (
-                result["message"]
-                == "The ORCID API reported an error fo this request, see 'data' for cause"
+            result["message"]
+            == "The ORCID API reported an error fo this request, see 'data' for cause"
         )
         assert result["data"]["response-code"] == 403
         assert result["data"]["error-code"] == 9010
@@ -371,8 +371,8 @@ def test_delete_work_put_code_not_found(fake_fs):
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
         assert (
-                result["message"]
-                == "The ORCID API reported an error fo this request, see 'data' for cause"
+            result["message"]
+            == "The ORCID API reported an error fo this request, see 'data' for cause"
         )
         assert result["data"]["response-code"] == 404
         assert result["data"]["error-code"] == 9016

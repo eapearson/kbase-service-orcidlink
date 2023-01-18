@@ -39,7 +39,7 @@ def make_error(code: str, title: str, message: str, data=None) -> ErrorResponse:
 
 
 def error_response(
-        code: str, title: str, message: str, data=None, status_code=400
+    code: str, title: str, message: str, data=None, status_code=400
 ) -> JSONResponse:
     response = ErrorResponse(
         code=code,
@@ -59,11 +59,11 @@ def error_response_not_found(message: str) -> JSONResponse:
 
 
 def exception_error_response(
-        code: str,
-        title: str,
-        exception: Exception,
-        data: Optional[dict] = None,
-        status_code=400,
+    code: str,
+    title: str,
+    exception: Exception,
+    data: Optional[dict] = None,
+    status_code=400,
 ) -> JSONResponse:
     traceback = []
     for tb in extract_tb(exception.__traceback__):
@@ -119,7 +119,7 @@ class ErrorException(Exception):
 
 
 def make_error_exception(
-        code: str, title: str, message: str, data=None, status_code=400
+    code: str, title: str, message: str, data=None, status_code=400
 ) -> ErrorException:
     return ErrorException(
         error=make_error(code, title, message, data), status_code=status_code

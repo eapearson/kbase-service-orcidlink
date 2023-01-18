@@ -21,7 +21,7 @@ function black {
 }
 
 function shell {
-  docker compose -f docker-compose-runner.yml run --rm orcidlink scripts/run-black.sh ${1} ${2}
+  docker compose -f docker-compose-runner.yml run --rm orcidlink bash
 }
 
 function server {
