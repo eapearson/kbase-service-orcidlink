@@ -47,7 +47,7 @@ LinkingUI --> User: if success, show continuation button
 end
 
 User -> LinkingUI: click continuation button
-LinkingUI ->  LinkingService:/linking-sessions/start/{session_id}
+LinkingUI ->  LinkingService:/linking-sessions/{session_id}/oauth/start
 note left
 initiates linking flow
 end note

@@ -2,11 +2,11 @@ import contextlib
 
 import pytest
 from fastapi.testclient import TestClient
-from orcidlink.lib import storage_model
 from orcidlink.lib.config import config
 from orcidlink.main import app
-from orcidlink.model_types import LinkRecord, ORCIDProfile
-from orcidlink.routers.orcid import orcid_profile_to_normalized
+from orcidlink.model import LinkRecord, ORCIDProfile
+from orcidlink.routers.orcid import get_profile_to_ORCIDProfile
+from orcidlink.storage import storage_model
 from test.data.utils import load_data_file, load_data_json, load_test_data
 from test.mocks.mock_contexts import (
     mock_auth_service,
@@ -60,7 +60,7 @@ def test_router_profile_to_normalized():
     model_profile = load_test_data("orcid", "profile-model")
     email = load_test_data("orcid", "email")
     assert (
-        orcid_profile_to_normalized(orcid_id, raw_profile, email).dict()
+        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
         == ORCIDProfile.parse_obj(model_profile).dict()
     )
 
@@ -71,7 +71,7 @@ def test_router_profile_to_normalized_single_affiliation():
     model_profile = load_test_data("orcid", "profile-model-single-affiliation")
     email = load_test_data("orcid", "email")
     assert (
-        orcid_profile_to_normalized(orcid_id, raw_profile, email).dict()
+        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
         == ORCIDProfile.parse_obj(model_profile).dict()
     )
 

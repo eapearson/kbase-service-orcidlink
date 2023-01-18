@@ -29,7 +29,7 @@ class MockImaginaryService(MockSDKJSON11ServiceBase):
                             "state": "OK",
                             "version": "0.4.2",
                             "message": "",
-                            "git_url": "https://github.com/kbase/service_wizard",
+                            "git_url": "https://github.com/kbase/imaginary_service",
                         }
                     )
                 )

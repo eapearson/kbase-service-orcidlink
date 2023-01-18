@@ -1,26 +1,15 @@
-import json
-from urllib.parse import urlencode
-
-import httpx
-from fastapi import Cookie, FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import RedirectResponse
-from orcidlink.api_types import InfoResponse, StatusResponse
-from orcidlink.lib.config import config, get_kbase_config
+from orcidlink.lib.config import config
 from orcidlink.lib.responses import (
     ErrorException,
     error_response,
     error_response_not_found,
     exception_error_response,
-    ui_error_response,
 )
-from orcidlink.lib.storage_model import storage_model
-from orcidlink.lib.utils import epoch_time_millis
-from orcidlink.model_types import LinkingSessionStarted, ORCIDAuth
-from orcidlink.routers import link, linking_sessions, orcid, works
-from orcidlink.routers.linking_sessions import get_linking_session_record
-from orcidlink.service_clients.authclient2 import (
+from orcidlink.routers import link, linking_sessions, orcid, root, works
+from orcidlink.service_clients.KBaseAuth import (
     KBaseAuthException,
     KBaseAuthInvalidToken,
     KBaseAuthMissingToken,
@@ -77,6 +66,7 @@ app = FastAPI(
 #
 # All paths are included here as routers. Each router is defined in the "routers" directory.
 #
+app.include_router(root.router)
 app.include_router(link.router)
 app.include_router(linking_sessions.router)
 app.include_router(works.router)
@@ -212,35 +202,6 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 #
 
 
-STARTED = epoch_time_millis()
-
-
-@app.get("/status", response_model=StatusResponse, tags=["misc"])
-async def get_status():
-    """
-    The status of the service.
-
-    The intention of this endpoint is as a lightweight way to call to ping the
-    service, e.g. for health check, latency tests, etc.
-    """
-    return StatusResponse(status="ok", start_time=STARTED, time=epoch_time_millis())
-
-
-@app.get("/info", response_model=InfoResponse, tags=["misc"])
-async def get_info():
-    """
-    Returns basic information about the service and its runtime configuration.
-    """
-    kbase_sdk_config = get_kbase_config()
-    config_copy = config().dict()
-    config_copy["module"]["CLIENT_ID"] = "REDACTED"
-    config_copy["module"]["CLIENT_SECRET"] = "REDACTED"
-    return {"kbase_sdk_config": kbase_sdk_config, "config": config_copy}
-
-
-# Docs
-
-
 @app.get(
     "/docs",
     include_in_schema=True,
@@ -273,142 +234,4 @@ async def docs(req: Request):
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",
-    )
-
-
-#
-# Redirection target for linking.
-#
-# The provided "code" is very short-lived and must be exchanged for the
-# long-lived tokens without allowing the user to dawdle over it.
-#
-# Yet we do want the user to verify the linking with full account info first.
-# Even using the forced logout during ORCID authentication, the ORCID interface
-# does not identify the account after login. Since their user ids are cryptic,
-#
-# it would be possible on a multi-user computer to use the wrong ORCID Id.
-# So what we do is save the response and issue our own temporary token.
-# Upon submitting that token to /finish-link link is made.
-#
-@app.get(
-    "/continue-linking-session",
-    responses={
-        302: {"description": "Redirect to the continuation page; or error page"}
-    },
-    tags=["link"],
-)
-async def continue_linking_session(
-    kbase_session: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
-    kbase_session_backup: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
-    code: str | None = None,
-    state: str | None = None,
-    error: str | None = None,
-):
-    """
-    The redirect endpoint for the ORCID OAuth flow we use for linking.
-    """
-    # Note that this is the target for redirection from ORCID,
-    # and we don't have an Authorization header. We don't
-    # (necessarily) have an auth cookie.
-    # So we use the state to get the session id.
-    if kbase_session is None:
-        if kbase_session_backup is None:
-            # TODO: this should be our own exception, otherwise it will be caught by
-            # the global fastapi hooks.
-            raise HTTPException(401, "Linking requires authentication")
-        else:
-            authorization = kbase_session_backup
-    else:
-        authorization = kbase_session
-
-    if error is not None:
-        return ui_error_response("link.orcid_error", "ORCID Error Linking", error)
-
-    if code is None:
-        return ui_error_response(
-            "link.code_missing",
-            "Linking code missing",
-            "The 'code' query param is required but missing",
-        )
-
-    if state is None:
-        return ui_error_response(
-            "link.state_missing",
-            "Linking state missing",
-            "The 'state' query param is required but missing",
-        )
-
-    unpacked_state = json.loads(state)
-
-    if "session_id" not in unpacked_state:
-        return ui_error_response(
-            "link.session_id_missing",
-            "Linking Error",
-            "The 'session_id' was not provided in the 'state' query param",
-        )
-
-    session_id = unpacked_state.get("session_id")
-
-    session_record = get_linking_session_record(session_id, authorization)
-
-    if not type(session_record) == LinkingSessionStarted:
-        return ui_error_response(
-            "linking_session.wrong_state",
-            "Linking Error",
-            "The session is not in 'started' state",
-        )
-
-    #
-    # Exchange the temporary token from ORCID for the authorized token.
-    #
-    header = {
-        "accept": "application/json",
-        "content-type": "application/x-www-form-urlencoded",
-    }
-    # Note that the redirect uri below is just for the api - it is not actually used
-    # for redirection in this case.
-    # TODO: investigate and point to the docs, because this is weird.
-    # TODO: put in orcid client!
-    data = {
-        "client_id": config().module.CLIENT_ID,
-        "client_secret": config().module.CLIENT_SECRET,
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": f"{config().kbase.services.ORCIDLink.url}/continue-linking-session",
-    }
-    response = httpx.post(
-        f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
-    )
-    orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
-
-    #
-    # Now we store the response from ORCID in our session.
-    # We still need the user to finalize the linking, now that it has succeeded
-    # which is done in finalize-linking-session.
-    #
-
-    # Note that this is approximate, as it uses our time, not the
-    # ORCID server time.
-    # session_record.orcid_auth = orcid_auth
-    model = storage_model()
-    model.update_linking_session_to_finished(session_id, orcid_auth)
-
-    #
-    # Redirect back to the orcidlink interface, with some
-    # options that support integration into workflows.
-    #
-    params = {}
-
-    if session_record.return_link is not None:
-        params["return_link"] = session_record.return_link
-
-    params["skip_prompt"] = session_record.skip_prompt
-
-    return RedirectResponse(
-        f"{config().kbase.uiOrigin}?{urlencode(params)}#orcidlink/continue/{session_id}",
-        status_code=302,
     )

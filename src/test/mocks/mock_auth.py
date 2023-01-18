@@ -5,7 +5,9 @@ from test.mocks.mock_server import MockService
 
 
 def load_test_data(filename: str):
-    test_data_path = f"{utils.module_dir()}/src/test/service_clients/test_authclient2/{filename}.json"
+    test_data_path = (
+        f"{utils.module_dir()}/src/test/service_clients/test_KBaseAuth/{filename}.json"
+    )
     with open(test_data_path) as fin:
         return json.load(fin)
 

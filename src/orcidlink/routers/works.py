@@ -12,12 +12,12 @@ from orcidlink.lib.responses import (
     make_error_exception,
     success_response_no_data,
 )
-from orcidlink.lib.storage_model import storage_model
-from orcidlink.lib.transform import parse_date, raw_work_to_work
 from orcidlink.lib.utils import get_raw_prop, get_string_prop
-from orcidlink.model_types import ExternalId, LinkRecord, ORCIDWork, SimpleSuccess
+from orcidlink.model import ExternalId, LinkRecord, ORCIDWork, SimpleSuccess
+from orcidlink.models.orcid import raw_work_to_work
 from orcidlink.service_clients.ORCIDClient import orcid_api, orcid_api_url
 from orcidlink.service_clients.auth import get_username
+from orcidlink.storage.storage_model import storage_model
 from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
@@ -46,6 +46,23 @@ class NewWork(BaseModel):
 #
 # Utils
 #
+
+
+def parse_date(date_string):
+    date_parts = date_string.split("/")
+    if len(date_parts) == 1:
+        return {"year": {"value": date_parts[0]}}
+    elif len(date_parts) == 2:
+        return {
+            "year": {"value": date_parts[0]},
+            "month": {"value": date_parts[1].rjust(2, "0")},
+        }
+    elif len(date_parts) == 3:
+        return {
+            "year": {"value": date_parts[0]},
+            "month": {"value": date_parts[1].rjust(2, "0")},
+            "day": {"value": date_parts[2].rjust(2, "0")},
+        }
 
 
 def get_link_record(kbase_token: str) -> Optional[LinkRecord]:
@@ -344,7 +361,7 @@ async def create_work(
     }
     # TODO: propagate everywhere. Or, perhaps better,
     # wrap this common use case into a function or class.
-    timeout = config().kbase.defaults.serviceRequestTimeout / 1000
+    timeout = config().module.serviceRequestTimeout / 1000
     try:
         response = httpx.post(
             url,

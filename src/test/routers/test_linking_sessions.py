@@ -4,10 +4,10 @@ import urllib
 
 import pytest
 from fastapi.testclient import TestClient
-from orcidlink.lib import storage_model
 from orcidlink.lib.config import config
 from orcidlink.main import app
-from orcidlink.model_types import LinkRecord
+from orcidlink.model import LinkRecord
+from orcidlink.storage.storage_model import storage_model
 from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
@@ -34,7 +34,7 @@ def around_tests(fake_fs):
 
 
 def create_link():
-    sm = storage_model.storage_model()
+    sm = storage_model()
     sm.db.links.drop()
     sm.create_link_record(LinkRecord.parse_obj(TEST_LINK))
 
@@ -95,7 +95,7 @@ def assert_start_linking_session(
 
     # TODO: should be put or post
     response = client.get(
-        f"/linking-sessions/{session_id}/start",
+        f"/linking-sessions/{session_id}/oauth/start",
         headers=headers,
         params=params,
         follow_redirects=False,
@@ -347,13 +347,14 @@ def test_start_linking_session_errors(fake_fs):
 
         # No auth cookie
         response = client.get(
-            f"/linking-sessions/{initial_session_id}/start", follow_redirects=False
+            f"/linking-sessions/{initial_session_id}/oauth/start",
+            follow_redirects=False,
         )
         assert response.status_code == 401
 
         # username doesn't  match
         response = client.get(
-            f"/linking-sessions/{initial_session_id}/start",
+            f"/linking-sessions/{initial_session_id}/oauth/start",
             headers={"Cookie": "kbase_session=bar; Path=/"},
             follow_redirects=False,
         )
@@ -361,7 +362,7 @@ def test_start_linking_session_errors(fake_fs):
 
         # linking session not found
         response = client.get(
-            f"/linking-sessions/foo/start",
+            f"/linking-sessions/foo/oauth/start",
             headers={"Cookie": "kbase_session=bar; Path=/"},
             follow_redirects=False,
         )
@@ -438,7 +439,7 @@ def test_continue_linking_session(fake_fs):
             headers["Cookie"] = f"kbase_session_backup={kbase_session_backup}"
 
         response = client.get(
-            "/continue-linking-session",
+            "/linking-sessions/oauth/continue",
             headers=headers,
             params=params,
             follow_redirects=False,
@@ -539,7 +540,7 @@ def test_continue_linking_session_errors(fake_fs):
 
                 # No auth cookie: no kbase_session or kbase_session_backup
                 response = client.get(
-                    f"/continue-linking-session",
+                    f"/linking-sessions/oauth/continue",
                     params=params,
                     follow_redirects=False,
                 )
@@ -549,7 +550,7 @@ def test_continue_linking_session_errors(fake_fs):
                 # TODO: double check the ORCID error structure; here we assume it is a string.
                 params = {"error": "foo"}
                 response = client.get(
-                    f"/continue-linking-session",
+                    f"/linking-sessions/oauth/continue",
                     headers={"Cookie": "kbase_session=foo"},
                     params=params,
                     follow_redirects=False,
@@ -560,7 +561,7 @@ def test_continue_linking_session_errors(fake_fs):
                 # No code
                 params = {"state": json.dumps({"session_id": initial_session_id})}
                 response = client.get(
-                    f"/continue-linking-session",
+                    f"/linking-sessions/oauth/continue",
                     headers={"Cookie": "kbase_session=foo"},
                     params=params,
                     follow_redirects=False,
@@ -578,7 +579,7 @@ def test_continue_linking_session_errors(fake_fs):
                 # No state
                 params = {"code": "foo"}
                 response = client.get(
-                    f"/continue-linking-session",
+                    f"/linking-sessions/oauth/continue",
                     headers={"Cookie": "kbase_session=foo"},
                     params=params,
                     follow_redirects=False,
@@ -596,7 +597,7 @@ def test_continue_linking_session_errors(fake_fs):
                 # No session_id
                 params = {"code": "foo", "state": json.dumps({})}
                 response = client.get(
-                    f"/continue-linking-session",
+                    f"/linking-sessions/oauth/continue",
                     headers={"Cookie": "kbase_session=foo"},
                     params=params,
                     follow_redirects=False,
@@ -675,7 +676,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
                 # First time, it should be fine, returning a 302 as expected, with a
                 # location to ORCID
                 response = client.get(
-                    "/continue-linking-session",
+                    "/linking-sessions/oauth/continue",
                     headers=headers,
                     params=params,
                     follow_redirects=False,
@@ -684,7 +685,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
 
                 # Second time it should produce an error
                 response = client.get(
-                    "/continue-linking-session",
+                    "/linking-sessions/oauth/continue",
                     headers=headers,
                     params=params,
                     follow_redirects=False,
@@ -781,7 +782,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 # First time, it should be fine, returning a 302 as expected, with a
                 # location to ORCID
                 response = client.get(
-                    "/continue-linking-session",
+                    "/linking-sessions/oauth/continue",
                     headers=headers,
                     params=params,
                     follow_redirects=False,
@@ -844,87 +845,3 @@ def test_delete_linking_session(fake_fs):
         with pytest.raises(Exception) as ex:
             assert_get_linking_session(client, initial_session_id)
         assert ex is not None
-
-
-# def xest_get_link(fake_fs):
-#     server = MockServer("127.0.0.1", MockAuthService)
-#     server.start_service()
-#     # hack the config
-#     config.set_config(["kbase", "services", "Auth2", "url"],
-#                       f"{server.base_url()}/services/auth/api/V2/token",
-#                       reload=True)
-#
-#     client = TestClient(app)
-#     # client.headers['authorization'] = 'foo'
-#     response = client.get("/link",
-#                           headers={"Authorization": "foo"}
-#                           )
-#     assert response.status_code == 200
-#
-#     response = client.get("/link",
-#                           headers={"Authorization": "foox"}
-#                           )
-#     assert response.status_code == 401
-#
-#     response = client.get("/link",
-#                           headers={"Authorization": "bar"}
-#                           )
-#     assert response.status_code == 404
-
-
-# def xest_is_linked(fake_fs):
-#     server = MockServer("127.0.0.1", MockAuthService)
-#     server.start_service()
-#     # hack the config
-#     config.set_config(["kbase", "services", "Auth2", "url"],
-#                       f"{server.base_url()}/services/auth/api/V2/token",
-#                       reload=True)
-#
-#     client = TestClient(app)
-#     # client.headers['authorization'] = 'foo'
-#     response = client.get("/link/is_linked",
-#                           headers={"Authorization": "foo"}
-#                           )
-#     result = response.json()
-#     assert result is True
-#
-#     response = client.get("/link/is_linked",
-#                           headers={"Authorization": "bar"}
-#                           )
-#     result = response.json()
-#     assert result is False
-#
-#     response = client.get("/link/is_linked",
-#                           headers={"Authorization": "baz"}
-#                           )
-#     assert response.status_code == 401
-
-
-# def xest_delete_link(fake_fs):
-#     mock_auth_service = MockServer("127.0.0.1", MockAuthService)
-#     mock_auth_service.start_service()
-#     mock_orcid_oauth_service = MockServer("127.0.0.1", MockORCIDOAuth)
-#     mock_orcid_oauth_service.start_service()
-#     try:
-#         # hack the config
-#         config.set_config(["kbase", "services", "Auth2", "url"],
-#                           f"{mock_auth_service.base_url()}/services/auth/api/V2/token",
-#                           reload=True)
-#         config.set_config(["orcid", "oauthBaseURL"],
-#                           f"{mock_orcid_oauth_service.base_url()}")
-#
-#         client = TestClient(app)
-#         # client.headers['authorization'] = 'foo'
-#
-#         response = client.delete("/link",
-#                                  headers={"Authorization": "foo"}
-#                                  )
-#         assert response.status_code == 204
-#
-#         response = client.delete("/link",
-#                                  headers={"Authorization": "bar"}
-#                                  )
-#         assert response.status_code == 204
-#     finally:
-#         mock_auth_service.stop_service()
-#         mock_orcid_oauth_service.stop_service()

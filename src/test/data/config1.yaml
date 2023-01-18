@@ -4,20 +4,20 @@ kbase:
       url: http://127.0.0.1:9999/services/auth/api/V2/token
       tokenCacheLifetime: 300000
       tokenCacheMaxSize: 20000
-    ServiceWizard:
-      url: http://127.0.0.1:9999/services/service_wizard
     ORCIDLink:
       url: http://127.0.0.1:9999/services/orcidlink
   uiOrigin: https://ci.kbase.us
-  defaults:
-    serviceRequestTimeout: 60000
 orcid:
   oauthBaseURL: https://sandbox.orcid.org/oauth
   baseURL: https://sandbox.orcid.org
   apiBaseURL: https://api.sandbox.orcid.org/v3.0
+  clientId: 'REDACTED-CLIENT-ID'
+  clientSecret: 'REDACTED-CLIENT-SECRET'
+mongo:
+  host: 'mongo'
+  port: 27017
+  database: 'orcidlink'
+  username: 'dev'
+  password: 'd3v'
 module:
-  CLIENT_ID: 'REDACTED-CLIENT-ID'
-  CLIENT_SECRET: 'REDACTED-CLIENT-SECRET'
-  MONGO_USERNAME: 'dev'
-  MONGO_PASSWORD: 'd3v'
-  STORAGE_MODEL: 'mongo'
+  serviceRequestTimeout: 60000

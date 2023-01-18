@@ -3,9 +3,10 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
-from orcidlink.lib import storage_model
 from orcidlink.main import app
-from orcidlink.model_types import LinkRecord
+from orcidlink.model import LinkRecord
+from orcidlink.routers.works import parse_date
+from orcidlink.storage import storage_model
 from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
@@ -377,3 +378,27 @@ def test_delete_work_put_code_not_found(fake_fs):
         assert result["data"]["error-code"] == 9016
         # # Tha actual messages may change over time, and are not used
         # # programmatically
+
+
+def test_parse_date():
+    assert parse_date("2000") == {"year": {"value": "2000"}}
+    assert parse_date("2000/1") == {"year": {"value": "2000"}, "month": {"value": "01"}}
+    assert parse_date("2000/12") == {
+        "year": {"value": "2000"},
+        "month": {"value": "12"},
+    }
+    assert parse_date("2000/1/2") == {
+        "year": {"value": "2000"},
+        "month": {"value": "01"},
+        "day": {"value": "02"},
+    }
+    assert parse_date("2000/12/3") == {
+        "year": {"value": "2000"},
+        "month": {"value": "12"},
+        "day": {"value": "03"},
+    }
+    assert parse_date("2000/12/34") == {
+        "year": {"value": "2000"},
+        "month": {"value": "12"},
+        "day": {"value": "34"},
+    }

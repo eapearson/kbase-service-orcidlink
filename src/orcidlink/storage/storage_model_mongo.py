@@ -1,6 +1,6 @@
 from typing import Optional
 
-from orcidlink.model_types import (
+from orcidlink.model import (
     LinkRecord,
     LinkingSessionComplete,
     LinkingSessionInitial,
@@ -11,16 +11,18 @@ from pymongo import MongoClient
 
 
 class StorageModelMongo:
-    def __init__(self, username, password):
-        self.client = MongoClient(
-            "mongo",
-            27017,
+    def __init__(
+        self, host: str, port: int, database: str, username: str, password: str
+    ):
+        self.client: MongoClient = MongoClient(
+            host=host,
+            port=port,
             username=username,
             password=password,
-            authMechanism="SCRAM-SHA-1",
-            authSource="orcidlink",
+            # authMechanism="SCRAM-SHA-1",
+            authSource=database,
         )
-        self.db = self.client.orcidlink
+        self.db = self.client[database]
 
     ##
     # Operations on the user record.

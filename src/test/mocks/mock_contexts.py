@@ -11,7 +11,6 @@ from test.mocks.mock_orcid import (
     MockORCIDOAuth2,
 )
 from test.mocks.mock_server import MockSDKJSON11Service, MockServer
-from test.mocks.mock_service_wizard_service import MockServiceWizardService
 
 
 @contextlib.contextmanager
@@ -82,26 +81,13 @@ def mock_orcid_api_service_with_errors():
 
 
 @contextlib.contextmanager
-def mock_service_wizard_service():
-    server = MockServer("127.0.0.1", MockServiceWizardService)
-    MockServiceWizardService.reset_call_counts()
-    try:
-        server.start_service()
-        url = f"{server.base_url()}/services/service_wizard/rpc"
-        config.config().kbase.services.ServiceWizard.url = url
-        yield [server, MockServiceWizardService, url]
-    finally:
-        server.stop_service()
-
-
-@contextlib.contextmanager
 def mock_imaginary_service():
     server = MockServer("127.0.0.1", MockImaginaryService)
     MockImaginaryService.reset_call_counts()
     try:
         server.start_service()
         url = f"{server.base_url()}/services/imaginary_service"
-        yield [server, MockServiceWizardService, url]
+        yield [server, MockImaginaryService, url]
     finally:
         server.stop_service()
 

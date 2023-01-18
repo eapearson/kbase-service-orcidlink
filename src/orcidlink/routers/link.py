@@ -10,10 +10,10 @@ from orcidlink.lib.responses import (
     error_response_not_found,
     success_response_no_data,
 )
-from orcidlink.lib.storage_model import storage_model
-from orcidlink.model_types import LinkRecord, LinkRecordPublic, ORCIDAuthPublic
+from orcidlink.model import LinkRecord, LinkRecordPublic, ORCIDAuthPublic
 from orcidlink.service_clients.ORCIDClient import orcid_oauth
 from orcidlink.service_clients.auth import get_username
+from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/link", responses={404: {"description": "Not found"}})
 

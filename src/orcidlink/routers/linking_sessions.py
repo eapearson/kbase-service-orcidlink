@@ -2,6 +2,7 @@ import json
 import uuid
 from urllib.parse import urlencode
 
+import httpx
 from fastapi import APIRouter, Cookie, HTTPException, Query, responses
 from orcidlink.lib.config import config
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
@@ -12,19 +13,22 @@ from orcidlink.lib.responses import (
     ensure_authorization,
     error_response,
     success_response_no_data,
+    ui_error_response,
 )
-from orcidlink.lib.storage_model import storage_model
 from orcidlink.lib.utils import current_time_millis
-from orcidlink.model_types import (
+from orcidlink.model import (
     LinkRecord,
     LinkingSessionComplete,
     LinkingSessionInitial,
     LinkingSessionStarted,
+    ORCIDAuth,
     SimpleSuccess,
 )
 from orcidlink.service_clients.ORCIDClient import AuthorizeParams
 from orcidlink.service_clients.auth import get_username
+from orcidlink.storage.storage_model import storage_model
 from pydantic import BaseModel, Field
+from starlette.responses import RedirectResponse
 
 router = APIRouter(
     prefix="/linking-sessions", responses={404: {"description": "Not found"}}
@@ -109,13 +113,112 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     return CreateLinkingSessionResult(session_id=session_id)
 
 
+@router.get(
+    "/{session_id}",
+    response_model=LinkingSessionComplete
+    | LinkingSessionStarted
+    | LinkingSessionInitial,
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        200: {
+            "description": "Returns the current linking session, scrubbed of private info"
+        },
+    },
+    tags=["link"],
+)
+async def get_linking_sessions(
+    session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
+):
+    authorization = ensure_authorization(authorization)
+
+    return get_linking_session_record(session_id, authorization)
+
+
+@router.delete(
+    "/{session_id}",
+    response_model=SimpleSuccess,
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        204: {"description": "Successfully deleted the session"},
+    },
+    tags=["link"],
+)
+async def delete_linking_session(
+    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+):
+    authorization = ensure_authorization(authorization)
+
+    session_record = get_linking_session_record(session_id, authorization)
+
+    model = storage_model()
+    model.delete_linking_session(session_record.session_id)
+    return success_response_no_data()
+
+
+#
+# Called when the linking session should be finalized, and saved to the database.
+# The interactive design calls for an optional confirmation of the creation of the link
+# after the oauth flow.
+#
+@router.put(
+    "/{session_id}/finish",
+    response_model=SimpleSuccess,
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        200: {"description": "The linking session has been finished successfully"},
+    },
+    tags=["link"],
+)
+async def finish_linking_session(
+    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+):
+    """
+    The final stage of the interactive linking session; called when the user confirms the creation
+    of the link, after OAuth flow has finished.
+    """
+    authorization = ensure_authorization(authorization)
+
+    session_record = get_linking_session_record(session_id, authorization)
+
+    if not type(session_record) == LinkingSessionComplete:
+        return error_response(
+            "invalidState",
+            "Invalid Linking Session State",
+            "The linking session must be in 'complete' state, but is not",
+            status_code=400,
+        )
+
+    username = get_username(authorization)
+    created_at = current_time_millis()
+    expires_at = created_at + session_record.orcid_auth.expires_in * 1000
+
+    model = storage_model()
+    link_record = LinkRecord(
+        username=username,
+        orcid_auth=session_record.orcid_auth,
+        created_at=created_at,
+        expires_at=expires_at,
+    )
+    model.create_link_record(link_record)
+
+    model.delete_linking_session(session_id)
+    return SimpleSuccess(ok="true")
+
+
+#
+# OAuth Interactive Endpoints
+#
+
 #
 # The initial url for linking to an ORCID Account
 # Note that this is an interactive url - that is the browser is directly invoking this endpoint.
 # TODO: Errors should be redirects to the generic error handler in the ORCIDLink UI.
 #
 @router.get(
-    "/{session_id}/start",
+    "/{session_id}/oauth/start",
     responses={
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -187,12 +290,11 @@ async def start_linking_session(
     # problem.
     # I think we just need to assume we are running on the "most released"; I don't think
     # there is a way for a dynamic service to know where it is running...
-    # service_wizard = ServiceWizard(get_config(["kbase", "services", "ServiceWizard", "url"]), None)
     params = AuthorizeParams(
-        client_id=config().module.CLIENT_ID,
+        client_id=config().orcid.clientId,
         response_type="code",
         scope=scope,
-        redirect_uri=f"{config().kbase.services.ORCIDLink.url}/continue-linking-session",
+        redirect_uri=f"{config().kbase.services.ORCIDLink.url}/linking-sessions/oauth/continue",
         prompt="login",
         state=json.dumps({"session_id": session_id}),
     )
@@ -201,100 +303,143 @@ async def start_linking_session(
 
 
 #
-# Called when the linking session should be finalized, and saved to the database.
-# The interactive design calls for an optional confirmation of the creation of the link
-# after the oauth flow.
+# Redirection target for linking.
 #
-@router.put(
-    "/{session_id}/finish",
-    response_model=SimpleSuccess,
+# The provided "code" is very short-lived and must be exchanged for the
+# long-lived tokens without allowing the user to dawdle over it.
+#
+# Yet we do want the user to verify the linking with full account info first.
+# Even using the forced logout during ORCID authentication, the ORCID interface
+# does not identify the account after login. Since their user ids are cryptic,
+#
+# it would be possible on a multi-user computer to use the wrong ORCID Id.
+# So what we do is save the response and issue our own temporary token.
+# Upon submitting that token to /finish-link link is made.
+#
+@router.get(
+    "/oauth/continue",
     responses={
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-        200: {"description": "The linking session has been finished successfully"},
+        302: {"description": "Redirect to the continuation page; or error page"}
     },
     tags=["link"],
 )
-async def finish_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
-):
+async def linking_sessions_continue(
+    kbase_session: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    kbase_session_backup: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+) -> RedirectResponse:
     """
-    The final stage of the interactive linking session; called when the user confirms the creation
-    of the link, after OAuth flow has finished.
+    The redirect endpoint for the ORCID OAuth flow we use for linking.
     """
-    authorization = ensure_authorization(authorization)
+    # Note that this is the target for redirection from ORCID,
+    # and we don't have an Authorization header. We don't
+    # (necessarily) have an auth cookie.
+    # So we use the state to get the session id.
+    if kbase_session is None:
+        if kbase_session_backup is None:
+            # TODO: this should be our own exception, otherwise it will be caught by
+            # the global fastapi hooks.
+            raise HTTPException(401, "Linking requires authentication")
+        else:
+            authorization = ensure_authorization(kbase_session_backup)
+    else:
+        authorization = ensure_authorization(kbase_session)
+
+    if error is not None:
+        return ui_error_response("link.orcid_error", "ORCID Error Linking", error)
+
+    if code is None:
+        return ui_error_response(
+            "link.code_missing",
+            "Linking code missing",
+            "The 'code' query param is required but missing",
+        )
+
+    if state is None:
+        return ui_error_response(
+            "link.state_missing",
+            "Linking state missing",
+            "The 'state' query param is required but missing",
+        )
+
+    unpacked_state = json.loads(state)
+
+    if "session_id" not in unpacked_state:
+        return ui_error_response(
+            "link.session_id_missing",
+            "Linking Error",
+            "The 'session_id' was not provided in the 'state' query param",
+        )
+
+    session_id = unpacked_state.get("session_id")
 
     session_record = get_linking_session_record(session_id, authorization)
 
-    if not type(session_record) == LinkingSessionComplete:
-        return error_response(
-            "invalidState",
-            "Invalid Linking Session State",
-            "The linking session must be in 'complete' state, but is not",
-            status_code=400,
+    if not type(session_record) == LinkingSessionStarted:
+        return ui_error_response(
+            "linking_session.wrong_state",
+            "Linking Error",
+            "The session is not in 'started' state",
         )
 
-    username = get_username(authorization)
-    created_at = current_time_millis()
-    expires_at = created_at + session_record.orcid_auth.expires_in * 1000
-
-    model = storage_model()
-    link_record = LinkRecord(
-        username=username,
-        orcid_auth=session_record.orcid_auth,
-        created_at=created_at,
-        expires_at=expires_at,
+    #
+    # Exchange the temporary token from ORCID for the authorized token.
+    #
+    header = {
+        "accept": "application/json",
+        "content-type": "application/x-www-form-urlencoded",
+    }
+    # Note that the redirect uri below is just for the api - it is not actually used
+    # for redirection in this case.
+    # TODO: investigate and point to the docs, because this is weird.
+    # TODO: put in orcid client!
+    data = {
+        "client_id": config().orcid.clientId,
+        "client_secret": config().orcid.clientSecret,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": f"{config().kbase.services.ORCIDLink.url}/linking-sessions/oauth/continue",
+    }
+    response = httpx.post(
+        f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
     )
-    model.create_link_record(link_record)
+    orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
 
-    model.delete_linking_session(session_id)
-    return SimpleSuccess(ok="true")
+    #
+    # Now we store the response from ORCID in our session.
+    # We still need the user to finalize the linking, now that it has succeeded
+    # which is done in finalize-linking-session.
+    #
+
+    # Note that this is approximate, as it uses our time, not the
+    # ORCID server time.
+    # session_record.orcid_auth = orcid_auth
+    model = storage_model()
+    model.update_linking_session_to_finished(session_id, orcid_auth)
+
+    #
+    # Redirect back to the orcidlink interface, with some
+    # options that support integration into workflows.
+    #
+    params = {}
+
+    if session_record.return_link is not None:
+        params["return_link"] = session_record.return_link
+
+    params["skip_prompt"] = session_record.skip_prompt
+
+    return RedirectResponse(
+        f"{config().kbase.uiOrigin}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        status_code=302,
+    )
 
 
 #
 # Managing linking sessions
 #
-
-
-@router.get(
-    "/{session_id}",
-    response_model=LinkingSessionComplete
-    | LinkingSessionStarted
-    | LinkingSessionInitial,
-    responses={
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-        200: {
-            "description": "Returns the current linking session, scrubbed of private info"
-        },
-    },
-    tags=["link"],
-)
-async def get_linking_sessions(
-    session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
-):
-    ensure_authorization(authorization)
-
-    return get_linking_session_record(session_id, authorization)
-
-
-@router.delete(
-    "/{session_id}",
-    response_model=SimpleSuccess,
-    responses={
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-        204: {"description": "Successfully deleted the session"},
-    },
-    tags=["link"],
-)
-async def delete_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
-):
-    authorization = ensure_authorization(authorization)
-
-    session_record = get_linking_session_record(session_id, authorization)
-
-    model = storage_model()
-    model.delete_linking_session(session_record.session_id)
-    return success_response_no_data()

@@ -137,8 +137,8 @@ class ORCIDOAuthClient(ORCIDClientBase):
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {
-            "client_id": config().module.CLIENT_ID,
-            "client_secret": config().module.CLIENT_SECRET,
+            "client_id": config().orcid.clientId,
+            "client_secret": config().orcid.clientSecret,
             "token": self.access_token,
         }
         # TODO: determine all possible ORCID errors here, or the

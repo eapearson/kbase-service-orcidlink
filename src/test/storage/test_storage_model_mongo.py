@@ -1,8 +1,7 @@
 import pytest
 from orcidlink.lib.config import config
-from orcidlink.lib.storage_model import storage_model
-from orcidlink.model_types import LinkRecord, LinkingSessionInitial, ORCIDAuth
-
+from orcidlink.model import LinkRecord, LinkingSessionInitial, ORCIDAuth
+from orcidlink.storage.storage_model import storage_model
 from test.data.utils import load_data_file
 
 config_yaml = load_data_file("config1.yaml")

@@ -1,7 +1,6 @@
 import pytest
 from orcidlink.lib import config
 from test.data.utils import load_data_file
-from test.mocks.mock_contexts import mock_service_wizard_service, no_stderr
 
 config_yaml = load_data_file("config1.yaml")
 
@@ -26,8 +25,8 @@ def my_config_file2(fs):
 def test_get_config(my_config_file2):
     # Force reload of the mock config to a pristine state.
     config.config(reload=True)
-    assert config.config().module.CLIENT_ID == "REDACTED-CLIENT-ID"
-    assert config.config().module.CLIENT_SECRET == "REDACTED-CLIENT-SECRET"
+    assert config.config().orcid.clientId == "REDACTED-CLIENT-ID"
+    assert config.config().orcid.clientSecret == "REDACTED-CLIENT-SECRET"
     assert (
         config.config().kbase.services.Auth2.url
         == "https://ci.kbase.us/services/auth/api/V2/token"
@@ -52,22 +51,15 @@ def test_config_initially_none(my_config_file2):
 
 
 def test_set_config(my_config_file):
-    with no_stderr():
-        with mock_service_wizard_service() as [_, mock_class, _]:
-            mock_class.reset_call_counts()
+    config.config()
 
-            # server address.
-            config.config()
+    config.config().kbase.services.ORCIDLink.url = "BAR"
+    assert config.config().kbase.services.ORCIDLink.url == "BAR"
 
-            config.config(reload=True)
+    # Set to different value, should be changed.
+    config.config().kbase.services.ORCIDLink.url = "FOO"
+    assert config.config().kbase.services.ORCIDLink.url == "FOO"
 
-            # Set to different value, should be changed.
-            config.config().kbase.services.ServiceWizard.url = "FOO"
-            assert config.config().kbase.services.ServiceWizard.url == "FOO"
-
-            # Set to same value, nothing should change
-            config.config().kbase.services.ServiceWizard.url = "FOO"
-            assert config.config().kbase.services.ServiceWizard.url == "FOO"
-
-            # with pytest.raises(ValueError, match="Config not found on path: kbase.services.ServiceWizard.url2") as ex:
-            #     config.set_config(["kbase", "services", "ServiceWizard", "url2"], "FOO")
+    # Set to same value, nothing should change
+    config.config().kbase.services.ORCIDLink.url = "FOO"
+    assert config.config().kbase.services.ORCIDLink.url == "FOO"

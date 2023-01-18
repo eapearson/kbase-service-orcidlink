@@ -1,8 +1,8 @@
 import pytest
 from orcidlink.lib.config import config
-from orcidlink.lib.storage_model import storage_model
-from orcidlink.lib.storage_model_mongo import StorageModelMongo
-from orcidlink.model_types import LinkRecord, LinkingSessionInitial, ORCIDAuth
+from orcidlink.model import LinkRecord, LinkingSessionInitial, ORCIDAuth
+from orcidlink.storage.storage_model import storage_model
+from orcidlink.storage.storage_model_mongo import StorageModelMongo
 from test.data.utils import load_data_file, load_data_json
 
 config_yaml = load_data_file("config1.yaml")
@@ -32,11 +32,13 @@ def test_constructor(temp_config):
     assert isinstance(sm, StorageModelMongo)
 
 
-def test_constructor_errors(temp_config):
-    with pytest.raises(ValueError) as ve:
-        temp_config.module.STORAGE_MODEL = "foo"
-        storage_model()
-    assert str(ve.value) == 'Unsupported storage model "foo"'
+# TODO: test constructor errors when config is bad
+#
+# def test_constructor_errors(temp_config):
+#     with pytest.raises(ValueError) as ve:
+#         temp_config.module.STORAGE_MODEL = "foo"
+#         storage_model()
+#     assert str(ve.value) == 'Unsupported storage model "foo"'
 
 
 #

@@ -19,44 +19,41 @@ class ORCIDLinkService(KBaseService):
     pass
 
 
-class ServiceWizardService(KBaseService):
-    pass
-
-
 class ORCIDConfig(BaseModel):
     oauthBaseURL: str = Field(...)
     baseURL: str = Field(...)
     apiBaseURL: str = Field(...)
+    clientId: str = Field(...)
+    clientSecret: str = Field(...)
+
+
+class MongoConfig(BaseModel):
+    host: str = Field(...)
+    port: int = Field(...)
+    database: str = Field(...)
+    username: str = Field(...)
+    password: str = Field(...)
 
 
 class ModuleConfig(BaseModel):
-    CLIENT_ID: str = Field(...)
-    CLIENT_SECRET: str = Field(...)
-    MONGO_USERNAME: str = Field(...)
-    MONGO_PASSWORD: str = Field(...)
-    STORAGE_MODEL: str = Field(...)
+    serviceRequestTimeout: int = Field(...)
 
 
 class Services(BaseModel):
     Auth2: Auth2Service
-    ServiceWizard: ServiceWizardService
     ORCIDLink: ORCIDLinkService = Field(...)
-
-
-class Defaults(BaseModel):
-    serviceRequestTimeout: int = Field(...)
 
 
 class KBaseConfig(BaseModel):
     services: Services
     uiOrigin: str = Field(...)
-    defaults: Defaults
 
 
 class Config(BaseModel):
-    kbase: KBaseConfig
-    orcid: ORCIDConfig
-    module: ModuleConfig
+    kbase: KBaseConfig = Field(...)
+    orcid: ORCIDConfig = Field(...)
+    mongo: MongoConfig = Field(...)
+    module: ModuleConfig = Field(...)
 
 
 class ConfigManager:

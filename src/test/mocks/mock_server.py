@@ -211,11 +211,6 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
         # TODO: Reminder - switch to normal auth2 endpoint in config and here.
         if self.path == "/services/my_service":
             request = self.get_body_json()
-            # TODO: handle errors either strictly according to the specs,
-            # or the way KBase or at least ServiceWizard does.
-            # For now, we just do the happy path since we are not yet
-            # testing the ServiceWizard use cases directly (just implicitly
-            # the happy path).
 
             method = request.get("method")
 
@@ -330,54 +325,5 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
             else:
                 self.increment_method_call_count(method, "error")
                 result = self.error_response(METHOD_NOT_FOUND, "Method not found")
-
-            self.send_json(result)
-
-
-class MockServiceWizardService(MockService):
-    def do_POST(self):
-        # TODO: Reminder - switch to normal auth2 endpoint in config and here.
-        if self.path == "/services/service_wizard":
-            params = json.loads(self.get_body_string())
-            # TODO: handle errors either strictly according to the specs,
-            # or the way KBase or at least ServiceWizard does.
-            # For now, we just do the happy path since we are not yet
-            # testing the ServiceWizard use cases directly (just implicitly
-            # the happy path).
-
-            method = params.get("method")
-
-            if method == "ServiceWizard.get_service_status":
-                # commit hash replaced with HASH for brevity; otherwise a real response
-                self.increment_method_call_count(method, "success")
-                result = {
-                    "version": "1.1",
-                    "result": [
-                        {
-                            "git_commit_hash": "HASH",
-                            "status": "active",
-                            "version": "0.2.0",
-                            "hash": "HASH",
-                            "release_tags": ["dev"],
-                            "url": "https://ci.kbase.us:443/dynserv/HASH.ORCIDLink",
-                            "module_name": "ORCIDLink",
-                            "health": "healthy",
-                            "up": 1,
-                        }
-                    ],
-                    "id": "123",
-                }
-            else:
-                self.increment_method_call_count(method, "error")
-                result = {
-                    "version": "1.1",
-                    "id": "123",
-                    "error": {
-                        "code": -32601,
-                        "name": "Method not found",
-                        "message": None,
-                        "error": None,
-                    },
-                }
 
             self.send_json(result)
