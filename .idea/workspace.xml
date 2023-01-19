@@ -4,21 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="kbase core service compliance: use jinja2 not dockerize, use toml not yaml  [CE-161]">
+    <list default="true" id="20bd4621-9911-4199-a627-94c8beb43680" name="Changes" comment="oops, forgot to mypy and black first  [CE-161]">
+      <change afterPath="$PROJECT_DIR$/.github/workflows/pull-request-develop-merged.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/workflows/pull-request-develop.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/pull_request_template.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/pull_request_template.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Taskfile" beforeDir="false" afterPath="$PROJECT_DIR$/Taskfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/orcidlink/lib/responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/lib/responses.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/orcidlink/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/orcidlink/routers/linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/orcidlink/routers/linking_sessions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/lib/test_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/lib/test_config_module.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_config_module.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/lib/test_responses.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/lib/test_responses.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/routers/test_linking_sessions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_linking_sessions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/routers/test_orcid.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_orcid.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/routers/test_works.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/routers/test_works.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/service_clients/test_ORCIDClient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/test_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/test_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RELEASE.md" beforeDir="false" afterPath="$PROJECT_DIR$/RELEASE_NOTES.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +48,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "TODO_SCOPE": "All Places",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-service-orcid-link/src/test/data",
+    "last_opened_file_path": "/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-service-orcid-link/.github/workflows",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -77,11 +68,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/.github/workflows" />
       <recent name="$PROJECT_DIR$/src/test/data" />
       <recent name="$PROJECT_DIR$/scripts" />
       <recent name="$PROJECT_DIR$/templates" />
       <recent name="$PROJECT_DIR$/src/test/routers" />
-      <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/test/storage" />
@@ -191,14 +182,7 @@
       <workItem from="1673440365844" duration="81568000" />
       <workItem from="1673795684043" duration="15393000" />
       <workItem from="1673965150248" duration="7041000" />
-      <workItem from="1673973842810" duration="41643000" />
-    </task>
-    <task id="LOCAL-00025" summary="add a comment [CE-70]">
-      <created>1663103384608</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1663103384608</updated>
+      <workItem from="1673973842810" duration="44445000" />
     </task>
     <task id="LOCAL-00026" summary="refactor linking [CE-70]">
       <created>1663345148877</created>
@@ -536,7 +520,14 @@
       <option name="project" value="LOCAL" />
       <updated>1674085234518</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="oops, forgot to mypy and black first  [CE-161]">
+      <created>1674085919004</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1674085919004</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -565,7 +556,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="first init and checkin again [CE-45]" />
     <MESSAGE value="bump version [CE-45]" />
     <MESSAGE value="fix type [CE-45]" />
     <MESSAGE value="update python dependencies [CE-45]" />
@@ -590,7 +580,8 @@
     <MESSAGE value="remove dependency on now-defunct Makefile  [CE-160]" />
     <MESSAGE value="add codeowners  [CE-160]" />
     <MESSAGE value="kbase core service compliance: use jinja2 not dockerize, use toml not yaml  [CE-161]" />
-    <option name="LAST_COMMIT_MESSAGE" value="kbase core service compliance: use jinja2 not dockerize, use toml not yaml  [CE-161]" />
+    <MESSAGE value="oops, forgot to mypy and black first  [CE-161]" />
+    <option name="LAST_COMMIT_MESSAGE" value="oops, forgot to mypy and black first  [CE-161]" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
