@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "* Running mypy."
 # Ge sure mypy is on the last line, in order to return the result code, so that tooling can
 # honor failure. Alternatively, one can capture the result code in $? and return it later.

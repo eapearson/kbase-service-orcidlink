@@ -1,6 +1,7 @@
 import os
 import threading
 
+import toml
 import yaml
 from orcidlink.lib.utils import module_dir
 from pydantic import BaseModel, Field
@@ -44,13 +45,13 @@ class Services(BaseModel):
     ORCIDLink: ORCIDLinkService = Field(...)
 
 
-class KBaseConfig(BaseModel):
-    services: Services
-    uiOrigin: str = Field(...)
+class UIConfig(BaseModel):
+    origin: str = Field(...)
 
 
 class Config(BaseModel):
-    kbase: KBaseConfig = Field(...)
+    services: Services = Field(...)
+    ui: UIConfig = Field(...)
     orcid: ORCIDConfig = Field(...)
     mongo: MongoConfig = Field(...)
     module: ModuleConfig = Field(...)
@@ -67,7 +68,7 @@ class ConfigManager:
         with self.lock:
             file_name = self.config_path
             with open(file_name, "r") as in_file:
-                config_yaml = yaml.load(in_file, yaml.SafeLoader)
+                config_yaml = toml.load(in_file)
                 return Config.parse_obj(config_yaml)
 
     def config(self, reload: bool = False) -> Config:
@@ -84,7 +85,7 @@ def config(reload: bool = False) -> Config:
     global GLOBAL_CONFIG_MANAGER
     if GLOBAL_CONFIG_MANAGER is None:
         GLOBAL_CONFIG_MANAGER = ConfigManager(
-            os.path.join(module_dir(), "config/config.yaml")
+            os.path.join(module_dir(), "config/config.toml")
         )
     return GLOBAL_CONFIG_MANAGER.config(reload)
 

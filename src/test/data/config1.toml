@@ -1,0 +1,41 @@
+[services]
+
+[services.Auth2]
+url = "http://127.0.0.1:9999/services/auth/api/V2/token"
+tokenCacheLifetime = 300000
+tokenCacheMaxSize = 20000
+
+[services.ORCIDLink]
+url = "http://127.0.0.1:9999/services/orcidlink"
+
+[ui]
+# in prod the ui host is narrative.kbase.us, but in all others it
+# is X.kbase.us, where X is ci, next, appdev, narrative-dev
+#  defaults:
+# the ui origin is the base url for which to create links back to the ui
+# This is used when a redirection back to a ui is needed for error reporting
+# during oauth flow.
+# KBASE_ENDPOINT is like https://ci.kbase.us/services/
+# splitting on / gives ['https:', '', 'ci.kbase.us', 'services', '']
+# we are interested in the hostname.
+origin = "https://ci.kbase.us"
+
+[orcid]
+# TODO: perhaps have these also set by env variables, as they are matched with the client id and
+# secret.
+# In CI we should use the sandbox, at least initially, and in prod the production orcid endpoints.
+oauthBaseURL = "https://sandbox.orcid.org/oauth"
+baseURL = "https://sandbox.orcid.org"
+apiBaseURL = "https://api.sandbox.orcid.org/v3.0"
+clientId = "REDACTED-CLIENT-ID"
+clientSecret = "REDACTED-CLIENT-SECRET"
+
+[module]
+serviceRequestTimeout = 60000
+
+[mongo]
+host = "mongo"
+port = "27017"
+database = "orcidlink"
+username = "dev"
+password = "d3v"

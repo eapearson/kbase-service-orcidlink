@@ -1,3 +1,4 @@
+#!/bin/bash
 
 subcommand=${1:-check}
 target=${2:-src}

@@ -42,8 +42,6 @@ WORKDIR /kb/module
 
 RUN poetry config virtualenvs.create false && poetry install
 
+ENTRYPOINT [ "scripts/entrypoint.sh" ]
 
-ENTRYPOINT [ "dockerize" ]
-
-CMD ["-template", "/kb/module/templates/config.yaml.tmpl:/kb/module/config/config.yaml", \
-    "bash", "/kb/module/scripts/start-server.sh" ]
+CMD [ "scripts/run-server.sh" ]

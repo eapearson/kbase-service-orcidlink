@@ -230,7 +230,7 @@ async def docs(req: Request):
         # print('RESPONSE IS', response.status_code)
         # return response
 
-    openapi_url = config().kbase.services.ORCIDLink.url + app.openapi_url
+    openapi_url = config().services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",

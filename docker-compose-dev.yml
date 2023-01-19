@@ -32,6 +32,7 @@ services:
     depends_on:
       - mongo
       - mongo-express
+    command: [ 'scripts/run-server-dev.sh' ]
   mongo:
     image: mongo
     restart: always

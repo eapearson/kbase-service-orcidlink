@@ -294,7 +294,7 @@ async def start_linking_session(
         client_id=config().orcid.clientId,
         response_type="code",
         scope=scope,
-        redirect_uri=f"{config().kbase.services.ORCIDLink.url}/linking-sessions/oauth/continue",
+        redirect_uri=f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
         prompt="login",
         state=json.dumps({"session_id": session_id}),
     )
@@ -404,7 +404,7 @@ async def linking_sessions_continue(
         "client_secret": config().orcid.clientSecret,
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": f"{config().kbase.services.ORCIDLink.url}/linking-sessions/oauth/continue",
+        "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
     }
     response = httpx.post(
         f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
@@ -435,7 +435,7 @@ async def linking_sessions_continue(
     params["skip_prompt"] = session_record.skip_prompt
 
     return RedirectResponse(
-        f"{config().kbase.uiOrigin}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        f"{config().ui.origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )
 

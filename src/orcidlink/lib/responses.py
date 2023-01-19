@@ -96,7 +96,7 @@ def exception_error_response(
 def ui_error_response(code: str, title: str, message: str) -> RedirectResponse:
     error_params = urlencode({"code": code, "title": title, "message": message})
     return RedirectResponse(
-        f"{config().kbase.uiOrigin}?{error_params}#orcidlink/error", status_code=302
+        f"{config().ui.origin}?{error_params}#orcidlink/error", status_code=302
     )
 
 
