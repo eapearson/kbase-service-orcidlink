@@ -13,8 +13,12 @@ def main():
                 openapi_version=app.openapi_version,
                 description=app.description,
                 routes=app.routes,
+                tags=app.openapi_tags
                 # openapi_prefix=app.openapi_prefix,
             ),
             out,
             indent=4,
         )
+
+
+main()

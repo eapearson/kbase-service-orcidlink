@@ -16,26 +16,31 @@ from orcidlink.service_clients.KBaseAuth import (
 )
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import HTMLResponse
 
 #
 # Set up FastAPI top level app with associated metadata for documentation purposes.
 #
 
-description = """
+description = """\
 The *ORCID Link Service* provides an API to enable the creation of an interface for a KBase
  user to link their KBase account to their ORCID account.
 
 Once connected, *ORCID Link* enables certain integrations, including:
 
 - syncing your KBase profile from your ORCID profile
-- creating and managing KBase public Narratives within your ORCID profile 
+- creating and managing KBase public Narratives within your ORCID profile\
 """
 
 tags_metadata = [
     {"name": "misc", "description": "Miscellaneous operations"},
     {
         "name": "link",
-        "description": "Add and remove KBase-ORCID linking; includes OAuth integration and API",
+        "description": "Access to and control over stored ORCID Link",
+    },
+    {
+        "name": "linking-sessions",
+        "description": "OAuth integration and internal support for creating ORCID Links",
     },
     {"name": "orcid", "description": "Direct access to ORCID via ORCID Link"},
     {
@@ -116,6 +121,17 @@ async def kbase_auth_invalid_token_handler(
     # probably either 401, 403, or 500.
     return exception_error_response(
         "invalidToken", "KBase auth token is invalid", exc, status_code=401
+    )
+
+
+@app.exception_handler(KBaseAuthMissingToken)
+async def kbase_auth_missing_token_handler(
+    request: Request, exc: KBaseAuthMissingToken
+):
+    # TODO: this should reflect the nature of the auth error,
+    # probably either 401, 403, or 500.
+    return exception_error_response(
+        "missingToken", "KBase auth token is missing", exc, status_code=401
     )
 
 
@@ -204,11 +220,13 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.get(
     "/docs",
+    response_class=HTMLResponse,
     include_in_schema=True,
     tags=["misc"],
     responses={
-        200: {"description": "Successfully returned the api docs"},
-        302: {"description": "Not configured; should never occur"},
+        200: {
+            "description": "Successfully returned the api docs",
+        }
     },
 )
 async def docs(req: Request):

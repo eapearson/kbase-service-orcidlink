@@ -108,7 +108,7 @@ async def get_work(
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
     """
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -154,7 +154,7 @@ async def get_works(
     """
     Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
     """
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -193,7 +193,7 @@ async def save_work(
     """
     Update a work record; the `work_update` contains the `put code`.
     """
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -280,7 +280,7 @@ async def delete_work(
     put_code: int,
     authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -313,7 +313,7 @@ async def delete_work(
 async def create_work(
     new_work: NewWork, authorization: str | None = Header(default=None)
 ):
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 

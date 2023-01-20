@@ -60,9 +60,12 @@ class KBaseAuth(object):
         self.cache = global_cache
 
     def get_token_info(self, token: str) -> TokenInfo:
-        token_info = self.cache.get(token)
-        if token_info is not None:
-            return token_info
+        if token is None or token == "":
+            raise KBaseAuthMissingToken("Token may not be empty")
+
+        cache_value = self.cache.get(token)
+        if cache_value is not None:
+            return TokenInfo.parse_obj(cache_value)
 
         # TODO: timeout needs to be configurable
         try:
@@ -100,8 +103,8 @@ class KBaseAuth(object):
             else:
                 raise KBaseAuthException(json_response["error"]["message"])
 
-        token_info = TokenInfo.parse_obj(json_response)
-        self.cache.set(token, token_info)
+        token_info: TokenInfo = TokenInfo.parse_obj(json_response)
+        self.cache.set(token, token_info.dict(), timeout=token_info.cachefor)
         return token_info
 
     def get_username(self, token: str) -> str:
@@ -118,18 +121,3 @@ class KBaseAuthMissingToken(KBaseAuthException):
 
 class KBaseAuthInvalidToken(KBaseAuthException):
     pass
-
-
-# class KBaseAuthException(Exception):
-#     def __init__(self, code: int, message: str, long_message: str):
-#         super().__init__(message)
-#         self.code = code
-#         self.message = message
-#         self.long_message = long_message
-#
-#     def to_dict(self):
-#         return {
-#             'code': self.code,
-#             'message': self.message,
-#             'long_message': self.long_message
-#         }

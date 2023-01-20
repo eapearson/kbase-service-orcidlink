@@ -80,6 +80,14 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert content["code"] == "invalidToken"
             assert content["title"] == "KBase auth token is invalid"
 
+            # call with empty token
+            response = client.get("/link", headers={"Authorization": ""})
+            assert response.status_code == 401
+            assert response.headers["content-type"] == "application/json"
+            content = response.json()
+            assert content["code"] == "missingToken"
+            assert content["title"] == "KBase auth token is missing"
+
             # make a call which triggers a bug to trigger a JSON parse error
             response = client.get("/link", headers={"Authorization": "bad_json"})
             assert response.status_code == 500

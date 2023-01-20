@@ -10,7 +10,6 @@ from orcidlink.lib.utils import get_int_prop, get_raw_prop, get_string_prop
 from orcidlink.model import ORCIDProfile
 from orcidlink.models.orcid import raw_work_to_work
 from orcidlink.service_clients.ORCIDClient import orcid_api
-from orcidlink.service_clients.auth import get_username
 from orcidlink.storage.storage_model import storage_model
 
 ################################
@@ -135,8 +134,7 @@ def get_profile_to_ORCIDProfile(
         **STD_RESPONSES,
         404: {"description": "User not linked or ORCID profile not available."},
         200: {"description": ""},
-    }
-    # responses={**GET_PROFILE_RESPONSES, **AUTH_RESPONSES, **STD_RESPONSES}
+    },
 )
 async def get_profile(authorization: str | None = AUTHORIZATION_HEADER):
     """
@@ -144,8 +142,8 @@ async def get_profile(authorization: str | None = AUTHORIZATION_HEADER):
 
     Returns a 404 Not Found if the user is not linked
     """
-    authorization = ensure_authorization(authorization)
-    username = get_username(authorization)
+    _, token_info = ensure_authorization(authorization)
+    username = token_info.user
 
     #
     # Fetch the user's ORCID Link record from KBase.
