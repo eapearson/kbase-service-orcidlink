@@ -10,14 +10,14 @@ The ORCID Link service should be available with a service path suffix of `orcidl
 
 This service uses GitHub Actions (GHA) to provide workflows for testing, image building, and image hosting. 
 
-| event | test | build | push | tag |
-|-------|------|-------|------|-----|
- | pr to develop activity | ✓ | ✓ | | |
- | pr to develop merged | ✓ | ✓  | ✓ | develop |
- | pr develop -> main activity | ✓ | ✓  | ✓  |  |
- | pr develop -> main merged | ✓  | ✓  | ✓ | latest-rc |
- | release against main | ✓ | ✓ | ✓ | v#.#.# |
- | manual | ✓ | ✓ | ✓| ref-<branch name> |
+| event                       | test | build | push | tag               |
+|-----------------------------|------|-------|------|-------------------|
+ | pr to develop activity      | ✓    | ✓     |      |                   |
+ | pr to develop merged        | ✓    | ✓     | ✓    | develop           |
+ | pr develop -> main activity | ✓    | ✓     | ✓    |                   |
+ | pr develop -> main merged   | ✓    | ✓     | ✓    | latest-rc         |
+ | release against main        | ✓    | ✓     | ✓    | v#.#.#            |
+ | manual                      | ✓    | ✓     | ✓    | ref-<branch name> |
  
  
 
@@ -75,7 +75,7 @@ Base URL for all OAUTH interaction with ORCID, including server-server and clien
 
 #### `ORCID_CLIENT_ID`
 
-All OAuth interactions require usage of a the "client id" and "client secret" assigned to KBase. The "client id" is not secret - that is it is considered a permanent identifier for KBase; exposing it does not compromise security.
+All OAuth interactions require usage of a "client id" and "client secret" assigned to KBase. The "client id" is not secret - that is, it is considered a permanent identifier for KBase; exposing it does not compromise security.
 
 #### `ORCID_CLIENT_SECRET`
 
@@ -99,8 +99,8 @@ The name of the database used for the ORCIDLink service. The testing environment
 
 ### MONGO_USERNAME
 
-The "username" used for authenticating against the MongoDB server and ORCIDLink database. In testing it is `dev`.
+The "username" used for authenticating against the MongoDB server and ORCIDLink database. In testing, it is `dev`.
 
 #### MONGO_PASSWORD
 
-The "password" used for authenticating against the MongoDB server and ORCIDLInk database. The testing tools use `d3v`.
+The "password" used for authenticating against the MongoDB server and orcidlink database. The testing tools use `d3v`.
