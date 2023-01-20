@@ -22,7 +22,6 @@ class ORCIDLinkService(KBaseService):
 
 class ORCIDConfig(BaseModel):
     oauthBaseURL: str = Field(...)
-    baseURL: str = Field(...)
     apiBaseURL: str = Field(...)
     clientId: str = Field(...)
     clientSecret: str = Field(...)

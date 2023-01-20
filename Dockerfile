@@ -18,11 +18,6 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-# dockerize for config generation
-RUN version=v0.17.0 && \
-    wget -O - https://github.com/powerman/dockerize/releases/download/${version}/dockerize-`uname -s`-`uname -m` | install /dev/stdin /usr/local/bin/dockerize
-
-
 RUN mkdir -p /kb/module/work
 RUN mkdir -p /kb/module/config
 RUN chmod -R a+rw /kb/module

@@ -1,36 +1,36 @@
 # Pull Request
 
 > Replace quoted instructions with the requested information.
-> 
 > Leave checkboxes in place, check them off as tasks completed
-> 
 > (And yes, remove this quote block!)
 
 ## Description
 
 > * Summarize the changes.
-
 > * Describe relevant motivation and context.
-
 > * List any dependencies involved in this change.
 
 ## Issues Resolved
 
 > * list Jira tickets resolved in this PR
-> 
 >   e.g.  https://kbase-jira.atlassian.net/browse/PTV-XXX
 
-> * list Github issues resolved by this PR
-> 
+> * list GitHub issues resolved by this PR
 >   e.g. https://github.com/myrepo/issues/xxx
 
-* [ ] Added the Jira Tickets to the title of the PR e.g. (PTV-XXX fixes a terrible bug)
-* [ ] Added the Github Issue to the title of the PR e.g. (PTV-XXX adds an awesome feature)
+* [ ] Added the Jira Tickets Ids to the title of the PR
+* ~~[ ] Added the Github Issue Ids to the title of the PR~~
 
 
 ## Testing Instructions
 
-> Provide details for testing status and how to test the PR:
+One needs to have bash and docker installed.
+
+```
+git clone https://githubcom/kbase/kbase-service-orcidlink
+cd kbase-service-orcidlink
+./Taskfile test
+```
   
 * [ ] Tests pass locally
 * [ ] Tests pass in github actions
@@ -57,5 +57,5 @@
 
 > This section only relevant if this PR is preparing a release
 
-* [ ] Bump the version in `kbase.yml` to match the version that will be created in GitHub.
-* [ ] Rename the "Unreleased" section to the appropriate release, and create a new, empty "Ureleased" section at the top
+* ~~[ ] Bump the version in `kbase.yml` to match the version that will be created in GitHub.~~
+* ~~[ ] Rename the "Unreleased" section to the appropriate release, and create a new, empty "Ureleased" section at the top~~
