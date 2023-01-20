@@ -15,11 +15,11 @@
 > * list Jira tickets resolved in this PR
 >   e.g.  https://kbase-jira.atlassian.net/browse/PTV-XXX
 
-> * list Github issues resolved by this PR
+> * list GitHub issues resolved by this PR
 >   e.g. https://github.com/myrepo/issues/xxx
 
-* [ ] Added the Jira Tickets to the title of the PR e.g. (PTV-XXX fixes a terrible bug)
-* ~~[ ] Added the Github Issue to the title of the PR e.g. (PTV-XXX adds an awesome feature)~~
+* [ ] Added the Jira Tickets Ids to the title of the PR
+* ~~[ ] Added the Github Issue Ids to the title of the PR~~
 
 
 ## Testing Instructions
