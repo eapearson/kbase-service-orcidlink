@@ -19,3 +19,4 @@ First release.
 * Migrate to mongodb
 * convert config to toml (from yaml) [CE-161]
 * convert template tech to jinja2 (from dockerize) [CE-161]
+* add additional environment variables for ORCID urls [CE-161]

@@ -25,9 +25,8 @@ origin = "https://{% if host == 'kbase.us' %}narrative.kbase.us{% else %}{{host}
 # TODO: perhaps have these also set by env variables, as they are matched with the client id and
 # secret.
 # In CI we should use the sandbox, at least initially, and in prod the production orcid endpoints.
-oauthBaseURL = "https://sandbox.orcid.org/oauth"
-baseURL = "https://sandbox.orcid.org"
-apiBaseURL = "https://api.sandbox.orcid.org/v3.0"
+apiBaseURL = "{{ ORCID_API_BASE_URL }}"
+oauthBaseURL = "{{ ORCID_OAUTH_BASE_URL }}"
 clientId = "{{ ORCID_CLIENT_ID }}"
 clientSecret = "{{ ORCID_CLIENT_SECRET }}"
 
