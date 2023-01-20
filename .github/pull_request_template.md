@@ -34,29 +34,28 @@
   
 * [ ] Tests pass locally
 * [ ] Tests pass in github actions
-* [ ] Manually verified that changes area available (by spinning up an instance and navigating to _X_ to see _Y_)
+* [ ] Manually verified that changes are available (if applicable)
 
 ## Dev Checklist
 
-* [ ] Code follows the guidelines at [https://sites.google.com/truss.works/kbasetruss/development](https://sites.google.com/truss.works/kbasetruss/development)
 * [ ] I have performed a self-review of my own code
 * [ ] I have commented my code, particularly in hard-to-understand areas
 * [ ] I have made corresponding changes to the documentation
 * [ ] My changes generate no new warnings
 * [ ] I have added tests that prove my fix is effective or that my feature works
 * [ ] New and existing unit tests pass locally with my changes
-* [ ] Integration tests have been run and fully pass (only when preparing a release)
-* [ ] I have run run the code quality script against the codebase (also done implicitly during a build)
+* [ ] I have run the code quality tools against the codebase
 
-## Release Notes
+## Development Release Notes
 
-* [ ] Ensure there is an "upcoming release notes" file located in release-notes/RELEASE_NOTES_NEXT.md
-* [ ] Add relevant notes to this document
+> This section only relevant to a PR against develop
+
+* [ ] Ensure there is an "Unreleased" section located at the top of RELEASE_NOTES.md
+* [ ] Add relevant notes to the Unreleased following the format documented within
 
 ## Release
 
 > This section only relevant if this PR is preparing a release
 
-* [ ] Bump version in config/release.yml
-* [ ] Rename release-notes/RELEASE_NOTES_NEXT.md to the appropriate release
-* [ ] Add release notes document to the release notes index release-notes/index.md
+* [ ] Bump the version in `kbase.yml` to match the version that will be created in GitHub.
+* [ ] Rename the "Unreleased" section to the appropriate release, and create a new, empty "Ureleased" section at the top
