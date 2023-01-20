@@ -1,0 +1,1831 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "ORCID Link Service",
+        "description": "\nThe *ORCID Link Service* provides an API to enable the creation of an interface for a KBase\n user to link their KBase account to their ORCID account.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile \n",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/status": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "summary": "Get Status",
+                "description": "The status of the service.\n\nThe intention of this endpoint is as a lightweight way to call to ping the\nservice, e.g. for health check, latency tests, etc.",
+                "operationId": "get_status_status_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/info": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "summary": "Get Info",
+                "description": "Returns basic information about the service and its runtime configuration.",
+                "operationId": "get_info_info_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InfoResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/link": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Link",
+                "description": "Return the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
+                "operationId": "link_link_get",
+                "parameters": [
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the scrubbed link record for this user; contains no secrets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LinkRecordPublic"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link not available for this user"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Delete Link",
+                "description": "Removes the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
+                "operationId": "delete_link_link_delete",
+                "parameters": [
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successfully deleted the link"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/link/is_linked": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Is Linked",
+                "description": "Determine if the user associated with the KBase auth token in the \"Authorization\" header has a\nlink to an ORCID account.",
+                "operationId": "is_linked_link_is_linked_get",
+                "parameters": [
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns a boolean indicating whether the user account is linked to ORCID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Is Linked Link Is Linked Get",
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/linking-sessions": {
+            "post": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Create Linking Session",
+                "description": "Creates a new \"linking session\"; resulting in a linking session created in the database, and the id for it\nreturned for usage in an interactive linking session.",
+                "operationId": "create_linking_session_linking_sessions_post",
+                "parameters": [
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The linking session has been successfully created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreateLinkingSessionResult"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/linking-sessions/{session_id}": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Get Linking Sessions",
+                "operationId": "get_linking_sessions_linking_sessions__session_id__get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Session Id",
+                            "type": "string"
+                        },
+                        "name": "session_id",
+                        "in": "path"
+                    },
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the current linking session, scrubbed of private info",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Get Linking Sessions Linking Sessions  Session Id  Get",
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionComplete"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionStarted"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionInitial"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Delete Linking Session",
+                "operationId": "delete_linking_session_linking_sessions__session_id__delete",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Session Id",
+                            "type": "string"
+                        },
+                        "name": "session_id",
+                        "in": "path"
+                    },
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SimpleSuccess"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "Successfully deleted the session"
+                    }
+                }
+            }
+        },
+        "/linking-sessions/{session_id}/finish": {
+            "put": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Finish Linking Session",
+                "description": "The final stage of the interactive linking session; called when the user confirms the creation\nof the link, after OAuth flow has finished.",
+                "operationId": "finish_linking_session_linking_sessions__session_id__finish_put",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Session Id",
+                            "type": "string"
+                        },
+                        "name": "session_id",
+                        "in": "path"
+                    },
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The linking session has been finished successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SimpleSuccess"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/linking-sessions/{session_id}/oauth/start": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Start Linking Session",
+                "description": "Starts a \"linking session\", an interactive OAuth flow the end result of which is an access_token stored at\nKBase for future use by the user.",
+                "operationId": "start_linking_session_linking_sessions__session_id__oauth_start_get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Session Id",
+                            "type": "string"
+                        },
+                        "name": "session_id",
+                        "in": "path"
+                    },
+                    {
+                        "description": "A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url",
+                        "required": false,
+                        "schema": {
+                            "title": "Return Link",
+                            "type": "string",
+                            "description": "A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url"
+                        },
+                        "name": "return_link",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Whether to prompt for confirmation of linking; setting",
+                        "required": false,
+                        "schema": {
+                            "title": "Skip Prompt",
+                            "type": "string",
+                            "description": "Whether to prompt for confirmation of linking; setting"
+                        },
+                        "name": "skip_prompt",
+                        "in": "query"
+                    },
+                    {
+                        "description": "KBase auth token taken from a cookie",
+                        "required": false,
+                        "schema": {
+                            "title": "Kbase Session",
+                            "type": "string",
+                            "description": "KBase auth token taken from a cookie"
+                        },
+                        "name": "kbase_session",
+                        "in": "cookie"
+                    },
+                    {
+                        "description": "KBase auth token taken from a cookie",
+                        "required": false,
+                        "schema": {
+                            "title": "Kbase Session Backup",
+                            "type": "string",
+                            "description": "KBase auth token taken from a cookie"
+                        },
+                        "name": "kbase_session_backup",
+                        "in": "cookie"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Response when a linking session not found for the supplied session id"
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Redirect to ORCID if a valid linking session"
+                    }
+                }
+            }
+        },
+        "/linking-sessions/oauth/continue": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Linking Sessions Continue",
+                "description": "The redirect endpoint for the ORCID OAuth flow we use for linking.",
+                "operationId": "linking_sessions_continue_linking_sessions_oauth_continue_get",
+                "parameters": [
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Code",
+                            "type": "string"
+                        },
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "State",
+                            "type": "string"
+                        },
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Error",
+                            "type": "string"
+                        },
+                        "name": "error",
+                        "in": "query"
+                    },
+                    {
+                        "description": "KBase auth token taken from a cookie",
+                        "required": false,
+                        "schema": {
+                            "title": "Kbase Session",
+                            "type": "string",
+                            "description": "KBase auth token taken from a cookie"
+                        },
+                        "name": "kbase_session",
+                        "in": "cookie"
+                    },
+                    {
+                        "description": "KBase auth token taken from a cookie",
+                        "required": false,
+                        "schema": {
+                            "title": "Kbase Session Backup",
+                            "type": "string",
+                            "description": "KBase auth token taken from a cookie"
+                        },
+                        "name": "kbase_session_backup",
+                        "in": "cookie"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "302": {
+                        "description": "Redirect to the continuation page; or error page"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/works/{put_code}": {
+            "get": {
+                "tags": [
+                    "works"
+                ],
+                "summary": "Get Work",
+                "description": "Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header",
+                "operationId": "get_work_works__put_code__get",
+                "parameters": [
+                    {
+                        "description": "The ORCID `put code` for the work record to fetch",
+                        "required": true,
+                        "schema": {
+                            "title": "Put Code",
+                            "type": "integer",
+                            "description": "The ORCID `put code` for the work record to fetch"
+                        },
+                        "name": "put_code",
+                        "in": "path"
+                    },
+                    {
+                        "description": "Kbase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "Kbase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ORCIDWork"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link not available for this user"
+                    },
+                    "401": {
+                        "description": "Token missing or invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "works"
+                ],
+                "summary": "Delete Work",
+                "operationId": "delete_work_works__put_code__delete",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Put Code",
+                            "type": "integer"
+                        },
+                        "name": "put_code",
+                        "in": "path"
+                    },
+                    {
+                        "description": "Kbase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "Kbase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SimpleSuccess"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/works": {
+            "get": {
+                "tags": [
+                    "works"
+                ],
+                "summary": "Get Works",
+                "description": "Fetch all of the \"work\" records from a user's ORCID account if their KBase account is linked.",
+                "operationId": "get_works_works_get",
+                "parameters": [
+                    {
+                        "description": "Kbase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "Kbase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Get Works Works Get",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ORCIDWork"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link not available for this user"
+                    },
+                    "401": {
+                        "description": "Token missing or invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "works"
+                ],
+                "summary": "Save Work",
+                "description": "Update a work record; the `work_update` contains the `put code`.",
+                "operationId": "save_work_works_put",
+                "parameters": [
+                    {
+                        "description": "Kbase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "Kbase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WorkUpdate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ORCIDWork"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link not available for this user"
+                    },
+                    "401": {
+                        "description": "Token missing or invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "works"
+                ],
+                "summary": "Create Work",
+                "operationId": "create_work_works_post",
+                "parameters": [
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewWork"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ORCIDWork"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orcid/profile": {
+            "get": {
+                "tags": [
+                    "orcid"
+                ],
+                "summary": "Get Profile",
+                "description": "Get the ORCID profile for the user associated with the current auth token.\n\nReturns a 404 Not Found if the user is not linked",
+                "operationId": "get_profile_orcid_profile_get",
+                "parameters": [
+                    {
+                        "description": "KBase auth token",
+                        "required": false,
+                        "schema": {
+                            "title": "Authorization",
+                            "type": "string",
+                            "description": "KBase auth token"
+                        },
+                        "name": "authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ORCIDProfile"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not linked or ORCID profile not available."
+                    },
+                    "401": {
+                        "description": "KBase auth token absent"
+                    },
+                    "403": {
+                        "description": "KBase auth token invalid"
+                    },
+                    "422": {
+                        "description": "Either input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/docs": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "summary": "Docs",
+                "description": "Provides a web interface to the auto-generated API docs.",
+                "operationId": "docs_docs_get",
+                "responses": {
+                    "200": {
+                        "description": "Successfully returned the api docs",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Not configured; should never occur"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Auth2Service": {
+                "title": "Auth2Service",
+                "required": [
+                    "url",
+                    "tokenCacheLifetime",
+                    "tokenCacheMaxSize"
+                ],
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "tokenCacheLifetime": {
+                        "title": "Tokencachelifetime",
+                        "type": "integer"
+                    },
+                    "tokenCacheMaxSize": {
+                        "title": "Tokencachemaxsize",
+                        "type": "integer"
+                    }
+                }
+            },
+            "Config": {
+                "title": "Config",
+                "required": [
+                    "services",
+                    "ui",
+                    "orcid",
+                    "mongo",
+                    "module"
+                ],
+                "type": "object",
+                "properties": {
+                    "services": {
+                        "$ref": "#/components/schemas/Services"
+                    },
+                    "ui": {
+                        "$ref": "#/components/schemas/UIConfig"
+                    },
+                    "orcid": {
+                        "$ref": "#/components/schemas/ORCIDConfig"
+                    },
+                    "mongo": {
+                        "$ref": "#/components/schemas/MongoConfig"
+                    },
+                    "module": {
+                        "$ref": "#/components/schemas/ModuleConfig"
+                    }
+                }
+            },
+            "CreateLinkingSessionResult": {
+                "title": "CreateLinkingSessionResult",
+                "required": [
+                    "session_id"
+                ],
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "title": "Session Id",
+                        "type": "string"
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "title": "ErrorResponse",
+                "required": [
+                    "code",
+                    "title",
+                    "message"
+                ],
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "title": "Code",
+                        "type": "string"
+                    },
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "message": {
+                        "title": "Message",
+                        "type": "string"
+                    },
+                    "data": {
+                        "title": "Data"
+                    }
+                }
+            },
+            "ExternalId": {
+                "title": "ExternalId",
+                "required": [
+                    "type",
+                    "value",
+                    "url",
+                    "relationship"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "title": "Type",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "relationship": {
+                        "title": "Relationship",
+                        "type": "string"
+                    }
+                }
+            },
+            "HTTPValidationError": {
+                "title": "HTTPValidationError",
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "title": "Detail",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        }
+                    }
+                }
+            },
+            "InfoResponse": {
+                "title": "InfoResponse",
+                "required": [
+                    "kbase_sdk_config",
+                    "config"
+                ],
+                "type": "object",
+                "properties": {
+                    "kbase_sdk_config": {
+                        "$ref": "#/components/schemas/KBaseSDKConfig"
+                    },
+                    "config": {
+                        "$ref": "#/components/schemas/Config"
+                    }
+                }
+            },
+            "KBaseSDKConfig": {
+                "title": "KBaseSDKConfig",
+                "required": [
+                    "module-name",
+                    "module-description",
+                    "service-language",
+                    "module-version",
+                    "owners",
+                    "service-config"
+                ],
+                "type": "object",
+                "properties": {
+                    "module-name": {
+                        "title": "Module-Name",
+                        "type": "string"
+                    },
+                    "module-description": {
+                        "title": "Module-Description",
+                        "type": "string"
+                    },
+                    "service-language": {
+                        "title": "Service-Language",
+                        "type": "string"
+                    },
+                    "module-version": {
+                        "title": "Module-Version",
+                        "type": "string"
+                    },
+                    "owners": {
+                        "title": "Owners",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "service-config": {
+                        "$ref": "#/components/schemas/KBaseServiceConfig"
+                    }
+                }
+            },
+            "KBaseServiceConfig": {
+                "title": "KBaseServiceConfig",
+                "required": [
+                    "dynamic-service"
+                ],
+                "type": "object",
+                "properties": {
+                    "dynamic-service": {
+                        "title": "Dynamic-Service",
+                        "type": "boolean"
+                    }
+                }
+            },
+            "LinkRecordPublic": {
+                "title": "LinkRecordPublic",
+                "required": [
+                    "username",
+                    "created_at",
+                    "expires_at",
+                    "orcid_auth"
+                ],
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "title": "Username",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "title": "Expires At",
+                        "type": "integer"
+                    },
+                    "orcid_auth": {
+                        "$ref": "#/components/schemas/ORCIDAuthPublic"
+                    }
+                }
+            },
+            "LinkingSessionComplete": {
+                "title": "LinkingSessionComplete",
+                "required": [
+                    "session_id",
+                    "username",
+                    "created_at",
+                    "expires_at",
+                    "return_link",
+                    "skip_prompt",
+                    "orcid_auth"
+                ],
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "title": "Session Id",
+                        "type": "string"
+                    },
+                    "username": {
+                        "title": "Username",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "title": "Expires At",
+                        "type": "integer"
+                    },
+                    "return_link": {
+                        "title": "Return Link",
+                        "type": "string"
+                    },
+                    "skip_prompt": {
+                        "title": "Skip Prompt",
+                        "type": "string"
+                    },
+                    "orcid_auth": {
+                        "$ref": "#/components/schemas/ORCIDAuth"
+                    }
+                }
+            },
+            "LinkingSessionInitial": {
+                "title": "LinkingSessionInitial",
+                "required": [
+                    "session_id",
+                    "username",
+                    "created_at",
+                    "expires_at"
+                ],
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "title": "Session Id",
+                        "type": "string"
+                    },
+                    "username": {
+                        "title": "Username",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "title": "Expires At",
+                        "type": "integer"
+                    }
+                }
+            },
+            "LinkingSessionStarted": {
+                "title": "LinkingSessionStarted",
+                "required": [
+                    "session_id",
+                    "username",
+                    "created_at",
+                    "expires_at",
+                    "return_link",
+                    "skip_prompt"
+                ],
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "title": "Session Id",
+                        "type": "string"
+                    },
+                    "username": {
+                        "title": "Username",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "title": "Expires At",
+                        "type": "integer"
+                    },
+                    "return_link": {
+                        "title": "Return Link",
+                        "type": "string"
+                    },
+                    "skip_prompt": {
+                        "title": "Skip Prompt",
+                        "type": "string"
+                    }
+                }
+            },
+            "ModuleConfig": {
+                "title": "ModuleConfig",
+                "required": [
+                    "serviceRequestTimeout"
+                ],
+                "type": "object",
+                "properties": {
+                    "serviceRequestTimeout": {
+                        "title": "Servicerequesttimeout",
+                        "type": "integer"
+                    }
+                }
+            },
+            "MongoConfig": {
+                "title": "MongoConfig",
+                "required": [
+                    "host",
+                    "port",
+                    "database",
+                    "username",
+                    "password"
+                ],
+                "type": "object",
+                "properties": {
+                    "host": {
+                        "title": "Host",
+                        "type": "string"
+                    },
+                    "port": {
+                        "title": "Port",
+                        "type": "integer"
+                    },
+                    "database": {
+                        "title": "Database",
+                        "type": "string"
+                    },
+                    "username": {
+                        "title": "Username",
+                        "type": "string"
+                    },
+                    "password": {
+                        "title": "Password",
+                        "type": "string"
+                    }
+                }
+            },
+            "NewWork": {
+                "title": "NewWork",
+                "required": [
+                    "title",
+                    "journal",
+                    "date",
+                    "workType",
+                    "url",
+                    "externalIds"
+                ],
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    },
+                    "date": {
+                        "title": "Date",
+                        "type": "string"
+                    },
+                    "workType": {
+                        "title": "Worktype",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "externalIds": {
+                        "title": "Externalids",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        }
+                    }
+                }
+            },
+            "ORCIDAffiliation": {
+                "title": "ORCIDAffiliation",
+                "required": [
+                    "name",
+                    "role",
+                    "startYear"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "role": {
+                        "title": "Role",
+                        "type": "string"
+                    },
+                    "startYear": {
+                        "title": "Startyear",
+                        "type": "string"
+                    },
+                    "endYear": {
+                        "title": "Endyear",
+                        "type": "string"
+                    }
+                }
+            },
+            "ORCIDAuth": {
+                "title": "ORCIDAuth",
+                "required": [
+                    "access_token",
+                    "token_type",
+                    "refresh_token",
+                    "expires_in",
+                    "scope",
+                    "name",
+                    "orcid",
+                    "id_token"
+                ],
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "title": "Access Token",
+                        "type": "string"
+                    },
+                    "token_type": {
+                        "title": "Token Type",
+                        "type": "string"
+                    },
+                    "refresh_token": {
+                        "title": "Refresh Token",
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "title": "Expires In",
+                        "type": "integer"
+                    },
+                    "scope": {
+                        "title": "Scope",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "orcid": {
+                        "title": "Orcid",
+                        "type": "string"
+                    },
+                    "id_token": {
+                        "title": "Id Token",
+                        "type": "string"
+                    }
+                }
+            },
+            "ORCIDAuthPublic": {
+                "title": "ORCIDAuthPublic",
+                "required": [
+                    "name",
+                    "scope",
+                    "expires_in",
+                    "orcid"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "scope": {
+                        "title": "Scope",
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "title": "Expires In",
+                        "type": "integer"
+                    },
+                    "orcid": {
+                        "title": "Orcid",
+                        "type": "string"
+                    }
+                }
+            },
+            "ORCIDConfig": {
+                "title": "ORCIDConfig",
+                "required": [
+                    "oauthBaseURL",
+                    "apiBaseURL",
+                    "clientId",
+                    "clientSecret"
+                ],
+                "type": "object",
+                "properties": {
+                    "oauthBaseURL": {
+                        "title": "Oauthbaseurl",
+                        "type": "string"
+                    },
+                    "apiBaseURL": {
+                        "title": "Apibaseurl",
+                        "type": "string"
+                    },
+                    "clientId": {
+                        "title": "Clientid",
+                        "type": "string"
+                    },
+                    "clientSecret": {
+                        "title": "Clientsecret",
+                        "type": "string"
+                    }
+                }
+            },
+            "ORCIDLinkService": {
+                "title": "ORCIDLinkService",
+                "required": [
+                    "url"
+                ],
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    }
+                }
+            },
+            "ORCIDProfile": {
+                "title": "ORCIDProfile",
+                "required": [
+                    "orcidId",
+                    "firstName",
+                    "lastName",
+                    "bio",
+                    "affiliations",
+                    "works",
+                    "emailAddresses"
+                ],
+                "type": "object",
+                "properties": {
+                    "orcidId": {
+                        "title": "Orcidid",
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "title": "Firstname",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "title": "Lastname",
+                        "type": "string"
+                    },
+                    "bio": {
+                        "title": "Bio",
+                        "type": "string"
+                    },
+                    "affiliations": {
+                        "title": "Affiliations",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDAffiliation"
+                        }
+                    },
+                    "works": {
+                        "title": "Works",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDWork"
+                        }
+                    },
+                    "emailAddresses": {
+                        "title": "Emailaddresses",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ORCIDWork": {
+                "title": "ORCIDWork",
+                "required": [
+                    "putCode",
+                    "createdAt",
+                    "updatedAt",
+                    "source",
+                    "title",
+                    "date",
+                    "workType",
+                    "url",
+                    "externalIds"
+                ],
+                "type": "object",
+                "properties": {
+                    "putCode": {
+                        "title": "Putcode",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "title": "Createdat",
+                        "type": "integer"
+                    },
+                    "updatedAt": {
+                        "title": "Updatedat",
+                        "type": "integer"
+                    },
+                    "source": {
+                        "title": "Source",
+                        "type": "string"
+                    },
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    },
+                    "date": {
+                        "title": "Date",
+                        "type": "string"
+                    },
+                    "workType": {
+                        "title": "Worktype",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "externalIds": {
+                        "title": "Externalids",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        }
+                    }
+                }
+            },
+            "Services": {
+                "title": "Services",
+                "required": [
+                    "Auth2",
+                    "ORCIDLink"
+                ],
+                "type": "object",
+                "properties": {
+                    "Auth2": {
+                        "$ref": "#/components/schemas/Auth2Service"
+                    },
+                    "ORCIDLink": {
+                        "$ref": "#/components/schemas/ORCIDLinkService"
+                    }
+                }
+            },
+            "SimpleSuccess": {
+                "title": "SimpleSuccess",
+                "required": [
+                    "ok"
+                ],
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "title": "Ok",
+                        "type": "boolean"
+                    }
+                }
+            },
+            "StatusResponse": {
+                "title": "StatusResponse",
+                "required": [
+                    "status",
+                    "time",
+                    "start_time"
+                ],
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "title": "Status",
+                        "type": "string"
+                    },
+                    "time": {
+                        "title": "Time",
+                        "type": "integer"
+                    },
+                    "start_time": {
+                        "title": "Start Time",
+                        "type": "integer"
+                    }
+                }
+            },
+            "UIConfig": {
+                "title": "UIConfig",
+                "required": [
+                    "origin"
+                ],
+                "type": "object",
+                "properties": {
+                    "origin": {
+                        "title": "Origin",
+                        "type": "string"
+                    }
+                }
+            },
+            "ValidationError": {
+                "title": "ValidationError",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "loc": {
+                        "title": "Location",
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    },
+                    "msg": {
+                        "title": "Message",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Error Type",
+                        "type": "string"
+                    }
+                }
+            },
+            "WorkUpdate": {
+                "title": "WorkUpdate",
+                "required": [
+                    "putCode"
+                ],
+                "type": "object",
+                "properties": {
+                    "putCode": {
+                        "title": "Putcode",
+                        "type": "integer"
+                    },
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    },
+                    "date": {
+                        "title": "Date",
+                        "type": "string"
+                    },
+                    "workType": {
+                        "title": "Worktype",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "externalIds": {
+                        "title": "Externalids",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,43 @@
-# ORCIDLink
+# ORCID Link  _(kbase-service-orcidlink)_
 
-This is a prototype service for linking a KBase account to an ORCID account. 
+A KBase core REST service whose primary purpose is to link KBase accounts to ORCID accounts.
 
-Although it works with kb-sdk and is compatible with the KBase service wizard app runner, it does not use most of the machinery. Rather it is a simple fastapi-based service.
+ORCID Link also provides relates services, such as fetching the profile for a linked account, and managing the "works" for a linked account
+
+The service is implemented in Python, using the FastAPI library.
+
+Please see the [design doc](docs/design.md) for further information.
+
+## Security
+
+This service will only run with a specific set of [environment variables](docs/deployment.md#environment-variables), some of which contain private keys which are essential for communication with ORCID Services.
+
+## Background
+
+Many users of KBase also are [ORCID (Open Researcher and Contributor ID)](https://orcid.org) users as well. There are many opportunities for synergy between KBase and ORCID with respect to their users. Examples include:
+
+- **profile synchronization**: An ORCID account is designed to serve as a canonical profile; as such, a KBase profile is not only redundant, but may be in conflict; KBase can use a user's associated ORCID profile to synchronize with or replace the KBase profile.
+- **automated publication**: KBase is a platform supporting publication of analysis documents termed "Narratives", as well as the publication of openly accessible data. A KBase user who publishes Narratives and data and obtains a [DOI](https://doi.org), may use KBase tools to automatically populate and manage the "works" section of their profile.
+
+By linking a KBase account to an ORCID account, tools described above can be implemented, to the benefit of KBase users.
+
+## Install
+
+This service is not directly installable as such. It is a REST-based web service and must be built and run within a compatible deployment environment.
+
+I suppose "installation" consists of building a Docker image and hosting it somewhere. In practice, this is conducted at GitHub, with a build conducted via [GitHub Actions](docs/deployment.md#github-actions) and hosted at the GitHub Container Repository (GHCR). 
 
 
+## Usage
+
+There are different scenarios under which it may be run and utilized. Each is described in separate sections:
+
+- [development](docs/development.md)
+- [deployment](docs/deployment.md)
+
+Deployment support is described, but deployment practices and mechanics are out of scope of this document and service.
+
+Running as a local service is not only feasible but the normal model for development.
 
 ## Usage
 
@@ -14,61 +47,14 @@ ORCID_SANDBOX_CLIENT_ID=<client id> ORCID_SANDBOX_CLIENT_SECRET=<client secret> 
 
 It currently works with the ORCID sandbox, so the credentials used above must be obtained from an ORCID sandbox account.
 
-## Development
+## API
 
-### build image
-```shell
-docker compose build
-```
+The API docs are generated automatically, and are available [in the codebase](docs/api/openapi/README.md) as well as from a live instance of the service at the `/docs` endpoint. 
 
-### shell into image to inspect
-```shell
-docker compose run --entrypoint sh orcidlink
-```  
+## Contributing
 
-### run it
-```shell
-docker compose up
-```
+[ to be done ]
 
-## Development 2
+## License
 
-This workflow works well with pycharm:
-
-> Had to set up poetry to work without a virtual env; although it worked once, 
-> for some reason I couldn't set the interpreter within the virtualenv.
-
-- create new interpreter for docker compose
-
-- make sure the environment variables are set, you can copy paste the following:
-```text
-KBASE_ENDPOINT=https://ci.kbase.us/services/;ORCID_CLIENT_ID={{OMITTED}} ;ORCID_CLIENT_SECRET={{OMITTED}}
-```
-
-- make sure interpreter paths are set:
-```text
-/usr/local/lib/python3.11/site-packages  (added by user)
-/kb/module/src  (added by user)
-/usr/local/lib/python3.11  (added by user)
-/usr/local/lib/python3.11/lib-dynload
-/root/.local/lib/python3.11/site-packages
-```
-
-- make sure the interpreter is:
-
-```text
-/usr/local/bin/python3.11
-```
-
-if in doubt shell into the container (using start-dev-bash.sh) and issue
-
-```shell
-poetry env info
-```
-
-
-
-## Testing
-
-- shell into container
-- run `pytest --cov src --cov-report=html src`
+See license in [LICENSE.md](LICENSE.md)
