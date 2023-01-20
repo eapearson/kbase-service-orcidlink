@@ -3,7 +3,7 @@
 /_local
 /dev/work/data
 /lib/
-#.idea
+.idea
 
 # Development artifacts
 LOCAL_ONLY_README.md
