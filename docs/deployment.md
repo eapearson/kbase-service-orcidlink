@@ -19,16 +19,33 @@ This service uses GitHub Actions (GHA) to provide workflows for testing, image b
  | release against main        | ✓    | ✓     | ✓    | v#.#.#            |
  | manual                      | ✓    | ✓     | ✓    | ref-<branch name> |
  
- 
+## Image repository
 
+Images are stored at GitHub Container Repository (GHCR), which has the host name `ghcr.io`. Image references are thus `ghcr.io/ACCOUNT/IMAGE:TAG`
+
+E.g.
+
+```text
+ghcr.io/kbase/kbase-service-orcidlink:v1.2.3
+```
+ 
 ## Image name
 
-This service follows the KBase conventions for image naming. The base name for the image should be `kbase/orcidlink`. The tag should be:
+This service roughly follows the KBase conventions for image naming. The base name for the image should be `kbase/kbase-service-orcidlink`, which matches the repo name. I use repo names that are unambiguous when standing on their own. 
+
+The tag should be:
 
 - `develop` for the image created when a PR is merged into develop; this image should normally be used for the KBase deployment environment CI, and possibly narrative-dev. It should be redeployed as soon as possible after it is created. 
 - `latest-rc` for the image created when develop is merged to main; this image may be used for pre-release evaluation in the KBase deployment environments CI, next, or narrative-dev.
 - `v#.#.#` for the image created when a release is created against main; `#.#.#` should follow semver 2.0 conventions; `v` is the recommended prefix for release tags which are followed by a semver.
+- `release` is also for an image created for a release, in addition to the version-tag described above.
 - `"ref-<branch>"` - the "manual" workflow will create an image with a tag consisting of the branch name prefixed by "ref-". The prefix helps disambiguate manual builds from ordinary ones.
+
+For example, the image for a release "1.2.3" that should be deployed is
+
+```text
+kbase/kbase-service-orcidlink:v1.2.3
+```
 
 ## Service Dependencies
 
