@@ -1,10 +1,9 @@
 ---
-name: PR To main (or master) merged
+name: PR To develop merged
 on:
   pull_request:
     branches:
-      - main
-      - master
+      - develop
     types:
       - closed
 jobs:
