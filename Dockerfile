@@ -3,6 +3,7 @@ FROM python:3.11.0-slim-bullseye
 # poetry.lock.
 
 MAINTAINER KBase Developer
+org.opencontainers.image.source = "https://github.com/eapearson/kbase-service-orcidlink"
 # -----------------------------------------
 # In this section, you can install any system dependencies required
 # to run your App.  For instance, you could place an apt-get update or
