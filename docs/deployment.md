@@ -2,6 +2,34 @@
 
 ## Overview
 
+## Canonical URL
+
+The ORCID Link service should be available with a service path suffix of `orcidlink`. The URL in the CI environment, for example, should be `https://ci.kbase.us/services/orcidlink`
+
+## GitHub Actions
+
+This service uses GitHub Actions (GHA) to provide workflows for testing, image building, and image hosting. 
+
+| event | test | build | push | tag |
+|-------|------|-------|------|-----|
+ | pr to develop activity | ✓ | ✓ | | |
+ | pr to develop merged | ✓ | ✓  | ✓ | develop |
+ | pr develop -> main activity | ✓ | ✓  | ✓  |  |
+ | pr develop -> main merged | ✓  | ✓  | ✓ | latest-rc |
+ | release against main | ✓ | ✓ | ✓ | v#.#.# |
+ | manual | ✓ | ✓ | ✓| ref-<branch name> |
+ 
+ 
+
+## Image name
+
+This service follows the KBase conventions for image naming. The base name for the image should be `kbase/orcidlink`. The tag should be:
+
+- `develop` for the image created when a PR is merged into develop; this image should normally be used for the KBase deployment environment CI, and possibly narrative-dev. It should be redeployed as soon as possible after it is created. 
+- `latest-rc` for the image created when develop is merged to main; this image may be used for pre-release evaluation in the KBase deployment environments CI, next, or narrative-dev.
+- `v#.#.#` for the image created when a release is created against main; `#.#.#` should follow semver 2.0 conventions; `v` is the recommended prefix for release tags which are followed by a semver.
+- `"ref-<branch>"` - the "manual" workflow will create an image with a tag consisting of the branch name prefixed by "ref-". The prefix helps disambiguate manual builds from ordinary ones.
+
 ## Service Dependencies
 
 - KBase auth service
