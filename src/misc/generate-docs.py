@@ -175,27 +175,12 @@ def generate_response_content(content):
     json_content_type = prop(content, "application/json")
     if json_content_type is None:
         return list(content)[0]
-        # return 'NOT JSON!'
 
     schema = prop(json_content_type, "schema")
     if schema is None:
         return "NO TYPE!"
 
-    result = generate_schema(schema)
-    if result == "!! NOT HANDLED !!":
-        print("hmm", json_content_type)
-    return result
-
-    # rows = []
-    # for content_type, spec in content.items():
-    #     rows.append([
-    #         content_type,
-    #         generate_data_type_content(spec)
-    #     ])
-    # return generate_html_table(
-    #     ['Content Type', 'Data Type'],
-    #     rows
-    # )
+    return generate_schema(schema)
 
 
 def generate_responsesx(responses):
