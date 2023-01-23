@@ -48,24 +48,62 @@ def generate_table(header, rows):
     return md
 
 
-def generate_html_table_row(row, tag="td", widths=None):
+def generate_html_table_row(row, tag="td"):
     return ["<tr>", [[f"<{tag}>", item, f"</{tag}>"] for item in row], "</tr>"]
+
+
+# def generate_html_table_header_row(row, tag="td", widths=None):
+#     if widths is None:
+#         return ["<tr>", [[f"<{tag}>", item, f"</{tag}>"] for item in row], "</tr>"]
+#
+#     md = []
+#     md.append('<tr>')
+#     for index, item in enumerate(row):
+#         width = widths[index]
+#         if width is None:
+#             md.append(['<th>', item, '</th>'])
+#         else:
+#             md.append(['<th>', item, '</th>'])
+
+
+def generate_html_table_width_rows(header, widths, tag="td"):
+    if widths is None:
+        return []
+    md = []
+    # full width row
+    md.append(
+        [
+            "<tr>",
+            f'<{tag} colspan="{len(header)}">',
+            '<img width="2000px">',
+            f"</{tag}>",
+            "</tr>",
+        ]
+    )
+    md.append("<tr>")
+    for width in widths:
+        if width is None:
+            md.append(["<th>", "</th>"])
+        else:
+            md.append(["<th>", f'<img width="{width}">', "</th>"])
+    return md
 
 
 def generate_html_table(header, rows, widths=None):
     md = []
-    md.append('<table style="width: 100%;">')
+    md.append("<table>")
     md.append("<thead>")
+    md.append(generate_html_table_width_rows(header, widths, "th"))
     md.append(generate_html_table_row(header, "th"))
     md.append("</thead>")
-    if widths is not None:
-        md.append("<colgroup>")
-        for width in widths:
-            if width is not None:
-                md.append(f'<col style="width: {width};">')
-            else:
-                md.append(f"<col>")
-        md.append("</colgroup>")
+    # if widths is not None:
+    #     md.append("<colgroup>")
+    #     for width in widths:
+    #         if width is not None:
+    #             md.append(f'<col style="width: {width};">')
+    #         else:
+    #             md.append(f"<col>")
+    #     md.append("</colgroup>")
     md.append("<tbody>")
     for row in rows:
         md.append(generate_html_table_row(row))
@@ -232,7 +270,10 @@ def generate_parameters(parameters):
                 prop(parameter, "in", "n/a"),
             ]
         )
-    return generate_html_table(["Name", "Description", "Type", "In"], rows)
+    widths = ["10em", None, "10em", "10em"]
+    return generate_html_table(
+        ["Name", "Description", "Type", "In"], rows, widths=widths
+    )
 
 
 def generate_path(spec: dict):
