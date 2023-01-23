@@ -21,4 +21,4 @@ First release.
 * convert template tech to jinja2 (from dockerize) [CE-161]
 * add additional environment variables for ORCID urls [CE-161]
 * document workflows, improve pr template [CE-161]
-* add static documentation generation, improve README [CE-161]
+* add static documentation generation, improve README [CE-162]
