@@ -243,7 +243,9 @@ def generate_responses(responses):
             ]
         )
     return generate_html_table(
-        ["Status Code", "Description", "Type"], rows, widths=["8em", None, "10em"]
+        ["Status Code", "Description", "Type"],
+        rows,
+        widths=["120px", "1000px", "150px"],
     )
 
 
@@ -270,7 +272,7 @@ def generate_parameters(parameters):
                 prop(parameter, "in", "n/a"),
             ]
         )
-    widths = ["10em", None, "10em", "10em"]
+    widths = ["150px", "1000px", "150px", "150px"]
     return generate_html_table(
         ["Name", "Description", "Type", "In"], rows, widths=widths
     )
@@ -329,7 +331,7 @@ def generate_properties(required, properties):
         )
 
     return generate_html_table(
-        ["Name", "Type", "Required"], rows, widths=[None, "15em", "5em"]
+        ["Name", "Type", "Required"], rows, widths=["1000px", "200px", "75px"]
     )
 
 
