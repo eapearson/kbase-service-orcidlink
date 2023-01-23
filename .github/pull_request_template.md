@@ -3,6 +3,8 @@
 > Replace quoted instructions with the requested information.
 > Leave checkboxes in place, check them off as tasks completed
 > (And yes, remove this quote block!)
+> 
+> Also please ~~cross out~~ any requirements which are inapplicable
 
 ## Description
 
