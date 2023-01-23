@@ -1,3 +1,4 @@
+import contextlib
 import json
 from urllib.parse import parse_qs, urlparse
 
@@ -5,9 +6,18 @@ import pytest
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from orcidlink.lib import responses
 from orcidlink.lib.responses import ErrorException, error_response_not_found
+from orcidlink.service_clients.KBaseAuth import TokenInfo
 from test.data.utils import load_data_file
+from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
 config_yaml = load_data_file("config1.toml")
+
+
+@contextlib.contextmanager
+def mock_services():
+    with no_stderr():
+        with mock_auth_service():
+            yield
 
 
 @pytest.fixture
@@ -122,8 +132,11 @@ def test_make_error_exception():
 
 
 def test_ensure_authorization():
-    value = responses.ensure_authorization("foo")
-    assert value == "foo"
+    with mock_services():
+        authorization, value = responses.ensure_authorization("foo")
+        assert isinstance(authorization, str)
+        assert authorization == "foo"
+        assert isinstance(value, TokenInfo)
 
     with pytest.raises(
         ErrorException, match="API call requires a KBase auth token"

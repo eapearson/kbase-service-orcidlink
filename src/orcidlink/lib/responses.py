@@ -1,12 +1,13 @@
 # from fastapi import HTTPException
 from traceback import extract_tb
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 from fastapi import Header
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from orcidlink.lib.config import config
+from orcidlink.service_clients.KBaseAuth import KBaseAuth, TokenInfo
 from pydantic import BaseModel, Field
 
 
@@ -126,7 +127,12 @@ def make_error_exception(
     )
 
 
-def ensure_authorization(authorization: str | None) -> str:
+def ensure_authorization(authorization: str | None) -> Tuple[str, TokenInfo]:
+    """
+    Ensures that the "authorization" value, the KBase auth token, is
+    not none. This is a convenience function for endpoints, whose sole
+    purpose is to ensure that the provided token is good and valid.
+    """
     if authorization is None:
         raise ErrorException(
             error=ErrorResponse(
@@ -136,7 +142,12 @@ def ensure_authorization(authorization: str | None) -> str:
             ),
             status_code=401,
         )
-    return authorization
+    auth = KBaseAuth(
+        auth_url=config().services.Auth2.url,
+        cache_lifetime=int(config().services.Auth2.tokenCacheLifetime / 1000),
+        cache_max_size=config().services.Auth2.tokenCacheMaxSize,
+    )
+    return authorization, auth.get_token_info(authorization)
 
 
 AUTHORIZATION_HEADER = Header(default=None, description="KBase auth token")
@@ -144,8 +155,8 @@ AUTHORIZATION_HEADER = Header(default=None, description="KBase auth token")
 ResponseMapping = Mapping[Union[int, str], Dict[str, Any]]
 
 AUTH_RESPONSES: ResponseMapping = {
-    401: {"description": "KBase auth token absent"},
-    403: {"description": "KBase auth token invalid"},
+    401: {"description": "KBase auth token absent", "model": ErrorResponse},
+    403: {"description": "KBase auth token invalid", "model": ErrorResponse},
 }
 
 STD_RESPONSES: ResponseMapping = {

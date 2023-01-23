@@ -49,7 +49,7 @@ It currently works with the ORCID sandbox, so the credentials used above must be
 
 ## API
 
-The API docs are generated automatically, and are available [in the codebase](docs/api/openapi/README.md) as well as from a live instance of the service at the `/docs` endpoint. 
+The [API docs](docs/api/openapi/index.md) are generated automatically, and are [available in the codebase](docs/api/openapi/index.md) as well as from a live instance of the service at the `/docs` endpoint. 
 
 ## Contributing
 

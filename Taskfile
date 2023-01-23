@@ -61,6 +61,11 @@ function generate-openapi {
   docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-openapi.py
 }
 
+function generate-docs {
+  rm -rf docs/api/openapi/*
+  docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-docs.py
+}
+
 function generate-apidocs {
     rm -rf docs/api/openapi/*
     docker run --rm \

@@ -4,11 +4,7 @@ from orcidlink.lib.utils import epoch_time_millis
 from orcidlink.model import KBaseSDKConfig
 from pydantic import BaseModel, Field
 
-router = APIRouter(prefix="/link", responses={404: {"description": "Not found"}})
-
-from fastapi import APIRouter
-
-router = APIRouter(prefix="", responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="")
 
 
 # TODO: move into config!!
@@ -21,13 +17,26 @@ class StatusResponse(BaseModel):
     start_time: int = Field(...)
 
 
-@router.get("/status", response_model=StatusResponse, tags=["misc"])
+@router.get(
+    "/status",
+    response_model=StatusResponse,
+    tags=["misc"],
+    responses={
+        200: {
+            "description": "Successfully returns the service status",
+            "model": StatusResponse,
+        }
+    },
+)
 async def get_status():
     """
-    The status of the service.
+    Get the current status of the service.
 
-    The intention of this endpoint is as a lightweight way to call to ping the
-    service, e.g. for health check, latency tests, etc.
+    This endpoint returns the status of the service (by definition "ok" if
+    it is running!), the current time, and the start time.
+
+    It can be used as a healthcheck, for basic latency performance (as it makes no
+    upstream calls at all), or for time synchronization (as it returns the current time).
     """
     # TODO: start time, deal with it@
     return StatusResponse(status="ok", start_time=0, time=epoch_time_millis())
