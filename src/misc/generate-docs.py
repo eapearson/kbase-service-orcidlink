@@ -182,8 +182,8 @@ def generate_response_content(content):
         return "NO TYPE!"
 
     result = generate_schema(schema)
-    if result == '!! NOT HANDLED !!':
-        print('hmm', json_content_type)
+    if result == "!! NOT HANDLED !!":
+        print("hmm", json_content_type)
     return result
 
     # rows = []

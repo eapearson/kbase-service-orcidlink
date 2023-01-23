@@ -38,7 +38,7 @@ router = APIRouter(prefix="/linking-sessions")
 # Convenience functions
 #
 def get_linking_session_record(
-        session_id: str, authorization: str
+    session_id: str, authorization: str
 ) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete:
     _, token_info = ensure_authorization(authorization)
 
@@ -123,8 +123,8 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
         200: {
             "description": "Returns the current linking session, scrubbed of private info",
             "model": LinkingSessionComplete
-                     | LinkingSessionStarted
-                     | LinkingSessionInitial,
+            | LinkingSessionStarted
+            | LinkingSessionInitial,
         },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -137,7 +137,7 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     tags=["linking-sessions"],
 )
 async def get_linking_session(
-        session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
 ):
     """
     Get Linking Session
@@ -170,7 +170,7 @@ async def get_linking_session(
     tags=["linking-sessions"],
 )
 async def delete_linking_session(
-        session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
 ):
     """
     Delete Linking Session
@@ -215,7 +215,7 @@ async def delete_linking_session(
     tags=["linking-sessions"],
 )
 async def finish_linking_session(
-        session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
 ):
     """
     Finish Linking Session
@@ -266,9 +266,7 @@ async def finish_linking_session(
     response_class=RedirectResponse,
     status_code=302,
     responses={
-        302: {
-            "description": "Redirect to ORCID if a valid linking session"
-        },
+        302: {"description": "Redirect to ORCID if a valid linking session"},
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         404: {
@@ -279,15 +277,15 @@ async def finish_linking_session(
     tags=["linking-sessions"],
 )
 async def start_linking_session(
-        session_id: str = SESSION_ID_FIELD,
-        return_link: str | None = RETURN_LINK_QUERY,
-        skip_prompt: str = SKIP_PROMPT_QUERY,
-        kbase_session: str = Cookie(
-            default=None, description="KBase auth token taken from a cookie"
-        ),
-        kbase_session_backup: str = Cookie(
-            default=None, description="KBase auth token taken from a cookie"
-        ),
+    session_id: str = SESSION_ID_FIELD,
+    return_link: str | None = RETURN_LINK_QUERY,
+    skip_prompt: str = SKIP_PROMPT_QUERY,
+    kbase_session: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    kbase_session_backup: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
 ):
     """
     Start Linking Session
@@ -369,9 +367,7 @@ async def start_linking_session(
     status_code=302,
     response_class=RedirectResponse,
     responses={
-        302: {
-            "description": "Redirect to the continuation page; or error page"
-        },
+        302: {"description": "Redirect to the continuation page; or error page"},
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         401: {
@@ -381,15 +377,15 @@ async def start_linking_session(
     tags=["linking-sessions"],
 )
 async def linking_sessions_continue(
-        kbase_session: str = Cookie(
-            default=None, description="KBase auth token taken from a cookie"
-        ),
-        kbase_session_backup: str = Cookie(
-            default=None, description="KBase auth token taken from a cookie"
-        ),
-        code: str | None = None,
-        state: str | None = None,
-        error: str | None = None,
+    kbase_session: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    kbase_session_backup: str = Cookie(
+        default=None, description="KBase auth token taken from a cookie"
+    ),
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
 ) -> RedirectResponse:
     """
     Continue Linking Session
@@ -508,6 +504,7 @@ async def linking_sessions_continue(
         f"{config().ui.origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )
+
 
 #
 # Managing linking sessions
