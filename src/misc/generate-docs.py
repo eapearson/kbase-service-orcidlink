@@ -445,8 +445,9 @@ def generate_glossary():
         {
             "term": "Public link record",
             "definition": "The record used internally to associate a KBase User Account with an ORCID Account,"
-                          + " with sensitive information such as tokens removed. Represented by "
-                          + "the type " + generate_anchor_link('LinkRecordPublic', 'header_type', render="html"),
+            + " with sensitive information such as tokens removed. Represented by "
+            + "the type "
+            + generate_anchor_link("LinkRecordPublic", "header_type", render="html"),
         },
     ]
 
