@@ -18,8 +18,8 @@ Once connected, *ORCID Link* enables certain integrations, including:
 <a href="https://www.kbase.us/about/terms-and-conditions-v2/">https://www.kbase.us/about/terms-and-conditions-v2/</a>
 <a name="header_contact"></a>
 ## Contact
-KBase, Lawrence Berkeley National Laboratory, DOE
-<a href="https://www.kbase.us">https://www.kbase.us</a>
+KBase, Lawrence Berkeley National Laboratory, DOE  
+<a href="https://www.kbase.us">https://www.kbase.us</a>  
 engage@kbase.us
 <a name="header_license"></a>
 ## License
@@ -134,7 +134,7 @@ Return the link for the user associated with the KBase auth token passed in the 
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the <a href='#glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets</td><td><a href="#user-content-header_type_linkrecordpublic">LinkRecordPublic</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets</td><td><a href="#user-content-header_type_linkrecordpublic">LinkRecordPublic</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -219,7 +219,7 @@ as long as it is owned by the user associated with the given KBase auth token.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the public linking session, scrubbed of private info</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_linkingsessioncomplete">LinkingSessionComplete</a></div><div><a href="#user-content-header_type_linkingsessionstarted">LinkingSessionStarted</a></div><div><a href="#user-content-header_type_linkingsessioninitial">LinkingSessionInitial</a></div></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>403</td><td>User does not own linking session</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Linking session not found</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the linking session</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_linkingsessionstarted">LinkingSessionStarted</a></div><div><a href="#user-content-header_type_linkingsessioninitial">LinkingSessionInitial</a></div></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>403</td><td>User does not own linking session</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Linking session not found</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -456,7 +456,7 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 A generic error object used for all error responses.
 
 See [the error docs](docs/errors.md) for more information.
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td>!! NOT HANDLED !!</td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td>object</td><td></td></tr></tbody></table>
 
 
 
@@ -478,13 +478,6 @@ See [the error docs](docs/errors.md) for more information.
 ##### LinkRecordPublic
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublic">ORCIDAuthPublic</a></td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_linkingsessioncomplete"></a>
-##### LinkingSessionComplete
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>session_id</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>return_link</td><td>string</td><td>✓</td></tr><tr><td>skip_prompt</td><td>string</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauth">ORCIDAuth</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -527,13 +520,6 @@ Represents a work record that is going to be added to ORCID.
 ##### ORCIDAffiliation
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>role</td><td>string</td><td>✓</td></tr><tr><td>startYear</td><td>string</td><td>✓</td></tr><tr><td>endYear</td><td>string</td><td></td></tr></tbody></table>
-
-
-
-<a name="header_type_orcidauth"></a>
-##### ORCIDAuth
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>access_token</td><td>string</td><td>✓</td></tr><tr><td>token_type</td><td>string</td><td>✓</td></tr><tr><td>refresh_token</td><td>string</td><td>✓</td></tr><tr><td>expires_in</td><td>integer</td><td>✓</td></tr><tr><td>scope</td><td>string</td><td>✓</td></tr><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>orcid</td><td>string</td><td>✓</td></tr><tr><td>id_token</td><td>string</td><td>✓</td></tr></tbody></table>
 
 
 
@@ -619,6 +605,6 @@ and can be sent back to update the ORCID work record
 ## Glossary
 <dl>
 <dt><a name="glossary_term_orcid"></a><a href='https://orcid.org'>ORCID</a></dt><dd>Open Researcher and Contributor ID
-<dt><a name="glossary_term_public-link-record"></a>Public link record</dt><dd>The record used internally to associate a KBase User Account with an ORCID Account, with sensitive information such as tokens removed.</dd>
+<dt><a name="glossary_term_public-link-record"></a>Public link record</dt><dd>The record used internally to associate a KBase User Account with an ORCID Account, with sensitive information such as tokens removed. Represented by the type <a href="#user-content-header_type_linkrecordpublic">LinkRecordPublic</a></dd>
 </dl>
 -fin-

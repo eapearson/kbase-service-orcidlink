@@ -203,6 +203,10 @@ def generate_html_link(url: str) -> str:
     return x
 
 
+def md_line_break():
+    return "  "
+
+
 def generate_header(spec: dict):
     return [
         md_header(spec["info"]["title"], 1),
@@ -212,8 +216,8 @@ def generate_header(spec: dict):
         md_header("Terms of Service", 2),
         generate_html_link(spec["info"]["termsOfService"]),
         md_header("Contact", 2),
-        spec["info"]["contact"]["name"],
-        generate_html_link(spec["info"]["contact"]["url"]),
+        spec["info"]["contact"]["name"] + md_line_break(),
+        generate_html_link(spec["info"]["contact"]["url"]) + md_line_break(),
         spec["info"]["contact"]["email"],
         md_header("License", 2),
         spec["info"]["license"]["name"],
@@ -441,7 +445,8 @@ def generate_glossary():
         {
             "term": "Public link record",
             "definition": "The record used internally to associate a KBase User Account with an ORCID Account,"
-            + " with sensitive information such as tokens removed.",
+                          + " with sensitive information such as tokens removed. Represented by "
+                          + "the type " + generate_anchor_link('LinkRecordPublic', 'header_type', render="html"),
         },
     ]
 
