@@ -24,8 +24,8 @@ from starlette.responses import HTMLResponse
 
 description = """\
 The *ORCID Link Service* provides an API to enable the linking of a KBase
- user account to an ORCID account. This "link" consists of a Link Record which 
- contains a KBase username, ORCID id, ORCID access token. This link record allows
+ user account to an ORCID account. This "link" consists of a [Link Record](#user-content-header_type_linkrecord) which 
+ contains a KBase username, ORCID id, ORCID access token, and a few other fields. This link record allows
  KBase to create tools and services which utilize the ORCID api to view or modify
  certain aspects of a users ORCID profile.
 

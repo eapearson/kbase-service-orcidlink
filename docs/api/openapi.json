@@ -2,7 +2,7 @@
     "openapi": "3.0.2",
     "info": {
         "title": "ORCID Link Service",
-        "description": "The *ORCID Link Service* provides an API to enable the linking of a KBase\n user account to an ORCID account. This \"link\" consists of a Link Record which \n contains a KBase username, ORCID id, ORCID access token. This link record allows\n KBase to create tools and services which utilize the ORCID api to view or modify\n certain aspects of a users ORCID profile.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile",
+        "description": "The *ORCID Link Service* provides an API to enable the linking of a KBase\n user account to an ORCID account. This \"link\" consists of a [Link Record](#user-content-header_type_linkrecord) which \n contains a KBase username, ORCID id, ORCID access token, and a few other fields. This link record allows\n KBase to create tools and services which utilize the ORCID api to view or modify\n certain aspects of a users ORCID profile.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile",
         "version": "0.1.0"
     },
     "paths": {
@@ -75,7 +75,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns the <a href='#glossary_term_public_link_record'>Public link record</a> for this user; contains no secrets",
+                        "description": "Returns the <a href='#glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1564,7 +1564,8 @@
                             "$ref": "#/components/schemas/ExternalId"
                         }
                     }
-                }
+                },
+                "description": "Represents a work record that is going to be added to ORCID."
             },
             "ORCIDAffiliation": {
                 "title": "ORCIDAffiliation",
@@ -1890,14 +1891,16 @@
             "WorkUpdate": {
                 "title": "WorkUpdate",
                 "required": [
+                    "title",
+                    "journal",
+                    "date",
+                    "workType",
+                    "url",
+                    "externalIds",
                     "putCode"
                 ],
                 "type": "object",
                 "properties": {
-                    "putCode": {
-                        "title": "Putcode",
-                        "type": "integer"
-                    },
                     "title": {
                         "title": "Title",
                         "type": "string"
@@ -1924,8 +1927,13 @@
                         "items": {
                             "$ref": "#/components/schemas/ExternalId"
                         }
+                    },
+                    "putCode": {
+                        "title": "Putcode",
+                        "type": "integer"
                     }
-                }
+                },
+                "description": "Represents a work record which has been fetched from ORCID, modified,\nand can be sent back to update the ORCID work record"
             }
         }
     },

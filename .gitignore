@@ -10,6 +10,7 @@ LOCAL_ONLY_README.md
 custom.env
 *.pyc
 .DS_Store
+docs/api/index.html
 
 # Placeholder directories
 /config/*
