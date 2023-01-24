@@ -17,6 +17,12 @@ from pydantic import BaseModel, Field
 
 
 class ErrorResponse(BaseModel):
+    """
+    A generic error object used for all error responses.
+
+    See [the error docs](docs/errors.md) for more information.
+    """
+
     code: str = Field(...)
     title: str = Field(...)
     message: str = Field(...)
@@ -150,18 +156,23 @@ def ensure_authorization(authorization: str | None) -> Tuple[str, TokenInfo]:
     return authorization, auth.get_token_info(authorization)
 
 
-AUTHORIZATION_HEADER = Header(default=None, description="KBase auth token")
+AUTHORIZATION_HEADER = Header(
+    # default=None,
+    description="KBase auth token",
+    min_length=32,
+    max_length=32,
+)
 
 ResponseMapping = Mapping[Union[int, str], Dict[str, Any]]
 
 AUTH_RESPONSES: ResponseMapping = {
-    401: {"description": "KBase auth token absent", "model": ErrorResponse},
-    403: {"description": "KBase auth token invalid", "model": ErrorResponse},
+    401: {"description": "KBase auth token absent or invalid", "model": ErrorResponse},
+    # 403: {"description": "KBase auth token invalid", "model": ErrorResponse},
 }
 
 STD_RESPONSES: ResponseMapping = {
     422: {
-        "description": "Either input or output data does not comply with the API schema",
+        "description": "Input or output data does not comply with the API schema",
         "model": ErrorResponse,
     }
 }

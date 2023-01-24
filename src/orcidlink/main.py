@@ -23,8 +23,11 @@ from starlette.responses import HTMLResponse
 #
 
 description = """\
-The *ORCID Link Service* provides an API to enable the creation of an interface for a KBase
- user to link their KBase account to their ORCID account.
+The *ORCID Link Service* provides an API to enable the linking of a KBase
+ user account to an ORCID account. This "link" consists of a Link Record which 
+ contains a KBase username, ORCID id, ORCID access token. This link record allows
+ KBase to create tools and services which utilize the ORCID api to view or modify
+ certain aspects of a users ORCID profile.
 
 Once connected, *ORCID Link* enables certain integrations, including:
 
@@ -36,11 +39,18 @@ tags_metadata = [
     {"name": "misc", "description": "Miscellaneous operations"},
     {
         "name": "link",
-        "description": "Access to and control over stored ORCID Link",
+        "description": "Access to and control over stored ORCID Links",
     },
     {
         "name": "linking-sessions",
-        "description": "OAuth integration and internal support for creating ORCID Links",
+        "description": """\
+OAuth integration and internal support for creating ORCID Links.
+
+The common path element is `/linking-sessions`.
+
+Some of the endpoints are "browser interactive", meaning that the links are followed 
+directly by the browser, rather than being used within Javascript code.\
+""",
     },
     {"name": "orcid", "description": "Direct access to ORCID via ORCID Link"},
     {
@@ -115,7 +125,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-    request: Request, exc: KBaseAuthMissingToken
+    request: Request, exc: KBaseAuthInvalidToken
 ):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
@@ -124,15 +134,16 @@ async def kbase_auth_invalid_token_handler(
     )
 
 
-@app.exception_handler(KBaseAuthMissingToken)
-async def kbase_auth_missing_token_handler(
-    request: Request, exc: KBaseAuthMissingToken
-):
-    # TODO: this should reflect the nature of the auth error,
-    # probably either 401, 403, or 500.
-    return exception_error_response(
-        "missingToken", "KBase auth token is missing", exc, status_code=401
-    )
+#
+# @app.exception_handler(KBaseAuthMissingToken)
+# async def kbase_auth_missing_token_handler(
+#     request: Request, exc: KBaseAuthMissingToken
+# ):
+#     # TODO: this should reflect the nature of the auth error,
+#     # probably either 401, 403, or 500.
+#     return exception_error_response(
+#         "missingToken", "KBase auth token is missing", exc, status_code=401
+#     )
 
 
 @app.exception_handler(KBaseAuthException)
@@ -231,6 +242,8 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 )
 async def docs(req: Request):
     """
+    Get API Documentation
+
     Provides a web interface to the auto-generated API docs.
     """
     if app.openapi_url is None:
@@ -239,14 +252,6 @@ async def docs(req: Request):
         # 302, it resulted in a 404 in tests! I don't know about real life.
         # So lets just make this a 404, which is reasonable in any case.
         return error_response_not_found("The 'openapi_url' is 'None'")
-
-        # response = ui_error_response(
-        #     "docs.no_url",
-        #     "No DOCS URL",
-        #     "The 'openapi_url' is 'None'",
-        # )
-        # print('RESPONSE IS', response.status_code)
-        # return response
 
     openapi_url = config().services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(

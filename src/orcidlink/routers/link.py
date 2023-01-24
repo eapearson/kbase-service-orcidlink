@@ -35,13 +35,16 @@ def get_link_record(username: str) -> Optional[LinkRecord]:
             "model": ErrorResponse,
         },
         200: {
-            "description": "Returns the scrubbed link record for this user; contains no secrets",
+            "description": "Returns the <a href='#glossary_term_public-link-record'>Public link record</a> "
+            + "for this user; contains no secrets",
             "model": LinkRecordPublic,
         },
     },
 )
 async def link(authorization: str | None = AUTHORIZATION_HEADER):
     """
+    Get ORCID Link
+
     Return the link for the user associated with the KBase auth token passed in the "Authorization" header
     """
     _, token_info = ensure_authorization(authorization)
@@ -84,6 +87,8 @@ async def link(authorization: str | None = AUTHORIZATION_HEADER):
 )
 async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
     """
+    Get whether Is Linked
+
     Determine if the user associated with the KBase auth token in the "Authorization" header has a
     link to an ORCID account.
     """
@@ -112,6 +117,8 @@ async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
 )
 async def delete_link(authorization: str | None = AUTHORIZATION_HEADER):
     """
+    Delete ORCID Link
+
     Removes the link for the user associated with the KBase auth token passed in the "Authorization" header
     """
 

@@ -2,8 +2,7 @@ import json
 import uuid
 from urllib.parse import urlencode
 
-import httpx
-from fastapi import APIRouter, Cookie, HTTPException, Query, responses
+from fastapi import APIRouter, Cookie, HTTPException, Path, Query, responses
 from orcidlink.lib.config import config
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from orcidlink.lib.responses import (
@@ -22,10 +21,9 @@ from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionInitial,
     LinkingSessionStarted,
-    ORCIDAuth,
     SimpleSuccess,
 )
-from orcidlink.service_clients.ORCIDClient import AuthorizeParams
+from orcidlink.service_clients.ORCIDClient import AuthorizeParams, orcid_oauth
 from orcidlink.service_clients.auth import get_username
 from orcidlink.storage.storage_model import storage_model
 from pydantic import BaseModel, Field
@@ -60,13 +58,38 @@ def get_linking_session_record(
 #
 # Commonly used fields
 #
-SESSION_ID_FIELD = Field(..., description="The linking session id")
+SESSION_ID_FIELD = Field(
+    description="The linking session id",
+    # It is a uuid, whose string representation is 36 characters.
+    min_length=36,
+    max_length=36,
+)
+SESSION_ID_PATH_ELEMENT = Path(
+    description="The linking session id",
+    # It is a uuid, whose string representation is 36 characters.
+    min_length=36,
+    max_length=36,
+)
 RETURN_LINK_QUERY = Query(
     default=None,
-    description="A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url",
+    description="A url to redirect to after the entire linking is complete; "
+    + "not to be confused with the ORCID OAuth flow's redirect_url",
 )
 SKIP_PROMPT_QUERY = Query(
-    default=None, description="Whether to prompt for confirmation of linking; setting"
+    default=None, description="Whether to prompt for confirmation of linking"
+)
+
+KBASE_SESSION_COOKIE = Cookie(
+    default=None,
+    description="KBase auth token taken from a cookie named 'kbase_session'",
+)
+
+KBASE_SESSION_BACKUP_COOKIE = Cookie(
+    default=None,
+    description="KBase auth token taken from a cookie named 'kbase_session_backup. "
+    + "Required in the KBase production environment since the prod ui and services "
+    + "operate on different hosts; the primary cookie, kbase_session, is host-based "
+    "so cannot be read by a prod service.",
 )
 
 
@@ -76,7 +99,7 @@ SKIP_PROMPT_QUERY = Query(
 
 
 class CreateLinkingSessionResult(BaseModel):
-    session_id: str = Field(...)
+    session_id: str = SESSION_ID_FIELD
 
 
 # TODO: error if link already exists for this user.
@@ -121,7 +144,7 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     "/{session_id}",
     responses={
         200: {
-            "description": "Returns the current linking session, scrubbed of private info",
+            "description": "Returns the public linking session, scrubbed of private info",
             "model": LinkingSessionComplete
             | LinkingSessionStarted
             | LinkingSessionInitial,
@@ -130,24 +153,20 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
         **STD_RESPONSES,
         404: {"description": "Linking session not found", "model": ErrorResponse},
         403: {
-            "description": "Username does not match linking session",
+            "description": "User does not own linking session",
             "model": ErrorResponse,
         },
     },
     tags=["linking-sessions"],
 )
 async def get_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PATH_ELEMENT, authorization: str = AUTHORIZATION_HEADER
 ):
     """
     Get Linking Session
 
-    Returns the linking session record identified by the linking session id provided in
-    the url, as long as it is owned by the user associated with the provided
-    KBase auth token.
-
-    This endpoint is designed bo be used in the implementation of the
-    OAuth for whose purpose is to create an ORCID Link.
+    Returns the linking session record identified by the given linking session id,
+    as long as it is owned by the user associated with the given KBase auth token.
     """
     _, token_info = ensure_authorization(authorization)
 
@@ -170,7 +189,8 @@ async def get_linking_session(
     tags=["linking-sessions"],
 )
 async def delete_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PATH_ELEMENT,
+    authorization: str | None = AUTHORIZATION_HEADER,
 ):
     """
     Delete Linking Session
@@ -178,9 +198,6 @@ async def delete_linking_session(
     Deletes the linking session record associated with the session id provided
     in the url, as long as it is owned by the user associated with the provided
     KBase auth token.
-
-    This endpoint is designed bo be used in the implementation of the
-    OAuth for whose purpose is to create an ORCID Link.
     """
     authorization, _ = ensure_authorization(authorization)
 
@@ -215,7 +232,8 @@ async def delete_linking_session(
     tags=["linking-sessions"],
 )
 async def finish_linking_session(
-    session_id: str = SESSION_ID_FIELD, authorization: str | None = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PATH_ELEMENT,
+    authorization: str | None = AUTHORIZATION_HEADER,
 ):
     """
     Finish Linking Session
@@ -277,15 +295,11 @@ async def finish_linking_session(
     tags=["linking-sessions"],
 )
 async def start_linking_session(
-    session_id: str = SESSION_ID_FIELD,
+    session_id: str = SESSION_ID_PATH_ELEMENT,
     return_link: str | None = RETURN_LINK_QUERY,
     skip_prompt: str = SKIP_PROMPT_QUERY,
-    kbase_session: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
-    kbase_session_backup: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
-    ),
+    kbase_session: str = KBASE_SESSION_COOKIE,
+    kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
 ):
     """
     Start Linking Session
@@ -367,25 +381,35 @@ async def start_linking_session(
     status_code=302,
     response_class=RedirectResponse,
     responses={
-        302: {"description": "Redirect to the continuation page; or error page"},
+        302: {
+            "description": "Redirect to the continuation page; or error page",
+        },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         401: {
-            "description": "Linking requires authorization; same meaning as standard auth 401, but caught and issued in a different manner"
+            "description": "Linking requires authorization; same meaning as standard auth 401, "
+            + "but caught and issued in a different manner"
         },
     },
     tags=["linking-sessions"],
 )
 async def linking_sessions_continue(
-    kbase_session: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
+    kbase_session: str = KBASE_SESSION_COOKIE,
+    kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
+    code: str
+    | None = Query(
+        default=None,
+        description="For a success case, contains an OAuth exchange code parameter",
     ),
-    kbase_session_backup: str = Cookie(
-        default=None, description="KBase auth token taken from a cookie"
+    state: str
+    | None = Query(
+        default=None,
+        description="For a success case, contains an OAuth state parameter",
     ),
-    code: str | None = None,
-    state: str | None = None,
-    error: str | None = None,
+    error: str
+    | None = Query(
+        default=None, description="For an error case, contains an error code parameter"
+    ),
 ) -> RedirectResponse:
     """
     Continue Linking Session
@@ -457,25 +481,28 @@ async def linking_sessions_continue(
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
-    header = {
-        "accept": "application/json",
-        "content-type": "application/x-www-form-urlencoded",
-    }
-    # Note that the redirect uri below is just for the api - it is not actually used
-    # for redirection in this case.
-    # TODO: investigate and point to the docs, because this is weird.
-    # TODO: put in orcid client!
-    data = {
-        "client_id": config().orcid.clientId,
-        "client_secret": config().orcid.clientSecret,
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
-    }
-    response = httpx.post(
-        f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
-    )
-    orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
+    # def exchange_code_for_token(self, code: str):
+    orcid_auth = orcid_oauth(authorization).exchange_code_for_token(code)
+
+    # header = {
+    #     "accept": "application/json",
+    #     "content-type": "application/x-www-form-urlencoded",
+    # }
+    # # Note that the redirect uri below is just for the api - it is not actually used
+    # # for redirection in this case.
+    # # TODO: investigate and point to the docs, because this is weird.
+    # # TODO: put in orcid client!
+    # data = {
+    #     "client_id": config().orcid.clientId,
+    #     "client_secret": config().orcid.clientSecret,
+    #     "grant_type": "authorization_code",
+    #     "code": code,
+    #     "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
+    # }
+    # response = httpx.post(
+    #     f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
+    # )
+    # orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
 
     #
     # Now we store the response from ORCID in our session.
