@@ -1,14 +1,10 @@
 from fastapi import APIRouter
-from orcidlink.lib.config import Config, config, get_kbase_config
+from orcidlink.lib.config import Config, config, get_service_manifest
 from orcidlink.lib.utils import epoch_time_millis
-from orcidlink.model import KBaseSDKConfig
+from orcidlink.model import ServiceManifest
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="")
-
-
-# TODO: move into config!!
-# STARTED = epoch_time_millis()
 
 
 class StatusResponse(BaseModel):
@@ -36,14 +32,14 @@ async def get_status():
     is always "ok". Other information includes the current time, and the start time.
 
     It can be used as a healthcheck, for basic latency performance (as it makes no
-    i/o or other high-latency calls calls), or for time synchronization (as it returns the current time).
+    i/o or other high-latency calls), or for time synchronization (as it returns the current time).
     """
     # TODO: start time, deal with it@
     return StatusResponse(status="ok", start_time=0, time=epoch_time_millis())
 
 
 class InfoResponse(BaseModel):
-    kbase_sdk_config: KBaseSDKConfig = Field(...)
+    service_manifest: ServiceManifest = Field(alias="service-manifest")
     config: Config = Field(...)
 
 
@@ -55,13 +51,16 @@ async def get_info():
     Returns basic information about the service and its runtime configuration.
     """
     # TODO: version should either be separate call, or derived from the a file stamped during the build.
-    kbase_sdk_config = get_kbase_config()
-    config_copy = config().dict()
-    config_copy["orcid"]["clientId"] = "REDACTED"
-    config_copy["orcid"]["clientSecret"] = "REDACTED"
-    config_copy["mongo"]["username"] = "REDACTED"
-    config_copy["mongo"]["password"] = "REDACTED"
-    return {"kbase_sdk_config": kbase_sdk_config, "config": config_copy}
+    service_manifest = get_service_manifest()
+    config_copy = config().copy(deep=True)
+    config_copy.orcid.clientId = "REDACTED"
+    config_copy.orcid.clientSecret = "REDACTED"
+    config_copy.mongo.username = "REDACTED"
+    config_copy.mongo.password = "REDACTED"
+    # NB we can mix dict and model here.
+    return InfoResponse.parse_obj(
+        {"service-manifest": service_manifest, "config": config_copy}
+    )
 
 
 # Docs

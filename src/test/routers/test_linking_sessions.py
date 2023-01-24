@@ -6,7 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 from orcidlink.lib.config import config
 from orcidlink.main import app
-from orcidlink.model import LinkRecord
+from orcidlink.model import LinkRecord, LinkingSessionComplete
+from orcidlink.routers.linking_sessions import get_linking_session_record
 from orcidlink.storage.storage_model import storage_model
 from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
@@ -72,6 +73,14 @@ def assert_get_linking_session(client, session_id: str):
     session_id = session_info["session_id"]
     assert isinstance(session_id, str)
     return session_info
+
+
+def assert_get_linking_session_internal(session_id: str):
+    # response = client.get(
+    #     f"/linking-sessions/{session_id}", headers={"Authorization": TOKEN_FOO}
+    # )
+
+    return get_linking_session_record(session_id, TOKEN_FOO)
 
 
 def assert_start_linking_session(
@@ -387,6 +396,108 @@ def test_start_linking_session_errors(fake_fs):
         # TODO more assertions?
 
 
+def test_get_linking_session_bad_state(fake_fs):
+    """
+    Here we simulate the oauth flow with ORCID - in which
+    we redirect the browser to ORCID, which ends up returning
+    to our return url which in turn may ask the user to confirm
+    the linking, after which we exchange the code for an access token.
+    """
+
+    def assert_continue_linking_session(
+        kbase_session: str = None,
+        kbase_session_backup: str = None,
+        return_link: str = None,
+        skip_prompt: str = None,
+    ):
+        client = TestClient(app)
+
+        #
+        # Create linking session.
+        #
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+        initial_session_id = initial_session_info["session_id"]
+
+        #
+        # Get the session info.
+        #
+        session_info = assert_get_linking_session(client, initial_session_id)
+        assert session_info["session_id"] == initial_session_id
+
+        # Note that the call will fail if the result does not comply with either
+        # LinkingSessionComplete or LinkingSessionInitial
+
+        # The call after creating a linking session will return a LinkingSessionInitial
+        # which we only know from the absense of orcid_auth
+        assert "orcid_auth" not in session_info
+
+        #
+        # Start the linking session.
+        #
+
+        # If we start the linking session, the linking session will be updated, but remain
+        #  LinkingSessionInitial
+        assert_start_linking_session(
+            client,
+            initial_session_id,
+            kbase_session=TOKEN_FOO,
+            return_link=return_link,
+            skip_prompt=skip_prompt,
+        )
+
+        #
+        # In the actual OAuth flow, the browser would invoke the start link endpoint
+        # above, and naturally follow the redirect to ORCID OAuth.
+        # We can't do that here, but we can simulate it via the mock oauth
+        # service. That service also has a non-interactive endpoint "/authorize"
+        # which exchanges the code for an access_token (amongst other things)
+        #
+        params = {
+            "code": "foo",
+            "state": json.dumps({"session_id": initial_session_id}),
+        }
+
+        headers = {}
+        if kbase_session is not None:
+            headers["Cookie"] = f"kbase_session={kbase_session}"
+        if kbase_session_backup is not None:
+            headers["Cookie"] = f"kbase_session_backup={kbase_session_backup}"
+
+        response = client.get(
+            "/linking-sessions/oauth/continue",
+            headers=headers,
+            params=params,
+            follow_redirects=False,
+        )
+        assert response.status_code == 302
+
+        # TODO assertions about Location
+
+        #
+        # Get the session info post-continuation, which will complete the
+        # ORCID OAuth.
+        # NB we can't use the public api as a completed linking session cannot be
+        # accessed by such.
+        #
+        response = client.get(
+            f"/linking-sessions/{initial_session_id}",
+            headers={"Authorization": TOKEN_FOO},
+        )
+
+        assert response.status_code == 400
+        # TODO more assertions?
+
+    # Use individual context managers here, as we only need this
+    # setup once. If we need to use it again, we can can it in a
+    # function above.
+    with no_stderr():
+        with mock_auth_service():
+            with mock_orcid_oauth_service():
+                assert_continue_linking_session(
+                    kbase_session=TOKEN_FOO, skip_prompt="no"
+                )
+
+
 def test_continue_linking_session(fake_fs):
     """
     Here we simulate the oauth flow with ORCID - in which
@@ -467,10 +578,11 @@ def test_continue_linking_session(fake_fs):
         #
         # Get the session info post-continuation, which will complete the
         # ORCID OAuth.
+        # NB we can't use the public api as a completed linking session cannot be
+        # accessed by such.
         #
-        session_info = assert_get_linking_session(client, initial_session_id)
-        assert session_info["session_id"] == initial_session_id
-        assert "orcid_auth" in session_info
+        session_info = assert_get_linking_session_internal(initial_session_id)
+        assert type(session_info) == LinkingSessionComplete
 
         #
         # Finish the linking session
@@ -811,9 +923,8 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 # Get the session info post-continuation, which will complete the
                 # ORCID OAuth.
                 #
-                session_info = assert_get_linking_session(client, initial_session_id)
-                assert session_info["session_id"] == initial_session_id
-                assert "orcid_auth" in session_info
+                session_info = assert_get_linking_session_internal(initial_session_id)
+                assert type(session_info) == LinkingSessionComplete
 
                 #
                 # Finish the linking session; first time, ok.

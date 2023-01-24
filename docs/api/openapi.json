@@ -3,6 +3,16 @@
     "info": {
         "title": "ORCID Link Service",
         "description": "The *ORCID Link Service* provides an API to enable the linking of a KBase\n user account to an ORCID account. This \"link\" consists of a [Link Record](#user-content-header_type_linkrecord) which \n contains a KBase username, ORCID id, ORCID access token, and a few other fields. This link record allows\n KBase to create tools and services which utilize the ORCID api to view or modify\n certain aspects of a users ORCID profile.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile",
+        "termsOfService": "https://www.kbase.us/about/terms-and-conditions-v2/",
+        "contact": {
+            "name": "KBase, Lawrence Berkeley National Laboratory, DOE",
+            "url": "https://www.kbase.us",
+            "email": "engage@kbase.us"
+        },
+        "license": {
+            "name": "The MIT License",
+            "url": "https://github.com/kbase/kb_sdk/blob/develop/LICENSE.md"
+        },
         "version": "0.1.0"
     },
     "paths": {
@@ -12,7 +22,7 @@
                     "misc"
                 ],
                 "summary": "Get Status",
-                "description": "Get Service Status\n\nWith no parameters, this endpoint returns the current status of the service. The status code itself\nis always \"ok\". Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\ni/o or other high-latency calls calls), or for time synchronization (as it returns the current time).",
+                "description": "Get Service Status\n\nWith no parameters, this endpoint returns the current status of the service. The status code itself\nis always \"ok\". Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\ni/o or other high-latency calls), or for time synchronization (as it returns the current time).",
                 "operationId": "get_status_status_get",
                 "responses": {
                     "200": {
@@ -75,7 +85,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns the <a href='#glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets",
+                        "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -328,15 +338,12 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns the public linking session, scrubbed of private info",
+                        "description": "Returns the linking session",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "title": "Response 200 Get Linking Session Linking Sessions  Session Id  Get",
                                     "anyOf": [
-                                        {
-                                            "$ref": "#/components/schemas/LinkingSessionComplete"
-                                        },
                                         {
                                             "$ref": "#/components/schemas/LinkingSessionStarted"
                                         },
@@ -1242,7 +1249,8 @@
                         "type": "string"
                     },
                     "data": {
-                        "title": "Data"
+                        "title": "Data",
+                        "type": "object"
                     }
                 },
                 "description": "A generic error object used for all error responses.\n\nSee [the error docs](docs/errors.md) for more information."
@@ -1278,69 +1286,16 @@
             "InfoResponse": {
                 "title": "InfoResponse",
                 "required": [
-                    "kbase_sdk_config",
+                    "service-manifest",
                     "config"
                 ],
                 "type": "object",
                 "properties": {
-                    "kbase_sdk_config": {
-                        "$ref": "#/components/schemas/KBaseSDKConfig"
+                    "service-manifest": {
+                        "$ref": "#/components/schemas/ServiceManifest"
                     },
                     "config": {
                         "$ref": "#/components/schemas/Config"
-                    }
-                }
-            },
-            "KBaseSDKConfig": {
-                "title": "KBaseSDKConfig",
-                "required": [
-                    "module-name",
-                    "module-description",
-                    "service-language",
-                    "module-version",
-                    "owners",
-                    "service-config"
-                ],
-                "type": "object",
-                "properties": {
-                    "module-name": {
-                        "title": "Module-Name",
-                        "type": "string"
-                    },
-                    "module-description": {
-                        "title": "Module-Description",
-                        "type": "string"
-                    },
-                    "service-language": {
-                        "title": "Service-Language",
-                        "type": "string"
-                    },
-                    "module-version": {
-                        "title": "Module-Version",
-                        "type": "string"
-                    },
-                    "owners": {
-                        "title": "Owners",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "service-config": {
-                        "$ref": "#/components/schemas/KBaseServiceConfig"
-                    }
-                }
-            },
-            "KBaseServiceConfig": {
-                "title": "KBaseServiceConfig",
-                "required": [
-                    "dynamic-service"
-                ],
-                "type": "object",
-                "properties": {
-                    "dynamic-service": {
-                        "title": "Dynamic-Service",
-                        "type": "boolean"
                     }
                 }
             },
@@ -1368,48 +1323,6 @@
                     },
                     "orcid_auth": {
                         "$ref": "#/components/schemas/ORCIDAuthPublic"
-                    }
-                }
-            },
-            "LinkingSessionComplete": {
-                "title": "LinkingSessionComplete",
-                "required": [
-                    "session_id",
-                    "username",
-                    "created_at",
-                    "expires_at",
-                    "return_link",
-                    "skip_prompt",
-                    "orcid_auth"
-                ],
-                "type": "object",
-                "properties": {
-                    "session_id": {
-                        "title": "Session Id",
-                        "type": "string"
-                    },
-                    "username": {
-                        "title": "Username",
-                        "type": "string"
-                    },
-                    "created_at": {
-                        "title": "Created At",
-                        "type": "integer"
-                    },
-                    "expires_at": {
-                        "title": "Expires At",
-                        "type": "integer"
-                    },
-                    "return_link": {
-                        "title": "Return Link",
-                        "type": "string"
-                    },
-                    "skip_prompt": {
-                        "title": "Skip Prompt",
-                        "type": "string"
-                    },
-                    "orcid_auth": {
-                        "$ref": "#/components/schemas/ORCIDAuth"
                     }
                 }
             },
@@ -1594,54 +1507,6 @@
                     }
                 }
             },
-            "ORCIDAuth": {
-                "title": "ORCIDAuth",
-                "required": [
-                    "access_token",
-                    "token_type",
-                    "refresh_token",
-                    "expires_in",
-                    "scope",
-                    "name",
-                    "orcid",
-                    "id_token"
-                ],
-                "type": "object",
-                "properties": {
-                    "access_token": {
-                        "title": "Access Token",
-                        "type": "string"
-                    },
-                    "token_type": {
-                        "title": "Token Type",
-                        "type": "string"
-                    },
-                    "refresh_token": {
-                        "title": "Refresh Token",
-                        "type": "string"
-                    },
-                    "expires_in": {
-                        "title": "Expires In",
-                        "type": "integer"
-                    },
-                    "scope": {
-                        "title": "Scope",
-                        "type": "string"
-                    },
-                    "name": {
-                        "title": "Name",
-                        "type": "string"
-                    },
-                    "orcid": {
-                        "title": "Orcid",
-                        "type": "string"
-                    },
-                    "id_token": {
-                        "title": "Id Token",
-                        "type": "string"
-                    }
-                }
-            },
             "ORCIDAuthPublic": {
                 "title": "ORCIDAuthPublic",
                 "required": [
@@ -1820,6 +1685,29 @@
                         "items": {
                             "$ref": "#/components/schemas/ExternalId"
                         }
+                    }
+                }
+            },
+            "ServiceManifest": {
+                "title": "ServiceManifest",
+                "required": [
+                    "module-name",
+                    "description",
+                    "language"
+                ],
+                "type": "object",
+                "properties": {
+                    "module-name": {
+                        "title": "Module-Name",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "language": {
+                        "title": "Language",
+                        "type": "string"
                     }
                 }
             },

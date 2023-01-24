@@ -33,7 +33,7 @@ ghcr.io/kbase/kbase-service-orcidlink:v1.2.3
 
 This service roughly follows the KBase conventions for image naming. The base name for the image should be `kbase/kbase-service-orcidlink`, which matches the repo name. I use repo names that are unambiguous when standing on their own. 
 
-The tag should be:
+The tag should be one of:
 
 - `develop` for the image created when a PR is merged into develop; this image should normally be used for the KBase deployment environment CI, and possibly narrative-dev. It should be redeployed as soon as possible after it is created. 
 - `latest-rc` for the image created when develop is merged to main; this image may be used for pre-release evaluation in the KBase deployment environments CI, next, or narrative-dev.
@@ -60,16 +60,19 @@ During the development phase, we are using the ORCID Sandbox, a service provided
 
 This service requires the following environment variables:
 
-- KBASE_ENDPOINT
-- ORCID_API_BASE_URL
-- ORCID_OAUTH_BASE_URL
-- ORCID_CLIENT_ID
-- ORCID_CLIENT_SECRET
-- MONGO_HOST
-- MONGO_PORT
-- MONGO_DATABASE
-- MONGO_USERNAME
-- MONGO_PASSWORD
+| Name                 | Secret? | Test Value                         |
+|----------------------|---------|------------------------------------|
+| KBASE_ENDPOINT       |         | https://ci.kbase.us/services/      |
+| ORCID_API_BASE_URL   |         | https://api.sandbox.orcid.org/v3.0 |
+| ORCID_OAUTH_BASE_URL |         | https://sandbox.orcid.org/oauth    |
+| ORCID_CLIENT_ID      | ✓       | request from ORCID                 |
+| ORCID_CLIENT_SECRET  | ✓       | request from ORCID                 |
+| MONGO_HOST           |         | mongo                              |
+| MONGO_PORT           |         | 27017                              |
+| MONGO_DATABASE       |         | orcidlink                          |
+| MONGO_USERNAME       | ✓       | dev                                |
+| MONGO_PASSWORD       | ✓       | d3v                                |
+
 
 This may seem like a lot of environment variables, but they are composed of three groups:
 - KBase
@@ -98,26 +101,26 @@ All OAuth interactions require usage of a "client id" and "client secret" assign
 
 A secret key required for authentication against the ORCID OAuth endpoint. As opposed to the "client id", the "client secret" must never be exposed. We may expect that it will be replaced from time to time, either due to exposure or due to expiration.
 
-### MONGO
+### `MONGO`
 
 This service uses MongoDB to for persistence. Specifically it stores the link between a user's KBase account and ORCID account, and it also temporarily stores linking sessions as a user is creating an ORCID Link.
 
-#### MONGO_HOST
+#### `MONGO_HOST`
 
 The hostname at which the MongoDB server is located. For testing this is `mongo`, for deployment it should be the hostname of the shared MongoDB server instance.
 
-#### MONGO_PORT
+#### `MONGO_PORT`
 
 The port at which the MongoDB server operates on the above host. The default port is `27017`, which is used for the testing environment, but for security purposes the deployment port may  be different. 
 
-#### MONGO_DATABASE
+#### `MONGO_DATABASE`
 
 The name of the database used for the ORCIDLink service. The testing environment, and probably the deployment as well, uses the service module name in lower case - `orcidlink`.
 
-### MONGO_USERNAME
+### `MONGO_USERNAME`
 
 The "username" used for authenticating against the MongoDB server and ORCIDLink database. In testing, it is `dev`.
 
-#### MONGO_PASSWORD
+#### `MONGO_PASSWORD`
 
 The "password" used for authenticating against the MongoDB server and orcidlink database. The testing tools use `d3v`.

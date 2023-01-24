@@ -26,7 +26,7 @@ class ErrorResponse(BaseModel):
     code: str = Field(...)
     title: str = Field(...)
     message: str = Field(...)
-    data: object = Field(None)
+    data: Optional[dict] = Field(default=None)
 
 
 def success_response_no_data():
