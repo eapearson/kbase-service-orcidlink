@@ -3,6 +3,16 @@
     "info": {
         "title": "ORCID Link Service",
         "description": "The *ORCID Link Service* provides an API to enable the linking of a KBase\n user account to an ORCID account. This \"link\" consists of a [Link Record](#user-content-header_type_linkrecord) which \n contains a KBase username, ORCID id, ORCID access token, and a few other fields. This link record allows\n KBase to create tools and services which utilize the ORCID api to view or modify\n certain aspects of a users ORCID profile.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile",
+        "termsOfService": "https://www.kbase.us/about/terms-and-conditions-v2/",
+        "contact": {
+            "name": "KBase, Lawrence Berkeley National Laboratory, DOE",
+            "url": "https://www.kbase.us",
+            "email": "engage@kbase.us"
+        },
+        "license": {
+            "name": "The MIT License",
+            "url": "https://github.com/kbase/kb_sdk/blob/develop/LICENSE.md"
+        },
         "version": "0.1.0"
     },
     "paths": {
@@ -12,7 +22,7 @@
                     "misc"
                 ],
                 "summary": "Get Status",
-                "description": "Get Service Status\n\nWith no parameters, this endpoint returns the current status of the service. The status code itself\nis always \"ok\". Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\ni/o or other high-latency calls calls), or for time synchronization (as it returns the current time).",
+                "description": "Get Service Status\n\nWith no parameters, this endpoint returns the current status of the service. The status code itself\nis always \"ok\". Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\ni/o or other high-latency calls), or for time synchronization (as it returns the current time).",
                 "operationId": "get_status_status_get",
                 "responses": {
                     "200": {
@@ -1278,69 +1288,16 @@
             "InfoResponse": {
                 "title": "InfoResponse",
                 "required": [
-                    "kbase_sdk_config",
+                    "service-manifest",
                     "config"
                 ],
                 "type": "object",
                 "properties": {
-                    "kbase_sdk_config": {
-                        "$ref": "#/components/schemas/KBaseSDKConfig"
+                    "service-manifest": {
+                        "$ref": "#/components/schemas/ServiceManifest"
                     },
                     "config": {
                         "$ref": "#/components/schemas/Config"
-                    }
-                }
-            },
-            "KBaseSDKConfig": {
-                "title": "KBaseSDKConfig",
-                "required": [
-                    "module-name",
-                    "module-description",
-                    "service-language",
-                    "module-version",
-                    "owners",
-                    "service-config"
-                ],
-                "type": "object",
-                "properties": {
-                    "module-name": {
-                        "title": "Module-Name",
-                        "type": "string"
-                    },
-                    "module-description": {
-                        "title": "Module-Description",
-                        "type": "string"
-                    },
-                    "service-language": {
-                        "title": "Service-Language",
-                        "type": "string"
-                    },
-                    "module-version": {
-                        "title": "Module-Version",
-                        "type": "string"
-                    },
-                    "owners": {
-                        "title": "Owners",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "service-config": {
-                        "$ref": "#/components/schemas/KBaseServiceConfig"
-                    }
-                }
-            },
-            "KBaseServiceConfig": {
-                "title": "KBaseServiceConfig",
-                "required": [
-                    "dynamic-service"
-                ],
-                "type": "object",
-                "properties": {
-                    "dynamic-service": {
-                        "title": "Dynamic-Service",
-                        "type": "boolean"
                     }
                 }
             },
@@ -1820,6 +1777,29 @@
                         "items": {
                             "$ref": "#/components/schemas/ExternalId"
                         }
+                    }
+                }
+            },
+            "ServiceManifest": {
+                "title": "ServiceManifest",
+                "required": [
+                    "module-name",
+                    "description",
+                    "language"
+                ],
+                "type": "object",
+                "properties": {
+                    "module-name": {
+                        "title": "Module-Name",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "language": {
+                        "title": "Language",
+                        "type": "string"
                     }
                 }
             },

@@ -144,10 +144,8 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     "/{session_id}",
     responses={
         200: {
-            "description": "Returns the public linking session, scrubbed of private info",
-            "model": LinkingSessionComplete
-            | LinkingSessionStarted
-            | LinkingSessionInitial,
+            "description": "Returns the linking session",
+            "model": LinkingSessionStarted | LinkingSessionInitial,
         },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -170,7 +168,14 @@ async def get_linking_session(
     """
     _, token_info = ensure_authorization(authorization)
 
-    return get_linking_session_record(session_id, authorization)
+    linking_session = get_linking_session_record(session_id, authorization)
+    if type(linking_session) == LinkingSessionComplete:
+        return error_response(
+            "session-complete",
+            "Linking Session Completed",
+            "Attempt to return a completed linking session rejected",
+        )
+    return linking_session
 
 
 @router.delete(

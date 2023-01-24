@@ -1,0 +1,12 @@
+module-name = "ORCIDLink"
+
+language = "Python"
+
+description = """
+A service for creating linkage between a KBase account and an ORCID account.
+
+If a linkage, known herein as an "ORCID Link", exists for a user, the following features are available:
+    - read the associated ORCID profile, including just public and trusted partner keys
+    - read, create, update, and delete work activity (publications)
+    - remove ORCID Link
+"""

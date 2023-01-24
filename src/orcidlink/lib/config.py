@@ -2,8 +2,8 @@ import os
 import threading
 
 import toml
-import yaml
 from orcidlink.lib.utils import module_dir
+from orcidlink.model import ServiceManifest
 from pydantic import BaseModel, Field
 
 
@@ -89,7 +89,7 @@ def config(reload: bool = False) -> Config:
     return GLOBAL_CONFIG_MANAGER.config(reload)
 
 
-def get_kbase_config():
-    config_path = os.path.join(module_dir(), "./kbase.yml")
-    with open(config_path, "r") as kbase_config_file:
-        return yaml.load(kbase_config_file, yaml.SafeLoader)
+def get_service_manifest() -> ServiceManifest:
+    manifest_path = os.path.join(module_dir(), "MANIFEST.toml")
+    with open(manifest_path, "r") as manifest_file:
+        return ServiceManifest.parse_obj(toml.load(manifest_file))

@@ -13,7 +13,10 @@ def main():
                 openapi_version=app.openapi_version,
                 description=app.description,
                 routes=app.routes,
-                tags=app.openapi_tags
+                tags=app.openapi_tags,
+                terms_of_service=app.terms_of_service,
+                contact=app.contact,
+                license_info=app.license_info
                 # openapi_prefix=app.openapi_prefix,
             ),
             out,

@@ -84,17 +84,10 @@ class LinkRecordPublic(BaseModel):
 # Config
 
 
-class KBaseServiceConfig(BaseModel):
-    dynamic_service: bool = Field(..., alias="dynamic-service")
-
-
-class KBaseSDKConfig(BaseModel):
-    module_name: str = Field(..., alias="module-name")
-    module_description: str = Field(..., alias="module-description")
-    service_language: str = Field(..., alias="service-language")
-    module_version: str = Field(..., alias="module-version")
-    owners: List[str] = Field(...)
-    service_config: KBaseServiceConfig = Field(..., alias="service-config")
+class ServiceManifest(BaseModel):
+    module_name: str = Field(alias="module-name")
+    description: str = Field(...)
+    language: str = Field(...)
 
 
 # API
