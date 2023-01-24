@@ -35,7 +35,7 @@ def get_link_record(username: str) -> Optional[LinkRecord]:
             "model": ErrorResponse,
         },
         200: {
-            "description": "Returns the <a href='#glossary_term_public-link-record'>Public link record</a> "
+            "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
             + "for this user; contains no secrets",
             "model": LinkRecordPublic,
         },
