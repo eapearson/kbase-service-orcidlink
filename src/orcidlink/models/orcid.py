@@ -1,5 +1,7 @@
 from orcidlink.lib.utils import get_int_prop, get_raw_prop, get_string_prop, make_date
 
+from orcidlink.model import ORCIDWork
+
 
 def raw_work_to_work(work_summary):
     """
@@ -45,15 +47,17 @@ def raw_work_to_work(work_summary):
             }
         )
 
-    return {
-        "putCode": put_code,
-        "createdAt": created_at,
-        "updatedAt": updated_at,
-        "source": source,
-        "title": title,
-        "journal": journal,
-        "date": date,
-        "workType": work_type,
-        "url": url,
-        "externalIds": external_ids,
-    }
+    return ORCIDWork.parse_obj(
+        {
+            "putCode": put_code,
+            "createdAt": created_at,
+            "updatedAt": updated_at,
+            "source": source,
+            "title": title,
+            "journal": journal,
+            "date": date,
+            "workType": work_type,
+            "url": url,
+            "externalIds": external_ids,
+        }
+    )

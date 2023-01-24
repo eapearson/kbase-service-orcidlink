@@ -2,7 +2,7 @@
     "openapi": "3.0.2",
     "info": {
         "title": "ORCID Link Service",
-        "description": "The *ORCID Link Service* provides an API to enable the creation of an interface for a KBase\n user to link their KBase account to their ORCID account.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile",
+        "description": "The *ORCID Link Service* provides an API to enable the linking of a KBase\n user account to an ORCID account. This \"link\" consists of a Link Record which \n contains a KBase username, ORCID id, ORCID access token. This link record allows\n KBase to create tools and services which utilize the ORCID api to view or modify\n certain aspects of a users ORCID profile.\n\nOnce connected, *ORCID Link* enables certain integrations, including:\n\n- syncing your KBase profile from your ORCID profile\n- creating and managing KBase public Narratives within your ORCID profile",
         "version": "0.1.0"
     },
     "paths": {
@@ -12,7 +12,7 @@
                     "misc"
                 ],
                 "summary": "Get Status",
-                "description": "Get the current status of the service.\n\nThis endpoint returns the status of the service (by definition \"ok\" if\nit is running!), the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\nupstream calls at all), or for time synchronization (as it returns the current time).",
+                "description": "Get Service Status\n\nWith no parameters, this endpoint returns the current status of the service. The status code itself\nis always \"ok\". Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\ni/o or other high-latency calls calls), or for time synchronization (as it returns the current time).",
                 "operationId": "get_status_status_get",
                 "responses": {
                     "200": {
@@ -34,7 +34,7 @@
                     "misc"
                 ],
                 "summary": "Get Info",
-                "description": "Returns basic information about the service and its runtime configuration.",
+                "description": "Get Service Information\n\nReturns basic information about the service and its runtime configuration.",
                 "operationId": "get_info_info_get",
                 "responses": {
                     "200": {
@@ -56,14 +56,16 @@
                     "link"
                 ],
                 "summary": "Link",
-                "description": "Return the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
+                "description": "Get ORCID Link\n\nReturn the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
                 "operationId": "link_link_get",
                 "parameters": [
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -73,7 +75,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns the scrubbed link record for this user; contains no secrets",
+                        "description": "Returns the <a href='#glossary_term_public_link_record'>Public link record</a> for this user; contains no secrets",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -83,17 +85,7 @@
                         }
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "KBase auth token invalid",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -103,7 +95,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -129,14 +121,16 @@
                     "link"
                 ],
                 "summary": "Delete Link",
-                "description": "Removes the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
+                "description": "Delete ORCID Link\n\nRemoves the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
                 "operationId": "delete_link_link_delete",
                 "parameters": [
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -149,17 +143,7 @@
                         "description": "Successfully deleted the link"
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "KBase auth token invalid",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -169,7 +153,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -197,14 +181,16 @@
                     "link"
                 ],
                 "summary": "Is Linked",
-                "description": "Determine if the user associated with the KBase auth token in the \"Authorization\" header has a\nlink to an ORCID account.",
+                "description": "Get whether Is Linked\n\nDetermine if the user associated with the KBase auth token in the \"Authorization\" header has a\nlink to an ORCID account.",
                 "operationId": "is_linked_link_is_linked_get",
                 "parameters": [
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -225,17 +211,7 @@
                         }
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "KBase auth token invalid",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -245,7 +221,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -268,9 +244,11 @@
                 "parameters": [
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -290,17 +268,7 @@
                         }
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "KBase auth token invalid",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -310,7 +278,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -328,23 +296,29 @@
                     "linking-sessions"
                 ],
                 "summary": "Get Linking Session",
-                "description": "Get Linking Session\n\nReturns the linking session record identified by the linking session id provided in\nthe url, as long as it is owned by the user associated with the provided\nKBase auth token.\n\nThis endpoint is designed bo be used in the implementation of the\nOAuth for whose purpose is to create an ORCID Link.",
+                "description": "Get Linking Session\n\nReturns the linking session record identified by the given linking session id,\nas long as it is owned by the user associated with the given KBase auth token.",
                 "operationId": "get_linking_session_linking_sessions__session_id__get",
                 "parameters": [
                     {
+                        "description": "The linking session id",
                         "required": true,
                         "schema": {
                             "title": "Session Id",
-                            "type": "string"
+                            "maxLength": 36,
+                            "minLength": 36,
+                            "type": "string",
+                            "description": "The linking session id"
                         },
                         "name": "session_id",
                         "in": "path"
                     },
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -354,7 +328,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns the current linking session, scrubbed of private info",
+                        "description": "Returns the public linking session, scrubbed of private info",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -375,17 +349,7 @@
                         }
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Username does not match linking session",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -395,7 +359,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -413,6 +377,16 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "User does not own linking session",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -421,23 +395,29 @@
                     "linking-sessions"
                 ],
                 "summary": "Delete Linking Session",
-                "description": "Delete Linking Session\n\nDeletes the linking session record associated with the session id provided\nin the url, as long as it is owned by the user associated with the provided\nKBase auth token.\n\nThis endpoint is designed bo be used in the implementation of the\nOAuth for whose purpose is to create an ORCID Link.",
+                "description": "Delete Linking Session\n\nDeletes the linking session record associated with the session id provided\nin the url, as long as it is owned by the user associated with the provided\nKBase auth token.",
                 "operationId": "delete_linking_session_linking_sessions__session_id__delete",
                 "parameters": [
                     {
+                        "description": "The linking session id",
                         "required": true,
                         "schema": {
                             "title": "Session Id",
-                            "type": "string"
+                            "maxLength": 36,
+                            "minLength": 36,
+                            "type": "string",
+                            "description": "The linking session id"
                         },
                         "name": "session_id",
                         "in": "path"
                     },
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -450,7 +430,17 @@
                         "description": "Successfully deleted the session"
                     },
                     "401": {
-                        "description": "KBase auth token absent",
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -461,16 +451,6 @@
                     },
                     "403": {
                         "description": "Username does not match linking session",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Either input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -502,19 +482,25 @@
                 "operationId": "finish_linking_session_linking_sessions__session_id__finish_put",
                 "parameters": [
                     {
+                        "description": "The linking session id",
                         "required": true,
                         "schema": {
                             "title": "Session Id",
-                            "type": "string"
+                            "maxLength": 36,
+                            "minLength": 36,
+                            "type": "string",
+                            "description": "The linking session id"
                         },
                         "name": "session_id",
                         "in": "path"
                     },
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -534,7 +520,17 @@
                         }
                     },
                     "401": {
-                        "description": "KBase auth token absent",
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -545,16 +541,6 @@
                     },
                     "403": {
                         "description": "Username does not match linking session",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Either input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -586,10 +572,14 @@
                 "operationId": "start_linking_session_linking_sessions__session_id__oauth_start_get",
                 "parameters": [
                     {
+                        "description": "The linking session id",
                         "required": true,
                         "schema": {
                             "title": "Session Id",
-                            "type": "string"
+                            "maxLength": 36,
+                            "minLength": 36,
+                            "type": "string",
+                            "description": "The linking session id"
                         },
                         "name": "session_id",
                         "in": "path"
@@ -606,34 +596,34 @@
                         "in": "query"
                     },
                     {
-                        "description": "Whether to prompt for confirmation of linking; setting",
+                        "description": "Whether to prompt for confirmation of linking",
                         "required": false,
                         "schema": {
                             "title": "Skip Prompt",
                             "type": "string",
-                            "description": "Whether to prompt for confirmation of linking; setting"
+                            "description": "Whether to prompt for confirmation of linking"
                         },
                         "name": "skip_prompt",
                         "in": "query"
                     },
                     {
-                        "description": "KBase auth token taken from a cookie",
+                        "description": "KBase auth token taken from a cookie named 'kbase_session'",
                         "required": false,
                         "schema": {
                             "title": "Kbase Session",
                             "type": "string",
-                            "description": "KBase auth token taken from a cookie"
+                            "description": "KBase auth token taken from a cookie named 'kbase_session'"
                         },
                         "name": "kbase_session",
                         "in": "cookie"
                     },
                     {
-                        "description": "KBase auth token taken from a cookie",
+                        "description": "KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service.",
                         "required": false,
                         "schema": {
                             "title": "Kbase Session Backup",
                             "type": "string",
-                            "description": "KBase auth token taken from a cookie"
+                            "description": "KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service."
                         },
                         "name": "kbase_session_backup",
                         "in": "cookie"
@@ -644,17 +634,7 @@
                         "description": "Redirect to ORCID if a valid linking session"
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "KBase auth token invalid",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -664,7 +644,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -696,50 +676,56 @@
                 "operationId": "linking_sessions_continue_linking_sessions_oauth_continue_get",
                 "parameters": [
                     {
+                        "description": "For a success case, contains an OAuth exchange code parameter",
                         "required": false,
                         "schema": {
                             "title": "Code",
-                            "type": "string"
+                            "type": "string",
+                            "description": "For a success case, contains an OAuth exchange code parameter"
                         },
                         "name": "code",
                         "in": "query"
                     },
                     {
+                        "description": "For a success case, contains an OAuth state parameter",
                         "required": false,
                         "schema": {
                             "title": "State",
-                            "type": "string"
+                            "type": "string",
+                            "description": "For a success case, contains an OAuth state parameter"
                         },
                         "name": "state",
                         "in": "query"
                     },
                     {
+                        "description": "For an error case, contains an error code parameter",
                         "required": false,
                         "schema": {
                             "title": "Error",
-                            "type": "string"
+                            "type": "string",
+                            "description": "For an error case, contains an error code parameter"
                         },
                         "name": "error",
                         "in": "query"
                     },
                     {
-                        "description": "KBase auth token taken from a cookie",
+                        "description": "KBase auth token taken from a cookie named 'kbase_session'",
                         "required": false,
                         "schema": {
                             "title": "Kbase Session",
                             "type": "string",
-                            "description": "KBase auth token taken from a cookie"
+                            "description": "KBase auth token taken from a cookie named 'kbase_session'"
                         },
                         "name": "kbase_session",
                         "in": "cookie"
                     },
                     {
-                        "description": "KBase auth token taken from a cookie",
+                        "description": "KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service.",
                         "required": false,
                         "schema": {
                             "title": "Kbase Session Backup",
                             "type": "string",
-                            "description": "KBase auth token taken from a cookie"
+                            "description": "KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service."
                         },
                         "name": "kbase_session_backup",
                         "in": "cookie"
@@ -752,18 +738,8 @@
                     "401": {
                         "description": "Linking requires authorization; same meaning as standard auth 401, but caught and issued in a different manner"
                     },
-                    "403": {
-                        "description": "KBase auth token invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -822,10 +798,17 @@
                         "description": "Link not available for this user"
                     },
                     "401": {
-                        "description": "Token missing or invalid"
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -865,25 +848,28 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SimpleSuccess"
-                                }
-                            }
-                        }
+                    "204": {
+                        "description": "Work record successfully deleted"
                     },
                     "404": {
                         "description": "Not found"
                     },
-                    "422": {
-                        "description": "Validation Error",
+                    "401": {
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
@@ -931,10 +917,17 @@
                         "description": "Link not available for this user"
                     },
                     "401": {
-                        "description": "Token missing or invalid"
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -990,10 +983,17 @@
                         "description": "Link not available for this user"
                     },
                     "401": {
-                        "description": "Token missing or invalid"
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1033,7 +1033,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful Response",
+                        "description": "Work record successfully created",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1045,12 +1045,22 @@
                     "404": {
                         "description": "Not found"
                     },
-                    "422": {
-                        "description": "Validation Error",
+                    "401": {
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
@@ -1069,9 +1079,11 @@
                 "parameters": [
                     {
                         "description": "KBase auth token",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "title": "Authorization",
+                            "maxLength": 32,
+                            "minLength": 32,
                             "type": "string",
                             "description": "KBase auth token"
                         },
@@ -1094,17 +1106,7 @@
                         "description": "User not linked or ORCID profile not available."
                     },
                     "401": {
-                        "description": "KBase auth token absent",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "KBase auth token invalid",
+                        "description": "KBase auth token absent or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1114,7 +1116,7 @@
                         }
                     },
                     "422": {
-                        "description": "Either input or output data does not comply with the API schema",
+                        "description": "Input or output data does not comply with the API schema",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1132,7 +1134,7 @@
                     "misc"
                 ],
                 "summary": "Docs",
-                "description": "Provides a web interface to the auto-generated API docs.",
+                "description": "Get API Documentation\n\nProvides a web interface to the auto-generated API docs.",
                 "operationId": "docs_docs_get",
                 "responses": {
                     "200": {
@@ -1211,7 +1213,10 @@
                 "properties": {
                     "session_id": {
                         "title": "Session Id",
-                        "type": "string"
+                        "maxLength": 36,
+                        "minLength": 36,
+                        "type": "string",
+                        "description": "The linking session id"
                     }
                 }
             },
@@ -1239,7 +1244,8 @@
                     "data": {
                         "title": "Data"
                     }
-                }
+                },
+                "description": "A generic error object used for all error responses.\n\nSee [the error docs](docs/errors.md) for more information."
             },
             "ExternalId": {
                 "title": "ExternalId",
@@ -1266,19 +1272,6 @@
                     "relationship": {
                         "title": "Relationship",
                         "type": "string"
-                    }
-                }
-            },
-            "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "type": "object",
-                "properties": {
-                    "detail": {
-                        "title": "Detail",
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ValidationError"
-                        }
                     }
                 }
             },
@@ -1786,7 +1779,7 @@
                 "properties": {
                     "putCode": {
                         "title": "Putcode",
-                        "type": "string"
+                        "type": "integer"
                     },
                     "createdAt": {
                         "title": "Createdat",
@@ -1894,39 +1887,6 @@
                     }
                 }
             },
-            "ValidationError": {
-                "title": "ValidationError",
-                "required": [
-                    "loc",
-                    "msg",
-                    "type"
-                ],
-                "type": "object",
-                "properties": {
-                    "loc": {
-                        "title": "Location",
-                        "type": "array",
-                        "items": {
-                            "anyOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "integer"
-                                }
-                            ]
-                        }
-                    },
-                    "msg": {
-                        "title": "Message",
-                        "type": "string"
-                    },
-                    "type": {
-                        "title": "Error Type",
-                        "type": "string"
-                    }
-                }
-            },
             "WorkUpdate": {
                 "title": "WorkUpdate",
                 "required": [
@@ -1976,11 +1936,11 @@
         },
         {
             "name": "link",
-            "description": "Access to and control over stored ORCID Link"
+            "description": "Access to and control over stored ORCID Links"
         },
         {
             "name": "linking-sessions",
-            "description": "OAuth integration and internal support for creating ORCID Links"
+            "description": "OAuth integration and internal support for creating ORCID Links.\n\nThe common path element is `/linking-sessions`.\n\nSome of the endpoints are \"browser interactive\", meaning that the links are followed \ndirectly by the browser, rather than being used within Javascript code."
         },
         {
             "name": "orcid",

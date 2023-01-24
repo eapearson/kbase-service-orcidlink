@@ -30,13 +30,13 @@ class StatusResponse(BaseModel):
 )
 async def get_status():
     """
-    Get the current status of the service.
+    Get Service Status
 
-    This endpoint returns the status of the service (by definition "ok" if
-    it is running!), the current time, and the start time.
+    With no parameters, this endpoint returns the current status of the service. The status code itself
+    is always "ok". Other information includes the current time, and the start time.
 
     It can be used as a healthcheck, for basic latency performance (as it makes no
-    upstream calls at all), or for time synchronization (as it returns the current time).
+    i/o or other high-latency calls calls), or for time synchronization (as it returns the current time).
     """
     # TODO: start time, deal with it@
     return StatusResponse(status="ok", start_time=0, time=epoch_time_millis())
@@ -50,6 +50,8 @@ class InfoResponse(BaseModel):
 @router.get("/info", response_model=InfoResponse, tags=["misc"])
 async def get_info():
     """
+    Get Service Information
+
     Returns basic information about the service and its runtime configuration.
     """
     # TODO: version should either be separate call, or derived from the a file stamped during the build.

@@ -54,21 +54,15 @@ class MockAuthService(MockAuthServiceBase):
             if authorization is None:
                 self.send_json_error(self.error_no_token())
             else:
-                if authorization == "foo":
-                    # output_data = {
-                    #     "user_id": "bar"
-                    # }
+                if authorization.startswith("foo"):
                     self.send_json(GET_TOKEN_FOO)
-                elif authorization == "bar":
-                    # output_data = {
-                    #     "user_id": "bar"
-                    # }
+                elif authorization.startswith("bar"):
                     self.send_json(GET_TOKEN_BAR)
-                elif authorization == "exception":
+                elif authorization.startswith("exception"):
                     self.send_json_error(self.error_no_token())
-                elif authorization == "bad_json":
+                elif authorization.startswith("bad_json"):
                     self.send_text("Bad JSON!")
-                elif authorization == "something_bad":
+                elif authorization.startswith("something_bad"):
                     # just do something bad:
                     x = 1 / 0
                     print(x)

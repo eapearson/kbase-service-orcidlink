@@ -4,6 +4,8 @@ from orcidlink.main import app
 from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
+from test.mocks.testing_utils import generate_kbase_token
+
 client = TestClient(app, raise_server_exceptions=False)
 
 config_yaml = load_data_file("config1.toml")
@@ -65,15 +67,24 @@ def test_kbase_auth_exception_handler(fake_fs):
         with mock_auth_service() as [_, _, url]:
             # call with missing token
             response = client.get("/link", headers={})
-            assert response.status_code == 401
+            assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "missingToken"
-            assert content["title"] == "Missing Token"
-            assert content["message"] == "API call requires a KBase auth token"
+            assert content["code"] == "requestParametersInvalid"
+            assert content["title"] == "Request Parameters Invalid"
+            assert (
+                content["message"]
+                == "This request does not comply with the schema for this endpoint"
+            )
+
+            BAD_TOKEN = generate_kbase_token("bad)")
+            EMPTY_TOKEN = ""
+            BAD_JSON = generate_kbase_token("bad_json")
+            CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
 
             # call with invalid token
-            response = client.get("/link", headers={"Authorization": "baz"})
+
+            response = client.get("/link", headers={"Authorization": BAD_TOKEN})
             assert response.status_code == 401
             assert response.headers["content-type"] == "application/json"
             content = response.json()
@@ -81,15 +92,15 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert content["title"] == "KBase auth token is invalid"
 
             # call with empty token
-            response = client.get("/link", headers={"Authorization": ""})
-            assert response.status_code == 401
+            response = client.get("/link", headers={"Authorization": EMPTY_TOKEN})
+            assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "missingToken"
-            assert content["title"] == "KBase auth token is missing"
+            assert content["code"] == "requestParametersInvalid"
+            assert content["title"] == "Request Parameters Invalid"
 
             # make a call which triggers a bug to trigger a JSON parse error
-            response = client.get("/link", headers={"Authorization": "bad_json"})
+            response = client.get("/link", headers={"Authorization": BAD_JSON})
             assert response.status_code == 500
             assert response.headers["content-type"] == "application/json"
             content = response.json()
@@ -97,7 +108,9 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert content["title"] == "Unknown error authenticating with KBase"
 
             # make a call which triggers a bug to trigger a JSON parse error
-            response = client.get("/link", headers={"Authorization": "something_bad"})
+            response = client.get(
+                "/link", headers={"Authorization": CAUSES_INTERNAL_ERROR}
+            )
             assert response.status_code == 500
             assert response.headers["content-type"] == "application/json"
             content = response.json()
@@ -105,10 +118,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert content["title"] == "Internal Server Error"
 
             # make some call which triggers a non-404 error caught by FastAPI/Starlette, in this
-            # case a method not supported.
-            response = client.post(
-                "/linx", headers={"Authorization": "internal_server_error"}
-            )
+            # case an endpoint not found.
+            response = client.post("/linx", headers={"Authorization": "x" * 32})
             assert response.status_code == 404
             assert response.headers["content-type"] == "application/json"
             content = response.json()
@@ -120,9 +131,7 @@ def test_kbase_auth_exception_handler(fake_fs):
 
             # make some call which triggers a non-404 error caught by FastAPI/Starlette, in this
             # case a method not supported.
-            response = client.post(
-                "/link", headers={"Authorization": "internal_server_error"}
-            )
+            response = client.post("/link", headers={"Authorization": "x" * 32})
             assert response.status_code == 405
             assert response.headers["content-type"] == "application/json"
             content = response.json()

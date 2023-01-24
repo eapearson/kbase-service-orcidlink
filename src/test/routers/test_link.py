@@ -12,6 +12,7 @@ from test.mocks.mock_contexts import (
     mock_orcid_oauth_service,
     no_stderr,
 )
+from test.mocks.testing_utils import generate_kbase_token
 
 client = TestClient(app)
 
@@ -56,14 +57,23 @@ def test_get_link(fake_fs):
         create_link()
 
         client = TestClient(app)
-        response = client.get("/link", headers={"Authorization": "foo"})
+        response = client.get(
+            "/link", headers={"Authorization": generate_kbase_token("foo")}
+        )
         assert response.status_code == 200
 
-        response = client.get("/link", headers={"Authorization": "foox"})
+        response = client.get(
+            "/link", headers={"Authorization": generate_kbase_token("baz")}
+        )
         assert response.status_code == 401
 
-        response = client.get("/link", headers={"Authorization": "bar"})
+        response = client.get(
+            "/link", headers={"Authorization": generate_kbase_token("bar")}
+        )
         assert response.status_code == 404
+
+        response = client.get("/link", headers={"Authorization": "bar"})
+        assert response.status_code == 422
 
 
 def test_is_linked(fake_fs):
@@ -71,16 +81,25 @@ def test_is_linked(fake_fs):
         create_link()
 
         client = TestClient(app)
-        response = client.get("/link/is_linked", headers={"Authorization": "foo"})
+        response = client.get(
+            "/link/is_linked", headers={"Authorization": generate_kbase_token("foo")}
+        )
         result = response.json()
         assert result is True
 
-        response = client.get("/link/is_linked", headers={"Authorization": "bar"})
+        response = client.get(
+            "/link/is_linked", headers={"Authorization": generate_kbase_token("bar")}
+        )
         result = response.json()
         assert result is False
 
-        response = client.get("/link/is_linked", headers={"Authorization": "baz"})
+        response = client.get(
+            "/link/is_linked", headers={"Authorization": generate_kbase_token("baz")}
+        )
         assert response.status_code == 401
+
+        response = client.get("/link/is_linked", headers={"Authorization": "baz"})
+        assert response.status_code == 422
 
 
 def test_delete_link(fake_fs):
@@ -91,8 +110,20 @@ def test_delete_link(fake_fs):
 
                 client = TestClient(app)
 
-                response = client.delete("/link", headers={"Authorization": "foo"})
+                response = client.delete(
+                    "/link", headers={"Authorization": generate_kbase_token("foo")}
+                )
                 assert response.status_code == 204
 
-                response = client.delete("/link", headers={"Authorization": "bar"})
+                response = client.delete(
+                    "/link", headers={"Authorization": generate_kbase_token("bar")}
+                )
                 assert response.status_code == 404
+
+                response = client.delete("/link", headers={"Authorization": "bar"})
+                assert response.status_code == 422
+
+                response = client.delete(
+                    "/link", headers={"Authorization": generate_kbase_token("baz")}
+                )
+                assert response.status_code == 401

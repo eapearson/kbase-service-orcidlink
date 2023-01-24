@@ -67,7 +67,7 @@ def test_get_work(fake_fs):
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
-        assert work["putCode"] == "1526002"
+        assert work["putCode"] == 1526002
 
 
 def test_get_work_errors(fake_fs):
@@ -141,7 +141,7 @@ def test_create_work(fake_fs):
 
         # TODO: get from file.
         new_work_data = {
-            "putCode": "1526002",
+            "putCode": 1526002,
             "createdAt": 1663706262725,
             "updatedAt": 1671119638386,
             "source": "KBase CI",
@@ -167,7 +167,7 @@ def test_create_work(fake_fs):
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
-        assert work["putCode"] == "1526002"
+        assert work["putCode"] == 1526002
 
 
 def test_create_work_errors(fake_fs):
@@ -251,7 +251,7 @@ def test_save_work(fake_fs):
 
         # TODO: get from file.
         new_work_data = {
-            "putCode": "1526002",
+            "putCode": 1526002,
             "title": "Some Data Set, yo, bro, whoa",
             "journal": "Me myself and I and me",
             "date": "2021",
@@ -284,7 +284,7 @@ def test_save_work(fake_fs):
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
-        assert work["putCode"] == "1526002"
+        assert work["putCode"] == 1526002
 
 
 def test_save_work_errors(fake_fs):
@@ -293,7 +293,7 @@ def test_save_work_errors(fake_fs):
 
         # TODO: get from file.
         new_work_data = {
-            "putCode": "1526002",
+            "putCode": 1526002,
             "title": "Some Data Set, yo, bro, whoa",
             "journal": "Me myself and I and me",
             "date": "2021",
