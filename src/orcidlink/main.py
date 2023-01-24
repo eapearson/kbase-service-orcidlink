@@ -16,26 +16,41 @@ from orcidlink.service_clients.KBaseAuth import (
 )
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import HTMLResponse
 
 #
 # Set up FastAPI top level app with associated metadata for documentation purposes.
 #
 
-description = """
-The *ORCID Link Service* provides an API to enable the creation of an interface for a KBase
- user to link their KBase account to their ORCID account.
+description = """\
+The *ORCID Link Service* provides an API to enable the linking of a KBase
+ user account to an ORCID account. This "link" consists of a [Link Record](#user-content-header_type_linkrecord) which 
+ contains a KBase username, ORCID id, ORCID access token, and a few other fields. This link record allows
+ KBase to create tools and services which utilize the ORCID api to view or modify
+ certain aspects of a users ORCID profile.
 
 Once connected, *ORCID Link* enables certain integrations, including:
 
 - syncing your KBase profile from your ORCID profile
-- creating and managing KBase public Narratives within your ORCID profile 
+- creating and managing KBase public Narratives within your ORCID profile\
 """
 
 tags_metadata = [
     {"name": "misc", "description": "Miscellaneous operations"},
     {
         "name": "link",
-        "description": "Add and remove KBase-ORCID linking; includes OAuth integration and API",
+        "description": "Access to and control over stored ORCID Links",
+    },
+    {
+        "name": "linking-sessions",
+        "description": """\
+OAuth integration and internal support for creating ORCID Links.
+
+The common path element is `/linking-sessions`.
+
+Some of the endpoints are "browser interactive", meaning that the links are followed 
+directly by the browser, rather than being used within Javascript code.\
+""",
     },
     {"name": "orcid", "description": "Direct access to ORCID via ORCID Link"},
     {
@@ -110,13 +125,25 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-    request: Request, exc: KBaseAuthMissingToken
+    request: Request, exc: KBaseAuthInvalidToken
 ):
     # TODO: this should reflect the nature of the auth error,
     # probably either 401, 403, or 500.
     return exception_error_response(
         "invalidToken", "KBase auth token is invalid", exc, status_code=401
     )
+
+
+#
+# @app.exception_handler(KBaseAuthMissingToken)
+# async def kbase_auth_missing_token_handler(
+#     request: Request, exc: KBaseAuthMissingToken
+# ):
+#     # TODO: this should reflect the nature of the auth error,
+#     # probably either 401, 403, or 500.
+#     return exception_error_response(
+#         "missingToken", "KBase auth token is missing", exc, status_code=401
+#     )
 
 
 @app.exception_handler(KBaseAuthException)
@@ -204,15 +231,19 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.get(
     "/docs",
+    response_class=HTMLResponse,
     include_in_schema=True,
     tags=["misc"],
     responses={
-        200: {"description": "Successfully returned the api docs"},
-        302: {"description": "Not configured; should never occur"},
+        200: {
+            "description": "Successfully returned the api docs",
+        }
     },
 )
 async def docs(req: Request):
     """
+    Get API Documentation
+
     Provides a web interface to the auto-generated API docs.
     """
     if app.openapi_url is None:
@@ -221,14 +252,6 @@ async def docs(req: Request):
         # 302, it resulted in a 404 in tests! I don't know about real life.
         # So lets just make this a 404, which is reasonable in any case.
         return error_response_not_found("The 'openapi_url' is 'None'")
-
-        # response = ui_error_response(
-        #     "docs.no_url",
-        #     "No DOCS URL",
-        #     "The 'openapi_url' is 'None'",
-        # )
-        # print('RESPONSE IS', response.status_code)
-        # return response
 
     openapi_url = config().services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(

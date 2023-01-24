@@ -61,8 +61,6 @@ class StorageModelMongo:
 
     def delete_linking_session(self, session_id: str):
         self.db.linking_sessions.delete_one({"session_id": session_id})
-        # print('DELETE', result.deleted_count)
-        # return self.db.delete('linking-sessions', session_id)
 
     def get_linking_session(
         self, session_id: str

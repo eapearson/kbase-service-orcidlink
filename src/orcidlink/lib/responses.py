@@ -1,12 +1,13 @@
 # from fastapi import HTTPException
 from traceback import extract_tb
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 from fastapi import Header
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from orcidlink.lib.config import config
+from orcidlink.service_clients.KBaseAuth import KBaseAuth, TokenInfo
 from pydantic import BaseModel, Field
 
 
@@ -16,6 +17,12 @@ from pydantic import BaseModel, Field
 
 
 class ErrorResponse(BaseModel):
+    """
+    A generic error object used for all error responses.
+
+    See [the error docs](docs/errors.md) for more information.
+    """
+
     code: str = Field(...)
     title: str = Field(...)
     message: str = Field(...)
@@ -126,7 +133,12 @@ def make_error_exception(
     )
 
 
-def ensure_authorization(authorization: str | None) -> str:
+def ensure_authorization(authorization: str | None) -> Tuple[str, TokenInfo]:
+    """
+    Ensures that the "authorization" value, the KBase auth token, is
+    not none. This is a convenience function for endpoints, whose sole
+    purpose is to ensure that the provided token is good and valid.
+    """
     if authorization is None:
         raise ErrorException(
             error=ErrorResponse(
@@ -136,21 +148,31 @@ def ensure_authorization(authorization: str | None) -> str:
             ),
             status_code=401,
         )
-    return authorization
+    auth = KBaseAuth(
+        auth_url=config().services.Auth2.url,
+        cache_lifetime=int(config().services.Auth2.tokenCacheLifetime / 1000),
+        cache_max_size=config().services.Auth2.tokenCacheMaxSize,
+    )
+    return authorization, auth.get_token_info(authorization)
 
 
-AUTHORIZATION_HEADER = Header(default=None, description="KBase auth token")
+AUTHORIZATION_HEADER = Header(
+    # default=None,
+    description="KBase auth token",
+    min_length=32,
+    max_length=32,
+)
 
 ResponseMapping = Mapping[Union[int, str], Dict[str, Any]]
 
 AUTH_RESPONSES: ResponseMapping = {
-    401: {"description": "KBase auth token absent"},
-    403: {"description": "KBase auth token invalid"},
+    401: {"description": "KBase auth token absent or invalid", "model": ErrorResponse},
+    # 403: {"description": "KBase auth token invalid", "model": ErrorResponse},
 }
 
 STD_RESPONSES: ResponseMapping = {
     422: {
-        "description": "Either input or output data does not comply with the API schema",
+        "description": "Input or output data does not comply with the API schema",
         "model": ErrorResponse,
     }
 }

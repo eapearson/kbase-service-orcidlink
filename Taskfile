@@ -57,6 +57,24 @@ function build-image {
   docker build -t kbase/orcidlink:dev .
 }
 
+function generate-openapi {
+  docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-openapi.py
+}
+
+function generate-docs {
+  rm -rf docs/api/openapi/*
+  docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-docs.py
+}
+
+function generate-apidocs {
+    rm -rf docs/api/openapi/*
+    docker run --rm \
+      -v ${PWD}:/kb/module openapitools/openapi-generator-cli generate \
+      -i /kb/module/docs/api/openapi.json \
+      -g markdown \
+      -o /kb/module/docs/api/openapi
+}
+
 # For running a prod-like image locally
 function run-image {
   # NB There should be a mongo db running at the indicated

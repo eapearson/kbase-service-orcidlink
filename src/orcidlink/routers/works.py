@@ -5,15 +5,16 @@ import httpx
 from fastapi import APIRouter, HTTPException, Header, Path
 from orcidlink.lib.config import config
 from orcidlink.lib.responses import (
+    AUTH_RESPONSES,
     ErrorException,
-    ErrorResponse,
+    STD_RESPONSES,
     ensure_authorization,
     error_response,
     make_error_exception,
     success_response_no_data,
 )
 from orcidlink.lib.utils import get_raw_prop, get_string_prop
-from orcidlink.model import ExternalId, LinkRecord, ORCIDWork, SimpleSuccess
+from orcidlink.model import ExternalId, LinkRecord, ORCIDWork
 from orcidlink.models.orcid import raw_work_to_work
 from orcidlink.service_clients.ORCIDClient import orcid_api, orcid_api_url
 from orcidlink.service_clients.auth import get_username
@@ -24,23 +25,26 @@ from starlette.responses import JSONResponse
 router = APIRouter(prefix="/works", responses={404: {"description": "Not found"}})
 
 
-class WorkUpdate(BaseModel):
-    putCode: int = Field(...)
-    title: str = Field(None)
-    journal: str = Field(None)
-    date: str = Field(None)
-    workType: str = Field(None)
-    url: str = Field(None)
-    externalIds: List[ExternalId] = Field(None)
-
-
 class NewWork(BaseModel):
+    """
+    Represents a work record that is going to be added to ORCID.
+    """
+
     title: str = Field(...)
     journal: str = Field(...)
     date: str = Field(...)
     workType: str = Field(...)
     url: str = Field(...)
     externalIds: List[ExternalId] = Field(...)
+
+
+class WorkUpdate(NewWork):
+    """
+    Represents a work record which has been fetched from ORCID, modified,
+    and can be sent back to update the ORCID work record
+    """
+
+    putCode: int = Field(...)
 
 
 #
@@ -90,13 +94,10 @@ def link_record_not_found() -> JSONResponse:
     response_model=ORCIDWork,
     tags=["works"],
     responses={
-        401: {"description": "Token missing or invalid"},
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
         404: {"description": "Link not available for this user"},
         # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
-        422: {
-            "description": "Either input or output data does not comply with the API schema",
-            "model": ErrorResponse,
-        },
     },
 )
 async def get_work(
@@ -108,7 +109,7 @@ async def get_work(
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
     """
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -120,8 +121,7 @@ async def get_work(
 
     try:
         raw_work = orcid_api(token).get_work(orcid_id, put_code)
-        hmm = raw_work_to_work(raw_work["bulk"][0]["work"])
-        return hmm
+        return raw_work_to_work(raw_work["bulk"][0]["work"])
     except ErrorException as errx:
         return errx.get_response()
     except Exception as ex:
@@ -139,13 +139,9 @@ async def get_work(
     response_model=List[ORCIDWork],
     tags=["works"],
     responses={
-        401: {"description": "Token missing or invalid"},
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
         404: {"description": "Link not available for this user"},
-        # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
-        422: {
-            "description": "Either input or output data does not comply with the API schema",
-            "model": ErrorResponse,
-        },
     },
 )
 async def get_works(
@@ -154,7 +150,7 @@ async def get_works(
     """
     Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
     """
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -177,13 +173,9 @@ async def get_works(
     response_model=ORCIDWork,
     tags=["works"],
     responses={
-        401: {"description": "Token missing or invalid"},
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
         404: {"description": "Link not available for this user"},
-        # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
-        422: {
-            "description": "Either input or output data does not comply with the API schema",
-            "model": ErrorResponse,
-        },
     },
 )
 async def save_work(
@@ -193,7 +185,7 @@ async def save_work(
     """
     Update a work record; the `work_update` contains the `put code`.
     """
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -275,12 +267,21 @@ async def save_work(
     return raw_work_to_work(raw_work_record)
 
 
-@router.delete("/{put_code}", response_model=SimpleSuccess, tags=["works"])
+@router.delete(
+    "/{put_code}",
+    status_code=204,
+    tags=["works"],
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        204: {"description": "Work record successfully deleted"},
+    },
+)
 async def delete_work(
     put_code: int,
     authorization: str | None = Header(default=None, description="Kbase auth token"),
 ):
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
@@ -309,11 +310,19 @@ async def delete_work(
     )
 
 
-@router.post("", response_model=ORCIDWork, tags=["works"])
+@router.post(
+    "",
+    tags=["works"],
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        200: {"description": "Work record successfully created", "model": ORCIDWork},
+    },
+)
 async def create_work(
     new_work: NewWork, authorization: str | None = Header(default=None)
 ):
-    authorization = ensure_authorization(authorization)
+    authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 

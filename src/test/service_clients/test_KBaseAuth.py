@@ -5,6 +5,7 @@ from orcidlink.service_clients.KBaseAuth import (
     KBaseAuth,
     KBaseAuthException,
     KBaseAuthInvalidToken,
+    KBaseAuthMissingToken,
     TokenInfo,
 )
 from test.data.utils import load_data_file
@@ -78,6 +79,12 @@ def test_KBaseAuth_get_token_info_missing_token(fake_fs):
         # First fetch of token from service
         with pytest.raises(KBaseAuthInvalidToken):
             client.get_token_info("x")
+
+        with pytest.raises(KBaseAuthMissingToken):
+            client.get_token_info("")
+
+        with pytest.raises(KBaseAuthMissingToken):
+            client.get_token_info(None)
 
 
 def test_KBaseAuth_get_token_info_other_error(fake_fs):

@@ -14,6 +14,7 @@ from test.mocks.mock_contexts import (
     mock_orcid_oauth_service,
     no_stderr,
 )
+from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
 
 config_yaml = load_data_file("config1.toml")
 
@@ -63,7 +64,7 @@ def assert_create_linking_session(client, authorization: str):
 
 def assert_get_linking_session(client, session_id: str):
     response = client.get(
-        f"/linking-sessions/{session_id}", headers={"Authorization": "foo"}
+        f"/linking-sessions/{session_id}", headers={"Authorization": TOKEN_FOO}
     )
 
     assert response.status_code == 200
@@ -108,7 +109,7 @@ def assert_start_linking_session(
     # Get linking session again.
     #
     response = client.get(
-        f"/linking-sessions/{session_id}", headers={"Authorization": "foo"}
+        f"/linking-sessions/{session_id}", headers={"Authorization": TOKEN_FOO}
     )
 
     assert response.status_code == 200
@@ -146,7 +147,7 @@ def test_create_linking_session(fake_fs):
     with no_stderr():
         with mock_auth_service():
             client = TestClient(app)
-            assert_create_linking_session(client, "foo")
+            assert_create_linking_session(client, TOKEN_FOO)
 
 
 def test_get_linking_session(fake_fs):
@@ -160,7 +161,7 @@ def test_get_linking_session(fake_fs):
         #
         # Create linking session.
         #
-        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
         initial_session_id = initial_session_info["session_id"]
 
         #
@@ -187,26 +188,33 @@ def test_get_linking_session_errors(fake_fs):
 
         # Get a non-existent linking session id
         response = client.get(
-            f"/linking-sessions/bar", headers={"Authorization": "foo"}
+            f"/linking-sessions/{'x' * 36}", headers={"Authorization": TOKEN_FOO}
         )
         assert response.status_code == 404
 
-        # Omit the auth token, expect 401, no auth.
-        response = client.get(f"/linking-sessions/bar")
-        assert response.status_code == 401
+        # Get a malformed linking session id
+        response = client.get(
+            f"/linking-sessions/bar", headers={"Authorization": TOKEN_FOO}
+        )
+        assert response.status_code == 422
+
+        # Omit the auth token, expect 422, not 401, since the
+        # authorization header is a required input to the endpoint.
+        response = client.get(f"/linking-sessions/{'x' * 36}")
+        assert response.status_code == 422
 
         # Provide a bad auth token, also a 401; i.e., same as no auth
         response = client.get(
-            f"/linking-sessions/bar", headers={"Authorization": "baz"}
+            f"/linking-sessions/{'x' * 36}", headers={"Authorization": "baz"}
         )
-        assert response.status_code == 401
+        assert response.status_code == 422
 
         # To get a 403, we need a valid session with a different username.
-        session_info = assert_create_linking_session(client, "foo")
+        session_info = assert_create_linking_session(client, TOKEN_FOO)
         # Provide a bad auth token, also a 401; i.e., same as no auth
         response = client.get(
             f"/linking-sessions/{session_info['session_id']}",
-            headers={"Authorization": "bar"},
+            headers={"Authorization": TOKEN_BAR},
         )
         assert response.status_code == 403
 
@@ -222,7 +230,7 @@ def test_start_linking_session(fake_fs):
         #
         # Create linking session.
         #
-        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
         initial_session_id = initial_session_info["session_id"]
 
         #
@@ -246,7 +254,7 @@ def test_start_linking_session(fake_fs):
         assert_start_linking_session(
             client,
             initial_session_id,
-            kbase_session="foo",
+            kbase_session=TOKEN_FOO,
             return_link="baz",
             skip_prompt="no",
         )
@@ -271,7 +279,7 @@ def test_start_linking_session_backup_cookie(fake_fs):
         #
         # Create linking session.
         #
-        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
         initial_session_id = initial_session_info["session_id"]
 
         #
@@ -293,7 +301,7 @@ def test_start_linking_session_backup_cookie(fake_fs):
 
         # If we start the linking session, the linking session will be updated, but remain
         #  LinkingSessionInitial
-        # assert_start_linking_session(client, initial_session_id, kbase_session="foo")
+        # assert_start_linking_session(client, initial_session_id, kbase_session=TOKEN_FOO)
 
         # TODO more assertions?
 
@@ -301,7 +309,7 @@ def test_start_linking_session_backup_cookie(fake_fs):
         assert_start_linking_session(
             client,
             initial_session_id,
-            kbase_session_backup="foo",
+            kbase_session_backup=TOKEN_FOO,
             return_link="baz",
             skip_prompt="no",
         )
@@ -321,7 +329,7 @@ def test_start_linking_session_errors(fake_fs):
         #
         # Create linking session.
         #
-        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
         initial_session_id = initial_session_info["session_id"]
 
         #
@@ -360,9 +368,17 @@ def test_start_linking_session_errors(fake_fs):
         )
         assert response.status_code == 403
 
-        # linking session not found
+        # linking session id not correct format (s.b. 36 characters)
         response = client.get(
             f"/linking-sessions/foo/oauth/start",
+            headers={"Cookie": "kbase_session=bar; Path=/"},
+            follow_redirects=False,
+        )
+        assert response.status_code == 422
+
+        # linking session not found
+        response = client.get(
+            f"/linking-sessions/{'x' * 36}/oauth/start",
             headers={"Cookie": "kbase_session=bar; Path=/"},
             follow_redirects=False,
         )
@@ -390,7 +406,7 @@ def test_continue_linking_session(fake_fs):
         #
         # Create linking session.
         #
-        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
         initial_session_id = initial_session_info["session_id"]
 
         #
@@ -415,7 +431,7 @@ def test_continue_linking_session(fake_fs):
         assert_start_linking_session(
             client,
             initial_session_id,
-            kbase_session="foo",
+            kbase_session=TOKEN_FOO,
             return_link=return_link,
             skip_prompt=skip_prompt,
         )
@@ -461,7 +477,7 @@ def test_continue_linking_session(fake_fs):
         #
         response = client.put(
             f"/linking-sessions/{initial_session_id}/finish",
-            headers={"Authorization": "foo"},
+            headers={"Authorization": TOKEN_FOO},
         )
         assert response.status_code == 200
 
@@ -473,12 +489,14 @@ def test_continue_linking_session(fake_fs):
     with no_stderr():
         with mock_auth_service():
             with mock_orcid_oauth_service():
-                assert_continue_linking_session(kbase_session="foo", skip_prompt="no")
                 assert_continue_linking_session(
-                    kbase_session_backup="foo", skip_prompt="no"
+                    kbase_session=TOKEN_FOO, skip_prompt="no"
                 )
                 assert_continue_linking_session(
-                    kbase_session="foo", return_link="bar", skip_prompt="no"
+                    kbase_session_backup=TOKEN_FOO, skip_prompt="no"
+                )
+                assert_continue_linking_session(
+                    kbase_session=TOKEN_FOO, return_link="bar", skip_prompt="no"
                 )
 
 
@@ -497,7 +515,7 @@ def test_continue_linking_session_errors(fake_fs):
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, "foo")
+                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 #
@@ -522,7 +540,7 @@ def test_continue_linking_session_errors(fake_fs):
                 assert_start_linking_session(
                     client,
                     initial_session_id,
-                    kbase_session="foo",
+                    kbase_session=TOKEN_FOO,
                     skip_prompt="yes",
                 )
 
@@ -551,7 +569,7 @@ def test_continue_linking_session_errors(fake_fs):
                 params = {"error": "foo"}
                 response = client.get(
                     f"/linking-sessions/oauth/continue",
-                    headers={"Cookie": "kbase_session=foo"},
+                    headers={"Cookie": f"kbase_session={TOKEN_FOO}"},
                     params=params,
                     follow_redirects=False,
                 )
@@ -562,7 +580,7 @@ def test_continue_linking_session_errors(fake_fs):
                 params = {"state": json.dumps({"session_id": initial_session_id})}
                 response = client.get(
                     f"/linking-sessions/oauth/continue",
-                    headers={"Cookie": "kbase_session=foo"},
+                    headers={"Cookie": f"kbase_session={TOKEN_FOO}"},
                     params=params,
                     follow_redirects=False,
                 )
@@ -580,7 +598,7 @@ def test_continue_linking_session_errors(fake_fs):
                 params = {"code": "foo"}
                 response = client.get(
                     f"/linking-sessions/oauth/continue",
-                    headers={"Cookie": "kbase_session=foo"},
+                    headers={"Cookie": f"kbase_session={TOKEN_FOO}"},
                     params=params,
                     follow_redirects=False,
                 )
@@ -598,7 +616,7 @@ def test_continue_linking_session_errors(fake_fs):
                 params = {"code": "foo", "state": json.dumps({})}
                 response = client.get(
                     f"/linking-sessions/oauth/continue",
-                    headers={"Cookie": "kbase_session=foo"},
+                    headers={"Cookie": f"kbase_session={TOKEN_FOO}"},
                     params=params,
                     follow_redirects=False,
                 )
@@ -628,7 +646,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, "foo")
+                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 #
@@ -653,7 +671,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
                 assert_start_linking_session(
                     client,
                     initial_session_id,
-                    kbase_session="foo",
+                    kbase_session=TOKEN_FOO,
                     skip_prompt="yes",
                 )
 
@@ -670,7 +688,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
                 }
 
                 headers = {
-                    "Cookie": "kbase_session=foo",
+                    "Cookie": f"kbase_session={TOKEN_FOO}",
                 }
 
                 # First time, it should be fine, returning a 302 as expected, with a
@@ -716,7 +734,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, "foo")
+                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 #
@@ -737,7 +755,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 #
                 response = client.put(
                     f"/linking-sessions/{initial_session_id}/finish",
-                    headers={"Authorization": "foo"},
+                    headers={"Authorization": TOKEN_FOO},
                 )
                 assert response.status_code == 400
 
@@ -759,7 +777,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 assert_start_linking_session(
                     client,
                     initial_session_id,
-                    kbase_session="foo",
+                    kbase_session=TOKEN_FOO,
                     skip_prompt="yes",
                 )
 
@@ -776,7 +794,7 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 }
 
                 headers = {
-                    "Cookie": "kbase_session=foo",
+                    "Cookie": f"kbase_session={TOKEN_FOO}",
                 }
 
                 # First time, it should be fine, returning a 302 as expected, with a
@@ -802,14 +820,14 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 #
                 response = client.put(
                     f"/linking-sessions/{initial_session_id}/finish",
-                    headers={"Authorization": "foo"},
+                    headers={"Authorization": TOKEN_FOO},
                 )
                 assert response.status_code == 200
 
                 # Second time it should produce a 404 since it will have been deleted!
                 response = client.put(
                     f"/linking-sessions/{initial_session_id}/finish",
-                    headers={"Authorization": "foo"},
+                    headers={"Authorization": TOKEN_FOO},
                 )
                 assert response.status_code == 404
 
@@ -821,7 +839,7 @@ def test_delete_linking_session(fake_fs):
         #
         # Create the linking session.
         #
-        initial_session_info = assert_create_linking_session(client, "foo")
+        initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
         initial_session_id = initial_session_info["session_id"]
 
         #
@@ -835,7 +853,7 @@ def test_delete_linking_session(fake_fs):
         # Delete the session
         #
         response = client.delete(
-            f"/linking-sessions/{session_id}", headers={"Authorization": "foo"}
+            f"/linking-sessions/{session_id}", headers={"Authorization": TOKEN_FOO}
         )
         assert response.status_code == 204
 

@@ -1,6 +1,7 @@
 import json
 
 from orcidlink.lib import utils
+from orcidlink.model import ORCIDWork
 from orcidlink.models.orcid import raw_work_to_work
 
 
@@ -19,6 +20,8 @@ def load_test_data(filename: str):
 
 def test_raw_work_to_work():
     test_work = load_test_data("work_1526002")
-    test_work_transformed = load_test_data("work_1526002_transformed")
+    test_work_transformed = ORCIDWork.parse_obj(
+        load_test_data("work_1526002_transformed")
+    )
     value = raw_work_to_work(test_work)
     assert value == test_work_transformed

@@ -13,6 +13,7 @@ from test.mocks.mock_contexts import (
     mock_orcid_api_service,
     no_stderr,
 )
+from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
 
 client = TestClient(app)
 
@@ -96,7 +97,7 @@ def test_get_profile(fake_fs):
     with mock_services():
         create_link()
         response = TestClient(app).get(
-            "/orcid/profile", headers={"Authorization": "foo"}
+            "/orcid/profile", headers={"Authorization": TOKEN_FOO}
         )
         assert response.status_code == 200
 
@@ -104,6 +105,6 @@ def test_get_profile(fake_fs):
 def test_get_profile_not_found(fake_fs):
     with mock_services():
         response = TestClient(app).get(
-            "/orcid/profile", headers={"Authorization": "bar"}
+            "/orcid/profile", headers={"Authorization": TOKEN_BAR}
         )
         assert response.status_code == 404

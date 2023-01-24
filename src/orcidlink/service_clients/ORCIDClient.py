@@ -5,6 +5,7 @@ from typing import Optional
 import httpx
 from orcidlink.lib.config import config
 from orcidlink.lib.responses import ErrorException, ErrorResponse
+from orcidlink.model import ORCIDAuth
 from pydantic import BaseModel
 
 
@@ -147,6 +148,37 @@ class ORCIDOAuthClient(ORCIDClientBase):
 
         if response.status_code != 200:
             raise self.make_exception(response, source="revoke_link")
+
+    def exchange_code_for_token(self, code: str):
+        #
+        # Exchange the temporary token from ORCID for the authorized token.
+        #
+        # ORCID does not specifically document this, but refers to the OAuth spec:
+        # https://datatracker.ietf.org/doc/html/rfc8693.
+        # Error structure defined here:
+        # https://www.rfc-editor.org/rfc/rfc6749#section-5.2
+        #
+        header = {
+            "accept": "application/json",
+            "content-type": "application/x-www-form-urlencoded",
+        }
+        # Note that the redirect uri below is just for the api - it is not actually used
+        # for redirection in this case.
+        # TODO: investigate and point to the docs, because this is weird.
+        # TODO: put in orcid client!
+        data = {
+            "client_id": config().orcid.clientId,
+            "client_secret": config().orcid.clientSecret,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
+        }
+        response = httpx.post(
+            f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
+        )
+        json_response = json.loads(response.text)
+        # TODO: branch on error
+        return ORCIDAuth.parse_obj(json_response)
 
 
 def orcid_api(token: str) -> ORCIDAPIClient:

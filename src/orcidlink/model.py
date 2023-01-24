@@ -40,6 +40,10 @@ class ORCIDAuthPublic(BaseModel):
 # absence of the original UI.
 # E.g. cannot rely on having the auth cookie available, so we
 # store it.
+
+type
+
+
 class LinkingSessionInitial(BaseModel):
     session_id: str = Field(...)
     username: str = Field(...)
@@ -97,20 +101,16 @@ class KBaseSDKConfig(BaseModel):
 
 
 class ORCIDWork(BaseModel):
-    putCode: str = Field(...)
+    putCode: int = Field(...)
     createdAt: int = Field(...)
     updatedAt: int = Field(...)
     source: str = Field(...)
     title: str = Field(...)
-    # need to make a variadic type...
     journal: Optional[str]
     date: str = Field(...)
     workType: str = Field(...)
     url: str = Field(...)
     externalIds: List[ExternalId]
-    # citationType: str = Field(...)
-    # citation: str = Field(...)
-    # citationDescription: str = Field(...)
 
 
 class ORCIDAffiliation(BaseModel):
