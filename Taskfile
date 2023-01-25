@@ -2,6 +2,8 @@
 
 function test {
   KBASE_ENDPOINT=ENDPOINT_TEST \
+  ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth \
+  ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0 \
   ORCID_CLIENT_ID=ORCID_CLIENT_ID_TEST \
   ORCID_CLIENT_SECRET=ORCID_CLIENT_SECRET_TEST \
   MONGO_HOST=mongo \
@@ -29,7 +31,9 @@ function server {
 }
 
 function dev {
-  KBASE_ENDPOINT=https://ci.kbase.us/services \
+  KBASE_ENDPOINT=https://ci.kbase.us/services/ \
+  ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth \
+  ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0 \
   ORCID_CLIENT_ID=${ORCID_CLIENT_ID} \
   ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET} \
   MONGO_HOST=mongo \
@@ -41,7 +45,9 @@ function dev {
 }
 
 function server {
-  KBASE_ENDPOINT=https://ci.kbase.us/services \
+  KBASE_ENDPOINT=https://ci.kbase.us/services/ \
+  ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth \
+  ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0 \
   ORCID_CLIENT_ID=${ORCID_CLIENT_ID} \
   ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET} \
   MONGO_HOST=mongo \
@@ -57,10 +63,13 @@ function build-image {
   docker build -t kbase/orcidlink:dev .
 }
 
+function check-openapi {
+  docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/check-openapi.py
+}
+
 function generate-openapi {
   docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-openapi.py
 }
-
 function generate-docs {
   rm -rf docs/api/openapi/*
   docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-docs.py
@@ -80,7 +89,9 @@ function run-image {
   # NB There should be a mongo db running at the indicated
   # host and port with the indicated auth
   docker run \
-    -e KBASE_ENDPOINT=https://ci.kbase.us/services \
+    -e KBASE_ENDPOINT=https://ci.kbase.us/services/ \
+    -e ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth \
+    -e ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0 \
     -e ORCID_CLIENT_ID=${ORCID_CLIENT_ID} \
     -e ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET} \
     -e MONGO_HOST=mongo \

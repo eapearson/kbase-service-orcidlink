@@ -4,6 +4,8 @@ jinja render \
   -t templates/config.tmpl.toml \
   -o config/config.toml \
   -e KBASE_ENDPOINT=${KBASE_ENDPOINT} \
+  -e ORCID_OAUTH_BASE_URL=${ORCID_OAUTH_BASE_URL} \
+  -e ORCID_API_BASE_URL=${ORCID_API_BASE_URL} \
   -e ORCID_CLIENT_ID=${ORCID_CLIENT_ID} \
   -e ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET} \
   -e MONGO_HOST=${MONGO_HOST} \

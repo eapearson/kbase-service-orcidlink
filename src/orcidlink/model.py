@@ -60,6 +60,13 @@ class LinkingSessionComplete(LinkingSessionStarted):
     orcid_auth: ORCIDAuth = Field(...)
 
 
+# TODO: maybe just a quick hack, but we use
+# this concept of "public" vs "private" types.
+# Public types are safe for exposing via the api.
+class LinkingSessionCompletePublic(LinkingSessionStarted):
+    orcid_auth: ORCIDAuthPublic = Field(...)
+
+
 class SessionInfo(BaseModel):
     session_id: str = Field(...)
 

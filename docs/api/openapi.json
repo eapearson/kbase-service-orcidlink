@@ -306,7 +306,7 @@
                     "linking-sessions"
                 ],
                 "summary": "Get Linking Session",
-                "description": "Get Linking Session\n\nReturns the linking session record identified by the given linking session id,\nas long as it is owned by the user associated with the given KBase auth token.",
+                "description": "Get Linking Session\n\nReturns the linking session record identified by the given linking session id,\nas long as it is owned by the user associated with the given KBase auth token.\n\nNote that the",
                 "operationId": "get_linking_session_linking_sessions__session_id__get",
                 "parameters": [
                     {
@@ -349,6 +349,9 @@
                                         },
                                         {
                                             "$ref": "#/components/schemas/LinkingSessionInitial"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionCompletePublic"
                                         }
                                     ]
                                 }
@@ -1320,6 +1323,48 @@
                     "expires_at": {
                         "title": "Expires At",
                         "type": "integer"
+                    },
+                    "orcid_auth": {
+                        "$ref": "#/components/schemas/ORCIDAuthPublic"
+                    }
+                }
+            },
+            "LinkingSessionCompletePublic": {
+                "title": "LinkingSessionCompletePublic",
+                "required": [
+                    "session_id",
+                    "username",
+                    "created_at",
+                    "expires_at",
+                    "return_link",
+                    "skip_prompt",
+                    "orcid_auth"
+                ],
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "title": "Session Id",
+                        "type": "string"
+                    },
+                    "username": {
+                        "title": "Username",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "integer"
+                    },
+                    "expires_at": {
+                        "title": "Expires At",
+                        "type": "integer"
+                    },
+                    "return_link": {
+                        "title": "Return Link",
+                        "type": "string"
+                    },
+                    "skip_prompt": {
+                        "title": "Skip Prompt",
+                        "type": "string"
                     },
                     "orcid_auth": {
                         "$ref": "#/components/schemas/ORCIDAuthPublic"
