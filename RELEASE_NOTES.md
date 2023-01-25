@@ -22,4 +22,4 @@ First release.
 * add additional environment variables for ORCID urls [CE-161]
 * document workflows, improve pr template [CE-161]
 * add static documentation generation, improve README [CE-162]
-* Add git-info task & tool to capture git
+* Add git-info task & tool to capture git [CE-164]
