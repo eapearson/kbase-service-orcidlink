@@ -22,6 +22,10 @@ function black {
   docker compose -f docker-compose-runner.yml run --rm orcidlink scripts/run-black.sh ${1} ${2}
 }
 
+function git-info {
+  docker compose -f docker-compose-runner.yml run --rm orcidlink poetry run python src/misc/git-info.py
+}
+
 function shell {
   docker compose -f docker-compose-runner.yml run --rm orcidlink bash
 }

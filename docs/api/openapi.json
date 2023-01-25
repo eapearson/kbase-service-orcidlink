@@ -1286,11 +1286,64 @@
                     }
                 }
             },
+            "GitInfo": {
+                "title": "GitInfo",
+                "required": [
+                    "commit_hash",
+                    "commit_hash_abbreviated",
+                    "author_name",
+                    "author_date",
+                    "committer_name",
+                    "committer_date",
+                    "url",
+                    "branch"
+                ],
+                "type": "object",
+                "properties": {
+                    "commit_hash": {
+                        "title": "Commit Hash",
+                        "type": "string"
+                    },
+                    "commit_hash_abbreviated": {
+                        "title": "Commit Hash Abbreviated",
+                        "type": "string"
+                    },
+                    "author_name": {
+                        "title": "Author Name",
+                        "type": "string"
+                    },
+                    "author_date": {
+                        "title": "Author Date",
+                        "type": "integer"
+                    },
+                    "committer_name": {
+                        "title": "Committer Name",
+                        "type": "string"
+                    },
+                    "committer_date": {
+                        "title": "Committer Date",
+                        "type": "integer"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "branch": {
+                        "title": "Branch",
+                        "type": "string"
+                    },
+                    "tag": {
+                        "title": "Tag",
+                        "type": "string"
+                    }
+                }
+            },
             "InfoResponse": {
                 "title": "InfoResponse",
                 "required": [
                     "service-manifest",
-                    "config"
+                    "config",
+                    "git-info"
                 ],
                 "type": "object",
                 "properties": {
@@ -1299,6 +1352,9 @@
                     },
                     "config": {
                         "$ref": "#/components/schemas/Config"
+                    },
+                    "git-info": {
+                        "$ref": "#/components/schemas/GitInfo"
                     }
                 }
             },

@@ -9,12 +9,14 @@ client = TestClient(app, raise_server_exceptions=False)
 
 config_yaml = load_data_file("config1.toml")
 manifest_toml = load_data_file("manifest1.toml")
+gitinfo_toml = load_data_file("git_info1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
     fs.create_file("/kb/module/MANIFEST.toml", contents=manifest_toml)
+    fs.create_file("/kb/module/config/git_info.toml", contents=gitinfo_toml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -45,3 +47,5 @@ def test_main_info(fake_fs):
     manifest = result["service-manifest"]
     assert "module-name" in manifest
     assert manifest["module-name"] == "ORCIDLink"
+    git_info = result["git-info"]
+    assert git_info["author_name"] == "Foo Bar"
