@@ -39,7 +39,7 @@ COPY ./config /kb/module/config
 COPY ./templates /kb/module/templates
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
-COPY ./kbase.yml /kb/module
+COPY ./SERVICE_DESCRIPTION.toml /kb/module
 
 WORKDIR /kb/module
 
