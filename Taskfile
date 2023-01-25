@@ -11,7 +11,7 @@ function test {
   MONGO_DATABASE=orcidlink \
   MONGO_USERNAME=dev \
   MONGO_PASSWORD=d3v \
-  docker compose -f docker-compose-testing.yml run --rm orcidlink scripts/run-tests.sh ${1}
+  docker compose -f docker-compose-testing.yml run --rm orcidlink scripts/run-tests.sh "${1}"
 }
 
 function mypy {
@@ -19,7 +19,7 @@ function mypy {
 }
 
 function black {
-  docker compose -f docker-compose-runner.yml run --rm orcidlink scripts/run-black.sh ${1} ${2}
+  docker compose -f docker-compose-runner.yml run --rm orcidlink scripts/run-black.sh "${1}" "${2}"
 }
 
 function git-info {
@@ -82,7 +82,7 @@ function generate-docs {
 function generate-apidocs {
     rm -rf docs/api/openapi/*
     docker run --rm \
-      -v ${PWD}:/kb/module openapitools/openapi-generator-cli generate \
+      -v "${PWD}:/kb/module" openapitools/openapi-generator-cli generate \
       -i /kb/module/docs/api/openapi.json \
       -g markdown \
       -o /kb/module/docs/api/openapi
@@ -104,7 +104,10 @@ function run-image {
     -e MONGO_USERNAME=dev \
     -e MONGO_PASSWORD=d3v \
     --stop-signal SIGINT \
-    ${IMAGE:-kbase/orcidlink:dev}
+    --network kbase-dev \
+    --name orcidlink \
+    --hostname orcidlink \
+    "${IMAGE:-kbase/orcidlink:dev}"
 }
 
 function help {
@@ -117,4 +120,4 @@ function help {
 }
 
 TIMEFORMAT="Task completed in %3lR"
-time ${@:-default}
+time "${@:-default}"

@@ -1341,14 +1341,14 @@
             "InfoResponse": {
                 "title": "InfoResponse",
                 "required": [
-                    "service-manifest",
+                    "service-description",
                     "config",
                     "git-info"
                 ],
                 "type": "object",
                 "properties": {
-                    "service-manifest": {
-                        "$ref": "#/components/schemas/ServiceManifest"
+                    "service-description": {
+                        "$ref": "#/components/schemas/ServiceDescription"
                     },
                     "config": {
                         "$ref": "#/components/schemas/Config"
@@ -1789,8 +1789,8 @@
                     }
                 }
             },
-            "ServiceManifest": {
-                "title": "ServiceManifest",
+            "ServiceDescription": {
+                "title": "ServiceDescription",
                 "required": [
                     "module-name",
                     "description",

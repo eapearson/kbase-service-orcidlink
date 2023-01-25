@@ -4,10 +4,10 @@ from orcidlink.lib.config import (
     GitInfo,
     config,
     get_git_info,
-    get_service_manifest,
+    get_service_description,
 )
 from orcidlink.lib.utils import epoch_time_millis
-from orcidlink.model import ServiceManifest
+from orcidlink.model import ServiceDescription
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="")
@@ -45,7 +45,7 @@ async def get_status():
 
 
 class InfoResponse(BaseModel):
-    service_manifest: ServiceManifest = Field(alias="service-manifest")
+    service_description: ServiceDescription = Field(alias="service-description")
     config: Config = Field(...)
     git_info: GitInfo = Field(alias="git-info")
 
@@ -58,7 +58,7 @@ async def get_info():
     Returns basic information about the service and its runtime configuration.
     """
     # TODO: version should either be separate call, or derived from the a file stamped during the build.
-    service_manifest = get_service_manifest()
+    service_description = get_service_description()
     config_copy = config().copy(deep=True)
     config_copy.orcid.clientId = "REDACTED"
     config_copy.orcid.clientSecret = "REDACTED"
@@ -68,7 +68,7 @@ async def get_info():
     # NB we can mix dict and model here.
     return InfoResponse.parse_obj(
         {
-            "service-manifest": service_manifest,
+            "service-description": service_description,
             "config": config_copy,
             "git-info": git_info,
         }

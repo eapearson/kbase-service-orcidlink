@@ -4,7 +4,7 @@ from typing import Optional
 
 import toml
 from orcidlink.lib.utils import module_dir
-from orcidlink.model import ServiceManifest
+from orcidlink.model import ServiceDescription
 from pydantic import BaseModel, Field
 
 
@@ -102,10 +102,10 @@ def config(reload: bool = False) -> Config:
     return GLOBAL_CONFIG_MANAGER.config(reload)
 
 
-def get_service_manifest() -> ServiceManifest:
-    manifest_path = os.path.join(module_dir(), "MANIFEST.toml")
-    with open(manifest_path, "r") as manifest_file:
-        return ServiceManifest.parse_obj(toml.load(manifest_file))
+def get_service_description() -> ServiceDescription:
+    file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
+    with open(file_path, "r") as file:
+        return ServiceDescription.parse_obj(toml.load(file))
 
 
 def get_git_info() -> GitInfo:

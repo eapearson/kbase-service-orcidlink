@@ -91,7 +91,7 @@ class LinkRecordPublic(BaseModel):
 # Config
 
 
-class ServiceManifest(BaseModel):
+class ServiceDescription(BaseModel):
     module_name: str = Field(alias="module-name")
     description: str = Field(...)
     language: str = Field(...)
