@@ -16,7 +16,7 @@ jobs:
         run: ./Taskfile black
 
       - name: Generate openapi.json and compare to stored one
-        run: ./Taskfile compare-openapi
+        run: ./Taskfile check-openapi
 
       # Run tests
       - name: Run all tests
