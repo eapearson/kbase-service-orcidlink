@@ -103,11 +103,14 @@ function run-image {
     -e MONGO_DATABASE=orcidlink \
     -e MONGO_USERNAME=dev \
     -e MONGO_PASSWORD=d3v \
+    --pull always \
     --stop-signal SIGINT \
+    --dns 8.8.8.8 \
     --network kbase-dev \
     --name orcidlink \
     --hostname orcidlink \
-    "${IMAGE:-kbase/orcidlink:dev}"
+    --rm \
+    "${1:-kbase/orcidlink:dev}"
 }
 
 function help {
