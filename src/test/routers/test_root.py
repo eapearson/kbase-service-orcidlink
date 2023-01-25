@@ -8,13 +8,17 @@ from test.data.utils import load_data_file, load_data_json
 client = TestClient(app, raise_server_exceptions=False)
 
 config_yaml = load_data_file("config1.toml")
-manifest_toml = load_data_file("manifest1.toml")
+service_description_toml = load_data_file("service_description1.toml")
+gitinfo_toml = load_data_file("git_info1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
-    fs.create_file("/kb/module/MANIFEST.toml", contents=manifest_toml)
+    fs.create_file(
+        "/kb/module/SERVICE_DESCRIPTION.toml", contents=service_description_toml
+    )
+    fs.create_file("/kb/module/config/git-info.toml", contents=gitinfo_toml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
@@ -42,6 +46,8 @@ def test_main_info(fake_fs):
     response = client.get("/info")
     assert response.status_code == 200
     result = response.json()
-    manifest = result["service-manifest"]
-    assert "module-name" in manifest
-    assert manifest["module-name"] == "ORCIDLink"
+    service_description = result["service-description"]
+    assert "module-name" in service_description
+    assert service_description["module-name"] == "ORCIDLink"
+    git_info = result["git-info"]
+    assert git_info["author_name"] == "Foo Bar"

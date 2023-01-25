@@ -95,7 +95,6 @@ class KBaseAuth(object):
             # but some truly internal server error.
             # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
             # are 500.
-            print("ERROR", self.url, response.text)
             raise KBaseAuthException(f"Error decoding JSON response: {str(ex)}")
 
         if not response.is_success:

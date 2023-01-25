@@ -1,9 +1,10 @@
 import os
 import threading
+from typing import Optional
 
 import toml
 from orcidlink.lib.utils import module_dir
-from orcidlink.model import ServiceManifest
+from orcidlink.model import ServiceDescription
 from pydantic import BaseModel, Field
 
 
@@ -56,6 +57,18 @@ class Config(BaseModel):
     module: ModuleConfig = Field(...)
 
 
+class GitInfo(BaseModel):
+    commit_hash: str = Field(...)
+    commit_hash_abbreviated: str = Field(...)
+    author_name: str = Field(...)
+    author_date: int = Field(...)
+    committer_name: str = Field(...)
+    committer_date: int = Field(...)
+    url: str = Field(...)
+    branch: str = Field(...)
+    tag: Optional[str] = Field(default=None)
+
+
 class ConfigManager:
     def __init__(self, config_path: str):
         self.config_path = config_path
@@ -89,7 +102,13 @@ def config(reload: bool = False) -> Config:
     return GLOBAL_CONFIG_MANAGER.config(reload)
 
 
-def get_service_manifest() -> ServiceManifest:
-    manifest_path = os.path.join(module_dir(), "MANIFEST.toml")
-    with open(manifest_path, "r") as manifest_file:
-        return ServiceManifest.parse_obj(toml.load(manifest_file))
+def get_service_description() -> ServiceDescription:
+    file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
+    with open(file_path, "r") as file:
+        return ServiceDescription.parse_obj(toml.load(file))
+
+
+def get_git_info() -> GitInfo:
+    path = os.path.join(module_dir(), "config/git-info.toml")
+    with open(path, "r") as fin:
+        return GitInfo.parse_obj(toml.load(fin))

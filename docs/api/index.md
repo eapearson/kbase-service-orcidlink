@@ -469,10 +469,17 @@ See [the error docs](docs/errors.md) for more information.
 
 
 
+<a name="header_type_gitinfo"></a>
+##### GitInfo
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>commit_hash</td><td>string</td><td>✓</td></tr><tr><td>commit_hash_abbreviated</td><td>string</td><td>✓</td></tr><tr><td>author_name</td><td>string</td><td>✓</td></tr><tr><td>author_date</td><td>integer</td><td>✓</td></tr><tr><td>committer_name</td><td>string</td><td>✓</td></tr><tr><td>committer_date</td><td>integer</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>branch</td><td>string</td><td>✓</td></tr><tr><td>tag</td><td>string</td><td></td></tr></tbody></table>
+
+
+
 <a name="header_type_inforesponse"></a>
 ##### InfoResponse
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>service-manifest</td><td><a href="#user-content-header_type_servicemanifest">ServiceManifest</a></td><td>✓</td></tr><tr><td>config</td><td><a href="#user-content-header_type_config">Config</a></td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>service-description</td><td><a href="#user-content-header_type_servicedescription">ServiceDescription</a></td><td>✓</td></tr><tr><td>config</td><td><a href="#user-content-header_type_config">Config</a></td><td>✓</td></tr><tr><td>git-info</td><td><a href="#user-content-header_type_gitinfo">GitInfo</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -567,8 +574,8 @@ Represents a work record that is going to be added to ORCID.
 
 
 
-<a name="header_type_servicemanifest"></a>
-##### ServiceManifest
+<a name="header_type_servicedescription"></a>
+##### ServiceDescription
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>module-name</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr><tr><td>language</td><td>string</td><td>✓</td></tr></tbody></table>
 
