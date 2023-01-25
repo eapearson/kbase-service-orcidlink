@@ -15,6 +15,9 @@ jobs:
       - name: Run "black" to ensure is formatted correctly
         run: ./Taskfile black
 
+      - name: Generate openapi.json and compare to stored one
+        run: ./Taskfile compare-openapi
+
       # Run tests
       - name: Run all tests
         run: ./Taskfile test

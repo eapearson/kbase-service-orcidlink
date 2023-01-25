@@ -31,16 +31,16 @@ class KBaseAuth(object):
 
     def __init__(
         self,
-        auth_url: Optional[str] = None,
+        url: Optional[str] = None,
         cache_max_size: Optional[int] = None,
         cache_lifetime: Optional[int] = None,
     ):
         """
         Constructor
         """
-        if auth_url is None:
-            raise TypeError("missing required named argument 'auth_url'")
-        self.auth_url: str = auth_url
+        if url is None:
+            raise TypeError("missing required named argument 'url'")
+        self.url: str = url
 
         if cache_max_size is None:
             raise TypeError("missing required named argument 'cache_max_size'")
@@ -70,8 +70,11 @@ class KBaseAuth(object):
         # TODO: timeout needs to be configurable
         try:
             response = httpx.get(
-                self.auth_url, headers={"authorization": token}, timeout=10000
+                self.url, headers={"authorization": token}, timeout=10000
             )
+
+            # if response.status_code != 200:
+
             # except httpx.HTTPStatusError:
             #     # Note that here we are raising the default exception for the
             #     # httpx library in the case that a deep internal server error
@@ -92,6 +95,7 @@ class KBaseAuth(object):
             # but some truly internal server error.
             # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
             # are 500.
+            print("ERROR", self.url, response.text)
             raise KBaseAuthException(f"Error decoding JSON response: {str(ex)}")
 
         if not response.is_success:

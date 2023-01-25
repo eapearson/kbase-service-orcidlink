@@ -19,12 +19,12 @@ from orcidlink.lib.utils import current_time_millis
 from orcidlink.model import (
     LinkRecord,
     LinkingSessionComplete,
+    LinkingSessionCompletePublic,
     LinkingSessionInitial,
     LinkingSessionStarted,
     SimpleSuccess,
 )
 from orcidlink.service_clients.ORCIDClient import AuthorizeParams, orcid_oauth
-from orcidlink.service_clients.auth import get_username
 from orcidlink.storage.storage_model import storage_model
 from pydantic import BaseModel, Field
 from starlette.responses import RedirectResponse
@@ -145,7 +145,9 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     responses={
         200: {
             "description": "Returns the linking session",
-            "model": LinkingSessionStarted | LinkingSessionInitial,
+            "model": LinkingSessionStarted
+            | LinkingSessionInitial
+            | LinkingSessionCompletePublic,
         },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -165,16 +167,19 @@ async def get_linking_session(
 
     Returns the linking session record identified by the given linking session id,
     as long as it is owned by the user associated with the given KBase auth token.
+
+    Note that the
     """
     _, token_info = ensure_authorization(authorization)
 
     linking_session = get_linking_session_record(session_id, authorization)
     if type(linking_session) == LinkingSessionComplete:
-        return error_response(
-            "session-complete",
-            "Linking Session Completed",
-            "Attempt to return a completed linking session rejected",
-        )
+        linking_session = LinkingSessionCompletePublic.parse_obj(linking_session.dict())
+        # return error_response(
+        #     "session-complete",
+        #     "Linking Session Completed",
+        #     "Attempt to return a completed linking session rejected",
+        # )
     return linking_session
 
 
@@ -246,7 +251,7 @@ async def finish_linking_session(
     The final stage of the interactive linking session; called when the user confirms the creation
     of the link, after OAuth flow has finished.
     """
-    authorization, _ = ensure_authorization(authorization)
+    authorization, token_info = ensure_authorization(authorization)
 
     session_record = get_linking_session_record(session_id, authorization)
 
@@ -258,7 +263,7 @@ async def finish_linking_session(
             status_code=400,
         )
 
-    username = get_username(authorization)
+    username = token_info.user
     created_at = current_time_millis()
     expires_at = created_at + session_record.orcid_auth.expires_in * 1000
 

@@ -149,7 +149,7 @@ def ensure_authorization(authorization: str | None) -> Tuple[str, TokenInfo]:
             status_code=401,
         )
     auth = KBaseAuth(
-        auth_url=config().services.Auth2.url,
+        url=config().services.Auth2.url,
         cache_lifetime=int(config().services.Auth2.tokenCacheLifetime / 1000),
         cache_max_size=config().services.Auth2.tokenCacheMaxSize,
     )
