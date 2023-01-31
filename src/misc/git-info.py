@@ -136,6 +136,13 @@ def git_tag(commit_hash):
         return None
 
 
+def git_config():
+    output = run_command(
+        ["git", "config", "--global", "--add", "safe.directory", "*"]
+    )
+    return output.rstrip("\n")
+
+
 def save_info(info):
     with open("/kb/module/config/git-info.toml", "w") as fout:
         toml.dump(
@@ -145,6 +152,7 @@ def save_info(info):
 
 
 def main():
+    git_config()
     info = git_info()
     url = git_url()
     info["url"] = url
