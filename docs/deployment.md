@@ -51,14 +51,14 @@ The ORCID Link service should be available with a service path suffix of `orcidl
 
 This service uses GitHub Actions (GHA) to provide workflows for testing, image building, and image hosting. 
 
-| event                     | file                              | test | build | push | tag        |
-|---------------------------|-----------------------------------|------|-------|------|------------|
- | pr to develop             | `pull-request-develop.yml`        | ✓    | ✓     |      |            |
- | pr to develop merged      | `pull-request-develop-merged.yml` | ✓    | ✓     | ✓    | develop    |
- | pr develop to main        | `pull-request-main.yml`           | ✓    | ✓     | ✓    |            |
- | pr develop to main merged | `pull-request-main-merged.yml`    | ✓    | ✓     | ✓    | latest-rc  |
- | release against main      | `release-main.yml`                | ✓    | ✓     | ✓    | v#.#.#     |
- | manual                    | `manual.yml`                      | ✓    | ✓     | ✓    | ref-branch |
+| event                     | file                              | test | build | push | tag               |
+|---------------------------|-----------------------------------|------|-------|------|-------------------|
+ | pr to develop             | `pull-request-develop.yml`        | ✓    | ✓     |      |                   |
+ | pr to develop merged      | `pull-request-develop-merged.yml` | ✓    | ✓     | ✓    | develop           |
+ | pr develop to main        | `pull-request-main.yml`           | ✓    | ✓     | ✓    |                   |
+ | pr develop to main merged | `pull-request-main-merged.yml`    | ✓    | ✓     | ✓    | latest-rc         |
+ | release against main      | `release-main.yml`                | ✓    | ✓     | ✓    | v#.#.#<br/>latest |
+ | manual                    | `manual.yml`                      | ✓    | ✓     | ✓    | ref-*branch*      |
 
 Each event is captured by an individual workflow file. Each workflow file captures the event, and calls reusable workflow files to conduct the actual work.
 

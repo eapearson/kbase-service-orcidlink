@@ -43,6 +43,8 @@ def dict_diff(dict1: dict, dict2: dict, context=[]):
     keys2 = list(dict2.keys())
     list_diff(keys1, keys2, [*context, {"dict": "keys"}])
     for key in keys1:
+        if key not in dict2:
+            raise ValueError(f"key '{key}' not found in dict 2")
         el1 = dict1[key]
         el2 = dict2[key]
         if isinstance(el1, dict):

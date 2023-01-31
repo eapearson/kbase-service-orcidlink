@@ -111,7 +111,7 @@ Provides a web interface to the auto-generated API docs.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successfully returned the api docs</td><td>text/html</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successfully returned the api docs</td><td>text/html</td></tr><tr><td>404</td><td>Not Found</td><td><i>none</i></td></tr></tbody></table>
 
 
 ---
@@ -343,14 +343,14 @@ Returns a 404 Not Found if the user is not linked
 <a name="header_works"></a>
 ### works
 Add, remove, update 'works' records for a user's ORCID Account
-<a name="header_get-/works/{put_code}"></a>
-#### GET /works/{put_code}
+<a name="header_get-/orcid/works/{put_code}"></a>
+#### GET /orcid/works/{put_code}
 Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>The ORCID `put code` for the work record to fetch</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>The ORCID `put code` for the work record to fetch</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -359,14 +359,14 @@ Fetch the work record, identified by `put_code`, for the user associated with th
 
 
 ---
-<a name="header_delete-/works/{put_code}"></a>
-#### DELETE /works/{put_code}
+<a name="header_delete-/orcid/works/{put_code}"></a>
+#### DELETE /orcid/works/{put_code}
 n/a
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>n/a</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>n/a</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -375,14 +375,14 @@ n/a
 
 
 ---
-<a name="header_get-/works"></a>
-#### GET /works
+<a name="header_get-/orcid/works"></a>
+#### GET /orcid/works
 Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -391,14 +391,14 @@ Fetch all of the "work" records from a user's ORCID account if their KBase accou
 
 
 ---
-<a name="header_put-/works"></a>
-#### PUT /works
+<a name="header_put-/orcid/works"></a>
+#### PUT /orcid/works
 Update a work record; the `work_update` contains the `put code`.
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -407,14 +407,14 @@ Update a work record; the `work_update` contains the `put code`.
 
 
 ---
-<a name="header_post-/works"></a>
-#### POST /works
+<a name="header_post-/orcid/works"></a>
+#### POST /orcid/works
 n/a
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>n/a</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -439,6 +439,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
+<a name="header_type_basemodel"></a>
+##### BaseModel
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
+
+
+
 <a name="header_type_config"></a>
 ##### Config
 
@@ -458,7 +465,7 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 A generic error object used for all error responses.
 
 See [the error docs](docs/errors.md) for more information.
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td>object</td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><a href="#user-content-header_type_basemodel">BaseModel</a></td><td></td></tr></tbody></table>
 
 
 
@@ -571,6 +578,13 @@ Represents a work record that is going to be added to ORCID.
 ##### ORCIDWork
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td></td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td>string</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidworkgroup"></a>
+##### ORCIDWorkGroup
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>works</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 

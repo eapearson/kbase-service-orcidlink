@@ -4,10 +4,13 @@ The SDK version has been modified to integrate with this codebase, such as
 using httpx, pydantic models.
 """
 import json
-from typing import Optional
+from typing import Dict, Optional
 
 import httpx
 from cache3 import SafeCache  # type: ignore
+from orcidlink import model
+from orcidlink.lib.errors import ServiceError
+from orcidlink.lib.responses import ErrorResponse
 from pydantic import BaseModel, Field
 
 global_cache = None
@@ -20,7 +23,7 @@ class TokenInfo(BaseModel):
     created: int = Field(...)
     name: str | None = Field(...)
     user: str = Field(...)
-    custom: dict = Field(...)
+    custom: Dict[str, str] = Field(...)
     cachefor: int = Field(...)
 
 
@@ -60,8 +63,9 @@ class KBaseAuth(object):
         self.cache = global_cache
 
     def get_token_info(self, token: str) -> TokenInfo:
-        if token is None or token == "":
-            raise KBaseAuthMissingToken("Token may not be empty")
+
+        if token == "":
+            raise TypeError("Token may not be empty")
 
         cache_value = self.cache.get(token)
         if cache_value is not None:
@@ -72,20 +76,6 @@ class KBaseAuth(object):
             response = httpx.get(
                 self.url, headers={"authorization": token}, timeout=10000
             )
-
-            # if response.status_code != 200:
-
-            # except httpx.HTTPStatusError:
-            #     # Note that here we are raising the default exception for the
-            #     # httpx library in the case that a deep internal server error
-            #     # is thrown without an actual json response. In other words, the
-            #     # error is not a JSON-RPC error thrown by the auth2 service itself,
-            #     # but some truly internal server error.
-            #     # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
-            #     # are 500.
-            #     response.raise_for_status()
-            #
-            # try:
             json_response = response.json()
         except json.JSONDecodeError as ex:
             # Note that here we are raising the default exception for the
@@ -95,16 +85,41 @@ class KBaseAuth(object):
             # but some truly internal server error.
             # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
             # are 500.
-            raise KBaseAuthException(f"Error decoding JSON response: {str(ex)}")
-
+            raise ServiceError(
+                error=ErrorResponse[BaseModel](
+                    code="jsonDecodeError",
+                    title="Error Decoding Response",
+                    message="The auth service responded with non-JSON content",
+                    data=model.JSONDecodeErrorData(
+                        status_code=response.status_code, error=str(ex)
+                    ),
+                ),
+                status_code=502,
+            )
+            # raise make_service_error(
+            #     "jsonDecodeError",
+            #     "Error Decoding Response",
+            #     "The auth service responded with non-JSON content",
+            #     {
+            #         "status_code": response.status_code,
+            #         "error": str(ex)
+            #     },
+            #     502
+            # )
+            # raise ServiceError({
+            #    code: "jsonDecodeError",
+            #
+            # }, 500)
+            # raise InvalidResponse(f"Error decoding JSON response: {str(ex)}")
         if not response.is_success:
             # The auth service should return a 500 for all errors
             # Make an attempt to handle a specific auth error
             appcode = json_response["error"]["appcode"]
+            message = json_response["error"]["message"]
             if appcode == 10020:
                 raise KBaseAuthInvalidToken("Invalid token")
             else:
-                raise KBaseAuthException(json_response["error"]["message"])
+                raise KBaseAuthError("Auth Service Error", appcode, message)
 
         token_info: TokenInfo = TokenInfo.parse_obj(json_response)
         self.cache.set(token, token_info.dict(), timeout=token_info.cachefor)
@@ -114,13 +129,30 @@ class KBaseAuth(object):
         return self.get_token_info(token).user
 
 
-class KBaseAuthException(Exception):
-    pass
+# class InvalidResponse(ServiceError):
+#     """
+#     Raised when a remote service returns an invalid response. E.g. a 500 error with a text response, when the
+#     service is only defined to return JSON.
+#     """
+#
+#     pass
 
 
-class KBaseAuthMissingToken(KBaseAuthException):
-    pass
+class KBaseAuthError(Exception):
+    def __init__(self, message: str, code: int, original_message: str):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.original_message = original_message
+
+    def to_dict(self) -> Dict[str, str | int]:
+        return {
+            "code": self.code,
+            "message": self.message,
+            "original_message": self.original_message,
+        }
 
 
-class KBaseAuthInvalidToken(KBaseAuthException):
-    pass
+class KBaseAuthInvalidToken(KBaseAuthError):
+    def __init__(self, original_message: str):
+        super().__init__("Invalid token", 1020, original_message)

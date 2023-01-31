@@ -1,3 +1,11 @@
+"""
+
+Provides all support for creating an ORCID link.
+
+This module implements an OAUTH flow and related services required to create an
+ORCID Link and to fit into various front end usage scenarios.
+
+"""
 import json
 import uuid
 from urllib.parse import urlencode
@@ -10,7 +18,6 @@ from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     ErrorResponse,
     STD_RESPONSES,
-    ensure_authorization,
     error_response,
     success_response_no_data,
     ui_error_response,
@@ -24,10 +31,11 @@ from orcidlink.model import (
     LinkingSessionStarted,
     SimpleSuccess,
 )
-from orcidlink.service_clients.ORCIDClient import AuthorizeParams, orcid_oauth
+from orcidlink.service_clients.auth import ensure_authorization
+from orcidlink.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 from pydantic import BaseModel, Field
-from starlette.responses import RedirectResponse
+from starlette.responses import JSONResponse, RedirectResponse, Response
 
 router = APIRouter(prefix="/linking-sessions")
 
@@ -114,7 +122,9 @@ class CreateLinkingSessionResult(BaseModel):
     },
     tags=["linking-sessions"],
 )
-async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADER):
+async def create_linking_session(
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> CreateLinkingSessionResult | JSONResponse:
     """
     Create Linking Session
 
@@ -161,7 +171,7 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
 )
 async def get_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT, authorization: str = AUTHORIZATION_HEADER
-):
+) -> LinkingSessionStarted | LinkingSessionInitial | LinkingSessionCompletePublic | JSONResponse:
     """
     Get Linking Session
 
@@ -201,7 +211,7 @@ async def get_linking_session(
 async def delete_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT,
     authorization: str | None = AUTHORIZATION_HEADER,
-):
+) -> JSONResponse | Response:
     """
     Delete Linking Session
 
@@ -244,7 +254,7 @@ async def delete_linking_session(
 async def finish_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT,
     authorization: str | None = AUTHORIZATION_HEADER,
-):
+) -> SimpleSuccess | JSONResponse:
     """
     Finish Linking Session
 
@@ -310,7 +320,8 @@ async def start_linking_session(
     skip_prompt: str = SKIP_PROMPT_QUERY,
     kbase_session: str = KBASE_SESSION_COOKIE,
     kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
-):
+) -> RedirectResponse | JSONResponse:
+    # TODO: should be no json responses here!
     """
     Start Linking Session
 
@@ -420,7 +431,8 @@ async def linking_sessions_continue(
     | None = Query(
         default=None, description="For an error case, contains an error code parameter"
     ),
-) -> RedirectResponse:
+) -> RedirectResponse | JSONResponse:
+    # TODO: should be no json responses here@
     """
     Continue Linking Session
 

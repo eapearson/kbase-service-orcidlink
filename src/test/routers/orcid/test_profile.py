@@ -2,10 +2,11 @@ import contextlib
 
 import pytest
 from fastapi.testclient import TestClient
+from orcidlink import model
 from orcidlink.lib.config import config
 from orcidlink.main import app
-from orcidlink.model import LinkRecord, ORCIDProfile
-from orcidlink.routers.orcid import get_profile_to_ORCIDProfile
+from orcidlink.routers.orcid.profile import get_profile_to_ORCIDProfile
+from orcidlink.service_clients import orcid_api
 from orcidlink.storage import storage_model
 from test.data.utils import load_data_file, load_data_json, load_test_data
 from test.mocks.mock_contexts import (
@@ -47,7 +48,7 @@ def around_tests(fake_fs):
 def create_link():
     sm = storage_model.storage_model()
     sm.db.links.drop()
-    sm.create_link_record(LinkRecord.parse_obj(TEST_LINK))
+    sm.create_link_record(model.LinkRecord.parse_obj(TEST_LINK))
 
 
 #
@@ -57,27 +58,26 @@ def create_link():
 
 def test_router_profile_to_normalized():
     orcid_id = "0000-0003-4997-3076"
-    raw_profile = load_test_data("orcid", "profile")
-    model_profile = load_test_data("orcid", "profile-model")
-    email = load_test_data("orcid", "email")
+    raw_profile = orcid_api.ORCIDProfile.parse_obj(load_test_data("orcid", "profile"))
+    model_profile = model.ORCIDProfile.parse_obj(
+        load_test_data("orcid", "profile-model")
+    )
     assert (
-        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
-        == ORCIDProfile.parse_obj(model_profile).dict()
+        get_profile_to_ORCIDProfile(orcid_id, raw_profile).dict()
+        == model_profile.dict()
     )
 
 
 def test_router_profile_to_normalized_single_affiliation():
     orcid_id = "0000-0003-4997-3076"
-    raw_profile = load_test_data("orcid", "profile-single-affiliation")
-    model_profile = load_test_data("orcid", "profile-model-single-affiliation")
-    email = load_test_data("orcid", "email")
-    assert (
-        get_profile_to_ORCIDProfile(orcid_id, raw_profile, email).dict()
-        == ORCIDProfile.parse_obj(model_profile).dict()
-    )
+    orcid_data = load_test_data("orcid", "profile-single-affiliation")
+    raw_profile = orcid_api.ORCIDProfile.parse_obj(orcid_data)
+    model_data = load_test_data("orcid", "profile-model-single-affiliation")
+    model_profile = model.ORCIDProfile.parse_obj(model_data)
+    assert get_profile_to_ORCIDProfile(orcid_id, raw_profile) == model_profile
 
 
-# def test_get_profile():
+# def xest_get_profile():
 #     server = MockServer("127.0.0.1", MockORCIDOAuth2)
 #     server.start_service()
 #     try:
@@ -85,7 +85,7 @@ def test_router_profile_to_normalized_single_affiliation():
 #             url=server.base_url(),
 #             access_token="access_token"
 #         )
-#         with pytest.raises(ErrorException, match="Error fetching data from ORCID Auth api"):
+#         with pytest.raises(ServiceError, match="Error fetching data from ORCID Auth api"):
 #             client.revoke_token()
 #     except Exception as ex:
 #         pytest.fail(f"Unexpected exception raised: {str(ex)}")

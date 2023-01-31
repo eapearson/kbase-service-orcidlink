@@ -29,3 +29,17 @@
 #     with pytest.raises(ValueError) as ex:
 #         ServiceError(code=123, name="foo")
 #     assert str(ex.value) == 'The "message" named argument is required'
+import pytest
+
+from orcidlink.lib.errors import ServiceError, make_service_error
+
+
+def test_make_service_error():
+    with pytest.raises(ServiceError, match="message") as ex:
+        raise make_service_error(
+            "codex", "title", "message", data={"foo": "bar"}, status_code=123
+        )
+
+    response = ex.value.get_response()
+    assert response is not None
+    assert response.status_code == 123

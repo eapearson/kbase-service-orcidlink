@@ -30,7 +30,7 @@ class StatusResponse(BaseModel):
         }
     },
 )
-async def get_status():
+async def get_status() -> StatusResponse:
     """
     Get Service Status
 
@@ -51,7 +51,7 @@ class InfoResponse(BaseModel):
 
 
 @router.get("/info", response_model=InfoResponse, tags=["misc"])
-async def get_info():
+async def get_info() -> InfoResponse:
     """
     Get Service Information
 
@@ -73,6 +73,3 @@ async def get_info():
             "git-info": git_info,
         }
     )
-
-
-# Docs
