@@ -1207,11 +1207,6 @@
                     }
                 }
             },
-            "BaseModel": {
-                "title": "BaseModel",
-                "type": "object",
-                "properties": {}
-            },
             "Config": {
                 "title": "Config",
                 "required": [
@@ -1285,7 +1280,7 @@
                         "description": "A human-readable error message, meant to be displayed to an end user or developer"
                     },
                     "data": {
-                        "$ref": "#/components/schemas/BaseModel"
+                        "$ref": "#/components/schemas/ServiceBaseModel"
                     }
                 },
                 "description": "A generic error object used for all error responses.\n\nSee [the error docs](docs/errors.md) for more information."
@@ -1849,6 +1844,11 @@
                         }
                     }
                 }
+            },
+            "ServiceBaseModel": {
+                "title": "ServiceBaseModel",
+                "type": "object",
+                "properties": {}
             },
             "ServiceDescription": {
                 "title": "ServiceDescription",

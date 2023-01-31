@@ -11,12 +11,13 @@ from cache3 import SafeCache  # type: ignore
 from orcidlink import model
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import ErrorResponse
-from pydantic import BaseModel, Field
+from orcidlink.lib.type import ServiceBaseModel
+from pydantic import Field
 
 global_cache = None
 
 
-class TokenInfo(BaseModel):
+class TokenInfo(ServiceBaseModel):
     type: str = Field(...)
     id: str = Field(...)
     expires: int = Field(...)
@@ -86,7 +87,7 @@ class KBaseAuth(object):
             # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
             # are 500.
             raise ServiceError(
-                error=ErrorResponse[BaseModel](
+                error=ErrorResponse[ServiceBaseModel](
                     code="jsonDecodeError",
                     title="Error Decoding Response",
                     message="The auth service responded with non-JSON content",
@@ -96,21 +97,6 @@ class KBaseAuth(object):
                 ),
                 status_code=502,
             )
-            # raise make_service_error(
-            #     "jsonDecodeError",
-            #     "Error Decoding Response",
-            #     "The auth service responded with non-JSON content",
-            #     {
-            #         "status_code": response.status_code,
-            #         "error": str(ex)
-            #     },
-            #     502
-            # )
-            # raise ServiceError({
-            #    code: "jsonDecodeError",
-            #
-            # }, 500)
-            # raise InvalidResponse(f"Error decoding JSON response: {str(ex)}")
         if not response.is_success:
             # The auth service should return a 500 for all errors
             # Make an attempt to handle a specific auth error
@@ -138,19 +124,27 @@ class KBaseAuth(object):
 #     pass
 
 
+class KBaseAuthErrorInfo(ServiceBaseModel):
+    code: int = Field(...)
+    message: str = Field(...)
+    original_message: str = Field(alias="original-message")
+
+
 class KBaseAuthError(Exception):
+    message: str
+    code: int
+    original_message: str
+
     def __init__(self, message: str, code: int, original_message: str):
         super().__init__(message)
         self.code = code
         self.message = message
         self.original_message = original_message
 
-    def to_dict(self) -> Dict[str, str | int]:
-        return {
-            "code": self.code,
-            "message": self.message,
-            "original_message": self.original_message,
-        }
+    def to_obj(self) -> KBaseAuthErrorInfo:
+        return KBaseAuthErrorInfo(
+            code=self.code, message=self.message, original_message=self.original_message
+        )
 
 
 class KBaseAuthInvalidToken(KBaseAuthError):

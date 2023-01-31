@@ -48,7 +48,7 @@ def test_exception_error_response():
         raise Exception("I am exceptional")
     except Exception as ex:
         value = responses.exception_error_response(
-            "codex", "title", ex, data={"some": "data"}, status_code=123
+            "codex", "title", ex, status_code=123
         )
         assert isinstance(value, JSONResponse)
         assert value.status_code == 123
@@ -61,8 +61,6 @@ def test_exception_error_response():
         assert data["code"] == "codex"
         assert data["title"] == "title"
         assert data["message"] == "I am exceptional"
-        assert data["data"]["some"] == "data"
-        assert data["data"]["exception"] == "I am exceptional"
         assert isinstance(data["data"]["traceback"], list)
 
 

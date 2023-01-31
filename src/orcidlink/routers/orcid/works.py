@@ -5,14 +5,17 @@ import httpx
 from fastapi import APIRouter, Body, HTTPException, Path
 from orcidlink import model
 from orcidlink.lib.config import config
-from orcidlink.lib.errors import ServiceError, make_service_error
+from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     AUTH_RESPONSES,
+    ErrorResponse,
     STD_RESPONSES,
     error_response,
     success_response_no_data,
 )
+from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.model import UnknownError
 from orcidlink.service_clients import orcid_api
 from orcidlink.service_clients.auth import ensure_authorization, get_username
 
@@ -48,6 +51,7 @@ def link_record_not_found() -> JSONResponse:
 #
 # Works
 #
+
 
 ##
 # Get a single work from the user linked to the KBase authentication token,
@@ -89,13 +93,22 @@ async def get_work(
     except ServiceError as err:
         return err.get_response()
     except Exception as ex:
-        raise make_service_error(
-            "upstreamError",
-            "Error",
-            "Exception calling ORCID endpoint",
+        raise ServiceError(
+            error=ErrorResponse[ServiceBaseModel](
+                code="upstreamError",
+                title="Error",
+                message="Exception calling ORCID endpoint",
+                data=UnknownError(exception=str(ex)),
+            ),
             status_code=400,
-            data={"exception": str(ex)},
         )
+        # raise make_service_error(
+        #     "upstreamError",
+        #     "Error",
+        #     "Exception calling ORCID endpoint",
+        #     status_code=400,
+        #     data={"exception": str(ex)},
+        # )
 
 
 @router.get(

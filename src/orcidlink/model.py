@@ -14,21 +14,22 @@ documentation.
 
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, Field
+from orcidlink.lib.type import ServiceBaseModel
+from pydantic import Field
 
 
-class SimpleSuccess(BaseModel):
+class SimpleSuccess(ServiceBaseModel):
     ok: bool = Field(...)
 
 
-class ExternalId(BaseModel):
+class ExternalId(ServiceBaseModel):
     type: str = Field(...)
     value: str = Field(...)
     url: str = Field(...)
     relationship: str = Field(...)
 
 
-class ORCIDAuth(BaseModel):
+class ORCIDAuth(ServiceBaseModel):
     access_token: str = Field(...)
     token_type: str = Field(...)
     refresh_token: str = Field(...)
@@ -39,7 +40,7 @@ class ORCIDAuth(BaseModel):
     id_token: str = Field(...)
 
 
-class ORCIDAuthPublic(BaseModel):
+class ORCIDAuthPublic(ServiceBaseModel):
     name: str = Field(...)
     scope: str = Field(...)
     expires_in: int = Field(...)
@@ -58,7 +59,7 @@ class ORCIDAuthPublic(BaseModel):
 type
 
 
-class LinkingSessionInitial(BaseModel):
+class LinkingSessionInitial(ServiceBaseModel):
     session_id: str = Field(...)
     username: str = Field(...)
     created_at: int = Field(...)
@@ -81,21 +82,21 @@ class LinkingSessionCompletePublic(LinkingSessionStarted):
     orcid_auth: ORCIDAuthPublic = Field(...)
 
 
-class SessionInfo(BaseModel):
+class SessionInfo(ServiceBaseModel):
     session_id: str = Field(...)
 
 
 # The Link itself
 
 
-class LinkRecord(BaseModel):
+class LinkRecord(ServiceBaseModel):
     username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
     orcid_auth: ORCIDAuth = Field(...)
 
 
-class LinkRecordPublic(BaseModel):
+class LinkRecordPublic(ServiceBaseModel):
     username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
@@ -105,7 +106,7 @@ class LinkRecordPublic(BaseModel):
 # Config
 
 
-class ServiceDescription(BaseModel):
+class ServiceDescription(ServiceBaseModel):
     module_name: str = Field(alias="module-name")
     description: str = Field(...)
     language: str = Field(...)
@@ -114,7 +115,7 @@ class ServiceDescription(BaseModel):
 # API
 
 
-class ORCIDWork(BaseModel):
+class ORCIDWork(ServiceBaseModel):
     putCode: int = Field(...)
     createdAt: int = Field(...)
     updatedAt: int = Field(...)
@@ -134,20 +135,20 @@ class ORCIDWork(BaseModel):
 # to be identical for each of the work records.
 # We do need to model it correctly, but not quite sure
 # how to interpret it...
-class ORCIDWorkGroup(BaseModel):
+class ORCIDWorkGroup(ServiceBaseModel):
     updatedAt: int = Field(...)
     externalIds: List[ExternalId] = Field(...)
     works: List[ORCIDWork] = Field(...)
 
 
-class ORCIDAffiliation(BaseModel):
+class ORCIDAffiliation(ServiceBaseModel):
     name: str = Field(...)
     role: str = Field(...)
     startYear: str = Field(...)
     endYear: Union[str, None] = Field(default=None)
 
 
-class ORCIDProfile(BaseModel):
+class ORCIDProfile(ServiceBaseModel):
     orcidId: str = Field(...)
     firstName: str = Field(...)
     lastName: str = Field(...)
@@ -157,7 +158,7 @@ class ORCIDProfile(BaseModel):
     emailAddresses: List[str] = Field(...)
 
 
-class NewWork(BaseModel):
+class NewWork(ServiceBaseModel):
     """
     Represents a work record that is going to be added to ORCID.
     """
@@ -179,6 +180,10 @@ class WorkUpdate(NewWork):
     putCode: int = Field(...)
 
 
-class JSONDecodeErrorData(BaseModel):
-    status_code: str = Field(alias="status-code")
+class JSONDecodeErrorData(ServiceBaseModel):
+    status_code: int = Field(alias="status-code")
     error: str = Field(...)
+
+
+class UnknownError(ServiceBaseModel):
+    exception: str = Field(...)

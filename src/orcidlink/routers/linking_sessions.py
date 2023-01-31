@@ -22,6 +22,7 @@ from orcidlink.lib.responses import (
     success_response_no_data,
     ui_error_response,
 )
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import current_time_millis
 from orcidlink.model import (
     LinkRecord,
@@ -34,7 +35,7 @@ from orcidlink.model import (
 from orcidlink.service_clients.auth import ensure_authorization
 from orcidlink.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.storage.storage_model import storage_model
-from pydantic import BaseModel, Field
+from pydantic import Field
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
 router = APIRouter(prefix="/linking-sessions")
@@ -106,7 +107,7 @@ KBASE_SESSION_BACKUP_COOKIE = Cookie(
 #
 
 
-class CreateLinkingSessionResult(BaseModel):
+class CreateLinkingSessionResult(ServiceBaseModel):
     session_id: str = SESSION_ID_FIELD
 
 

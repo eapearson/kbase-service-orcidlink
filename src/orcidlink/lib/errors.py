@@ -2,12 +2,9 @@
 #     description: str = Field(...)
 #     status_code: int = Field(...)
 # : Dict[str, ErrorDefinition]
-from typing import Any, Optional
+from typing import Any
 
 from fastapi.encoders import jsonable_encoder
-from orcidlink.lib.json_file import JSONLikeObject
-from orcidlink.lib.responses import ErrorResponse
-from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 errors = {
@@ -50,7 +47,10 @@ class ServiceError(Exception):
     specific error response.
     """
 
-    def __init__(self, error: ErrorResponse[Any], status_code: int):
+    error: Any
+    status_code: int
+
+    def __init__(self, error: Any, status_code: int):
         super().__init__(error.message)
         self.error = error
         self.status_code = status_code
@@ -89,16 +89,16 @@ class ServiceError(Exception):
 #
 #         # Data is optional.
 #         self.data: Any = data
-def make_service_error(
-    code: str,
-    title: str,
-    message: str,
-    data: Optional[JSONLikeObject] = None,
-    status_code: int = 400,
-) -> ServiceError:
-    return ServiceError(
-        error=ErrorResponse[BaseModel](
-            code=code, title=title, message=message, data=data
-        ),
-        status_code=status_code,
-    )
+# def make_service_error(
+#     code: str,
+#     title: str,
+#     message: str,
+#     data: Optional[JSONLikeObject] = None,
+#     status_code: int = 400,
+# ) -> ServiceError:
+#     return ServiceError(
+#         error=ErrorResponse[BaseModel](
+#             code=code, title=title, message=message, data=data
+#         ),
+#         status_code=status_code,
+#     )

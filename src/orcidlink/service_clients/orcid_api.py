@@ -18,29 +18,25 @@ from orcidlink import model
 from orcidlink.lib.config import config
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import ErrorResponse
-from pydantic import BaseModel, Field
+from orcidlink.lib.type import ServiceBaseModel
+from pydantic import Field
 
 
-class ORCIDAPIBaseModel(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-
-class ORCIDIdentifier(ORCIDAPIBaseModel):
+class ORCIDIdentifier(ServiceBaseModel):
     uri: str = Field(...)
     path: str = Field(...)
     host: str = Field(...)
 
 
-class ORCIDIntValue(ORCIDAPIBaseModel):
+class ORCIDIntValue(ServiceBaseModel):
     value: int = Field(...)
 
 
-class StringValue(ORCIDAPIBaseModel):
+class StringValue(ServiceBaseModel):
     value: str = Field(...)
 
 
-class Date(ORCIDAPIBaseModel):
+class Date(ServiceBaseModel):
     year: StringValue = Field(...)
     month: Optional[StringValue] = Field(default=None)
     day: Optional[StringValue] = Field(default=None)
@@ -49,7 +45,7 @@ class Date(ORCIDAPIBaseModel):
 Visibility: TypeAlias = Literal["public", "limited", "private"]
 
 
-class ORCIDPersonName(ORCIDAPIBaseModel):
+class ORCIDPersonName(ServiceBaseModel):
     created_date: ORCIDIntValue = Field(alias="created-date")
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     given_names: StringValue = Field(alias="given-names")
@@ -60,13 +56,13 @@ class ORCIDPersonName(ORCIDAPIBaseModel):
     path: str = Field(...)
 
 
-class ORCIDOtherNames(ORCIDAPIBaseModel):
+class ORCIDOtherNames(ServiceBaseModel):
     last_modified_date: Optional[ORCIDIntValue] = Field(default=None)
     other_name: List[str] = Field(alias="other-name")
     path: str = Field(...)
 
 
-class ORCIDBiography(ORCIDAPIBaseModel):
+class ORCIDBiography(ServiceBaseModel):
     created_date: ORCIDIntValue = Field(alias="created-date")
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     content: str = Field(...)
@@ -74,7 +70,7 @@ class ORCIDBiography(ORCIDAPIBaseModel):
     path: str = Field(...)
 
 
-class ResearcherURLs(ORCIDAPIBaseModel):
+class ResearcherURLs(ServiceBaseModel):
     last_modified_date: Optional[ORCIDIntValue] = Field(
         default=None, alias="last-modified-date"
     )
@@ -82,7 +78,7 @@ class ResearcherURLs(ORCIDAPIBaseModel):
     path: str = Field(...)
 
 
-class ORCIDSource(ORCIDAPIBaseModel):
+class ORCIDSource(ServiceBaseModel):
     source_orcid: Optional[ORCIDIdentifier] = Field(default=None, alias="source-orcid")
     source_client_id: Optional[ORCIDIdentifier] = Field(
         default=None, alias="source-client-id"
@@ -94,7 +90,7 @@ class ORCIDSource(ORCIDAPIBaseModel):
     # assertion_origin_name
 
 
-class ORCIDEmail(ORCIDAPIBaseModel):
+class ORCIDEmail(ServiceBaseModel):
     created_date: ORCIDIntValue = Field(alias="created-date")
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     source: ORCIDSource = Field(...)
@@ -106,13 +102,13 @@ class ORCIDEmail(ORCIDAPIBaseModel):
     put_code: Optional[int] = Field(default=None, alias="put-code")
 
 
-class ORCIDEmails(ORCIDAPIBaseModel):
+class ORCIDEmails(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     email: List[ORCIDEmail] = Field(...)
     path: str = Field(...)
 
 
-class ORCIDPerson(ORCIDAPIBaseModel):
+class ORCIDPerson(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     name: ORCIDPersonName = Field(...)
     other_names: ORCIDOtherNames = Field(..., alias="other-names")
@@ -125,12 +121,12 @@ class ORCIDPerson(ORCIDAPIBaseModel):
     path: str = Field(...)
 
 
-class ORCIDExternalIdNormalized(ORCIDAPIBaseModel):
+class ORCIDExternalIdNormalized(ServiceBaseModel):
     value: str = Field(...)
     transient: bool = Field(...)
 
 
-class ORCIDExternalId(ORCIDAPIBaseModel):
+class ORCIDExternalId(ServiceBaseModel):
     external_id_type: str = Field(alias="external-id-type")
     external_id_value: str = Field(alias="external-id-value")
     # TODO: this is a case of a field which is present when fetching, but
@@ -143,17 +139,17 @@ class ORCIDExternalId(ORCIDAPIBaseModel):
     external_id_relationship: str = Field(alias="external-id-relationship")
 
 
-class ExternalIds(ORCIDAPIBaseModel):
+class ExternalIds(ServiceBaseModel):
     external_id: List[ORCIDExternalId] = Field(alias="external-id")
 
 
-class ORCIDTitle(ORCIDAPIBaseModel):
+class ORCIDTitle(ServiceBaseModel):
     title: StringValue = Field(...)
     # subTitle: Optional
     # translated_title
 
 
-class NewWork(ORCIDAPIBaseModel):
+class NewWork(ServiceBaseModel):
     type: str = Field(...)
     title: ORCIDTitle = Field(...)
     journal_title: Optional[StringValue] = Field(default=None, alias="journal-title")
@@ -191,32 +187,32 @@ class WorkSummary(PersistedWorkBase):
     path: str = Field(...)
 
 
-class WorkGroup(ORCIDAPIBaseModel):
+class WorkGroup(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     external_ids: ExternalIds = Field(alias="external-ids")
     work_summary: List[WorkSummary] = Field(alias="work-summary")
 
 
-class Works(ORCIDAPIBaseModel):
+class Works(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     group: List[WorkGroup] = Field(...)
     path: str = Field(...)
 
 
-class ORCIDOrganizationAddress(ORCIDAPIBaseModel):
+class ORCIDOrganizationAddress(ServiceBaseModel):
     city: Optional[str] = Field(default=None)
     region: Optional[str] = Field(default=None)
     country: Optional[str] = Field(default=None)
 
 
-class ORCIDDisambiguatedOrganization(ORCIDAPIBaseModel):
+class ORCIDDisambiguatedOrganization(ServiceBaseModel):
     disambiguated_organization_identifier: str = Field(
         alias="disambiguated-organization-identifier"
     )
     disambiguation_source: str = Field(alias="disambiguation-source")
 
 
-class ORCIDOrganization(ORCIDAPIBaseModel):
+class ORCIDOrganization(ServiceBaseModel):
     name: str = Field(...)
     address: ORCIDOrganizationAddress = Field(...)
     disambiguated_organization: ORCIDDisambiguatedOrganization = Field(
@@ -224,7 +220,7 @@ class ORCIDOrganization(ORCIDAPIBaseModel):
     )
 
 
-class ORCIDEmploymentSummary(ORCIDAPIBaseModel):
+class ORCIDEmploymentSummary(ServiceBaseModel):
     created_date: ORCIDIntValue = Field(alias="created-date")
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     source: ORCIDSource
@@ -241,17 +237,17 @@ class ORCIDEmploymentSummary(ORCIDAPIBaseModel):
     path: str = Field(...)
 
 
-class ORCIDEmploymentSummaryWrapper(ORCIDAPIBaseModel):
+class ORCIDEmploymentSummaryWrapper(ServiceBaseModel):
     employment_summary: ORCIDEmploymentSummary = Field(alias="employment-summary")
 
 
-class ORCIDAffiliationGroup(ORCIDAPIBaseModel):
+class ORCIDAffiliationGroup(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     external_ids: ExternalIds = Field(alias="external-ids")
     summaries: Tuple[ORCIDEmploymentSummaryWrapper] = Field(...)
 
 
-class ORCIDEmployments(ORCIDAPIBaseModel):
+class ORCIDEmployments(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     affiliation_group: Union[
         ORCIDAffiliationGroup, List[ORCIDAffiliationGroup]
@@ -259,7 +255,7 @@ class ORCIDEmployments(ORCIDAPIBaseModel):
     path: str = Field(...)
 
 
-class ORCIDActivitiesSummary(ORCIDAPIBaseModel):
+class ORCIDActivitiesSummary(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     # distinctions
     # educations
@@ -281,7 +277,7 @@ class ORCIDActivitiesSummary(ORCIDAPIBaseModel):
 #
 
 
-class ORCIDProfile(ORCIDAPIBaseModel):
+class ORCIDProfile(ServiceBaseModel):
     orcid_identifier: ORCIDIdentifier = Field(alias="orcid-identifier")
     # preferences: Dict[str, str] = Field(...)
     # history: ORCIDHistory = Field(...)
@@ -289,7 +285,7 @@ class ORCIDProfile(ORCIDAPIBaseModel):
     activities_summary: ORCIDActivitiesSummary = Field(..., alias="activities-summary")
 
 
-class AuthorizeParams(ORCIDAPIBaseModel):
+class AuthorizeParams(ServiceBaseModel):
     client_id: str
     response_type: str
     scope: str
@@ -303,7 +299,7 @@ def orcid_api_url(path: str) -> str:
 
 
 # This is the usual error response for 4xx
-class APIResponseError(ORCIDAPIBaseModel):
+class APIResponseError(ServiceBaseModel):
     response_code: int = Field(alias="response-code")
     developer_message: str = Field(alias="developer-message")
     user_message: str = Field(alias="user-message")
@@ -312,7 +308,7 @@ class APIResponseError(ORCIDAPIBaseModel):
 
 
 # This is the usual error response for 500
-class APIResponseInternalServerError(ORCIDAPIBaseModel):
+class APIResponseInternalServerError(ServiceBaseModel):
     message_version: str = Field(alias="message-version")
     orcid_profile: Optional[Any] = Field(default=None, alias="orcid-profile")
     orcid_search_results: Optional[Any] = Field(
@@ -322,27 +318,27 @@ class APIResponseInternalServerError(ORCIDAPIBaseModel):
 
 
 # This is return for at least 401
-class APIResponseUnauthorized(ORCIDAPIBaseModel):
+class APIResponseUnauthorized(ServiceBaseModel):
     error: str = Field(...)
     error_description: Optional[str] = Field(default=None, alias="error-description")
 
 
-class APIResponseUnknownError(ORCIDAPIBaseModel):
+class APIResponseUnknownError(ServiceBaseModel):
     detail: Any = Field(...)
 
 
-class APIParseError(ORCIDAPIBaseModel):
+class APIParseError(ServiceBaseModel):
     error_text: str = Field(alias="error-text")
 
 
-T = TypeVar("T", bound=BaseModel)
+DetailType = TypeVar("DetailType", bound=ServiceBaseModel)
 
 
 # A wrapper for all orcid api errors, wrapping the one returned from ORCID.
-class APIErrorWrapper(ORCIDAPIBaseModel, Generic[T]):
+class APIErrorWrapper(ServiceBaseModel, Generic[DetailType]):
     source: str = Field(...)
     status_code: int = Field(...)
-    detail: T = Field(...)
+    detail: DetailType = Field(...)
     # error: Optional[str] = Field(default=None)
     # error_description: Optional[str] = Field(default=None)
     # error_text: Optional[str] = Field(default=None)
@@ -366,7 +362,7 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             #     detail=APIResponseUnauthorized.parse_obj(json_response)
             # )
             return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[BaseModel]](
+                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
                     code="upstreamError",
                     title="Error",
                     message="Error fetching data from ORCID Auth api",
@@ -380,7 +376,7 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             )
         elif "message-version" in json_response:
             return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[BaseModel]](
+                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
                     code="upstreamError",
                     title="Error",
                     message="Error fetching data from ORCID Auth api",
@@ -394,7 +390,7 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             )
         elif "response-code" in json_response:
             return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[BaseModel]](
+                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
                     code="upstreamError",
                     title="Error",
                     message="Error fetching data from ORCID Auth api",
@@ -408,7 +404,7 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             )
         else:
             return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[BaseModel]](
+                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
                     code="upstreamError",
                     title="Error",
                     message="Error fetching data from ORCID Auth api",
@@ -424,7 +420,7 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
     except JSONDecodeError:
 
         return ServiceError(
-            error=ErrorResponse[APIErrorWrapper[BaseModel]](
+            error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
                 code="upstreamError",
                 title="Error",
                 message="Error fetching data from ORCID Auth api",
@@ -469,23 +465,23 @@ class ORCIDClientBase:
         }
 
 
-class GetEmailResult(ORCIDAPIBaseModel):
+class GetEmailResult(ServiceBaseModel):
     email: ORCIDEmail
 
 
-class WorkWrapper(ORCIDAPIBaseModel):
+class WorkWrapper(ServiceBaseModel):
     work: Work
 
 
-class NewWorkWrapper(ORCIDAPIBaseModel):
+class NewWorkWrapper(ServiceBaseModel):
     work: NewWork
 
 
-class GetWorkResult(ORCIDAPIBaseModel):
+class GetWorkResult(ServiceBaseModel):
     bulk: Tuple[WorkWrapper]
 
 
-class CreateWorkInput(ORCIDAPIBaseModel):
+class CreateWorkInput(ServiceBaseModel):
     bulk: Tuple[NewWorkWrapper]
 
 

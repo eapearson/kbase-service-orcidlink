@@ -3,12 +3,13 @@ import threading
 from typing import Optional
 
 import toml
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import module_dir
 from orcidlink.model import ServiceDescription
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 
-class KBaseService(BaseModel):
+class KBaseService(ServiceBaseModel):
     url: str = Field(...)
 
 
@@ -21,14 +22,14 @@ class ORCIDLinkService(KBaseService):
     pass
 
 
-class ORCIDConfig(BaseModel):
+class ORCIDConfig(ServiceBaseModel):
     oauthBaseURL: str = Field(...)
     apiBaseURL: str = Field(...)
     clientId: str = Field(...)
     clientSecret: str = Field(...)
 
 
-class MongoConfig(BaseModel):
+class MongoConfig(ServiceBaseModel):
     host: str = Field(...)
     port: int = Field(...)
     database: str = Field(...)
@@ -36,20 +37,20 @@ class MongoConfig(BaseModel):
     password: str = Field(...)
 
 
-class ModuleConfig(BaseModel):
+class ModuleConfig(ServiceBaseModel):
     serviceRequestTimeout: int = Field(...)
 
 
-class Services(BaseModel):
+class Services(ServiceBaseModel):
     Auth2: Auth2Service
     ORCIDLink: ORCIDLinkService = Field(...)
 
 
-class UIConfig(BaseModel):
+class UIConfig(ServiceBaseModel):
     origin: str = Field(...)
 
 
-class Config(BaseModel):
+class Config(ServiceBaseModel):
     services: Services = Field(...)
     ui: UIConfig = Field(...)
     orcid: ORCIDConfig = Field(...)
@@ -57,7 +58,7 @@ class Config(BaseModel):
     module: ModuleConfig = Field(...)
 
 
-class GitInfo(BaseModel):
+class GitInfo(ServiceBaseModel):
     commit_hash: str = Field(...)
     commit_hash_abbreviated: str = Field(...)
     author_name: str = Field(...)

@@ -13,7 +13,7 @@ Routers include: link, linking-sessions, works, orcid, and root.
 
 """
 
-from typing import Any, Dict, List
+from typing import Any, Generic, List, TypeVar
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -21,13 +21,20 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from orcidlink.lib.config import config
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import (
+    ErrorResponse,
     error_response,
+    error_response2,
     exception_error_response,
 )
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
-from orcidlink.service_clients.KBaseAuth import KBaseAuthError, KBaseAuthInvalidToken
-from pydantic import BaseModel, Field
+from orcidlink.service_clients.KBaseAuth import (
+    KBaseAuthError,
+    KBaseAuthErrorInfo,
+    KBaseAuthInvalidToken,
+)
+from pydantic import Field
 
 # from pydantic.error_wrappers import ErrorDict
 from starlette import status
@@ -108,7 +115,6 @@ app.include_router(linking_sessions.router)
 app.include_router(profile.router)
 app.include_router(works.router)
 
-
 ###############################################################################
 #
 # Exception handlers
@@ -116,12 +122,14 @@ app.include_router(works.router)
 #
 ###############################################################################
 
-
-class WrappedError(BaseModel):
-    detail: Dict[str, str | int] = Field(...)
+T = TypeVar("T", bound=ServiceBaseModel)
 
 
-class ValidationError(BaseModel):
+class WrappedError(ServiceBaseModel, Generic[T]):
+    detail: T = Field(...)
+
+
+class ValidationError(ServiceBaseModel):
     detail: List[Any] = Field(...)
     body: Any = Field(...)
 
@@ -163,7 +171,9 @@ async def validation_exception_handler(
 async def kbase_auth_invalid_token_handler(
     request: Request, exc: KBaseAuthInvalidToken
 ) -> JSONResponse:
-    data: WrappedError = WrappedError(detail=exc.to_dict())
+    data: WrappedError[KBaseAuthErrorInfo] = WrappedError[KBaseAuthErrorInfo](
+        detail=exc.to_obj()
+    )
     return error_response(
         "invalidToken",
         "Invalid KBase Token",
@@ -178,6 +188,12 @@ async def kbase_auth_invalid_token_handler(
 # very rare.
 # See https://github.com/kbase/auth2/blob/master/src/us/kbase/auth2/lib/exceptions/ErrorType.java
 #
+
+
+class KBaseAuthErrorDetails(ServiceBaseModel):
+    details: KBaseAuthErrorInfo
+
+
 @app.exception_handler(KBaseAuthError)
 async def kbase_auth_exception_handler(
     request: Request, exc: KBaseAuthError
@@ -190,7 +206,7 @@ async def kbase_auth_exception_handler(
         "authError",
         "Error Authenticating KBase Token",
         "Unknown error authenticating with KBase",
-        data={"details": exc.to_dict()},
+        data=KBaseAuthErrorDetails(details=exc.to_obj()),
         status_code=status.HTTP_401_UNAUTHORIZED,
     )
 
@@ -223,6 +239,14 @@ async def internal_server_error_handler(
     )
 
 
+class StarletteHTTPDetailData(ServiceBaseModel):
+    detail: Any = Field(...)
+
+
+class StarletteHTTPNotFoundData(StarletteHTTPDetailData):
+    path: str = Field(...)
+
+
 #
 # Finally there are some other errors thrown by FastAPI / Starlette which need overriding to return
 # a normalized JSON form.
@@ -234,19 +258,26 @@ async def http_exception_handler(
     request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:
     if exc.status_code == 404:
-        return error_response(
-            "notFound",
-            "Not Found",
-            "The requested resource was not found",
-            data={"detail": exc.detail, "path": request.url.path},
+        return error_response2(
+            ErrorResponse[StarletteHTTPNotFoundData](
+                code="notFound",
+                title="Not Found",
+                message="The requested resource was not found",
+                data=StarletteHTTPNotFoundData(
+                    detail=exc.detail, path=request.url.path
+                ),
+                # {"detail": exc.detail, "path": request.url.path},
+            ),
             status_code=status.HTTP_404_NOT_FOUND,
         )
 
-    return error_response(
-        "fastapiError",
-        "FastAPI Error",
-        "Internal FastAPI Exception",
-        data={"detail": exc.detail},
+    return error_response2(
+        ErrorResponse[StarletteHTTPDetailData](
+            code="fastapiError",
+            title="FastAPI Error",
+            message="Internal FastAPI Exception",
+            data=StarletteHTTPDetailData(detail=exc.detail),
+        ),
         status_code=exc.status_code,
     )
 

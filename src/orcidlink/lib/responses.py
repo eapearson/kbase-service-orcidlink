@@ -1,22 +1,23 @@
 # from fastapi import HTTPException
 from traceback import extract_tb
-from typing import Any, Dict, Generic, Mapping, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union
 from urllib.parse import urlencode
 
 from fastapi import Header
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from orcidlink.lib.config import config
-from pydantic import BaseModel, Field
+from orcidlink.lib.type import ServiceBaseModel
+from pydantic import Field
 
 ##
 # Common http responses, implemented as response-generating functions.
 #
 
-T = TypeVar("T", bound=BaseModel)
+T = TypeVar("T", bound=ServiceBaseModel)
 
 
-class ErrorResponse(BaseModel, Generic[T]):
+class ErrorResponse(ServiceBaseModel, Generic[T]):
     """
     A generic error object used for all error responses.
 
@@ -44,18 +45,33 @@ def success_response_no_data() -> Response:
     return Response(status_code=204)
 
 
+R = TypeVar("R", bound=ServiceBaseModel)
+
+
+def error_response2(
+    # response_content: ErrorResponse[ServiceBaseModel],
+    response_content: Any,
+    status_code: int = 400,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content=jsonable_encoder(response_content, exclude_unset=True),
+    )
+
+
 def error_response(
     code: str,
     title: str,
     message: str,
-    data: Any = None,
+    data: Optional[ServiceBaseModel] = None,
     status_code: int = 400,
 ) -> JSONResponse:
-    response = ErrorResponse[Any](
+    response = ErrorResponse[ServiceBaseModel](
         code=code,
         title=title,
         message=message,
     )
+
     if data is not None:
         response.data = data
 
@@ -68,28 +84,34 @@ def error_response_not_found(message: str) -> JSONResponse:
     return error_response("notFound", "Not Found", message, status_code=404)
 
 
+class ExceptionTraceback(ServiceBaseModel):
+    filename: str = Field(...)
+    line_number: str = Field(alias="line-number")
+    name: str = Field(...)
+    line: str = Field(...)
+
+
+class ExceptionData(ServiceBaseModel):
+    exception: str = Field(...)
+    traceback: List[ExceptionTraceback]
+
+
 def exception_error_response(
     code: str,
     title: str,
     exception: Exception,
-    data: Optional[Any] = None,
     status_code: int = 400,
 ) -> JSONResponse:
     traceback = []
     for tb in extract_tb(exception.__traceback__):
         traceback.append(
-            {
-                "filename": tb.filename,
-                "line_number": tb.lineno,
-                "name": tb.name,
-                "line": tb.line,
-            }
+            ExceptionTraceback(
+                filename=tb.filename, line_number=tb.lineno, name=tb.name, line=tb.line
+            )
         )
 
-    if data is None:
-        data = {}
-
-    data.update({"exception": str(exception), "traceback": traceback})
+    # data.update({"exception": str(exception), "traceback": traceback})
+    data = ExceptionData(exception=str(exception), traceback=traceback)
 
     response = ErrorResponse[Any](
         code=code or "exception",

@@ -3,8 +3,8 @@ from typing import Tuple
 from orcidlink.lib.config import config
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import ErrorResponse
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.service_clients.KBaseAuth import KBaseAuth, TokenInfo
-from pydantic import BaseModel
 
 
 ##
@@ -29,7 +29,7 @@ def ensure_authorization(authorization: str | None) -> Tuple[str, TokenInfo]:
     """
     if authorization is None:
         raise ServiceError(
-            error=ErrorResponse[BaseModel](
+            error=ErrorResponse[ServiceBaseModel](
                 code="missingToken",
                 title="Missing Token",
                 message="API call requires a KBase auth token",
