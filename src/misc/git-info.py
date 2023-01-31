@@ -137,9 +137,7 @@ def git_tag(commit_hash):
 
 
 def git_config():
-    output = run_command(
-        ["git", "config", "--global", "--add", "safe.directory", "*"]
-    )
+    output = run_command(["git", "config", "--global", "--add", "safe.directory", "*"])
     return output.rstrip("\n")
 
 
