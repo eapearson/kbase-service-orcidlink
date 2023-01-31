@@ -36,7 +36,7 @@ services:
       - mongo-express
     command: [ 'scripts/run-server-dev.sh' ]
   mongo:
-    image: mongo
+    image: mongo:3.6
     restart: always
     networks:
       - kbase-dev
