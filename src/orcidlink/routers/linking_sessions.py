@@ -186,11 +186,7 @@ async def get_linking_session(
     linking_session = get_linking_session_record(session_id, authorization)
     if type(linking_session) == LinkingSessionComplete:
         linking_session = LinkingSessionCompletePublic.parse_obj(linking_session.dict())
-        # return error_response(
-        #     "session-complete",
-        #     "Linking Session Completed",
-        #     "Attempt to return a completed linking session rejected",
-        # )
+
     return linking_session
 
 
@@ -504,29 +500,7 @@ async def linking_sessions_continue(
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
-    # def exchange_code_for_token(self, code: str):
     orcid_auth = orcid_oauth(authorization).exchange_code_for_token(code)
-
-    # header = {
-    #     "accept": "application/json",
-    #     "content-type": "application/x-www-form-urlencoded",
-    # }
-    # # Note that the redirect uri below is just for the api - it is not actually used
-    # # for redirection in this case.
-    # # TODO: investigate and point to the docs, because this is weird.
-    # # TODO: put in orcid client!
-    # data = {
-    #     "client_id": config().orcid.clientId,
-    #     "client_secret": config().orcid.clientSecret,
-    #     "grant_type": "authorization_code",
-    #     "code": code,
-    #     "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
-    # }
-    # response = httpx.post(
-    #     f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
-    # )
-    # orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
-
     #
     # Now we store the response from ORCID in our session.
     # We still need the user to finalize the linking, now that it has succeeded
@@ -535,7 +509,6 @@ async def linking_sessions_continue(
 
     # Note that this is approximate, as it uses our time, not the
     # ORCID server time.
-    # session_record.orcid_auth = orcid_auth
     model = storage_model()
     model.update_linking_session_to_finished(session_id, orcid_auth)
 
@@ -554,8 +527,3 @@ async def linking_sessions_continue(
         f"{config().ui.origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )
-
-
-#
-# Managing linking sessions
-#

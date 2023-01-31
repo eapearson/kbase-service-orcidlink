@@ -1,7 +1,3 @@
-# class ErrorDefinition(BaseModel):
-#     description: str = Field(...)
-#     status_code: int = Field(...)
-# : Dict[str, ErrorDefinition]
 from typing import Any
 
 from fastapi.encoders import jsonable_encoder
@@ -60,45 +56,3 @@ class ServiceError(Exception):
             status_code=self.status_code,
             content=jsonable_encoder(self.error, exclude_unset=True),
         )
-
-
-# class ServiceError(Exception):
-#     """
-#     A general purpose exception mechanism mirroring the
-#     """
-#
-#     def __init__(
-#             self,
-#             code: Optional[int] = None,
-#             name: Optional[str] = None,
-#             message: Optional[str] = None,
-#             data: Optional[Any] = None,
-#     ):
-#         super().__init__(message)
-#         if code is None:
-#             raise ValueError('The "code" named argument is required')
-#         self.code: int = code
-#
-#         if name is None:
-#             raise ValueError('The "name" named argument is required')
-#         self.name: str = name
-#
-#         if message is None:
-#             raise ValueError('The "message" named argument is required')
-#         self.message: str = message
-#
-#         # Data is optional.
-#         self.data: Any = data
-# def make_service_error(
-#     code: str,
-#     title: str,
-#     message: str,
-#     data: Optional[JSONLikeObject] = None,
-#     status_code: int = 400,
-# ) -> ServiceError:
-#     return ServiceError(
-#         error=ErrorResponse[BaseModel](
-#             code=code, title=title, message=message, data=data
-#         ),
-#         status_code=status_code,
-#     )

@@ -2,11 +2,6 @@ from orcidlink import model
 from orcidlink.service_clients import orcid_api
 
 
-# "year": {"value": date_parts[0]},
-# "month": {"value": date_parts[1].rjust(2, "0")},
-# "day": {"value": date_parts[2].rjust(2, "0")},
-
-
 def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
     # def pad(s: str) -> str:
     #     return s.lstrip('0').rjust(2, '0')

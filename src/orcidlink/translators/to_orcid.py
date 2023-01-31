@@ -23,28 +23,6 @@ def parse_date(date_string: str) -> orcid_api.Date:
         )
 
 
-# def parse_date(date_string: str) -> Date:
-#     date_parts = date_string.split("/")
-#     if len(date_parts) == 1:
-#         return Date(year=StringValue(value=date_parts[0]))
-#     elif len(date_parts) == 2:
-#         return Date(
-#             year=StringValue(value=date_parts[0]),
-#             month=StringValue(value=date_parts[1].rjust(2, "0")),
-#         )
-#     elif len(date_parts) == 3:
-#         return Date(
-#             year=StringValue(value=date_parts[0]),
-#             month=StringValue(value=date_parts[1].rjust(2, "0")),
-#             day=StringValue(value=date_parts[2].rjust(2, "0")),
-#         )
-#
-#     else:
-#         raise ValueError(
-#             f"Date must have 1-3 parts; has {len(date_parts)}: {date_string}"
-#         )
-
-
 # TODO: return should be class
 def translate_work_update(
     work_update: WorkUpdate, work_record: orcid_api.Work

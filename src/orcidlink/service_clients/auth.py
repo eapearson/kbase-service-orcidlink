@@ -7,10 +7,6 @@ from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.service_clients.KBaseAuth import KBaseAuth, TokenInfo
 
 
-##
-#
-
-
 def get_username(kbase_auth_token: str) -> str:
     auth = KBaseAuth(
         url=config().services.Auth2.url,

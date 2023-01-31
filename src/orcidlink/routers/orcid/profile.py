@@ -53,16 +53,10 @@ def transform_affilations(
 
     affiliations = []
     for affiliation in aff_group:
-        # employment_summary = get_prop(affiliationaffiliation["employment-summary"]
-
         #
         # For some reason there is a list of summaries here, but I don't
         # see such a structure in the XML, so just take the first element.
         #
-        # employment_summary = get_raw_prop(
-        #     affiliation, ["summaries", 0, "employment-summary"]
-        # )
-
         employment_summary = affiliation.summaries[0].employment_summary
         name = employment_summary.organization.name
         role = employment_summary.role_title
@@ -71,19 +65,7 @@ def transform_affilations(
             end_year = employment_summary.end_date.year.value
         else:
             end_year = None
-        # name = get_string_prop(employment_summary, ["organization", "name"])
-        # role = get_string_prop(employment_summary, ["role-title"])
-        # start_year = get_int_prop(employment_summary, ["start-date", "year", "value"])
-        # end_year = get_int_prop(employment_summary, ["end-date", "year", "value"])
 
-        # affiliations.append(
-        #     {
-        #         "name": name,
-        #         "role": role,
-        #         "startYear": start_year,
-        #         "endYear": end_year,
-        #     }
-        # )
         affiliations.append(
             model.ORCIDAffiliation(
                 name=name, role=role, startYear=start_year, endYear=end_year
@@ -108,32 +90,7 @@ def get_profile_to_ORCIDProfile(
     last_name = profile_raw.person.name.family_name.value
     bio = profile_raw.person.biography.content
 
-    # first_name = get_string_prop(
-    #     profile_json,
-    #     ["person", "name", "given-names", "value"],
-    # )
-    # last_name = get_string_prop(
-    #     profile_json,
-    #     ["person", "name", "family-name", "value"],
-    # )
-    # bio = get_string_prop(
-    #     profile_json,
-    #     [
-    #         "person",
-    #         "biography",
-    #         "content",
-    #     ],
-    # )
-
     # Organizations / Employment!
-
-    # affiliation_group = get_raw_prop(
-    #     profile_json, ["activities-summary", "employments", "affiliation-group"], []
-    # )
-
-    # is an array if more than one, otherwise just a single instance
-
-    # This funny business makes mypy happy
 
     affiliation_group = profile_raw.activities_summary.employments.affiliation_group
     affiliations = transform_affilations(affiliation_group)
@@ -141,9 +98,7 @@ def get_profile_to_ORCIDProfile(
     #
     # Publications
     works = []
-    # activity_works = get_raw_prop(
-    #     profile_json, ["activities-summary", "works", "group"], []
-    # )
+
     activity_works = profile_raw.activities_summary.works.group
     for work in activity_works:
         work_summary = work.work_summary[0]
@@ -159,15 +114,6 @@ def get_profile_to_ORCIDProfile(
         works=works,
         emailAddresses=email_addresses,
     )
-
-
-# GET_PROFILE_RESPONSES: ResponseMapping = {
-#     404: {"description": "User not linked or ORCID profile not available."},
-#     200: {"description": ""}
-# }
-
-
-# GET_PROFILE_RESPONSES | AUTH_RESPONSES | STD_RESPONSES
 
 
 @router.get(

@@ -56,8 +56,6 @@ class ORCIDAuthPublic(ServiceBaseModel):
 # E.g. cannot rely on having the auth cookie available, so we
 # store it.
 
-type
-
 
 class LinkingSessionInitial(ServiceBaseModel):
     session_id: str = Field(...)

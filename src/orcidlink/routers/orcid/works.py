@@ -18,12 +18,6 @@ from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.model import UnknownError
 from orcidlink.service_clients import orcid_api
 from orcidlink.service_clients.auth import ensure_authorization, get_username
-
-# import (
-#     GetWorkResult,
-#     orcid_api,
-#     orcid_api_url,
-# )
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
 from starlette.responses import JSONResponse, Response
@@ -102,13 +96,6 @@ async def get_work(
             ),
             status_code=400,
         )
-        # raise make_service_error(
-        #     "upstreamError",
-        #     "Error",
-        #     "Exception calling ORCID endpoint",
-        #     status_code=400,
-        #     data={"exception": str(ex)},
-        # )
 
 
 @router.get(
@@ -278,18 +265,6 @@ async def create_work(
     #
     # Create initial work record
     #
-    # TODO: model this
-    # work_record = {
-    #     "type": new_work.workType,
-    #     "title": {"title": {"value": new_work.title}},
-    #     "journal-title": {"value": new_work.journal},
-    #     "publication-date": {},
-    #     "url": {"value": new_work.url}
-    #     # "external-ids": {"external-id": []}
-    # }
-
-    # if new_work.date is not None:
-    #     work_record["publication-date"] = parse_date(new_work.date)
 
     external_ids: List[orcid_api.ORCIDExternalId] = []
     if new_work.externalIds is not None:
@@ -314,8 +289,6 @@ async def create_work(
         external_ids=orcid_api.ExternalIds(external_id=external_ids),
         publication_date=to_orcid.parse_date(new_work.date),
     )
-    # if new_work.date is not None:
-    #     work_record.publication_date = parse_date(new_work.date)
 
     url = orcid_api.orcid_api_url(f"{orcid_id}/works")
     header = {

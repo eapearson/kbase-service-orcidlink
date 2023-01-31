@@ -199,9 +199,6 @@ async def kbase_auth_exception_handler(
     request: Request, exc: KBaseAuthError
 ) -> JSONResponse:
     # TODO: this should reflect the nature of the auth error,
-    # return exception_error_response(
-    # "authError", "Unknown error authenticating with KBase", exc, status_code=500
-    # )
     return error_response(
         "authError",
         "Error Authenticating KBase Token",
@@ -266,7 +263,6 @@ async def http_exception_handler(
                 data=StarletteHTTPNotFoundData(
                     detail=exc.detail, path=request.url.path
                 ),
-                # {"detail": exc.detail, "path": request.url.path},
             ),
             status_code=status.HTTP_404_NOT_FOUND,
         )

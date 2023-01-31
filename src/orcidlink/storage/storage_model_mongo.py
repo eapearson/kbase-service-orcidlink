@@ -19,7 +19,6 @@ class StorageModelMongo:
             port=port,
             username=username,
             password=password,
-            # authMechanism="SCRAM-SHA-1",
             authSource=database,
         )
         self.db = self.client[database]

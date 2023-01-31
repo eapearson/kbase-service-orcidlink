@@ -356,11 +356,7 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             # token from the error response.
             if response.status_code == 401 or response.status_code == 403:
                 json_response.pop("error_description")
-            # data = APIErrorWrapper[APIResponseUnauthorized](
-            #     source=source,
-            #     status_code=response.status_code,
-            #     detail=APIResponseUnauthorized.parse_obj(json_response)
-            # )
+
             return ServiceError(
                 error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
                     code="upstreamError",
@@ -433,16 +429,6 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             status_code=400,
         )
 
-    # return ServiceError(
-    #     error=ErrorResponse[APIErrorWrapper[Any]](
-    #         code="upstreamError",
-    #         title="Error",
-    #         message="Error fetching data from ORCID Auth api",
-    #         data=data,
-    #     ),
-    #     status_code=400,
-    # )
-
 
 class ORCIDClientBase:
     def __init__(self, url: Optional[str] = None, access_token: Optional[str] = None):
@@ -500,10 +486,6 @@ class ORCIDAPIClient(ORCIDClientBase):
         """
         response = httpx.get(self.url(f"{orcid_id}/record"), headers=self.header())
         return ORCIDProfile.parse_obj(json.loads(response.text))
-
-    # def get_email(self, orcid_id: str) -> GetEmailResult:
-    #     response = httpx.get(self.url(f"{orcid_id}/email"), headers=self.header())
-    #     return GetEmailResult.parse_obj(json.loads(response.text))
 
     #
     # Works
