@@ -60,8 +60,14 @@ function gitInfo(state) {
 """
 import subprocess
 import sys
+from typing import List
 
 import toml
+
+
+def print_lines(prefix: str, lines: List[str]):
+    for index, line in enumerate(lines):
+        print(f"{prefix} {index}: {line}")
 
 
 def run_command(command, ignore_error=False):
@@ -71,6 +77,9 @@ def run_command(command, ignore_error=False):
         if ignore_error:
             return str(cpe), False
         print("Error running git command:")
+        print(f"Command: {cpe.cmd}")
+        if cpe.stderr is not None:
+            print_lines("stderr", cpe.stderr.split("\n"))
         print(str(cpe))
         sys.exit(1)
 
