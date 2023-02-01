@@ -1,5 +1,7 @@
 # Docker Usage
 
+> to do
+> 
 This project uses docker for most tasks. The reason is simple. It reduces the number of host dependencies, making the startup effort to work on projects faster and more deterministic.
 
 There are four docker compose files for running the service:

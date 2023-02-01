@@ -67,18 +67,36 @@ function build-image {
   docker build -t kbase/orcidlink:dev .
 }
 
+#
+# Generates the openapi spec in memory, and compares it to the one already existing in docs/api/openapi.json.
+# Returns a success if identical, error (1) if there are any differences.
+#
 function check-openapi {
   docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/check-openapi.py
 }
 
+#
+# Generates the openapi.json spec file at docs/api/openapi.json
+#
 function generate-openapi {
   docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-openapi.py
 }
+
+#
+# Generates markdown + html api docs from a given openapi.json spec file, placing the resulting document
+# at docs/api/index.md. A development-time preview which utilizes an approximation of GitHub styles, is
+# also generated at docs/api/index.html.
+#
 function generate-docs {
   rm -rf docs/api/openapi/*
   docker compose -f docker-compose-runner.yml run --rm orcidlink  poetry run python src/misc/generate-docs.py
 }
 
+#
+# This was the first attempt at generating API docs, but was not suitable for generation of
+# docs which could be viewed at GitHub. Left here for posterity, and because maybe we can get
+# it to work better.
+#
 function generate-apidocs {
     rm -rf docs/api/openapi/*
     docker run --rm \

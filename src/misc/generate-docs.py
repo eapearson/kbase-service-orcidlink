@@ -230,17 +230,6 @@ def md_tags(tags):
     return f'tags: {", ".join(tags)}'
 
 
-# def generate_property_type(spec):
-#     if "$ref" in spec:
-#         link = spec["$ref"]
-#         name = link.split("/")[3]
-#         return f'<a href="#{name}">{name}</a>'
-#     elif "type" in spec:
-#         return spec["type"]
-#     else:
-#         return "n/a"
-
-
 def generate_schema(schema):
     if "$ref" in schema:
         link = schema["$ref"]
@@ -445,9 +434,9 @@ def generate_glossary():
         {
             "term": "Public link record",
             "definition": "The record used internally to associate a KBase User Account with an ORCID Account,"
-            + " with sensitive information such as tokens removed. Represented by "
-            + "the type "
-            + generate_anchor_link("LinkRecordPublic", "header_type", render="html"),
+                          + " with sensitive information such as tokens removed. Represented by "
+                          + "the type "
+                          + generate_anchor_link("LinkRecordPublic", "header_type", render="html"),
         },
     ]
 

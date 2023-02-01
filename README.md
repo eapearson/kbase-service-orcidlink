@@ -1,16 +1,16 @@
 # ORCID Link  _(kbase-service-orcidlink)_
 
-A KBase core REST service whose primary purpose is to link KBase accounts to ORCID accounts.
+*ORCID Link* is a KBase core REST service whose primary purpose is to link KBase accounts to ORCID accounts.
 
-ORCID Link also provides relates services, such as fetching the profile for a linked account, and managing the "works" for a linked account
+ORCID Link also provides functional on top of the link, such as fetching the profile for a linked account, and managing the "works" for a linked account
 
 The service is implemented in Python, using the FastAPI library.
 
-Please see the [design doc](docs/design.md) for further information.
+Please see the [design doc](docs/design/design.md) for further information.
 
 ## Security
 
-This service will only run with a specific set of [environment variables](docs/deployment.md#environment-variables), some of which contain private keys which are essential for communication with ORCID Services. See [the deploymet doc](docs/deployment.md) for details.
+This service will only run with a specific set of [environment variables](docs/operation/deployment.md#environment-variables), some of which contain private keys which are essential for communication with ORCID Services. See [the deploymet doc](docs/operation/deployment.md) for details.
 
 ## Background
 
@@ -25,15 +25,15 @@ By linking a KBase account to an ORCID account, tools described above can be imp
 
 This service is not directly installable as such. It is a REST-based web service and must be built and run within a compatible deployment environment.
 
-I suppose "installation" consists of building a Docker image and hosting it somewhere. In practice, this is conducted at GitHub, with a build conducted via [GitHub Actions](docs/deployment.md#github-actions) and hosted at the GitHub Container Repository (GHCR). 
+One could say that "installation" consists of building a Docker image and hosting it somewhere. In practice, this is conducted at GitHub, with a build conducted by [GitHub Actions](docs/operation/deployment.md#github-actions) and hosted at the [GitHub Container Repository (GHCR)](https://ghcr.io), also known as [GitHub Packages](https://github.com/features/packages).
 
 
 ## Usage
 
-There are different scenarios under which it may be run and utilized. Each is described in separate sections:
+There are different scenarios under which *ORCID Link* may be run and utilized. Each is described in separate sections:
 
-- [development](docs/development.md)
-- [deployment](docs/deployment.md)
+- [development](docs/development/development.md)
+- [deployment](docs/operation/deployment.md)
 
 Deployment support is described, but deployment practices and mechanics are out of scope of this document and service.
 
@@ -53,19 +53,9 @@ The [API docs](docs/api/index.md) are generated automatically, and are [availabl
 
 ## Contributing
 
-For supported and recommended development practices see [development](docs/development.md).
+For supported and recommended development practices see [development](docs/development/development.md).
 
-All development is orchestrated through the GitHub repo roughly following the *gitflow* git workflow.
 
-Contributions should be made via a branch off of the develop branch. Such branches should normally be created in response to a KBase JIRA ticket, but can also be related to a GitHub issue. The contribution branch should be pushed directly to the kbase repo, certainly for staff; outside contributions will need to be from forks.
-
-When the branch is ready for review, a PR is made from the contribution branch to the develop branch. The PR description template lists all of the requirements. When those requirements are met, and tests pass, a review should be requested.
-
-Upon approval, a PR will be merged into the develop branch.
-
-Periodically, or as needed, the state of the develop branch will be deployed to the CI environment, https://ci.kbase.us.
-
-At some point in the future, when a release is called for, the develop branch will be merged into the master branch, a release created, and the resulting image deployed to the next environment, appdev, and ultimately production.
 
 ## License
 

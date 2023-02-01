@@ -1,5 +1,19 @@
 # Development
 
+## Contributing
+
+All development is orchestrated through the GitHub repo roughly following the *gitflow* git workflow.
+
+Contributions should be made via a branch off of the develop branch. Such branches should normally be created in response to a KBase JIRA ticket, but can also be related to a GitHub issue. The contribution branch should be pushed directly to the kbase repo, certainly for staff; outside contributions will need to be from forks.
+
+When the branch is ready for review, a PR is made from the contribution branch to the develop branch. The PR description template lists all of the requirements. When those requirements are met, and tests pass, a review should be requested.
+
+Upon approval, a PR will be merged into the develop branch.
+
+Periodically, or as needed, the state of the develop branch will be deployed to the CI environment, https://ci.kbase.us.
+
+At some point in the future, when a release is called for, the develop branch will be merged into the master branch, a release created, and the resulting image deployed to the next environment, appdev, and ultimately production.
+
 ## A workflow
 
 ### Use & Develop
