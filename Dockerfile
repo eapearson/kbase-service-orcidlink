@@ -47,4 +47,4 @@ RUN poetry config virtualenvs.create false && poetry install
 
 ENTRYPOINT [ "scripts/entrypoint.sh" ]
 
-CMD [ "scripts/run-server.sh" ]
+CMD [ "scripts/start-server.sh" ]

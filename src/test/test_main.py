@@ -21,7 +21,6 @@ CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
-    fs.create_file("/kb/module/kbase.yml", contents=kbase_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 

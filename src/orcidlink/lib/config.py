@@ -74,7 +74,6 @@ class ConfigManager:
     def __init__(self, config_path: str):
         self.config_path = config_path
         self.lock = threading.RLock()
-        # self.config_data: Optional[Config] = None
         self.config_data = self.get_config_data()
 
     def get_config_data(self) -> Config:
