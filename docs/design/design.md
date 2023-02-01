@@ -1,15 +1,21 @@
-# Architecture
+# Design of ORCIDLink
 
-This is a KBase Dynamic Service, but does not follow the standard kb-sdk architecture or tooling.
+This is a KBase core service that does not follow the kb-sdk architecture or tooling.
+
+> In case there are remnants of kb-sdk tooling or language, this is due to the service having started out life as a dynamic service for prototyping.
 
 ## Why Diverge from kb-sdk?
 
-The primary reasons to diverge from the KBase SDK are:
+There are several reasons to diverge from the KBase SDK:
 - The sdk is quite out of date in terms of Python support and base OS
-- Advances in the Python http service ecosystem has brought forth fastapi, a library which brings:
-  - good typing
-  - automatic api documentation generation
-  - easy REST api building
+- Advances in the Python http service ecosystem has brought forth improvements beyond what the kb-sdk provides:
+  - type hinting
+  - Pydantic data type classes
+  - FastAPI, providing:
+    - automatic api documentation generation
+    - easy REST api building
+  
+In addition, this service would need to support more than one browser-interactive endpoint to support three-legged OAuth integration with ORCID. Although it is certain feasible to support both JSON-RPC, as is required for a strictly kb-sdk service, as well as REST-like or browser-interactive endpoints, it would make the codebase more complex and difficult to understand.
 
 ## FastAPI
 
@@ -45,7 +51,7 @@ Overall, however, the following attributes are important for the nature of this 
 
 The configuration template (`templates/config.tmpl.toml`) requires a set of environment variables in order to render to a resulting configuration file.
 
-See [the configuration doc](./configuration.md) for details. 
+See [the configuration doc](../operation/configuration.md) for details. 
 
 ### External Services
 

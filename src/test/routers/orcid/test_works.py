@@ -213,18 +213,8 @@ def test_create_work_errors(fake_fs):
                 }
             ],
         }
-        # client.headers['authorization'] = 'foo'
-        # response = client.post(f"/works",
-        #                        headers={"Authorization": "foo"},
-        #                        content=json.dumps(new_work_data)
-        #                        )
-        # assert response.status_code == 200
-        # work = response.json()
-        # assert isinstance(work, dict)
-        # assert work['putCode'] == '1526002'
 
         # Error: link_record not found
-        # client.headers['authorization'] = 'bar'
         response = client.post(
             f"/orcid/works",
             headers={"Authorization": TOKEN_BAR},
