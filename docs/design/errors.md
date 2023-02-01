@@ -1,5 +1,7 @@
 # Errors
 
+> in progress 
+ 
 Two types of errors may be encountered: api and interaction
 
 API errors are by far the most numerous. They may occur during any API call to this service. They follow schema that is documented below. With API errors, the front end (browser) will detect the error and display it in a uniform manner.

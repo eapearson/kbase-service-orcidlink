@@ -230,17 +230,6 @@ def md_tags(tags):
     return f'tags: {", ".join(tags)}'
 
 
-# def generate_property_type(spec):
-#     if "$ref" in spec:
-#         link = spec["$ref"]
-#         name = link.split("/")[3]
-#         return f'<a href="#{name}">{name}</a>'
-#     elif "type" in spec:
-#         return spec["type"]
-#     else:
-#         return "n/a"
-
-
 def generate_schema(schema):
     if "$ref" in schema:
         link = schema["$ref"]
