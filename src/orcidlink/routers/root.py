@@ -1,13 +1,20 @@
 from fastapi import APIRouter
-from orcidlink.lib.config import Config, config, get_service_manifest
+from orcidlink.lib.config import (
+    Config,
+    GitInfo,
+    config,
+    get_git_info,
+    get_service_description,
+)
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import epoch_time_millis
-from orcidlink.model import ServiceManifest
-from pydantic import BaseModel, Field
+from orcidlink.model import ServiceDescription
+from pydantic import Field
 
 router = APIRouter(prefix="")
 
 
-class StatusResponse(BaseModel):
+class StatusResponse(ServiceBaseModel):
     status: str = Field(...)
     time: int = Field(...)
     start_time: int = Field(...)
@@ -24,7 +31,7 @@ class StatusResponse(BaseModel):
         }
     },
 )
-async def get_status():
+async def get_status() -> StatusResponse:
     """
     Get Service Status
 
@@ -38,29 +45,32 @@ async def get_status():
     return StatusResponse(status="ok", start_time=0, time=epoch_time_millis())
 
 
-class InfoResponse(BaseModel):
-    service_manifest: ServiceManifest = Field(alias="service-manifest")
+class InfoResponse(ServiceBaseModel):
+    service_description: ServiceDescription = Field(alias="service-description")
     config: Config = Field(...)
+    git_info: GitInfo = Field(alias="git-info")
 
 
 @router.get("/info", response_model=InfoResponse, tags=["misc"])
-async def get_info():
+async def get_info() -> InfoResponse:
     """
     Get Service Information
 
     Returns basic information about the service and its runtime configuration.
     """
     # TODO: version should either be separate call, or derived from the a file stamped during the build.
-    service_manifest = get_service_manifest()
+    service_description = get_service_description()
     config_copy = config().copy(deep=True)
     config_copy.orcid.clientId = "REDACTED"
     config_copy.orcid.clientSecret = "REDACTED"
     config_copy.mongo.username = "REDACTED"
     config_copy.mongo.password = "REDACTED"
+    git_info = get_git_info()
     # NB we can mix dict and model here.
     return InfoResponse.parse_obj(
-        {"service-manifest": service_manifest, "config": config_copy}
+        {
+            "service-description": service_description,
+            "config": config_copy,
+            "git-info": git_info,
+        }
     )
-
-
-# Docs

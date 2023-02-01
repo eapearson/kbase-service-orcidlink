@@ -1,3 +1,11 @@
+"""
+
+Provides all support for creating an ORCID link.
+
+This module implements an OAUTH flow and related services required to create an
+ORCID Link and to fit into various front end usage scenarios.
+
+"""
 import json
 import uuid
 from urllib.parse import urlencode
@@ -10,24 +18,25 @@ from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     ErrorResponse,
     STD_RESPONSES,
-    ensure_authorization,
     error_response,
     success_response_no_data,
     ui_error_response,
 )
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import current_time_millis
 from orcidlink.model import (
     LinkRecord,
     LinkingSessionComplete,
+    LinkingSessionCompletePublic,
     LinkingSessionInitial,
     LinkingSessionStarted,
     SimpleSuccess,
 )
-from orcidlink.service_clients.ORCIDClient import AuthorizeParams, orcid_oauth
-from orcidlink.service_clients.auth import get_username
+from orcidlink.service_clients.auth import ensure_authorization
+from orcidlink.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.storage.storage_model import storage_model
-from pydantic import BaseModel, Field
-from starlette.responses import RedirectResponse
+from pydantic import Field
+from starlette.responses import JSONResponse, RedirectResponse, Response
 
 router = APIRouter(prefix="/linking-sessions")
 
@@ -98,7 +107,7 @@ KBASE_SESSION_BACKUP_COOKIE = Cookie(
 #
 
 
-class CreateLinkingSessionResult(BaseModel):
+class CreateLinkingSessionResult(ServiceBaseModel):
     session_id: str = SESSION_ID_FIELD
 
 
@@ -114,7 +123,9 @@ class CreateLinkingSessionResult(BaseModel):
     },
     tags=["linking-sessions"],
 )
-async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADER):
+async def create_linking_session(
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> CreateLinkingSessionResult | JSONResponse:
     """
     Create Linking Session
 
@@ -145,7 +156,9 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
     responses={
         200: {
             "description": "Returns the linking session",
-            "model": LinkingSessionStarted | LinkingSessionInitial,
+            "model": LinkingSessionStarted
+            | LinkingSessionInitial
+            | LinkingSessionCompletePublic,
         },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -159,22 +172,21 @@ async def create_linking_session(authorization: str | None = AUTHORIZATION_HEADE
 )
 async def get_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT, authorization: str = AUTHORIZATION_HEADER
-):
+) -> LinkingSessionStarted | LinkingSessionInitial | LinkingSessionCompletePublic | JSONResponse:
     """
     Get Linking Session
 
     Returns the linking session record identified by the given linking session id,
     as long as it is owned by the user associated with the given KBase auth token.
+
+    Note that the
     """
     _, token_info = ensure_authorization(authorization)
 
     linking_session = get_linking_session_record(session_id, authorization)
     if type(linking_session) == LinkingSessionComplete:
-        return error_response(
-            "session-complete",
-            "Linking Session Completed",
-            "Attempt to return a completed linking session rejected",
-        )
+        linking_session = LinkingSessionCompletePublic.parse_obj(linking_session.dict())
+
     return linking_session
 
 
@@ -196,7 +208,7 @@ async def get_linking_session(
 async def delete_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT,
     authorization: str | None = AUTHORIZATION_HEADER,
-):
+) -> JSONResponse | Response:
     """
     Delete Linking Session
 
@@ -239,14 +251,14 @@ async def delete_linking_session(
 async def finish_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT,
     authorization: str | None = AUTHORIZATION_HEADER,
-):
+) -> SimpleSuccess | JSONResponse:
     """
     Finish Linking Session
 
     The final stage of the interactive linking session; called when the user confirms the creation
     of the link, after OAuth flow has finished.
     """
-    authorization, _ = ensure_authorization(authorization)
+    authorization, token_info = ensure_authorization(authorization)
 
     session_record = get_linking_session_record(session_id, authorization)
 
@@ -258,7 +270,7 @@ async def finish_linking_session(
             status_code=400,
         )
 
-    username = get_username(authorization)
+    username = token_info.user
     created_at = current_time_millis()
     expires_at = created_at + session_record.orcid_auth.expires_in * 1000
 
@@ -305,7 +317,8 @@ async def start_linking_session(
     skip_prompt: str = SKIP_PROMPT_QUERY,
     kbase_session: str = KBASE_SESSION_COOKIE,
     kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
-):
+) -> RedirectResponse | JSONResponse:
+    # TODO: should be no json responses here!
     """
     Start Linking Session
 
@@ -415,7 +428,8 @@ async def linking_sessions_continue(
     | None = Query(
         default=None, description="For an error case, contains an error code parameter"
     ),
-) -> RedirectResponse:
+) -> RedirectResponse | JSONResponse:
+    # TODO: should be no json responses here@
     """
     Continue Linking Session
 
@@ -486,29 +500,7 @@ async def linking_sessions_continue(
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
-    # def exchange_code_for_token(self, code: str):
     orcid_auth = orcid_oauth(authorization).exchange_code_for_token(code)
-
-    # header = {
-    #     "accept": "application/json",
-    #     "content-type": "application/x-www-form-urlencoded",
-    # }
-    # # Note that the redirect uri below is just for the api - it is not actually used
-    # # for redirection in this case.
-    # # TODO: investigate and point to the docs, because this is weird.
-    # # TODO: put in orcid client!
-    # data = {
-    #     "client_id": config().orcid.clientId,
-    #     "client_secret": config().orcid.clientSecret,
-    #     "grant_type": "authorization_code",
-    #     "code": code,
-    #     "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
-    # }
-    # response = httpx.post(
-    #     f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
-    # )
-    # orcid_auth = ORCIDAuth.parse_obj(json.loads(response.text))
-
     #
     # Now we store the response from ORCID in our session.
     # We still need the user to finalize the linking, now that it has succeeded
@@ -517,7 +509,6 @@ async def linking_sessions_continue(
 
     # Note that this is approximate, as it uses our time, not the
     # ORCID server time.
-    # session_record.orcid_auth = orcid_auth
     model = storage_model()
     model.update_linking_session_to_finished(session_id, orcid_auth)
 
@@ -536,8 +527,3 @@ async def linking_sessions_continue(
         f"{config().ui.origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )
-
-
-#
-# Managing linking sessions
-#

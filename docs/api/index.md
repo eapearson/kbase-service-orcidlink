@@ -111,7 +111,7 @@ Provides a web interface to the auto-generated API docs.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successfully returned the api docs</td><td>text/html</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successfully returned the api docs</td><td>text/html</td></tr><tr><td>404</td><td>Not Found</td><td><i>none</i></td></tr></tbody></table>
 
 
 ---
@@ -211,6 +211,8 @@ Get Linking Session
 Returns the linking session record identified by the given linking session id,
 as long as it is owned by the user associated with the given KBase auth token.
 
+Note that the
+
 
 <a name="header_input"></a>
 #### Input
@@ -219,7 +221,7 @@ as long as it is owned by the user associated with the given KBase auth token.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the linking session</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_linkingsessionstarted">LinkingSessionStarted</a></div><div><a href="#user-content-header_type_linkingsessioninitial">LinkingSessionInitial</a></div></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>403</td><td>User does not own linking session</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Linking session not found</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the linking session</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_linkingsessionstarted">LinkingSessionStarted</a></div><div><a href="#user-content-header_type_linkingsessioninitial">LinkingSessionInitial</a></div><div><a href="#user-content-header_type_linkingsessioncompletepublic">LinkingSessionCompletePublic</a></div></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>403</td><td>User does not own linking session</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Linking session not found</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -341,14 +343,14 @@ Returns a 404 Not Found if the user is not linked
 <a name="header_works"></a>
 ### works
 Add, remove, update 'works' records for a user's ORCID Account
-<a name="header_get-/works/{put_code}"></a>
-#### GET /works/{put_code}
+<a name="header_get-/orcid/works/{put_code}"></a>
+#### GET /orcid/works/{put_code}
 Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>The ORCID `put code` for the work record to fetch</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>The ORCID `put code` for the work record to fetch</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -357,14 +359,14 @@ Fetch the work record, identified by `put_code`, for the user associated with th
 
 
 ---
-<a name="header_delete-/works/{put_code}"></a>
-#### DELETE /works/{put_code}
+<a name="header_delete-/orcid/works/{put_code}"></a>
+#### DELETE /orcid/works/{put_code}
 n/a
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>n/a</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>n/a</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -373,14 +375,14 @@ n/a
 
 
 ---
-<a name="header_get-/works"></a>
-#### GET /works
+<a name="header_get-/orcid/works"></a>
+#### GET /orcid/works
 Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -389,14 +391,14 @@ Fetch all of the "work" records from a user's ORCID account if their KBase accou
 
 
 ---
-<a name="header_put-/works"></a>
-#### PUT /works
+<a name="header_put-/orcid/works"></a>
+#### PUT /orcid/works
 Update a work record; the `work_update` contains the `put code`.
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>Kbase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -405,14 +407,14 @@ Update a work record; the `work_update` contains the `put code`.
 
 
 ---
-<a name="header_post-/works"></a>
-#### POST /works
+<a name="header_post-/orcid/works"></a>
+#### POST /orcid/works
 n/a
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>n/a</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -456,7 +458,7 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 A generic error object used for all error responses.
 
 See [the error docs](docs/errors.md) for more information.
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td>object</td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><a href="#user-content-header_type_servicebasemodel">ServiceBaseModel</a></td><td></td></tr></tbody></table>
 
 
 
@@ -467,10 +469,17 @@ See [the error docs](docs/errors.md) for more information.
 
 
 
+<a name="header_type_gitinfo"></a>
+##### GitInfo
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>commit_hash</td><td>string</td><td>✓</td></tr><tr><td>commit_hash_abbreviated</td><td>string</td><td>✓</td></tr><tr><td>author_name</td><td>string</td><td>✓</td></tr><tr><td>author_date</td><td>integer</td><td>✓</td></tr><tr><td>committer_name</td><td>string</td><td>✓</td></tr><tr><td>committer_date</td><td>integer</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>branch</td><td>string</td><td>✓</td></tr><tr><td>tag</td><td>string</td><td></td></tr></tbody></table>
+
+
+
 <a name="header_type_inforesponse"></a>
 ##### InfoResponse
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>service-manifest</td><td><a href="#user-content-header_type_servicemanifest">ServiceManifest</a></td><td>✓</td></tr><tr><td>config</td><td><a href="#user-content-header_type_config">Config</a></td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>service-description</td><td><a href="#user-content-header_type_servicedescription">ServiceDescription</a></td><td>✓</td></tr><tr><td>config</td><td><a href="#user-content-header_type_config">Config</a></td><td>✓</td></tr><tr><td>git-info</td><td><a href="#user-content-header_type_gitinfo">GitInfo</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -478,6 +487,13 @@ See [the error docs](docs/errors.md) for more information.
 ##### LinkRecordPublic
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublic">ORCIDAuthPublic</a></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_linkingsessioncompletepublic"></a>
+##### LinkingSessionCompletePublic
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>session_id</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>return_link</td><td>string</td><td>✓</td></tr><tr><td>skip_prompt</td><td>string</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublic">ORCIDAuthPublic</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -558,8 +574,22 @@ Represents a work record that is going to be added to ORCID.
 
 
 
-<a name="header_type_servicemanifest"></a>
-##### ServiceManifest
+<a name="header_type_orcidworkgroup"></a>
+##### ORCIDWorkGroup
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>works</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_servicebasemodel"></a>
+##### ServiceBaseModel
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
+
+
+
+<a name="header_type_servicedescription"></a>
+##### ServiceDescription
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>module-name</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr><tr><td>language</td><td>string</td><td>✓</td></tr></tbody></table>
 

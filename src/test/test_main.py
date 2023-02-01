@@ -11,6 +11,12 @@ client = TestClient(app, raise_server_exceptions=False)
 config_yaml = load_data_file("config1.toml")
 kbase_yaml = load_data_file("kbase1.yml")
 
+INVALID_TOKEN = generate_kbase_token("invalid_token")
+EMPTY_TOKEN = ""
+NO_TOKEN = generate_kbase_token("no_token")
+BAD_JSON = generate_kbase_token("bad_json")
+CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
+
 
 @pytest.fixture
 def fake_fs(fs):
@@ -50,7 +56,7 @@ def test_main_404(fake_fs):
 
 
 def test_validation_exception_handler(fake_fs):
-    response = client.post("/works", json={"foo": "bar"})
+    response = client.post("/orcid/works", json={"foo": "bar"})
     assert response.status_code == 422
     assert response.headers["content-type"] == "application/json"
     content = response.json()
@@ -77,19 +83,21 @@ def test_kbase_auth_exception_handler(fake_fs):
                 == "This request does not comply with the schema for this endpoint"
             )
 
-            BAD_TOKEN = generate_kbase_token("bad)")
-            EMPTY_TOKEN = ""
-            BAD_JSON = generate_kbase_token("bad_json")
-            CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
-
             # call with invalid token
 
-            response = client.get("/link", headers={"Authorization": BAD_TOKEN})
+            response = client.get("/link", headers={"Authorization": INVALID_TOKEN})
             assert response.status_code == 401
             assert response.headers["content-type"] == "application/json"
             content = response.json()
             assert content["code"] == "invalidToken"
-            assert content["title"] == "KBase auth token is invalid"
+            assert content["title"] == "Invalid KBase Token"
+
+            response = client.get("/link", headers={"Authorization": NO_TOKEN})
+            assert response.status_code == 401
+            assert response.headers["content-type"] == "application/json"
+            content = response.json()
+            assert content["code"] == "authError"
+            assert content["title"] == "Error Authenticating KBase Token"
 
             # call with empty token
             response = client.get("/link", headers={"Authorization": EMPTY_TOKEN})
@@ -101,11 +109,11 @@ def test_kbase_auth_exception_handler(fake_fs):
 
             # make a call which triggers a bug to trigger a JSON parse error
             response = client.get("/link", headers={"Authorization": BAD_JSON})
-            assert response.status_code == 500
+            assert response.status_code == 502
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "authError"
-            assert content["title"] == "Unknown error authenticating with KBase"
+            assert content["code"] == "jsonDecodeError"
+            assert content["title"] == "Error Decoding Response"
 
             # make a call which triggers a bug to trigger a JSON parse error
             response = client.get(

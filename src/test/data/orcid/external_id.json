@@ -1,0 +1,13 @@
+{
+  "external-id-type": "doi",
+  "external-id-value": "10.25982/1668075",
+  "external-id-normalized": {
+    "value": "10.25982/1668075",
+    "transient": true
+  },
+  "external-id-normalized-error": null,
+  "external-id-url": {
+    "value": "https://doi.org/10.25982/1668075"
+  },
+  "external-id-relationship": "self"
+}

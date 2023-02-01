@@ -1,13 +1,15 @@
 import os
 import threading
+from typing import Optional
 
 import toml
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import module_dir
-from orcidlink.model import ServiceManifest
-from pydantic import BaseModel, Field
+from orcidlink.model import ServiceDescription
+from pydantic import Field
 
 
-class KBaseService(BaseModel):
+class KBaseService(ServiceBaseModel):
     url: str = Field(...)
 
 
@@ -20,14 +22,14 @@ class ORCIDLinkService(KBaseService):
     pass
 
 
-class ORCIDConfig(BaseModel):
+class ORCIDConfig(ServiceBaseModel):
     oauthBaseURL: str = Field(...)
     apiBaseURL: str = Field(...)
     clientId: str = Field(...)
     clientSecret: str = Field(...)
 
 
-class MongoConfig(BaseModel):
+class MongoConfig(ServiceBaseModel):
     host: str = Field(...)
     port: int = Field(...)
     database: str = Field(...)
@@ -35,25 +37,37 @@ class MongoConfig(BaseModel):
     password: str = Field(...)
 
 
-class ModuleConfig(BaseModel):
+class ModuleConfig(ServiceBaseModel):
     serviceRequestTimeout: int = Field(...)
 
 
-class Services(BaseModel):
+class Services(ServiceBaseModel):
     Auth2: Auth2Service
     ORCIDLink: ORCIDLinkService = Field(...)
 
 
-class UIConfig(BaseModel):
+class UIConfig(ServiceBaseModel):
     origin: str = Field(...)
 
 
-class Config(BaseModel):
+class Config(ServiceBaseModel):
     services: Services = Field(...)
     ui: UIConfig = Field(...)
     orcid: ORCIDConfig = Field(...)
     mongo: MongoConfig = Field(...)
     module: ModuleConfig = Field(...)
+
+
+class GitInfo(ServiceBaseModel):
+    commit_hash: str = Field(...)
+    commit_hash_abbreviated: str = Field(...)
+    author_name: str = Field(...)
+    author_date: int = Field(...)
+    committer_name: str = Field(...)
+    committer_date: int = Field(...)
+    url: str = Field(...)
+    branch: str = Field(...)
+    tag: Optional[str] = Field(default=None)
 
 
 class ConfigManager:
@@ -89,7 +103,13 @@ def config(reload: bool = False) -> Config:
     return GLOBAL_CONFIG_MANAGER.config(reload)
 
 
-def get_service_manifest() -> ServiceManifest:
-    manifest_path = os.path.join(module_dir(), "MANIFEST.toml")
-    with open(manifest_path, "r") as manifest_file:
-        return ServiceManifest.parse_obj(toml.load(manifest_file))
+def get_service_description() -> ServiceDescription:
+    file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
+    with open(file_path, "r") as file:
+        return ServiceDescription.parse_obj(toml.load(file))
+
+
+def get_git_info() -> GitInfo:
+    path = os.path.join(module_dir(), "config/git-info.toml")
+    with open(path, "r") as fin:
+        return GitInfo.parse_obj(toml.load(fin))

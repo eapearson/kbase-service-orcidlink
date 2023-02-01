@@ -14,16 +14,20 @@ LABEL org.opencontainers.image.licenses=MIT
 # installation scripts.
 # -----------------------------------------
 
-RUN apt update && apt install -y curl wget 
+# We need curl to install poetry; git for the git-info tool.
+RUN apt-get update && apt-get install -y curl git
 
 # Install poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Don't need curl any more.
+RUN apt-get purge -y curl && apt-get autoremove -y
+
 # Annoyingly it puts it here.
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
 RUN mkdir -p /kb/module/work
-RUN mkdir -p /kb/module/config
 RUN chmod -R a+rw /kb/module
 
 # Copying only files needed for service runtime.
@@ -31,11 +35,11 @@ RUN chmod -R a+rw /kb/module
 # and have access to everything.
 COPY ./scripts /kb/module/scripts
 COPY ./src /kb/module/src
+COPY ./config /kb/module/config
 COPY ./templates /kb/module/templates
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
-COPY ./deploy.cfg /kb/module
-COPY ./kbase.yml /kb/module
+COPY ./SERVICE_DESCRIPTION.toml /kb/module
 
 WORKDIR /kb/module
 
