@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
-from orcidlink.routers.works import parse_date
+from orcidlink.service_clients import orcid_api
 from orcidlink.storage import storage_model
 from test.data.utils import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
@@ -13,6 +13,7 @@ from test.mocks.mock_contexts import (
     mock_orcid_api_service,
     no_stderr,
 )
+from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
 
 config_yaml = load_data_file("config1.toml")
 
@@ -63,7 +64,9 @@ def test_get_work(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.get(f"/works/{put_code}", headers={"Authorization": "foo"})
+        response = client.get(
+            f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
+        )
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, dict)
@@ -78,14 +81,16 @@ def test_get_work_errors(fake_fs):
         # An unlinked user gets a 422, since fastapi validates the url param
         # and it should be int.
         #
-        response = client.get(f"/works/bar", headers={"Authorization": "bar"})
+        response = client.get(f"/orcid/works/bar", headers={"Authorization": TOKEN_BAR})
         assert response.status_code == 422
 
         #
         # An unlinked user gets a 422, since fastapi validates the url param
         # and it should be int.
         #
-        response = client.get(f"/works/1526002", headers={"Authorization": "bar"})
+        response = client.get(
+            f"/orcid/works/1526002", headers={"Authorization": TOKEN_BAR}
+        )
         assert response.status_code == 404
 
         #
@@ -95,24 +100,39 @@ def test_get_work_errors(fake_fs):
         # to return a 200 text response for the "123" putCode, which
         # triggers a parse error.
         #
-        response = client.get(f"/works/123", headers={"Authorization": "foo"})
+        response = client.get(f"/orcid/works/123", headers={"Authorization": TOKEN_FOO})
         assert response.status_code == 400
 
         #
         # A bad put code results in a 400 from ORCID
         #
-        response = client.get(f"/works/456", headers={"Authorization": "foo"})
+        response = client.get(f"/orcid/works/456", headers={"Authorization": TOKEN_FOO})
         assert response.status_code == 400
         error = response.json()
-        assert error["data"]["originalStatusCode"] == 400
-        assert error["data"]["originalResponseJSON"]["error-code"] == 9006
+        expected = {
+            "code": "upstreamError",
+            "title": "Error",
+            "message": "Error fetching data from ORCID Auth api",
+            "data": {
+                "source": "get_work",
+                "status_code": 400,
+                "detail": {
+                    "response-code": 400,
+                    "developer-message": 'The client application sent a bad request to ORCID. Full validation error: For input string: "1526002x"',
+                    "user-message": "The client application sent a bad request to ORCID.",
+                    "error-code": 9006,
+                    "more-info": "https://members.orcid.org/api/resources/troubleshooting",
+                },
+            },
+        }
+        assert error == expected
 
 
 def test_get_works(fake_fs):
     with mock_services():
         create_link()
         client = TestClient(app)
-        response = client.get(f"/works", headers={"Authorization": "foo"})
+        response = client.get(f"/orcid/works", headers={"Authorization": TOKEN_FOO})
         assert response.status_code == 200
         work = response.json()
         assert isinstance(work, list)
@@ -126,7 +146,7 @@ def test_get_works_errors(fake_fs):
         #
         # An unlinked user gets a 404 from us.
         #
-        response = client.get(f"/works", headers={"Authorization": "bar"})
+        response = client.get(f"/orcid/works", headers={"Authorization": TOKEN_BAR})
         assert response.status_code == 404
 
 
@@ -160,8 +180,8 @@ def test_create_work(fake_fs):
             ],
         }
         response = client.post(
-            "/works",
-            headers={"Authorization": "foo"},
+            "/orcid/works",
+            headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 200
@@ -206,8 +226,8 @@ def test_create_work_errors(fake_fs):
         # Error: link_record not found
         # client.headers['authorization'] = 'bar'
         response = client.post(
-            f"/works",
-            headers={"Authorization": "bar"},
+            f"/orcid/works",
+            headers={"Authorization": TOKEN_BAR},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 404
@@ -216,8 +236,8 @@ def test_create_work_errors(fake_fs):
         # thrown by the http call.
         new_work_data["title"] = "trigger-http-exception"
         response = client.post(
-            f"/works",
-            headers={"Authorization": "foo"},
+            f"/orcid/works",
+            headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 400
@@ -226,8 +246,8 @@ def test_create_work_errors(fake_fs):
         # Invoke this with a special put code
         new_work_data["title"] = "trigger-500"
         response = client.post(
-            f"/works",
-            headers={"Authorization": "foo"},
+            f"/orcid/works",
+            headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 500
@@ -236,11 +256,30 @@ def test_create_work_errors(fake_fs):
         # Error: Any other non-200 returned from orcid
         new_work_data["title"] = "trigger-400"
         response = client.post(
-            f"/works",
-            headers={"Authorization": "foo"},
+            f"/orcid/works",
+            headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 400
+
+
+def test_external_id():
+    external_id = orcid_api.ORCIDExternalId(
+        external_id_type="foo",
+        external_id_value="value",
+        external_id_normalized=None,
+        external_id_url=orcid_api.StringValue(value="url"),
+        external_id_relationship="rel",
+    )
+    # orcid_api.ORCIDExternalId.parse_obj({
+    #     "external-id-type": "foo",
+    #     "external-id-value": "value",
+    #     "external-id-normalized": None,
+    #     "external-id-url": {
+    #         "value": "url"
+    #     },
+    #     "external-id-relationship": "rel"
+    # })
 
 
 def test_save_work(fake_fs):
@@ -265,7 +304,7 @@ def test_save_work(fake_fs):
                     "relationship": "self",
                 },
                 # adds an extra one
-                # TODO: should model differnt relationship
+                # TODO: should model different relationship
                 # TODO: what about mimicking errors in the
                 # api like a duplicate "self" relationship?
                 {
@@ -277,8 +316,8 @@ def test_save_work(fake_fs):
             ],
         }
         response = client.put(
-            f"/works",
-            headers={"Authorization": "foo"},
+            f"/orcid/works",
+            headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 200
@@ -309,8 +348,8 @@ def test_save_work_errors(fake_fs):
             ],
         }
         response = client.put(
-            f"/works",
-            headers={"Authorization": "bar"},
+            f"/orcid/works",
+            headers={"Authorization": TOKEN_BAR},
             content=json.dumps(new_work_data),
         )
         assert response.status_code == 404
@@ -321,7 +360,9 @@ def test_delete_work(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
+        response = client.delete(
+            f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
+        )
         assert response.status_code == 204
 
 
@@ -330,7 +371,9 @@ def test_delete_work_bad_no_link(fake_fs):
         create_link()
         put_code = 1526002
         client = TestClient(app)
-        response = client.delete(f"/works/{put_code}", headers={"Authorization": "bar"})
+        response = client.delete(
+            f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_BAR}
+        )
         assert response.status_code == 404
 
 
@@ -341,7 +384,9 @@ def test_delete_work_not_source(fake_fs):
         # transpose the final 2 with 3.
         client = TestClient(app)
         put_code = 123
-        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
+        response = client.delete(
+            f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
+        )
         assert response.status_code == 400
         result = response.json()
         assert isinstance(result, dict)
@@ -364,7 +409,9 @@ def test_delete_work_put_code_not_found(fake_fs):
         # transpose the final 2 with 3.
         client = TestClient(app)
         put_code = 456
-        response = client.delete(f"/works/{put_code}", headers={"Authorization": "foo"})
+        response = client.delete(
+            f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
+        )
         assert response.status_code == 400
         result = response.json()
         assert isinstance(result, dict)
@@ -378,27 +425,3 @@ def test_delete_work_put_code_not_found(fake_fs):
         assert result["data"]["error-code"] == 9016
         # # Tha actual messages may change over time, and are not used
         # # programmatically
-
-
-def test_parse_date():
-    assert parse_date("2000") == {"year": {"value": "2000"}}
-    assert parse_date("2000/1") == {"year": {"value": "2000"}, "month": {"value": "01"}}
-    assert parse_date("2000/12") == {
-        "year": {"value": "2000"},
-        "month": {"value": "12"},
-    }
-    assert parse_date("2000/1/2") == {
-        "year": {"value": "2000"},
-        "month": {"value": "01"},
-        "day": {"value": "02"},
-    }
-    assert parse_date("2000/12/3") == {
-        "year": {"value": "2000"},
-        "month": {"value": "12"},
-        "day": {"value": "03"},
-    }
-    assert parse_date("2000/12/34") == {
-        "year": {"value": "2000"},
-        "month": {"value": "12"},
-        "day": {"value": "34"},
-    }

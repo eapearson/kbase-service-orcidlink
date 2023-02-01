@@ -5,7 +5,7 @@
   "source": "KBase CI",
   "title": "Some Data Set, yo",
   "journal": "Me myself and I and me",
-  "date": "** invalid date **",
+  "date": "2021",
   "workType": "online-resource",
   "url": "https://kbase.us",
   "externalIds": [
@@ -13,7 +13,7 @@
       "type": "doi",
       "value": "123",
       "url": "https://example.com",
-      "relationship": "self"
+      "relationship": "external-id-relationship"
     }
   ]
 }

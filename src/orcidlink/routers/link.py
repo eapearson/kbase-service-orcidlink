@@ -1,3 +1,24 @@
+"""
+Core support for using an existing ORCID Link
+
+An ORCID Link opens many doors for providing user tools utilize the ORCID Api, but
+this module focuses on providing direct access to one's ORCID Link. Once created,
+via the "linking_sessions" module, a link may be fetched or deleted. There is currently
+nothing to change about a link.
+
+The url prefix for all endpoints is /link, all endpoints require the Authorization
+header containing either a KBase login token, and all endpoints return JSON or nothing.
+
+To that end the following endpoints are provided:
+
+* GET /link - returns link information (model.LinkRecordPublic) if a link is found associated
+          with the user account associated with the given KBase token
+* GET /link/is_linked - similar to /link, but just returns a boolean indicating whether a link exists or not
+# DELETE /link - removes the link associated with the user account associated with the given KBase token,
+                 and revokes the ORCID token in the link. Returns nothing if successful.
+
+"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Response
@@ -6,14 +27,15 @@ from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     ErrorResponse,
     STD_RESPONSES,
-    ensure_authorization,
     error_response,
     error_response_not_found,
     success_response_no_data,
 )
 from orcidlink.model import LinkRecord, LinkRecordPublic, ORCIDAuthPublic
-from orcidlink.service_clients.ORCIDClient import orcid_oauth
+from orcidlink.service_clients.auth import ensure_authorization
+from orcidlink.service_clients.orcid_api import orcid_oauth
 from orcidlink.storage.storage_model import storage_model
+from starlette.responses import JSONResponse
 
 router = APIRouter(prefix="/link")
 
@@ -41,7 +63,9 @@ def get_link_record(username: str) -> Optional[LinkRecord]:
         },
     },
 )
-async def link(authorization: str | None = AUTHORIZATION_HEADER):
+async def link(
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> LinkRecordPublic | JSONResponse:
     """
     Get ORCID Link
 
@@ -115,7 +139,7 @@ async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
         },
     },
 )
-async def delete_link(authorization: str | None = AUTHORIZATION_HEADER):
+async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Response:
     """
     Delete ORCID Link
 

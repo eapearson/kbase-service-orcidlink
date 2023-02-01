@@ -23,3 +23,4 @@ First release.
 * document workflows, improve pr template [CE-161]
 * add static documentation generation, improve README [CE-162]
 * Add git-info task & tool to capture git [CE-164]
+* Type the ORCID API [CE-166]

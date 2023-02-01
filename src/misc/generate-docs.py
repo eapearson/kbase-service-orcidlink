@@ -2,7 +2,7 @@ import json
 from typing import Any, List
 
 import httpx
-from orcidlink.lib.utils import get_prop
+from orcidlink.lib.json_file import get_prop
 
 
 def flatten(md: List[Any]):

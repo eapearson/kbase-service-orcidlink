@@ -1,26 +1,52 @@
+"""
+The main service entrypoint
+
+The main module provides the sole entrypoint for the FastAPI application. It defines the top level "app",
+and most interaction with the FastAPI app itself, such as exception handling overrides, application
+metadata for documentation, incorporation of all routers supporting all endpoints, and a
+sole endpoint implementing the online api documentation at "/docs".
+
+All endpoints other than the /docs are implement as "routers". All routers are implemented in individual
+modules within the "routers" directory. Each router should be associated with a top level path element, other
+than "root", which implements top level endpoints (other than /docs).
+Routers include: link, linking-sessions, works, orcid, and root.
+
+"""
+
+from typing import Any, Generic, List, TypeVar
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from orcidlink.lib.config import config
+from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import (
-    ErrorException,
+    ErrorResponse,
     error_response,
-    error_response_not_found,
+    error_response2,
     exception_error_response,
 )
-from orcidlink.routers import link, linking_sessions, orcid, root, works
+from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.routers import link, linking_sessions, root
+from orcidlink.routers.orcid import profile, works
 from orcidlink.service_clients.KBaseAuth import (
-    KBaseAuthException,
+    KBaseAuthError,
+    KBaseAuthErrorInfo,
     KBaseAuthInvalidToken,
-    KBaseAuthMissingToken,
 )
+from pydantic import Field
+
+# from pydantic.error_wrappers import ErrorDict
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, JSONResponse
 
+###############################################################################
+# FastAPI application setup
 #
 # Set up FastAPI top level app with associated metadata for documentation purposes.
 #
+###############################################################################
 
 description = """\
 The *ORCID Link Service* provides an API to enable the linking of a KBase
@@ -78,14 +104,34 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
+###############################################################################
+# Routers
 #
 # All paths are included here as routers. Each router is defined in the "routers" directory.
-#
+###############################################################################
 app.include_router(root.router)
 app.include_router(link.router)
 app.include_router(linking_sessions.router)
+app.include_router(profile.router)
 app.include_router(works.router)
-app.include_router(orcid.router)
+
+###############################################################################
+#
+# Exception handlers
+#
+#
+###############################################################################
+
+T = TypeVar("T", bound=ServiceBaseModel)
+
+
+class WrappedError(ServiceBaseModel, Generic[T]):
+    detail: T = Field(...)
+
+
+class ValidationError(ServiceBaseModel):
+    detail: List[Any] = Field(...)
+    body: Any = Field(...)
 
 
 #
@@ -99,77 +145,78 @@ app.include_router(orcid.router)
 # Have this return JSON in our "standard", or at least uniform, format. We don't
 # want users of this api to need to accept FastAPI/Starlette error format.
 # These errors are returned when the API is misused; they should not occur in production.
+# Note that response validation errors are caught by FastAPI and converted to Internal Server
+# errors. https://fastapi.tiangolo.com/tutorial/handling-errors/
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    data: ValidationError = ValidationError(detail=exc.errors(), body=exc.body)
     return error_response(
         "requestParametersInvalid",
         "Request Parameters Invalid",
         "This request does not comply with the schema for this endpoint",
-        data={"detail": exc.errors(), "body": exc.body},
+        data=data,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
 
 
 #
-# It is nice to let these exceptions propagate all the way up by default. There
-# are many calls to auth, and catching each one just muddles up the code.
+# We rely upon the auth client to raise this exception if a bad, invalid, expired token
+# is used. Service endpoint handlers should not attempt to catch this exception.
+# Note that we do not handle missing token errors. These are caught directly by
+# service endpoint handlers as part of defensive programming practices.
 #
-# @app.exception_handler(KBaseAuthMissingToken)
-# async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
-#     # TODO: this should reflect the nature of the auth error,
-#     # probably either 401, 403, or 500.
-#     return exception_error_response(
-#         "missingToken", "Error authenticating with KBase", exc, status_code=401
-#     )
-
-
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
     request: Request, exc: KBaseAuthInvalidToken
-):
-    # TODO: this should reflect the nature of the auth error,
-    # probably either 401, 403, or 500.
-    return exception_error_response(
-        "invalidToken", "KBase auth token is invalid", exc, status_code=401
+) -> JSONResponse:
+    data: WrappedError[KBaseAuthErrorInfo] = WrappedError[KBaseAuthErrorInfo](
+        detail=exc.to_obj()
+    )
+    return error_response(
+        "invalidToken",
+        "Invalid KBase Token",
+        "KBase auth token is invalid",
+        data=data,
+        status_code=status.HTTP_401_UNAUTHORIZED,
     )
 
 
 #
-# @app.exception_handler(KBaseAuthMissingToken)
-# async def kbase_auth_missing_token_handler(
-#     request: Request, exc: KBaseAuthMissingToken
-# ):
-#     # TODO: this should reflect the nature of the auth error,
-#     # probably either 401, 403, or 500.
-#     return exception_error_response(
-#         "missingToken", "KBase auth token is missing", exc, status_code=401
-#     )
+# This covers all other potential auth errors. From experience other potential errors are
+# very rare.
+# See https://github.com/kbase/auth2/blob/master/src/us/kbase/auth2/lib/exceptions/ErrorType.java
+#
 
 
-@app.exception_handler(KBaseAuthException)
-async def kbase_auth_exception_handler(request: Request, exc: KBaseAuthMissingToken):
+class KBaseAuthErrorDetails(ServiceBaseModel):
+    details: KBaseAuthErrorInfo
+
+
+@app.exception_handler(KBaseAuthError)
+async def kbase_auth_exception_handler(
+    request: Request, exc: KBaseAuthError
+) -> JSONResponse:
     # TODO: this should reflect the nature of the auth error,
-    # probably either 401, 403, or 500.
-    return exception_error_response(
-        "authError", "Unknown error authenticating with KBase", exc, status_code=500
+    return error_response(
+        "authError",
+        "Error Authenticating KBase Token",
+        "Unknown error authenticating with KBase",
+        data=KBaseAuthErrorDetails(details=exc.to_obj()),
+        status_code=status.HTTP_401_UNAUTHORIZED,
     )
 
 
-@app.exception_handler(ErrorException)
-async def kbase_error_exception_handler(request: Request, exc: ErrorException):
+#
+# ServiceError is a generic wrapper around an ErrorResponse and status code, and can create
+# its own error response dict.
+#
+@app.exception_handler(ServiceError)
+async def kbase_error_exception_handler(
+    request: Request, exc: ServiceError
+) -> JSONResponse:
     return exc.get_response()
-
-
-# Raised by httpx for "raise_for_error"
-# raise_for_error() is not used in the codebase, but let us keep this
-# for a minute.
-# @app.exception_handler(httpx.HTTPError)
-# async def kbase_http_error_exception_handler(request: Request, exc: httpx.HTTPError):
-#     # TODO: this should reflect the nature of the auth error,
-#     # probably either 401, 403, or 500.
-#     return exception_error_response(
-#         "httpError", "General HTTP Error (httpx)", exc, status_code=exc.status_code
-#     )
 
 
 #
@@ -178,7 +225,9 @@ async def kbase_error_exception_handler(request: Request, exc: ErrorException):
 # error structure.
 #
 @app.exception_handler(500)
-async def internal_server_error_handler(request: Request, exc: Exception):
+async def internal_server_error_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
     return exception_error_response(
         "internalServerError",
         "Internal Server Error",
@@ -187,35 +236,53 @@ async def internal_server_error_handler(request: Request, exc: Exception):
     )
 
 
+class StarletteHTTPDetailData(ServiceBaseModel):
+    detail: Any = Field(...)
+
+
+class StarletteHTTPNotFoundData(StarletteHTTPDetailData):
+    path: str = Field(...)
+
+
 #
-# Finally there are some other errors thrown by FastAPI which need overriding to return
+# Finally there are some other errors thrown by FastAPI / Starlette which need overriding to return
 # a normalized JSON form.
 # This should be all of them.
 # See: https://fastapi.tiangolo.com/tutorial/handling-errors/
 #
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+async def http_exception_handler(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
     if exc.status_code == 404:
-        return error_response(
-            "notFound",
-            "Not Found",
-            "The requested resource was not found",
-            data={"detail": exc.detail, "path": request.url.path},
-            status_code=404,
+        return error_response2(
+            ErrorResponse[StarletteHTTPNotFoundData](
+                code="notFound",
+                title="Not Found",
+                message="The requested resource was not found",
+                data=StarletteHTTPNotFoundData(
+                    detail=exc.detail, path=request.url.path
+                ),
+            ),
+            status_code=status.HTTP_404_NOT_FOUND,
         )
 
-    return error_response(
-        "fastapiError",
-        "FastAPI Error",
-        "Internal FastAPI Exception",
-        data={"detail": exc.detail},
+    return error_response2(
+        ErrorResponse[StarletteHTTPDetailData](
+            code="fastapiError",
+            title="FastAPI Error",
+            message="Internal FastAPI Exception",
+            data=StarletteHTTPDetailData(detail=exc.detail),
+        ),
         status_code=exc.status_code,
     )
 
 
-################################
+###############################################################################
+#
 # API
-################################
+#
+###############################################################################
 
 
 ##
@@ -237,10 +304,11 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     responses={
         200: {
             "description": "Successfully returned the api docs",
-        }
+        },
+        404: {"description": "Not Found"},
     },
 )
-async def docs(req: Request):
+async def docs(req: Request) -> HTMLResponse:
     """
     Get API Documentation
 
@@ -248,10 +316,14 @@ async def docs(req: Request):
     """
     if app.openapi_url is None:
         # FastAPI is obstinate - I initially wanted to handle this case
-        # with a "redirect error" to kbase-ui, but even though I regurned
+        # with a "redirect error" to kbase-ui, but even though I returned
         # 302, it resulted in a 404 in tests! I don't know about real life.
         # So lets just make this a 404, which is reasonable in any case.
-        return error_response_not_found("The 'openapi_url' is 'None'")
+        # return error_response_not_found("The 'openapi_url' is 'None'")
+        return HTMLResponse(
+            content="<h1>Not Found</h1><p>Sorry, the openapi url is not defined</p>",
+            status_code=404,
+        )
 
     openapi_url = config().services.ORCIDLink.url + app.openapi_url
     return get_swagger_ui_html(

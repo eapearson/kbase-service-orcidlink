@@ -58,8 +58,10 @@ class MockAuthService(MockAuthServiceBase):
                     self.send_json(GET_TOKEN_FOO)
                 elif authorization.startswith("bar"):
                     self.send_json(GET_TOKEN_BAR)
-                elif authorization.startswith("exception"):
+                elif authorization.startswith("no_token"):
                     self.send_json_error(self.error_no_token())
+                elif authorization.startswith("invalid_token"):
+                    self.send_json_error(self.error_invalid_token())
                 elif authorization.startswith("bad_json"):
                     self.send_text("Bad JSON!")
                 elif authorization.startswith("something_bad"):

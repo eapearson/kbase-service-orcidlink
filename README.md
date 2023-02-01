@@ -10,7 +10,7 @@ Please see the [design doc](docs/design.md) for further information.
 
 ## Security
 
-This service will only run with a specific set of [environment variables](docs/deployment.md#environment-variables), some of which contain private keys which are essential for communication with ORCID Services.
+This service will only run with a specific set of [environment variables](docs/deployment.md#environment-variables), some of which contain private keys which are essential for communication with ORCID Services. See [the deploymet doc](docs/deployment.md) for details.
 
 ## Background
 
@@ -21,7 +21,7 @@ Many users of KBase also are [ORCID (Open Researcher and Contributor ID)](https:
 
 By linking a KBase account to an ORCID account, tools described above can be implemented, to the benefit of KBase users.
 
-## Install
+## Installation
 
 This service is not directly installable as such. It is a REST-based web service and must be built and run within a compatible deployment environment.
 
@@ -53,7 +53,19 @@ The [API docs](docs/api/index.md) are generated automatically, and are [availabl
 
 ## Contributing
 
-[ to be done ]
+For supported and recommended development practices see [development](docs/development.md).
+
+All development is orchestrated through the GitHub repo roughly following the *gitflow* git workflow.
+
+Contributions should be made via a branch off of the develop branch. Such branches should normally be created in response to a KBase JIRA ticket, but can also be related to a GitHub issue. The contribution branch should be pushed directly to the kbase repo, certainly for staff; outside contributions will need to be from forks.
+
+When the branch is ready for review, a PR is made from the contribution branch to the develop branch. The PR description template lists all of the requirements. When those requirements are met, and tests pass, a review should be requested.
+
+Upon approval, a PR will be merged into the develop branch.
+
+Periodically, or as needed, the state of the develop branch will be deployed to the CI environment, https://ci.kbase.us.
+
+At some point in the future, when a release is called for, the develop branch will be merged into the master branch, a release created, and the resulting image deployed to the next environment, appdev, and ultimately production.
 
 ## License
 
