@@ -82,21 +82,37 @@ kbase/kbase-service-orcidlink:v1.2.3
 
 ### Auth Service
 
-The auth service is configured only by the ubiquitous `KBASE_ENDPOINT` environment variable
+The auth service is configured only by the ubiquitous `KBASE_ENDPOINT` environment variable. That is, the service base url, e.g. `https://ci.kbase.us/services/` is taken from configuration, and the actual endpoint path is embedded in the client.
 
 ### ORCID API and OAuth
 
-There are two ORCID services, the API and OAuth. The OAuth service is utilized for the initial ORCID Link creation, whereas the API is used for account access, unlinking, and works management.
+The service relies upon two ORCID services, API and OAuth. The OAuth service is utilized by the initial linking process and link revocation, and the API is used for accessing a user's ORCID profile.
 
 The base endponts are stored in the environment variables `ORCID_API_BASE_URL` and `ORCID_OAUTH_BASE_URL`. Actual endoints are created from these bases, based on the documented URL structures. In otherwords, although the base URLs are configurable, any changes in the URL structure would need to be resolved within code.
 
 All contact with ORCID API and OAuth service requires a client id and secret, to authenticate the interaction and to identify KBase as the authenticated partner service. These values are placed into the environment variables `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET`. These should obviously be kept as secrets. 
 
+### ORCID Credentials
+
 ORCID supports two styles of API access - Public and Member. Because we are providing ORCID integration on behalf of other users, we use the Member level API. Unlike Public API credentials which any ORCID member can obtain and manage via the web interface, Member API credentials require direct contact between KBase and ORCID staff. Initial contact is through a [form](https://info.orcid.org/register-a-client-application-production-member-api/), and thereafter communication will be by email. Member API credentials are only available to ORCID partner organizations such as KBase.
 
 We already have such a relationship to support auth. It is not clear whether we should obtain a new set of credentials for ORCID Link or should re-use the existing ones. If the latter, we would just need to contact ORCID and request the additional redirect endpoints be configured.
 
-> TODO: clarify this
+In any case, the credential configuration requires a so-called "redirect uri", a component of the 3-legged OAuth flow utilized by ORCID. This redirect uri is an endpoint within KBase to which to redirect the user's browser during the OAuth flow, after they have granted KBase permission to act on their behalf.
+
+![orcid-creds-form-return-uri](/Users/erikpearson/Work/KBase/2022/CreditEngine/OrcidLink/kbase-service-orcidlink/docs/operation/orcid-creds-form-return-uri.png)
+
+The endpoint is within the ORCID Link service itself, a requirement of 3-legged OAuth flow. This endpoint is at the service path `linking-sessions/continue`, as it a component of the `linking-sessions` set of services. The actual redirect uri must be fully qualified. Thus in CI the endpoint is
+
+`https://ci.kbase.us/services/orcidlink/linking-sessions/continue`
+
+It will need to be specified for each KBase deployment environment that the ORCID credentials will support.
+
+Note that in production, since this is a service endpoint and not a ui endpoint, the uri would be:
+
+`https://kbase.us/services/orcidlink/linking-sessions/continue`
+
+> In the screenshot above, note that in bullet point 3 "fully where possible" means that the url should specify the full path. The configured return uri is used by ORCID OAuth to compare to the request uri specified in the OAuth request itself - if they match, ORCID OAuth will perform the redirect, if not, it will display an error message. The match is made by prefix, so one may use a return uri which simply matches the prefix of the eventual redirect. E.g. we could use `https://ci.kbase.us/services/orcidlink`, which would work with any specific endpoint within the `orcidlink` service, giving us the flexibility to change the endpoint at any time, as long as it has the same prefix. However, their note indicates that it is more secure, from their point of view at least, to have the uri match completely.
 
 During the development phase, we are using the ORCID Sandbox, a service provided by ORCID which mimics the production ORCID environment but keeps all data separate.
 
