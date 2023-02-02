@@ -33,7 +33,7 @@ RUN mkdir -p /kb/module/work && mkdir /kb/module/config && chmod -R a+rw /kb/mod
 # Other usages of this image, e.g. testing, mount the project root at /kb/module
 # and have access to everything.
 COPY ./scripts /kb/module/scripts
-COPY ./src /kb/module/src
+COPY ./src/orcidlink /kb/module/src/orcidlink
 COPY ./etc /kb/module/etc
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
