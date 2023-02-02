@@ -35,6 +35,7 @@ from orcidlink.service_clients.KBaseAuth import (
     KBaseAuthInvalidToken,
 )
 from pydantic import Field
+
 # from pydantic.error_wrappers import ErrorDict
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -46,7 +47,7 @@ from starlette.responses import HTMLResponse, JSONResponse
 # Set up FastAPI top level app with associated metadata for documentation purposes.
 #
 ###############################################################################
- 
+
 description = """\
 The *ORCID Link Service* provides an API to enable the linking of a KBase
  user account to an ORCID account. This "link" consists of a [Link Record](#user-content-header_type_linkrecord) which 
@@ -148,7 +149,7 @@ class ValidationError(ServiceBaseModel):
 # errors. https://fastapi.tiangolo.com/tutorial/handling-errors/
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
+    request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     data: ValidationError = ValidationError(detail=exc.errors(), body=exc.body)
     return error_response(
@@ -168,7 +169,7 @@ async def validation_exception_handler(
 #
 @app.exception_handler(KBaseAuthInvalidToken)
 async def kbase_auth_invalid_token_handler(
-        request: Request, exc: KBaseAuthInvalidToken
+    request: Request, exc: KBaseAuthInvalidToken
 ) -> JSONResponse:
     data: WrappedError[KBaseAuthErrorInfo] = WrappedError[KBaseAuthErrorInfo](
         detail=exc.to_obj()
@@ -195,7 +196,7 @@ class KBaseAuthErrorDetails(ServiceBaseModel):
 
 @app.exception_handler(KBaseAuthError)
 async def kbase_auth_exception_handler(
-        request: Request, exc: KBaseAuthError
+    request: Request, exc: KBaseAuthError
 ) -> JSONResponse:
     # TODO: this should reflect the nature of the auth error,
     return error_response(
@@ -213,7 +214,7 @@ async def kbase_auth_exception_handler(
 #
 @app.exception_handler(ServiceError)
 async def kbase_error_exception_handler(
-        request: Request, exc: ServiceError
+    request: Request, exc: ServiceError
 ) -> JSONResponse:
     return exc.get_response()
 
@@ -225,7 +226,7 @@ async def kbase_error_exception_handler(
 #
 @app.exception_handler(500)
 async def internal_server_error_handler(
-        request: Request, exc: Exception
+    request: Request, exc: Exception
 ) -> JSONResponse:
     return exception_error_response(
         "internalServerError",
@@ -251,7 +252,7 @@ class StarletteHTTPNotFoundData(StarletteHTTPDetailData):
 #
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(
-        request: Request, exc: StarletteHTTPException
+    request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:
     if exc.status_code == 404:
         return error_response2(

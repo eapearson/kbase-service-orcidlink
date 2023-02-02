@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eo pipfail
+set -eo pipefail
 
 ./Taskfile mypy
 ./Taskfile black
