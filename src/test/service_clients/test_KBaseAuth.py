@@ -7,7 +7,7 @@ from orcidlink.service_clients.KBaseAuth import (
     KBaseAuthError,
     TokenInfo,
 )
-from test.data.utils import load_data_file
+from test.mocks.data import load_data_file
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
 config_yaml = load_data_file("config1.toml")

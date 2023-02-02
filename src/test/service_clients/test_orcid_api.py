@@ -5,7 +5,6 @@ import pytest
 from orcidlink.lib.config import config
 from orcidlink.lib.errors import ServiceError
 from orcidlink.service_clients import orcid_api
-
 # from orcidlink.service_clients.orcid_api import (
 #     ORCIDAPIClient,
 #     ORCIDOAuthClient,
@@ -13,7 +12,7 @@ from orcidlink.service_clients import orcid_api
 #     orcid_api_url,
 #     orcid_oauth,
 # )
-from test.data.utils import load_data_file, load_test_data
+from test.mocks.data import load_data_file, load_test_data
 from test.mocks.mock_contexts import (
     mock_orcid_api_service,
     mock_orcid_api_service_with_errors,
@@ -28,7 +27,7 @@ config_yaml = load_data_file("config1.toml")
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/src/test/data")
+    fs.add_real_directory("/kb/module/test/data")
     yield fs
 
 
@@ -68,7 +67,7 @@ def test_ORCIDOAuthClient_constructor():
     assert client.access_token == "access_token"
 
     with pytest.raises(
-        TypeError, match='the "access_token" named parameter is required'
+            TypeError, match='the "access_token" named parameter is required'
     ):
         orcid_api.ORCIDOAuthClient(url="url")
 
@@ -110,7 +109,7 @@ def test_ORCIDAuthClient_make_exception():
     )
 
     with pytest.raises(
-        ServiceError, match="Error fetching data from ORCID Auth api"
+            ServiceError, match="Error fetching data from ORCID Auth api"
     ) as ex:
         raise orcid_api.make_exception(fake_response, "source")
 
@@ -129,7 +128,7 @@ def test_ORCIDAuthClient_make_exception():
     fake_response = FakeResponse(status_code=123, text=json.dumps({"foo": "bar"}))
 
     with pytest.raises(
-        ServiceError, match="Error fetching data from ORCID Auth api"
+            ServiceError, match="Error fetching data from ORCID Auth api"
     ) as ex:
         raise orcid_api.make_exception(fake_response, "source")
 
@@ -151,7 +150,7 @@ def test_ORCIDAuthClient_make_exception():
     )
 
     with pytest.raises(
-        ServiceError, match="Error fetching data from ORCID Auth api"
+            ServiceError, match="Error fetching data from ORCID Auth api"
     ) as ex:
         raise orcid_api.make_exception(fake_response, "source")
 
@@ -169,7 +168,7 @@ def test_ORCIDAuthClient_make_exception():
     fake_response = FakeResponse(status_code=401, text="just text, folks")
 
     with pytest.raises(
-        ServiceError, match="Error fetching data from ORCID Auth api"
+            ServiceError, match="Error fetching data from ORCID Auth api"
     ) as ex:
         raise orcid_api.make_exception(fake_response, "source")
 
@@ -193,7 +192,7 @@ def test_ORCIDOAuth_error():
         with mock_orcid_oauth_service2() as [_, _, url]:
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
             with pytest.raises(
-                ServiceError, match="Error fetching data from ORCID Auth api"
+                    ServiceError, match="Error fetching data from ORCID Auth api"
             ):
                 client.revoke_token()
 
@@ -209,7 +208,7 @@ def test_ORCIDAPIClient_constructor():
     assert client.access_token == "access_token"
 
     with pytest.raises(
-        TypeError, match='the "access_token" named parameter is required'
+            TypeError, match='the "access_token" named parameter is required'
     ):
         orcid_api.ORCIDAPIClient(url="url")
 
@@ -261,7 +260,7 @@ def test_ORCIDAPI_get_works_error():
             orcid_id = "0000-0003-4997-3076"
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
             with pytest.raises(
-                ServiceError, match="Error fetching data from ORCID Auth api"
+                    ServiceError, match="Error fetching data from ORCID Auth api"
             ) as ex:
                 client.get_works(orcid_id)
 
@@ -304,7 +303,7 @@ def test_ORCIDAPI_save_work_error():
             #
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
             with pytest.raises(
-                ServiceError, match="Error fetching data from ORCID Auth api"
+                    ServiceError, match="Error fetching data from ORCID Auth api"
             ) as ex:
                 put_code = 1526002
                 work_update = orcid_api.Work.parse_obj(

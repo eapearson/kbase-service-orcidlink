@@ -7,7 +7,7 @@ from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.service_clients import orcid_api
 from orcidlink.storage import storage_model
-from test.data.utils import load_data_file, load_data_json
+from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_api_service,
@@ -21,7 +21,7 @@ config_yaml = load_data_file("config1.toml")
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/src/test/data")
+    fs.add_real_directory("/kb/module/test/data")
     yield fs
 
 
@@ -383,8 +383,8 @@ def test_delete_work_not_source(fake_fs):
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
         assert (
-            result["message"]
-            == "The ORCID API reported an error fo this request, see 'data' for cause"
+                result["message"]
+                == "The ORCID API reported an error fo this request, see 'data' for cause"
         )
         assert result["data"]["response-code"] == 403
         assert result["data"]["error-code"] == 9010
@@ -408,8 +408,8 @@ def test_delete_work_put_code_not_found(fake_fs):
         assert result["code"] == "orcid-api-error"
         assert result["title"] == "ORCID API Error"
         assert (
-            result["message"]
-            == "The ORCID API reported an error fo this request, see 'data' for cause"
+                result["message"]
+                == "The ORCID API reported an error fo this request, see 'data' for cause"
         )
         assert result["data"]["response-code"] == 404
         assert result["data"]["error-code"] == 9016

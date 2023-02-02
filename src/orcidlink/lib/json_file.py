@@ -1,9 +1,4 @@
-import json
-import os
-from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
-
-from orcidlink.lib import utils
+from typing import Dict, List, Tuple, Union
 
 JSONLike = Union["JSONLikeObject", "JSONLikeArray", int, str, bool, None]
 
@@ -29,24 +24,3 @@ def get_prop(value: JSONLikeObject, path: List[str | int]) -> Tuple[JSONLike, bo
             else:
                 raise ValueError("Path element not int")
     return temp, True
-
-
-def get_json_file_path(name: str) -> str:
-    root_path = Path(os.path.join(utils.module_dir(), "data"))
-    if not root_path.exists():
-        raise IOError("Root directory does not exist")
-
-    filename = f"{name}.json"
-
-    file_path = os.path.join(root_path, filename)
-
-    if not Path(file_path).exists():
-        raise IOError("File does not exist")
-
-    return file_path
-
-
-def get_json_file(name: str) -> Any:
-    file_path = get_json_file_path(name)
-    with open(file_path, "r") as db_file:
-        return json.load(db_file)

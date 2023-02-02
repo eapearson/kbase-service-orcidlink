@@ -6,7 +6,7 @@ from orcidlink.lib.config import config
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage import storage_model
-from test.data.utils import load_data_file, load_data_json
+from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_oauth_service,

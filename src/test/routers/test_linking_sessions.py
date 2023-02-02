@@ -8,7 +8,7 @@ from orcidlink.lib.config import config
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage.storage_model import storage_model
-from test.data.utils import load_data_file, load_data_json
+from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_oauth_service,
@@ -75,12 +75,12 @@ def assert_get_linking_session(client, session_id: str):
 
 
 def assert_start_linking_session(
-    client,
-    session_id: str,
-    kbase_session: str = None,
-    kbase_session_backup: str = None,
-    return_link: str = None,
-    skip_prompt: str = None,
+        client,
+        session_id: str,
+        kbase_session: str = None,
+        kbase_session_backup: str = None,
+        return_link: str = None,
+        skip_prompt: str = None,
 ):
     headers = {}
     if kbase_session is not None:
@@ -396,10 +396,10 @@ def test_continue_linking_session(fake_fs):
     """
 
     def assert_continue_linking_session(
-        kbase_session: str = None,
-        kbase_session_backup: str = None,
-        return_link: str = None,
-        skip_prompt: str = None,
+            kbase_session: str = None,
+            kbase_session_backup: str = None,
+            return_link: str = None,
+            skip_prompt: str = None,
     ):
         client = TestClient(app)
 

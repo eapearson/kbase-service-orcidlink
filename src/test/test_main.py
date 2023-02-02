@@ -1,9 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from orcidlink.main import app
-from test.data.utils import load_data_file, load_data_json
+from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
-
 from test.mocks.testing_utils import generate_kbase_token
 
 client = TestClient(app, raise_server_exceptions=False)
@@ -21,7 +20,7 @@ CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/src/test/data")
+    fs.add_real_directory("/kb/module/test/data")
     yield fs
 
 
@@ -62,8 +61,8 @@ def test_validation_exception_handler(fake_fs):
     assert content["code"] == "requestParametersInvalid"
     assert content["title"] == "Request Parameters Invalid"
     assert (
-        content["message"]
-        == "This request does not comply with the schema for this endpoint"
+            content["message"]
+            == "This request does not comply with the schema for this endpoint"
     )
 
 
@@ -78,8 +77,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert content["code"] == "requestParametersInvalid"
             assert content["title"] == "Request Parameters Invalid"
             assert (
-                content["message"]
-                == "This request does not comply with the schema for this endpoint"
+                    content["message"]
+                    == "This request does not comply with the schema for this endpoint"
             )
 
             # call with invalid token
