@@ -13,7 +13,7 @@ from orcidlink.service_clients import orcid_api
 #     orcid_api_url,
 #     orcid_oauth,
 # )
-from test.data.utils import load_data_file, load_test_data
+from test.mocks.data import load_data_file, load_test_data
 from test.mocks.mock_contexts import (
     mock_orcid_api_service,
     mock_orcid_api_service_with_errors,
@@ -27,8 +27,8 @@ config_yaml = load_data_file("config1.toml")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/src/test/data")
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
+    fs.add_real_directory("/kb/module/test/data")
     yield fs
 
 

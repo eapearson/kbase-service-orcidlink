@@ -1,3 +1,14 @@
+"""
+Configuration support for this service
+
+A KBase service requires at least a minimal, and often substantial, configuration in order to operate.
+Some configuration, like the base url for services, differs between each KBase environment.
+Other configuration represents information that may change over time, such as urls.
+Sill other configuration data contains private information like credentials, which must be well controlled.
+
+Because configuration is needed throughout the service's code, it is provided by means of a module variable
+which is populated when the module is first loaded.
+"""
 import os
 import threading
 from typing import Optional
@@ -74,7 +85,6 @@ class ConfigManager:
     def __init__(self, config_path: str):
         self.config_path = config_path
         self.lock = threading.RLock()
-        # self.config_data: Optional[Config] = None
         self.config_data = self.get_config_data()
 
     def get_config_data(self) -> Config:
@@ -98,7 +108,7 @@ def config(reload: bool = False) -> Config:
     global GLOBAL_CONFIG_MANAGER
     if GLOBAL_CONFIG_MANAGER is None:
         GLOBAL_CONFIG_MANAGER = ConfigManager(
-            os.path.join(module_dir(), "config/config.toml")
+            os.path.join(module_dir(), "deploy/config.toml")
         )
     return GLOBAL_CONFIG_MANAGER.config(reload)
 

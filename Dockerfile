@@ -27,16 +27,14 @@ RUN apt-get purge -y curl && apt-get autoremove -y
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-RUN mkdir -p /kb/module/work
-RUN chmod -R a+rw /kb/module
+RUN mkdir -p /kb/module/work && mkdir /kb/module/config && chmod -R a+rw /kb/module
 
 # Copying only files needed for service runtime.
 # Other usages of this image, e.g. testing, mount the project root at /kb/module
 # and have access to everything.
 COPY ./scripts /kb/module/scripts
-COPY ./src /kb/module/src
-COPY ./config /kb/module/config
-COPY ./templates /kb/module/templates
+COPY ./src/orcidlink /kb/module/src/orcidlink
+COPY ./etc /kb/module/etc
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
 COPY ./SERVICE_DESCRIPTION.toml /kb/module
@@ -47,4 +45,4 @@ RUN poetry config virtualenvs.create false && poetry install
 
 ENTRYPOINT [ "scripts/entrypoint.sh" ]
 
-CMD [ "scripts/run-server.sh" ]
+CMD [ "scripts/start-server.sh" ]

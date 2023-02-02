@@ -6,7 +6,7 @@ from orcidlink.lib.config import config
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage import storage_model
-from test.data.utils import load_data_file, load_data_json
+from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_oauth_service,
@@ -21,7 +21,7 @@ config_yaml = load_data_file("config1.toml")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
     yield fs
 
 

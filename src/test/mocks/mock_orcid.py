@@ -2,7 +2,7 @@ import json
 from time import sleep
 
 from orcidlink.lib import utils
-from test.data.utils import load_test_data
+from test.mocks.data import load_test_data
 from test.mocks.mock_server import MockService
 
 

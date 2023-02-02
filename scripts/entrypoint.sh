@@ -7,7 +7,7 @@ export PYTHONPATH="${PWD}/src"
 
 #
 # This execs whatever is provided as a COMMAND to the container. By default, as established
-# in the image via the Dockerfile, it is scripts/run-server.sh
+# in the image via the Dockerfile, it is scripts/start-server.sh
 # This mechanism, though, allows us to run anything inside the container. We use this
 # for running tests, mypy, black, etc. through docker compose.
 # Note that surrounding $@ with double quote causes the expansion (which starts with

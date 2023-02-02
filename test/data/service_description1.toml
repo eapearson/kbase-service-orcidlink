@@ -1,4 +1,6 @@
-module-name = "ORCIDLink"
+name = "ORCIDLink"
+
+title = "ORCID Link"
 
 language = "Python"
 
