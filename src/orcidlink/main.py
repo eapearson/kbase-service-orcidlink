@@ -46,7 +46,7 @@ from starlette.responses import HTMLResponse, JSONResponse
 # Set up FastAPI top level app with associated metadata for documentation purposes.
 #
 ###############################################################################
-
+ 
 description = """\
 The *ORCID Link Service* provides an API to enable the linking of a KBase
  user account to an ORCID account. This "link" consists of a [Link Record](#user-content-header_type_linkrecord) which 
