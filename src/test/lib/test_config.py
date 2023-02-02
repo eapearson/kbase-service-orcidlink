@@ -33,8 +33,8 @@ def test_get_config(my_config_file2):
     assert c.config().orcid.clientId == "REDACTED-CLIENT-ID"
     assert c.config().orcid.clientSecret == "REDACTED-CLIENT-SECRET"
     assert (
-            c.config().services.Auth2.url
-            == "https://ci.kbase.us/services/auth/api/V2/token"
+        c.config().services.Auth2.url
+        == "https://ci.kbase.us/services/auth/api/V2/token"
     )
 
 

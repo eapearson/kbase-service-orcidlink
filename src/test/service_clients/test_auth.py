@@ -31,6 +31,6 @@ def test_ensure_authorization():
         assert isinstance(value, TokenInfo)
 
     with pytest.raises(
-            ServiceError, match="API call requires a KBase auth token"
+        ServiceError, match="API call requires a KBase auth token"
     ) as ex:
         ensure_authorization(None)

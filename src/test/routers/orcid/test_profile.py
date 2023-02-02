@@ -63,8 +63,8 @@ def test_router_profile_to_normalized():
         load_test_data("orcid", "profile-model")
     )
     assert (
-            get_profile_to_ORCIDProfile(orcid_id, raw_profile).dict()
-            == model_profile.dict()
+        get_profile_to_ORCIDProfile(orcid_id, raw_profile).dict()
+        == model_profile.dict()
     )
 
 

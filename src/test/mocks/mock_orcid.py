@@ -90,13 +90,13 @@ class MockORCIDAPI(MockService):
             if new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-500":
                 self.send_text_error("AN ERROR", status_code=500)
             elif (
-                    new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-400"
+                new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-400"
             ):
                 error_data = {"user-message": "This is another error"}
                 self.send_json_error(error_data, status_code=400)
             elif (
-                    new_work["bulk"][0]["work"]["title"]["title"]["value"]
-                    == "trigger-http-exception"
+                new_work["bulk"][0]["work"]["title"]["title"]["value"]
+                == "trigger-http-exception"
             ):
                 # Note that this assumes the client timeout is < 1 sec. Tests
                 # should set the timeout to 0.5sec.
