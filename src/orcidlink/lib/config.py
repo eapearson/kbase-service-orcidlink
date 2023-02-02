@@ -1,3 +1,14 @@
+"""
+Configuration support for this service
+
+A KBase service requires at least a minimal, and often substantial, configuration in order to operate.
+Some configuration, like the base url for services, differs between each KBase environment.
+Other configuration represents information that may change over time, such as urls.
+Sill other configuration data contains private information like credentials, which must be well controlled.
+
+Because configuration is needed throughout the service's code, it is provided by means of a module variable
+which is populated when the module is first loaded.
+"""
 import os
 import threading
 from typing import Optional
