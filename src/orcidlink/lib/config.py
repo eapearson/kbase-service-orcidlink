@@ -97,7 +97,7 @@ def config(reload: bool = False) -> Config:
     global GLOBAL_CONFIG_MANAGER
     if GLOBAL_CONFIG_MANAGER is None:
         GLOBAL_CONFIG_MANAGER = ConfigManager(
-            os.path.join(module_dir(), "config/config.toml")
+            os.path.join(module_dir(), "deploy/config.toml")
         )
     return GLOBAL_CONFIG_MANAGER.config(reload)
 

@@ -11,12 +11,8 @@ custom.env
 *.pyc
 .DS_Store
 docs/api/index.html
+/deploy/*
 
-# Placeholder directories
-/config/*
-!/config/README.md
-/work/*
-!/work/README.md
 
 # Testing
 /htmlcov/
@@ -24,3 +20,6 @@ docs/api/index.html
 coverage.lcov
 .pytest_cache
 .mypy_cache
+
+# Deployment
+/deploy

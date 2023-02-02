@@ -14,7 +14,7 @@ gitinfo_toml = load_data_file("git_info1.toml")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
     fs.create_file(
         "/kb/module/SERVICE_DESCRIPTION.toml", contents=service_description_toml
     )

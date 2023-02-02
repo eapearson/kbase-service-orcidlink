@@ -1,11 +1,10 @@
 #!/bin/bash
 
-# We want to exit immediately if any env_var() call fails
 set -E
 
 jinja render \
-  -t templates/config.toml.jinja \
-  -o config/config.toml \
+  -t etc/config.toml.jinja \
+  -o deploy/config.toml \
   -e KBASE_ENDPOINT="${KBASE_ENDPOINT:?Required environment variable KBASE_ENDPOINT absent or empty}" \
   -e ORCID_OAUTH_BASE_URL="${ORCID_OAUTH_BASE_URL:?Required environment variable KBASE_ENDPOINT absent or empty}" \
   -e ORCID_API_BASE_URL="${ORCID_API_BASE_URL:?Required environment variable KBASE_ENDPOINT absent or empty}" \

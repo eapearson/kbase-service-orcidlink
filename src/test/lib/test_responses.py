@@ -21,7 +21,7 @@ def mock_services():
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 

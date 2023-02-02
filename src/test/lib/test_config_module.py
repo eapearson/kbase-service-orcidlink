@@ -8,14 +8,14 @@ config_yaml2 = load_data_file("config2.toml")
 
 @pytest.fixture
 def my_config_file(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 
 
 @pytest.fixture
 def my_config_file2(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml2)
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml2)
     fs.add_real_directory("/kb/module/src/test/data")
     yield fs
 

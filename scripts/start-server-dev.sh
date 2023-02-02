@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -E
-
 scripts/render-config.sh
 exit_code=$?
 if [ $exit_code != 0 ]; then

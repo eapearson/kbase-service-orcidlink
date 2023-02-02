@@ -49,7 +49,7 @@ Overall, however, the following attributes are important for the nature of this 
 
 ### Environment Variables
 
-The configuration template (`templates/config.toml.jinja`) requires a set of environment variables in order to render to a resulting configuration file.
+The configuration template (`etc/config.toml.jinja`) requires a set of environment variables in order to render to a resulting configuration file.
 
 See [the configuration doc](../operation/configuration.md) for details. 
 
