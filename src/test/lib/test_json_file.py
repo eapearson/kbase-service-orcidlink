@@ -57,23 +57,3 @@ def test_get_prop():
 
     with pytest.raises(ValueError, match="Path element not int"):
         json_file.get_prop(mixed_value, ["foo", "bar"])
-
-
-def test_get_json_file_path(fake_fs):
-    result = json_file.get_json_file_path("foo/bar")
-    assert result == "/kb/module/data/foo/bar.json"
-
-
-def test_get_json_file(fake_fs):
-    result = json_file.get_json_file("foo/bar")
-    assert result == {"baz": "buzz"}
-
-
-def test_get_json_file_error_bad_root_dir(bad_fake_fs1):
-    with pytest.raises(IOError, match="Root directory does not exist"):
-        json_file.get_json_file("foo")
-
-
-def test_get_json_file_error_file_not_found(fake_fs):
-    with pytest.raises(IOError, match="File does not exist"):
-        json_file.get_json_file("bar")

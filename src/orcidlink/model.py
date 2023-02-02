@@ -105,9 +105,10 @@ class LinkRecordPublic(ServiceBaseModel):
 
 
 class ServiceDescription(ServiceBaseModel):
-    module_name: str = Field(alias="module-name")
-    description: str = Field(...)
-    language: str = Field(...)
+    name: str = Field(min_length=2, max_length=50)
+    title: str = Field(min_length=5, max_length=100)
+    language: str = Field(min_length=1, max_length=50)
+    description: str = Field(min_length=50, max_length=4000)
 
 
 # API

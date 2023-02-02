@@ -29,13 +29,13 @@
 One needs to have bash and docker installed.
 
 ```
-git clone https://githubcom/kbase/kbase-service-orcidlink
+git clone https://github.com/kbase/kbase-service-orcidlink
 cd kbase-service-orcidlink
 ./Taskfile test
 ```
   
 * [ ] Tests pass locally
-* [ ] Tests pass in github actions
+* [ ] Tests and build pass in GitHub actions
 * [ ] Manually verified that changes are available (if applicable)
 
 ## Dev Checklist
@@ -48,16 +48,15 @@ cd kbase-service-orcidlink
 * [ ] New and existing unit tests pass locally with my changes
 * [ ] I have run the code quality tools against the codebase
 
-## Development Release Notes
+## Release Notes - Development
 
 > This section only relevant to a PR against develop
 
 * [ ] Ensure there is an "Unreleased" section located at the top of RELEASE_NOTES.md
-* [ ] Add relevant notes to the Unreleased following the format documented within
+* [ ] Add relevant notes to Unreleased
 
 ## Release
 
 > This section only relevant if this PR is preparing a release
 
-* ~~[ ] Bump the version in `kbase.yml` to match the version that will be created in GitHub.~~
 * ~~[ ] Rename the "Unreleased" section to the appropriate release, and create a new, empty "Ureleased" section at the top~~

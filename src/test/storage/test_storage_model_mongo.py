@@ -2,15 +2,16 @@ import pytest
 from orcidlink.lib.config import config
 from orcidlink.model import LinkRecord, LinkingSessionInitial, ORCIDAuth
 from orcidlink.storage.storage_model import storage_model
-from test.data.utils import load_data_file
+
+from test.mocks.data import load_data_file
 
 config_yaml = load_data_file("config1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/src/test/data")
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
+    fs.add_real_directory("/kb/module/test/data")
     yield fs
 
 

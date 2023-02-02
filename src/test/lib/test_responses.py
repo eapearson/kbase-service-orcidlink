@@ -6,7 +6,7 @@ import pytest
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from orcidlink.lib import responses
 from orcidlink.lib.responses import error_response_not_found
-from test.data.utils import load_data_file
+from test.mocks.data import load_data_file
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
 config_yaml = load_data_file("config1.toml")
@@ -21,8 +21,8 @@ def mock_services():
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/config/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/src/test/data")
+    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
+    fs.add_real_directory("/kb/module/test/data")
     yield fs
 
 

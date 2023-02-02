@@ -11,7 +11,7 @@ from orcidlink.translators import to_service  # raw_work_to_work
 
 
 def load_test_data(filename: str):
-    test_data_path = f"{utils.module_dir()}/src/test/data/{filename}.json"
+    test_data_path = f"{utils.module_dir()}/test/data/{filename}.json"
     with open(test_data_path) as fin:
         return json.load(fin)
 

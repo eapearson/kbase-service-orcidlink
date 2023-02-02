@@ -8,31 +8,35 @@ networks:
 services:
   orcidlink:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: ../Dockerfile
     image: kbase/orcidlink:dev
     container_name: ORCIDLink
     hostname: ORCIDLink
     dns: 8.8.8.8
     networks:
+      # kbase-dev network enables it to be integrated into the kbase-ui proxy
+      # for local ui integration work
       - kbase-dev
     ports:
+      # NB cannot use 5000 because macOS uses it; it is handy to expose
+      # this port for poking at the API during development.
       - "5001:5000"
     environment:
       - DEV=no
-      - KBASE_ENDPOINT=${KBASE_ENDPOINT}
-      - ORCID_API_BASE_URL=${ORCID_API_BASE_URL}
-      - ORCID_OAUTH_BASE_URL=${ORCID_OAUTH_BASE_URL}
-      - ORCID_CLIENT_ID=${ORCID_CLIENT_ID}
-      - ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET}
-      - MONGO_HOST=${MONGO_HOST}
-      - MONGO_PORT=${MONGO_PORT}
-      - MONGO_DATABASE=${MONGO_DATABASE}
-      - MONGO_USERNAME=${MONGO_USERNAME}
-      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - KBASE_ENDPOINT
+      - ORCID_API_BASE_URL
+      - ORCID_OAUTH_BASE_URL
+      - ORCID_CLIENT_ID
+      - ORCID_CLIENT_SECRET
+      - MONGO_HOST
+      - MONGO_PORT
+      - MONGO_DATABASE
+      - MONGO_USERNAME
+      - MONGO_PASSWORD
     depends_on:
       - mongo
-    command: [ "scripts/run-server.sh" ]
+    command: [ "scripts/start-server.sh" ]
   mongo:
     image: mongo:3.6.13
     restart: always
