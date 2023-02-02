@@ -1,5 +1,41 @@
 # Development
 
+## Getting Started
+
+1.  install git hooks
+
+Git hooks are a convenience, but not a requirement. Currently, there is a pre-commit and pre-push hook. The pre-commit runs the same code checks as the GHA workflows do, and the pre-push runs the tests.
+
+```shell
+git config --local core.hooksPath .githooks/
+```
+
+2. A convenience...
+
+As all development tasks are automated with `Taskfile`. Rather than invoke it with `./Taskfile task`, you can create an alias and invoke it as `run task`:
+
+```shell
+alias run="${PWD}/Taskfile"
+```
+
+3. run code checks and tests
+
+It is a good idea to start any development session by running the code checks and tests. This ensures you are starting in a clean, well-functioning state.
+
+```shell
+run mypy
+run black
+run test
+```
+
+## Running server locally 
+
+> TODO
+
+## Running server locally with kbase-ui
+
+> TODO 
+
 ## Contributing
 
 All development is orchestrated through the GitHub repo roughly following the *gitflow* git workflow.
@@ -24,20 +60,3 @@ At some point in the future, when a release is called for, the develop branch wi
 - develop demo calls via RESTer in Firefox
 - need some secrets to run against ORCID Sandbox.
 
-## From Devops (Boris)
-
-I believe the requirements are
-- Dockerfile with entrypoint
-- add GHA build actions
-- Follow the develop->main PR flow in order to enable builds using GHA actions and deployment to CI
-- Provide environmental configuration variables, so devops can customize them for each environment, and then your app
-- Provide us with your desired URL and we will set it up
-
-https://rancher.berkeley.kbase.us/env/1a803/apps/stacks/1st290/services/1s239031/containers uses the practices we want
-
-Here is how collections uses env variables instead of dockerize
-- https://github.com/kbase/collections/blob/main/scripts/entrypoint.sh#L5
-- https://github.com/kbase/collections/blob/main/collections_config.toml.jinja
-
-
-If you clone the collections service with the name you want, thats all we need in rancher, just an updated image name, env vars, and a URL
