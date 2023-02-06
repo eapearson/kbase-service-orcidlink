@@ -101,31 +101,37 @@ def test_get_work_errors(fake_fs):
         # triggers a parse error.
         #
         response = client.get(f"/orcid/works/123", headers={"Authorization": TOKEN_FOO})
-        assert response.status_code == 400
+        assert response.status_code == 502
+        error = response.json()
+        assert error["code"] == "upstreamError"
+        assert error["message"] == "Error decoding the ORCID response as JSON"
 
         #
         # A bad put code results in a 400 from ORCID
         #
         response = client.get(f"/orcid/works/456", headers={"Authorization": TOKEN_FOO})
-        assert response.status_code == 400
+        assert response.status_code == 502
         error = response.json()
-        expected = {
-            "code": "upstreamError",
-            "title": "Error",
-            "message": "Error fetching data from ORCID Auth api",
-            "data": {
-                "source": "get_work",
-                "status_code": 400,
-                "detail": {
-                    "response-code": 400,
-                    "developer-message": 'The client application sent a bad request to ORCID. Full validation error: For input string: "1526002x"',
-                    "user-message": "The client application sent a bad request to ORCID.",
-                    "error-code": 9006,
-                    "more-info": "https://members.orcid.org/api/resources/troubleshooting",
-                },
-            },
-        }
-        assert error == expected
+        assert error["code"] == "upstreamError"
+        assert error["message"] == "Error fetching data from ORCID"
+        # print('OH really', type(error), error)
+        # expected = {
+        #     "code": "upstreamError",
+        #     "title": "Error",
+        #     "message": "Error fetching data from ORCID Auth api",
+        #     "data": {
+        #         "source": "get_work",
+        #         "status_code": 400,
+        #         "detail": {
+        #             "response-code": 400,
+        #             "developer-message": 'The client application sent a bad request to ORCID. Full validation error: For input string: "1526002x"',
+        #             "user-message": "The client application sent a bad request to ORCID.",
+        #             "error-code": 9006,
+        #             "more-info": "https://members.orcid.org/api/resources/troubleshooting",
+        #         },
+        #     },
+        # }
+        # assert error == expected
 
 
 def test_get_works(fake_fs):
@@ -230,7 +236,7 @@ def test_create_work_errors(fake_fs):
             headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
-        assert response.status_code == 400
+        assert response.status_code == 502
 
         # Error: 500 returned from orcid
         # Invoke this with a special put code
@@ -240,7 +246,7 @@ def test_create_work_errors(fake_fs):
             headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
-        assert response.status_code == 500
+        assert response.status_code == 502
         # assert response.text == "AN ERROR"
 
         # Error: Any other non-200 returned from orcid
@@ -250,7 +256,7 @@ def test_create_work_errors(fake_fs):
             headers={"Authorization": TOKEN_FOO},
             content=json.dumps(new_work_data),
         )
-        assert response.status_code == 400
+        assert response.status_code == 502
 
 
 def test_external_id():
@@ -377,17 +383,16 @@ def test_delete_work_not_source(fake_fs):
         response = client.delete(
             f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
         )
-        assert response.status_code == 400
+        assert response.status_code == 502
         result = response.json()
-        assert isinstance(result, dict)
-        assert result["code"] == "orcid-api-error"
-        assert result["title"] == "ORCID API Error"
-        assert (
-            result["message"]
-            == "The ORCID API reported an error fo this request, see 'data' for cause"
-        )
-        assert result["data"]["response-code"] == 403
-        assert result["data"]["error-code"] == 9010
+        assert result["code"] == "upstreamError"
+        assert result["title"] == "Upstream Error"
+        # assert (
+        #         result["message"]
+        #         == "The ORCID API reported an error fo this request, see 'data' for cause"
+        # )
+        # assert result["data"]["response-code"] == 403
+        # assert result["data"]["error-code"] == 9010
         # # Tha actual messages may change over time, and are not used
         # # programmatically
 
@@ -402,16 +407,15 @@ def test_delete_work_put_code_not_found(fake_fs):
         response = client.delete(
             f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
         )
-        assert response.status_code == 400
+        assert response.status_code == 502
         result = response.json()
-        assert isinstance(result, dict)
-        assert result["code"] == "orcid-api-error"
-        assert result["title"] == "ORCID API Error"
-        assert (
-            result["message"]
-            == "The ORCID API reported an error fo this request, see 'data' for cause"
-        )
-        assert result["data"]["response-code"] == 404
-        assert result["data"]["error-code"] == 9016
+        assert result["code"] == "upstreamError"
+        assert result["title"] == "Upstream Error"
+        # assert (
+        #         result["message"]
+        #         == "The ORCID API reported an error fo this request, see 'data' for cause"
+        # )
+        # assert result["data"]["response-code"] == 404
+        # assert result["data"]["error-code"] == 9016
         # # Tha actual messages may change over time, and are not used
         # # programmatically

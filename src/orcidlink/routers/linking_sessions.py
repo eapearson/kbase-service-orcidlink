@@ -10,7 +10,8 @@ import json
 import uuid
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Cookie, HTTPException, Path, Query, responses
+from fastapi import APIRouter, Cookie, Path, Query, responses
+from orcidlink.lib import errors
 from orcidlink.lib.config import config
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from orcidlink.lib.responses import (
@@ -18,7 +19,6 @@ from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     ErrorResponse,
     STD_RESPONSES,
-    error_response,
     success_response_no_data,
     ui_error_response,
 )
@@ -36,7 +36,7 @@ from orcidlink.service_clients.auth import ensure_authorization
 from orcidlink.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 from pydantic import Field
-from starlette.responses import JSONResponse, RedirectResponse, Response
+from starlette.responses import RedirectResponse, Response
 
 router = APIRouter(prefix="/linking-sessions")
 
@@ -56,10 +56,12 @@ def get_linking_session_record(
     session_record = model.get_linking_session(session_id)
 
     if session_record is None:
-        raise HTTPException(404, "Linking session not found")
+        raise errors.NotFoundError("Linking session not found")
+        # raise HTTPException(404, "Linking session not found")
 
     if not session_record.username == username:
-        raise HTTPException(403, "Username does not match linking session")
+        raise errors.UnauthorizedError("Username does not match linking session")
+        # raise HTTPException(403, "Username does not match linking session")
 
     return session_record
 
@@ -125,7 +127,7 @@ class CreateLinkingSessionResult(ServiceBaseModel):
 )
 async def create_linking_session(
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> CreateLinkingSessionResult | JSONResponse:
+) -> CreateLinkingSessionResult:
     """
     Create Linking Session
 
@@ -172,7 +174,7 @@ async def create_linking_session(
 )
 async def get_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT, authorization: str = AUTHORIZATION_HEADER
-) -> LinkingSessionStarted | LinkingSessionInitial | LinkingSessionCompletePublic | JSONResponse:
+) -> LinkingSessionStarted | LinkingSessionInitial | LinkingSessionCompletePublic:
     """
     Get Linking Session
 
@@ -184,6 +186,9 @@ async def get_linking_session(
     _, token_info = ensure_authorization(authorization)
 
     linking_session = get_linking_session_record(session_id, authorization)
+    #
+    # Convert to public linking session to remove private info.
+    #
     if type(linking_session) == LinkingSessionComplete:
         linking_session = LinkingSessionCompletePublic.parse_obj(linking_session.dict())
 
@@ -208,7 +213,7 @@ async def get_linking_session(
 async def delete_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT,
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> JSONResponse | Response:
+) -> Response:
     """
     Delete Linking Session
 
@@ -251,7 +256,7 @@ async def delete_linking_session(
 async def finish_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT,
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> SimpleSuccess | JSONResponse:
+) -> SimpleSuccess:
     """
     Finish Linking Session
 
@@ -263,12 +268,15 @@ async def finish_linking_session(
     session_record = get_linking_session_record(session_id, authorization)
 
     if not type(session_record) == LinkingSessionComplete:
-        return error_response(
-            "invalidState",
-            "Invalid Linking Session State",
-            "The linking session must be in 'complete' state, but is not",
-            status_code=400,
+        raise errors.InvalidStateError(
+            "The linking session may only be finished if it is in the 'completed' state"
         )
+        # return error_response(
+        #     "invalidState",
+        #     "Invalid Linking Session State",
+        #     "The linking session must be in 'complete' state, but is not",
+        #     status_code=400,
+        # )
 
     username = token_info.user
     created_at = current_time_millis()
@@ -317,7 +325,7 @@ async def start_linking_session(
     skip_prompt: str = SKIP_PROMPT_QUERY,
     kbase_session: str = KBASE_SESSION_COOKIE,
     kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
-) -> RedirectResponse | JSONResponse:
+) -> RedirectResponse:
     # TODO: should be no json responses here!
     """
     Start Linking Session
@@ -333,7 +341,8 @@ async def start_linking_session(
 
     if kbase_session is None:
         if kbase_session_backup is None:
-            raise HTTPException(401, "Linking requires authentication")
+            raise errors.AuthTokenRequiredError("Linking requires authentication")
+            # raise HTTPException(401, "Linking requires authentication")
         else:
             authorization = kbase_session_backup
     else:
@@ -341,20 +350,14 @@ async def start_linking_session(
 
     _, token_info = ensure_authorization(authorization)
 
-    username = token_info.user
-
-    model = storage_model()
-    session_record = model.get_linking_session(session_id)
-
-    if session_record is None:
-        raise HTTPException(404, "Linking session not found")
-
-    if session_record.username != username:
-        raise HTTPException(403, "User not authorized to access this linking session")
+    # We don't need the record, but we want to ensure it exists
+    # and is owned by this user.
+    _ = get_linking_session_record(session_id, authorization)
 
     # TODO: enhance session record to record the status - so that we can prevent
     # starting a session twice!
 
+    model = storage_model()
     model.update_linking_session_to_started(session_id, return_link, skip_prompt)
 
     # TODO: get from config; in fact, all constants probably should be!
@@ -428,7 +431,7 @@ async def linking_sessions_continue(
     | None = Query(
         default=None, description="For an error case, contains an error code parameter"
     ),
-) -> RedirectResponse | JSONResponse:
+) -> RedirectResponse:
     # TODO: should be no json responses here@
     """
     Continue Linking Session
@@ -452,13 +455,18 @@ async def linking_sessions_continue(
         if kbase_session_backup is None:
             # TODO: this should be our own exception, otherwise it will be caught by
             # the global fastapi hooks.
-            raise HTTPException(401, "Linking requires authentication")
+            raise errors.AuthTokenRequiredError("Linking requires authentication")
+            # raise HTTPException(401, "Linking requires authentication")
         else:
             authorization = kbase_session_backup
     else:
         authorization = kbase_session
 
     authorization, _ = ensure_authorization(authorization)
+
+    #
+    # TODO: MAJOR: ensure ui error responses are working; refactor
+    #
 
     if error is not None:
         return ui_error_response("link.orcid_error", "ORCID Error Linking", error)

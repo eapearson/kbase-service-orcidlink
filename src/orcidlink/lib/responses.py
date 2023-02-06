@@ -59,6 +59,16 @@ def error_response2(
     )
 
 
+#
+# def error_response3(
+#         error: ErrorCode
+# ):
+#     return JSONResponse(
+#         status_code=error.status_code,
+#         content=jsonable_encoder(error, exclude_unset=True)
+#     )
+
+
 def error_response(
     code: str,
     title: str,

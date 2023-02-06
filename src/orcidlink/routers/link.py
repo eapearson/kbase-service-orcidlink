@@ -22,14 +22,12 @@ To that end the following endpoints are provided:
 from typing import Optional
 
 from fastapi import APIRouter, Response
+from orcidlink.lib import errors
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     AUTH_RESPONSES,
     ErrorResponse,
     STD_RESPONSES,
-    error_response,
-    error_response_not_found,
-    success_response_no_data,
 )
 from orcidlink.model import LinkRecord, LinkRecordPublic, ORCIDAuthPublic
 from orcidlink.service_clients.auth import ensure_authorization
@@ -63,7 +61,7 @@ def get_link_record(username: str) -> Optional[LinkRecord]:
         },
     },
 )
-async def link(
+async def get_link(
     authorization: str | None = AUTHORIZATION_HEADER,
 ) -> LinkRecordPublic | JSONResponse:
     """
@@ -76,12 +74,13 @@ async def link(
     link_record = get_link_record(token_info.user)
 
     if link_record is None:
-        return error_response(
-            "notFound",
-            "Not Linked",
-            "No link record was found for this user",
-            status_code=404,
-        )
+        raise errors.NotFoundError("No link record was found for this user")
+        # return error_response(
+        #     "notFound",
+        #     "Not Linked",
+        #     "No link record was found for this user",
+        #     status_code=404,
+        # )
 
     return LinkRecordPublic(
         username=link_record.username,
@@ -151,7 +150,8 @@ async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Respo
     link_record = get_link_record(username)
 
     if link_record is None:
-        return error_response_not_found("User does not have an ORCID Link")
+        raise errors.NotFoundError("User does not have an ORCID Link")
+        # return error_response_not_found("User does not have an ORCID Link")
 
     # TODO: handle error? or propagate?
     orcid_oauth(link_record.orcid_auth.access_token).revoke_token()
@@ -161,4 +161,4 @@ async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Respo
     # TODO: handle error? or propagate?
     model.delete_link_record(username)
 
-    return success_response_no_data()
+    return Response(status_code=204)
