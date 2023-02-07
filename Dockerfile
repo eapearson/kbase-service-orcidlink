@@ -3,7 +3,7 @@ FROM python:3.11.1-slim-bullseye
 # poetry.lock.
 
 MAINTAINER KBase Developer
-LABEL org.opencontainers.image.source = "https://github.com/eapearson/kbase-service-orcidlink"
+LABEL org.opencontainers.image.source = "https://github.com/kbase/kbase-service-orcidlink"
 LABEL org.opencontainers.image.description="A KBase core service to provide for linking a KBase account to an ORCID account, and associated services"
 LABEL org.opencontainers.image.licenses=MIT
 
@@ -17,8 +17,20 @@ LABEL org.opencontainers.image.licenses=MIT
 # We need curl to install poetry; git for the git-info tool.
 RUN apt-get update && apt-get install -y curl git
 
+SHELL ["/bin/bash", "-c"]
+
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.0
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+
+# Temporary fix for broken Python venv.
+# setuptools is not used by poetry (see the install command below), but it is present
+# anyway in poetry's venv (which is separate from that for the service). However, a bug
+# in Python 3.11.1 (and perhaps others, I just confirmed with this version) installs the
+# wrong version of setup tools -- it installs 65.5.0 from 3.11, which has a CVE issued
+# against it. Just upgrading to the latest version, to avoid having to fix this when poetry's
+# venv has a more recent version than 65.5.1 (which fixes the CVE). When the upstream issue is fixed,
+# this line can be removed.
+RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
 
 # Don't need curl any more.
 RUN apt-get purge -y curl && apt-get autoremove -y
@@ -41,7 +53,7 @@ COPY ./SERVICE_DESCRIPTION.toml /kb/module
 
 WORKDIR /kb/module
 
-RUN poetry config virtualenvs.create false && poetry install
+RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install
 
 ENTRYPOINT [ "scripts/entrypoint.sh" ]
 
