@@ -44,11 +44,31 @@ Contributions should be made via a branch off of the develop branch. Such branch
 
 When the branch is ready for review, a PR is made from the contribution branch to the develop branch. The PR description template lists all of the requirements. When those requirements are met, and tests pass, a review should be requested.
 
-Upon approval, a PR will be merged into the develop branch.
+Upon approval, the PR will be merged into the develop branch.
 
 Periodically, or as needed, the state of the develop branch will be deployed to the CI environment, https://ci.kbase.us.
 
 At some point in the future, when a release is called for, the develop branch will be merged into the master branch, a release created, and the resulting image deployed to the next environment, appdev, and ultimately production.
+
+## GitHub Action Workflows
+
+When changes are made to the repo at GitHub, GitHub Actions (GHA) may be invoked to perform tests, an image build, and a push of the resulting image to GitHub Container Registry (GHCR).
+
+It is useful to understand exactly when the GHA workflows are triggered and what they do, because you should monitor the results to ensure that everything that should have happened, has indeed occurred.
+
+| branch | triggering condition | test | build | push | image tag |
+|--------|----------------------|------|-------|------|---|
+| develop | pr activity <sup>1</sup> | ✓ | ✓ | | |
+| develop | pr merged | ✓ | ✓ | ✓ | develop |
+| main | pr activity | ✓ | ✓ | | |
+| main | pr merged | ✓ | ✓ | ✓ | latest-rc, pr-_#_ <sup>2</sup> |
+| main | release | ✓ | ✓ | ✓ | latest, _#.#.#_ <sup>3</sup>|
+| any | manual | ✓ | ✓ | ✓ | br-_branch_ <sup>4</sup>|
+
+<sup>1</sup> activity defined as "opened", "reopened", "synchronize"   
+<sup>2</sup> where _#_ is the pull request number  
+<sup>3</sup> where _#.#.#_ is the semver 2 formatted version  
+<sup>4</sup> where _branch_ is the branch name upon which the manual workflow was run
 
 ## A workflow
 
