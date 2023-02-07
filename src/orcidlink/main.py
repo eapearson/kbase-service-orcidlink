@@ -12,14 +12,13 @@ than "root", which implements top level endpoints (other than /docs).
 Routers include: link, linking-sessions, works, orcid, and root.
 
 """
-
 from typing import Any, Generic, List, TypeVar
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from orcidlink.lib.config import config
-from orcidlink.lib.errors import ServiceError
+from orcidlink.lib.errors import FASTAPI_ERROR, NOT_FOUND, ServiceError, ServiceErrorX
 from orcidlink.lib.responses import (
     ErrorResponse,
     error_response,
@@ -213,8 +212,15 @@ async def kbase_auth_exception_handler(
 # its own error response dict.
 #
 @app.exception_handler(ServiceError)
-async def kbase_error_exception_handler(
-    request: Request, exc: ServiceError
+async def service_error_exception_handler(
+    _: Request, exc: ServiceError
+) -> JSONResponse:
+    return exc.get_response()
+
+
+@app.exception_handler(ServiceErrorX)
+async def service_errorx_exception_handler(
+    _: Request, exc: ServiceErrorX
 ) -> JSONResponse:
     return exc.get_response()
 
@@ -257,8 +263,8 @@ async def http_exception_handler(
     if exc.status_code == 404:
         return error_response2(
             ErrorResponse[StarletteHTTPNotFoundData](
-                code="notFound",
-                title="Not Found",
+                code=NOT_FOUND.code,
+                title=NOT_FOUND.title,
                 message="The requested resource was not found",
                 data=StarletteHTTPNotFoundData(
                     detail=exc.detail, path=request.url.path
@@ -269,13 +275,16 @@ async def http_exception_handler(
 
     return error_response2(
         ErrorResponse[StarletteHTTPDetailData](
-            code="fastapiError",
+            code=FASTAPI_ERROR.code,
             title="FastAPI Error",
             message="Internal FastAPI Exception",
             data=StarletteHTTPDetailData(detail=exc.detail),
         ),
         status_code=exc.status_code,
     )
+    # return error_response3(
+    #
+    # )
 
 
 ###############################################################################

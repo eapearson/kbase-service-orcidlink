@@ -65,9 +65,9 @@
                 "tags": [
                     "link"
                 ],
-                "summary": "Link",
+                "summary": "Get Link",
                 "description": "Get ORCID Link\n\nReturn the link for the user associated with the KBase auth token passed in the \"Authorization\" header",
-                "operationId": "link_link_get",
+                "operationId": "get_link_link_get",
                 "parameters": [
                     {
                         "description": "KBase auth token",
@@ -344,6 +344,15 @@
                                 "schema": {
                                     "title": "Response 200 Get Linking Session Linking Sessions  Session Id  Get",
                                     "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionStarted"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionInitial"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/LinkingSessionCompletePublic"
+                                        },
                                         {
                                             "$ref": "#/components/schemas/LinkingSessionStarted"
                                         },

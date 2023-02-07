@@ -15,9 +15,8 @@ from typing import (
 
 import httpx
 from orcidlink import model
+from orcidlink.lib import errors
 from orcidlink.lib.config import config
-from orcidlink.lib.errors import ServiceError
-from orcidlink.lib.responses import ErrorResponse
 from orcidlink.lib.type import ServiceBaseModel
 from pydantic import Field
 
@@ -344,7 +343,7 @@ class APIErrorWrapper(ServiceBaseModel, Generic[DetailType]):
     # error_text: Optional[str] = Field(default=None)
 
 
-def make_exception(response: httpx.Response, source: str) -> ServiceError:
+def make_exception(response: httpx.Response, source: str) -> errors.ServiceErrorX:
     try:
         json_response = json.loads(response.text)
 
@@ -357,77 +356,127 @@ def make_exception(response: httpx.Response, source: str) -> ServiceError:
             if response.status_code == 401 or response.status_code == 403:
                 json_response.pop("error_description")
 
-            return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-                    code="upstreamError",
-                    title="Error",
-                    message="Error fetching data from ORCID Auth api",
-                    data=APIErrorWrapper[APIResponseUnauthorized](
-                        source=source,
-                        status_code=response.status_code,
-                        detail=APIResponseUnauthorized.parse_obj(json_response),
-                    ),
-                ),
-                status_code=400,
+            return errors.UpstreamError(
+                "Error fetching data from ORCID",
+                data={
+                    "source": source,
+                    "status_code": response.status_code,
+                    "detail": json_response,
+                }
+                # data=APIErrorWrapper[APIResponseUnauthorized](
+                #     source=source,
+                #     status_code=response.status_code,
+                #     detail=APIResponseUnauthorized.parse_obj(json_response),
+                # ),
             )
+
+            # return errors.ServiceError(
+            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
+            #         code="upstreamError",
+            #         title="Error",
+            #         message="Error fetching data from ORCID Auth api",
+            #         data=APIErrorWrapper[APIResponseUnauthorized](
+            #             source=source,
+            #             status_code=response.status_code,
+            #             detail=APIResponseUnauthorized.parse_obj(json_response),
+            #         ),
+            #     ),
+            #     status_code=400,
+            # )
         elif "message-version" in json_response:
-            return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-                    code="upstreamError",
-                    title="Error",
-                    message="Error fetching data from ORCID Auth api",
-                    data=APIErrorWrapper[APIResponseInternalServerError](
-                        source=source,
-                        status_code=response.status_code,
-                        detail=APIResponseInternalServerError.parse_obj(json_response),
-                    ),
-                ),
-                status_code=400,
+            return errors.UpstreamError(
+                "Error fetching data from ORCID",
+                data={
+                    "source": source,
+                    "status_code": response.status_code,
+                    "detail": json_response,
+                },
             )
+            # return ServiceError(
+            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
+            #         code="upstreamError",
+            #         title="Error",
+            #         message="Error fetching data from ORCID Auth api",
+            #         data=APIErrorWrapper[APIResponseInternalServerError](
+            #             source=source,
+            #             status_code=response.status_code,
+            #             detail=APIResponseInternalServerError.parse_obj(json_response),
+            #         ),
+            #     ),
+            #     status_code=400,
+            # )
         elif "response-code" in json_response:
-            return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-                    code="upstreamError",
-                    title="Error",
-                    message="Error fetching data from ORCID Auth api",
-                    data=APIErrorWrapper[APIResponseError](
-                        source=source,
-                        status_code=response.status_code,
-                        detail=APIResponseError.parse_obj(json_response),
-                    ),
-                ),
-                status_code=400,
+            return errors.UpstreamError(
+                "Error fetching data from ORCID",
+                data={
+                    "source": source,
+                    "status_code": response.status_code,
+                    "detail": json_response,
+                },
             )
+            # return ServiceError(
+            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
+            #         code="upstreamError",
+            #         title="Error",
+            #         message="Error fetching data from ORCID Auth api",
+            #         data=APIErrorWrapper[APIResponseError](
+            #             source=source,
+            #             status_code=response.status_code,
+            #             detail=APIResponseError.parse_obj(json_response),
+            #         ),
+            #     ),
+            #     status_code=400,
+            # )
         else:
-            return ServiceError(
-                error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-                    code="upstreamError",
-                    title="Error",
-                    message="Error fetching data from ORCID Auth api",
-                    data=APIErrorWrapper[APIResponseUnknownError](
-                        source=source,
-                        status_code=response.status_code,
-                        detail=APIResponseUnknownError(detail=json_response),
-                    ),
-                ),
-                status_code=400,
+            return errors.UpstreamError(
+                "Error fetching data from ORCID",
+                data={
+                    "source": source,
+                    "status_code": response.status_code,
+                    "detail": json_response,
+                },
             )
+            # return ServiceError(
+            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
+            #         code="upstreamError",
+            #         title="Error",
+            #         message="Error fetching data from ORCID Auth api",
+            #         data=APIErrorWrapper[APIResponseUnknownError](
+            #             source=source,
+            #             status_code=response.status_code,
+            #             detail=APIResponseUnknownError(detail=json_response),
+            #         ),
+            #     ),
+            #     status_code=400,
+            # )
 
     except JSONDecodeError:
-
-        return ServiceError(
-            error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-                code="upstreamError",
-                title="Error",
-                message="Error fetching data from ORCID Auth api",
-                data=APIErrorWrapper[APIParseError](
-                    source=source,
-                    status_code=response.status_code,
-                    detail=APIParseError(error_text=response.text),
-                ),
-            ),
-            status_code=400,
+        return errors.UpstreamError(
+            "Error decoding data returned from ORCID",
+            data={
+                "source": source,
+                "status_code": response.status_code,
+                "detail": {"error_text": response.text},
+            }
+            # data=APIErrorWrapper[APIParseError](
+            #     source=source,
+            #     status_code=response.status_code,
+            #     detail=APIParseError(error_text=response.text),
+            # ),
         )
+        # return ServiceError(
+        #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
+        #         code="upstreamError",
+        #         title="Error",
+        #         message="Error fetching data from ORCID Auth api",
+        #         data=APIErrorWrapper[APIParseError](
+        #             source=source,
+        #             status_code=response.status_code,
+        #             detail=APIParseError(error_text=response.text),
+        #         ),
+        #     ),
+        #     status_code=400,
+        # )
 
 
 class ORCIDClientBase:
@@ -509,7 +558,16 @@ class ORCIDAPIClient(ORCIDClientBase):
         if response.status_code != 200:
             raise make_exception(response, source="get_work")
 
-        return GetWorkResult.parse_obj(json.loads(response.text))
+        # safe json decode
+        try:
+            json_response = json.loads(response.text)
+        except JSONDecodeError as jde:
+            raise errors.UpstreamError(
+                "Error decoding the ORCID response as JSON",
+                data={"exception": str(jde)},
+            )
+
+        return GetWorkResult.parse_obj(json_response)
 
     def save_work(self, orcid_id: str, put_code: int, work_record: Work) -> Work:
         response = httpx.put(

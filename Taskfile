@@ -180,4 +180,4 @@ function help {
 }
 
 TIMEFORMAT="Task completed in %3lR"
-time "${@:-default}"
+time "${@:-help}"
