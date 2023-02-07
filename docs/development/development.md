@@ -56,19 +56,24 @@ When changes are made to the repo at GitHub, GitHub Actions (GHA) may be invoked
 
 It is useful to understand exactly when the GHA workflows are triggered and what they do, because you should monitor the results to ensure that everything that should have happened, has indeed occurred.
 
-| branch | triggering condition | test | build | push | image tag |
-|--------|----------------------|------|-------|------|---|
-| develop | pr activity <sup>1</sup> | ✓ | ✓ | | |
-| develop | pr merged | ✓ | ✓ | ✓ | develop |
-| main | pr activity | ✓ | ✓ | | |
-| main | pr merged | ✓ | ✓ | ✓ | latest-rc, pr-_#_ <sup>2</sup> |
-| main | release | ✓ | ✓ | ✓ | latest, _#.#.#_ <sup>3</sup>|
-| any | manual | ✓ | ✓ | ✓ | br-_branch_ <sup>4</sup>|
+| branch | triggering condition | test | build | push | image name | image tag |
+|--------|----------------------|------|-------|------|---|---|
+| develop | pr activity <sup>1</sup> | ✓ | ✓ | | | |
+| develop | pr merged | ✓ | ✓ | ✓ |  kbase-service-orcidlink-develop | latest, pr-_#_ <sup>2</sup> |
+| main | pr activity | ✓ | ✓ | ✓ | kbase-service-orcidlink | pr-_#_ <sup>2</sup> |
+| main | pr merged | ✓ | ✓ | ✓ | kbase-service-orcidlink |latest-rc, pr-_#_ <sup>2</sup> |
+| main | release | ✓ | ✓ | ✓ | kbase-service-orcidlink | latest, _#.#.#_ <sup>3</sup>|
+| any | manual | ✓ | ✓ | ✓ | kbase-service-orcidlink | br-_branch_ <sup>4</sup>|
 
 <sup>1</sup> activity defined as "opened", "reopened", "synchronize"   
 <sup>2</sup> where _#_ is the pull request number  
 <sup>3</sup> where _#.#.#_ is the semver 2 formatted version  
 <sup>4</sup> where _branch_ is the branch name upon which the manual workflow was run
+
+For those new to the way KBase core service workflows run, let us explain a bit.
+
+
+ 
 
 ## A workflow
 
