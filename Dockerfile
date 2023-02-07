@@ -39,7 +39,7 @@ RUN apt-get purge -y curl && apt-get autoremove -y
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-RUN mkdir -p /kb/module/work && mkdir /kb/module/config && chmod -R a+rw /kb/module
+RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && chmod -R a+rw /kb/module
 
 # Copying only files needed for service runtime.
 # Other usages of this image, e.g. testing, mount the project root at /kb/module

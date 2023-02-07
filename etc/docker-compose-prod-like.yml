@@ -8,11 +8,11 @@ networks:
 services:
   orcidlink:
     build:
-      context: ..
-      dockerfile: ../Dockerfile
-    image: kbase/orcidlink:dev
-    container_name: ORCIDLink
-    hostname: ORCIDLink
+      context: .
+    #      dockerfile: ../Dockerfile
+    #    image: kbase/orcidlink:dev
+    container_name: orcidlink
+    hostname: orcidlink
     dns: 8.8.8.8
     networks:
       # kbase-dev network enables it to be integrated into the kbase-ui proxy
