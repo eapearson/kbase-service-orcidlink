@@ -470,7 +470,9 @@ def test_continue_linking_session(fake_fs):
         #
         session_info = assert_get_linking_session(client, initial_session_id)
         assert session_info["session_id"] == initial_session_id
-        assert "orcid_auth" in session_info
+        # session_info is not in the public session info
+        assert "orcid_auth" not in session_info
+        # TODO: test that it is in the raw session info, though.
 
         #
         # Finish the linking session
@@ -764,8 +766,8 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 # "The linking session must be in 'complete' state, but is not",
                 assert response.json() == {
                     "code": "invalidState",
-                    "title": "Invalid Linking Session State",
-                    "message": "The linking session must be in 'complete' state, but is not",
+                    "title": "Invalid State",
+                    "message": "The linking session may only be finished if it is in the 'completed' state",
                 }
 
                 #
@@ -813,7 +815,8 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 #
                 session_info = assert_get_linking_session(client, initial_session_id)
                 assert session_info["session_id"] == initial_session_id
-                assert "orcid_auth" in session_info
+                # The api should not reveal the orcid_auth
+                assert "orcid_auth" not in session_info
 
                 #
                 # Finish the linking session; first time, ok.

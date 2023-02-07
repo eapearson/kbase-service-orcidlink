@@ -14,8 +14,9 @@ DATE of release
 
 SUMMARY of release
 
-* note 1 [JIRA-TICkET-1]
-* note 2 [JIRA-TICKET-2]
+* Replace GHA workflow files with official KBase ones [CE-161]
+* Update to Pyton 11.1 image to solve CVE-2022-40897[CE-161]
+
 
 ## 0.2.0
 

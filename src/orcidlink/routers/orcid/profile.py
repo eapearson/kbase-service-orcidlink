@@ -2,11 +2,11 @@ from typing import List
 
 from fastapi import APIRouter
 from orcidlink import model
+from orcidlink.lib.errors import NotFoundError
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     AUTH_RESPONSES,
     STD_RESPONSES,
-    error_response,
 )
 from orcidlink.model import ORCIDProfile
 from orcidlink.service_clients import orcid_api
@@ -20,20 +20,14 @@ from starlette.responses import JSONResponse
 ################################
 
 
-##
-# /status - The status of the service.
-#
-# The utility of this endpoint is really as a lightweight call to ping the
-# service.
-# Also, most services and all KB-SDK apps have a /status endpoint.
-# As a side benefit, it also returns non-private configuration.
-# TODO: perhaps non-private configuration should be accessible via an
-# "/info" endpoint.
-#
-
 router = APIRouter(
     prefix="/orcid/profile", responses={404: {"description": "Not found"}}
 )
+
+
+#
+# Utilities
+#
 
 
 def transform_affilations(
@@ -77,8 +71,6 @@ def transform_affilations(
 def get_profile_to_ORCIDProfile(
     orcid_id: str, profile_raw: orcid_api.ORCIDProfile
 ) -> ORCIDProfile:
-    # emails = get_raw_prop(email_json, ["email"])
-    # emails =
     email_addresses = []
     for email in profile_raw.person.emails.email:
         email_addresses.append(email.email)
@@ -116,6 +108,11 @@ def get_profile_to_ORCIDProfile(
     )
 
 
+#
+# API
+#
+
+
 @router.get(
     "",
     response_model=ORCIDProfile,
@@ -143,9 +140,10 @@ async def get_profile(
     #
     user_link_record = storage_model().get_link_record(username)
     if user_link_record is None:
-        return error_response(
-            "notfound", "Not Found", "User link record not found", status_code=404
-        )
+        raise NotFoundError(message="User link record not found")
+        # return error_response(
+        #     "notfound", "Not Found", "User link record not found", status_code=404
+        # )
 
     # Extract our simplified, flattened form of the profile.
     access_token = user_link_record.orcid_auth.access_token

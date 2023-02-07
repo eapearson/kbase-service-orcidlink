@@ -2,25 +2,21 @@ import json
 from typing import List, Optional
 
 import httpx
-from fastapi import APIRouter, Body, HTTPException, Path
+from fastapi import APIRouter, Body, Path
 from orcidlink import model
+from orcidlink.lib import errors
 from orcidlink.lib.config import config
-from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     AUTH_RESPONSES,
-    ErrorResponse,
     STD_RESPONSES,
-    error_response,
     success_response_no_data,
 )
-from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.model import UnknownError
 from orcidlink.service_clients import orcid_api
 from orcidlink.service_clients.auth import ensure_authorization, get_username
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
-from starlette.responses import JSONResponse, Response
+from starlette.responses import Response
 
 router = APIRouter(prefix="/orcid/works", responses={404: {"description": "Not found"}})
 
@@ -34,12 +30,6 @@ def get_link_record(kbase_token: str) -> Optional[model.LinkRecord]:
     username = get_username(kbase_token)
     model = storage_model()
     return model.get_link_record(username)
-
-
-def link_record_not_found() -> JSONResponse:
-    return error_response(
-        "notFound", "Not Found", "ORCID link record not found for user", status_code=404
-    )
 
 
 #
@@ -67,7 +57,7 @@ async def get_work(
         description="The ORCID `put code` for the work record to fetch"
     ),
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> model.ORCIDWork | JSONResponse:
+) -> model.ORCIDWork:
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
     """
@@ -76,26 +66,33 @@ async def get_work(
     link_record = get_link_record(authorization)
 
     if link_record is None:
-        return link_record_not_found()
+        raise errors.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
 
-    try:
-        raw_work = orcid_api.orcid_api(token).get_work(orcid_id, put_code)
-        return to_service.raw_work_to_work(raw_work.bulk[0].work)
-    except ServiceError as err:
-        return err.get_response()
-    except Exception as ex:
-        raise ServiceError(
-            error=ErrorResponse[ServiceBaseModel](
-                code="upstreamError",
-                title="Error",
-                message="Exception calling ORCID endpoint",
-                data=UnknownError(exception=str(ex)),
-            ),
-            status_code=400,
-        )
+    # try:
+    raw_work = orcid_api.orcid_api(token).get_work(orcid_id, put_code)
+    return to_service.raw_work_to_work(raw_work.bulk[0].work)
+    # except errors.ServiceError as err:
+    #     # we just catch this so we can release it!
+    #     raise err
+    # except Exception as ex:
+    #     raise errors.UpstreamError(
+    #         "Exception calling ORCID API",
+    #         data={
+    #             "exception": str(ex)
+    #         }
+    #     )
+    # raise ServiceError(
+    #     error=ErrorResponse[ServiceBaseModel](
+    #         code="upstreamError",
+    #         title="Error",
+    #         message="Exception calling ORCID endpoint",
+    #         data=UnknownError(exception=str(ex)),
+    #     ),
+    #     status_code=400,
+    # )
 
 
 @router.get(
@@ -111,7 +108,7 @@ async def get_work(
 )
 async def get_works(
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> List[model.ORCIDWorkGroup] | JSONResponse:
+) -> List[model.ORCIDWorkGroup]:
     """
     Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
     """
@@ -120,7 +117,7 @@ async def get_works(
     link_record = get_link_record(authorization)
 
     if link_record is None:
-        return link_record_not_found()
+        raise errors.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -159,7 +156,7 @@ async def get_works(
 async def save_work(
     work_update: model.WorkUpdate,
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> model.ORCIDWork | JSONResponse:
+) -> model.ORCIDWork:
     """
     Update a work record; the `work_update` contains the `put code`.
     """
@@ -168,7 +165,7 @@ async def save_work(
     link_record = get_link_record(authorization)
 
     if link_record is None:
-        return link_record_not_found()
+        raise errors.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -204,13 +201,13 @@ async def save_work(
 async def delete_work(
     put_code: int,
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> JSONResponse | Response:
+) -> Response:
     authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
     if link_record is None:
-        return link_record_not_found()
+        raise errors.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -226,12 +223,17 @@ async def delete_work(
     if response.status_code == 204:
         return success_response_no_data()
 
-    return error_response(
-        "orcid-api-error",
-        "ORCID API Error",
+    raise errors.UpstreamError(
         "The ORCID API reported an error fo this request, see 'data' for cause",
-        data=response.json(),
+        data={"upstreamError": response.json()},
     )
+
+    # return error_response(
+    #     "orcid-api-error",
+    #     "ORCID API Error",
+    #     "The ORCID API reported an error fo this request, see 'data' for cause",
+    #     data=response.json(),
+    # )
 
 
 @router.post(
@@ -251,13 +253,13 @@ async def create_work(
         description="The new work record to be added to the ORCID profile."
     ),
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> JSONResponse | model.ORCIDWork:
+) -> model.ORCIDWork:
     authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
 
     if link_record is None:
-        return link_record_not_found()
+        raise errors.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -317,36 +319,50 @@ async def create_work(
             content=json.dumps(content.dict(by_alias=True)),
         )
     except httpx.HTTPError as ex:
-        raise HTTPException(
-            400,
-            {
-                "code": "foo",
-                "message": "An error was encountered saving the work record",
+        raise errors.UpstreamError(
+            "An error was encountered saving the work record",
+            data={
                 "description": str(ex),
             },
         )
+        # raise HTTPException(
+        #     400,
+        #     {
+        #         "code": "foo",
+        #         "message": "An error was encountered saving the work record",
+        #         "description": str(ex),
+        #     },
+        # )
     if response.status_code == 200:
         work_record2 = orcid_api.GetWorkResult.parse_obj(json.loads(response.text))
         # TODO: handle errors here; they are not always
         new_work_record = to_service.raw_work_to_work(work_record2.bulk[0].work)
         return new_work_record
-    else:
-        if response.status_code == 500:
-            raise HTTPException(
-                500,
-                {
-                    "code": "internalserver",
-                    "message": "Internal Server Error",
-                    "data": {"responseText": response.text},
-                },
-            )
-        error = json.loads(response.text)
-        raise HTTPException(
-            400,
-            {
-                "code": "fastapi",
-                # TODO: error should be typed
-                "message": error["user-message"],
-                "data": error,
-            },
+    elif response.status_code == 500:
+        raise errors.UpstreamError(
+            "An error was encountered saving the work record",
+            data={"upstreamError": {"text": response.text}},
         )
+        # raise HTTPException(
+        #     500,
+        #     {
+        #         "code": "internalserver",
+        #         "message": "Internal Server Error",
+        #         "data": {"responseText": response.text},
+        #     },
+        # )
+    else:
+        error = json.loads(response.text)
+        raise errors.UpstreamError(
+            "The ORCID API reported an error for this request, see 'data' for cause",
+            data={"upstreamError": error},
+        )
+        # raise HTTPException(
+        #     400,
+        #     {
+        #         "code": "fastapi",
+        #         # TODO: error should be typed
+        #         "message": error["user-message"],
+        #         "data": error,
+        #     },
+        # )

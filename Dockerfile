@@ -1,4 +1,4 @@
-FROM python:3.11.0-slim-bullseye
+FROM python:3.11.1-slim-bullseye
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.licenses=MIT
 RUN apt-get update && apt-get install -y curl git
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.0
 
 # Don't need curl any more.
 RUN apt-get purge -y curl && apt-get autoremove -y

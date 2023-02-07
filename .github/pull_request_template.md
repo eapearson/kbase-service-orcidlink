@@ -20,7 +20,7 @@
 > * list GitHub issues resolved by this PR
 >   e.g. https://github.com/myrepo/issues/xxx
 
-* [ ] Added the Jira Tickets Ids to the title of the PR
+* [ ] Added the Jira Ticket id(s) to the title of the PR
 * ~~[ ] Added the Github Issue Ids to the title of the PR~~
 
 
