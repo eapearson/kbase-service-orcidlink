@@ -1,5 +1,5 @@
 ---
-name: Run code checks and tests for all conditions for builds
+name: Code checks and tests for conditions
 on:
   pull_request:
     branches:
