@@ -18,7 +18,7 @@ def fake_fs(fs):
     fs.create_file(
         "/kb/module/SERVICE_DESCRIPTION.toml", contents=service_description_toml
     )
-    fs.create_file("/kb/module/config/git-info.toml", contents=gitinfo_toml)
+    fs.create_file("/kb/module/deploy/git-info.toml", contents=gitinfo_toml)
     fs.add_real_directory("/kb/module/test/data")
     yield fs
 
