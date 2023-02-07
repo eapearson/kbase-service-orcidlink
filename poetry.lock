@@ -645,6 +645,22 @@ files = [
 ]
 
 [[package]]
+name = "pipdeptree"
+version = "2.3.3"
+description = "Command line utility to show dependency tree of packages."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pipdeptree-2.3.3-py3-none-any.whl", hash = "sha256:8c012fd8ee79083806db9d1410a44648f71dba11364719aa40ed718f4762e964"},
+    {file = "pipdeptree-2.3.3.tar.gz", hash = "sha256:9d666f77ff1b9528d01b3d98594096484f56de70d752abe22f13e681be239bd8"},
+]
+
+[package.extras]
+graphviz = ["graphviz (>=0.20.1)"]
+test = ["covdefaults (>=2.2)", "diff-cover (>=7.0.1)", "pip (>=22.3)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock (>=3.10)", "virtualenv (>=20.16.6,<21)"]
+
+[[package]]
 name = "platformdirs"
 version = "3.0.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -1135,5 +1151,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = "3.11.0"
-content-hash = "153552203a9c83be4d9b4a481fd7fe2ae4cfe75bf9bd1d00fc69a55f34109e15"
+python-versions = "3.11.1"
+content-hash = "e17ab09825406a46ffb43cbc596c620d5fd9a6c4b36401e70c126561f6a6011a"
