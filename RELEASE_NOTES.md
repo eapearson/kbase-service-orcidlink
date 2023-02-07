@@ -15,7 +15,8 @@ DATE of release
 SUMMARY of release
 
 * Replace GHA workflow files with official KBase ones [CE-161]
-* Update to Pyton 11.1 image to solve CVE-2022-40897[CE-161]
+* Update to Pyton 11.1 image to solve CVE-2022-40897 [CE-161]
+* Patch poetry venv in Dockerfile to solve 2nd CVE-2022-40897 [CE-161]
 
 
 ## 0.2.0
