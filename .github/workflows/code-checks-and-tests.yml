@@ -1,5 +1,5 @@
 ---
-name: Code checks and tests
+name: Code Checks & Tests
 on:
   pull_request:
     branches:
@@ -17,7 +17,7 @@ on:
       - published
   workflow_dispatch:
 jobs:
-  run-tests:
+  code-checks-n-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Check out GitHub Repo
