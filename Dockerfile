@@ -39,23 +39,31 @@ RUN apt-get purge -y curl && apt-get autoremove -y
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && chmod -R a+rw /kb/module
+RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && mkdir -p /kb/module/build  && chmod -R a+rw /kb/module
 
 # Copying only files needed for service runtime.
 # Other usages of this image, e.g. testing, mount the project root at /kb/module
 # and have access to everything.
 COPY ./scripts /kb/module/scripts
 COPY ./src/orcidlink /kb/module/src/orcidlink
+COPY ./src/misc /kb/module/src/misc
 COPY ./etc /kb/module/etc
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
 COPY ./SERVICE_DESCRIPTION.toml /kb/module
+COPY .git /kb/module
 # NB: build should be populated at build time
-COPY ./build /kb/module
+#COPY ./build /kb/module
 
 WORKDIR /kb/module
 
-RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install
+RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install --no-dev
+
+RUN poetry run python src/misc/git-info.py
+
+RUN rm -rf /kb/module/.git && rm -rf /kb/module/src/misc
+
+RUN apt-get remove -y git
 
 ENTRYPOINT [ "scripts/entrypoint.sh" ]
 

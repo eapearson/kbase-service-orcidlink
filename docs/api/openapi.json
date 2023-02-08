@@ -1864,6 +1864,7 @@
                 "required": [
                     "name",
                     "title",
+                    "version",
                     "language",
                     "description"
                 ],
@@ -1878,6 +1879,12 @@
                     "title": {
                         "title": "Title",
                         "maxLength": 100,
+                        "minLength": 5,
+                        "type": "string"
+                    },
+                    "version": {
+                        "title": "Version",
+                        "maxLength": 50,
                         "minLength": 5,
                         "type": "string"
                     },
