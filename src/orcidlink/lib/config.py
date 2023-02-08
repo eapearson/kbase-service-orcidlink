@@ -120,6 +120,6 @@ def get_service_description() -> ServiceDescription:
 
 
 def get_git_info() -> GitInfo:
-    path = os.path.join(module_dir(), "deploy/git-info.toml")
+    path = os.path.join(module_dir(), "build/git-info.toml")
     with open(path, "r") as fin:
         return GitInfo.parse_obj(toml.load(fin))

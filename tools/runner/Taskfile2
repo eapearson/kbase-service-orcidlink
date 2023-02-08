@@ -9,27 +9,16 @@
 #
 # Runs docker compose with the given docker compose filename suffix with the given command arguments
 #
-function _run-in {
-  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --rm orcidlink "${@:2}"
+function _run-dc {
+  docker compose -f "etc/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --rm orcidlink "${@:2}"
+}
+
+function _dc-run {
+  docker compose -f "etc/docker-compose-runner2.yml" --project-directory "${PWD}" --project-name runner run --rm runner "${@:1}"
 }
 
 function _dc-up {
-  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink up
-}
-
-
-#function _run-tool {
-#  echo "Running: "
-#  echo "${@:1}"
-#  docker compose -f "tools/runner/docker-compose-tool-runner.yml" --project-directory "${PWD}" --project-name tools run --rm runner "${@:1}"
-#  echo "done"
-#}
-
-function _run {
-  echo "Running: "
-  echo "${@:1}"
-  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --rm "${1}" "${@:2}"
-  echo "done"
+  docker compose -f "etc/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink up
 }
 
 #
@@ -37,20 +26,21 @@ function _run {
 #
 
 function mypy {
-  _run runner tools/scripts/run-mypy.sh
+  _dc-run scripts/run-mypy.sh
 }
 
 function black {
-  _run runner tools/scripts/run-black.sh "${1}" "${2}"
+  _dc-run scripts/run-black.sh "${1}" "${2}"
 }
 
 function git-info {
-  _run runner poetry --quiet run python src/misc/git-info.py
+  mkdir -p deploy
+  _dc-run poetry run python src/misc/git-info.py
 }
 
 function render-config {
   mkdir -p deploy
-  _run-in-service runner scripts/render-config.sh
+  _dc-run scripts/render-config.sh
 }
 
 #
@@ -58,14 +48,14 @@ function render-config {
 # Returns a success if identical, error (1) if there are any differences.
 #
 function check-openapi {
-  _run runner poetry --quiet run python src/misc/check-openapi.py /app
+  _dc-run poetry run python src/misc/check-openapi.py
 }
 
 #
 # Generates the openapi.json spec file at docs/api/openapi.json
 #
 function generate-openapi {
-  _run runner poetry --quiet run python src/misc/generate-openapi.py /app
+  _dc-run poetry run python src/misc/generate-openapi.py
 }
 
 #
@@ -75,16 +65,16 @@ function generate-openapi {
 #
 function generate-docs {
   rm -rf docs/api/openapi/*
-  _run runner poetry --quiet run python src/misc/generate-docs.py /app
+  _dc-run poetry run python src/misc/generate-docs.py
 }
 
 function shell {
-  _run runner bash
+  _dc-run bash
 }
 
-#function server {
-#  docker compose -f tools/docker-compose-prod-like.yml
-#}
+function server {
+  docker compose -f etc/docker-compose-prod-like.yml
+}
 
 #
 # For generating a config to be used
@@ -101,15 +91,14 @@ function render-config-dev {
   export MONGO_DATABASE=orcidlink
   export MONGO_USERNAME=dev
   export MONGO_PASSWORD=d3v
-  _run-in-server runner scripts/render-config.sh
+  _run-dc runner scripts/render-config.sh
 }
 
 function test {
   # Testing only touches locally controlled services, either mock
   # mock (kbase auth, orcid) or locally running (mongodb), so
   # all such values are controlled within the test environment.
-  export PROJECT_ROOT=/app
-  _run testing tools/scripts/run-tests.sh "${1}"
+  _run-dc testing scripts/run-tests.sh "${1}"
 }
 
 function dev-server {

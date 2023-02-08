@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
+from orcidlink.lib import utils
 from orcidlink.main import app
 from test.mocks.data import load_data_file, load_data_json
 
@@ -14,12 +15,12 @@ gitinfo_toml = load_data_file("git_info1.toml")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
+    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.create_file(
-        "/kb/module/SERVICE_DESCRIPTION.toml", contents=service_description_toml
+        utils.module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
     )
-    fs.create_file("/kb/module/deploy/git-info.toml", contents=gitinfo_toml)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(utils.module_path("build/git-info.toml"), contents=gitinfo_toml)
+    fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 

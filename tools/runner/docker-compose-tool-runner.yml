@@ -1,0 +1,10 @@
+version: '3.6'
+services:
+  runner:
+    build:
+      context: .
+      dockerfile: tools/runner/Dockerfile
+    volumes:
+      - .:/app
+    command:
+      - bash

@@ -1,8 +1,5 @@
-import os
-
 import pytest
-from orcidlink.lib import config
-from orcidlink.lib.utils import module_dir
+from orcidlink.lib import config, utils
 from orcidlink.model import ServiceDescription
 from test.mocks.data import load_data_file
 
@@ -13,23 +10,23 @@ service_description_toml = load_data_file("service_description1.toml")
 
 @pytest.fixture
 def my_config_file(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_file)
+    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_file)
     fs.create_file(
-        "/kb/module/SERVICE_DESCRIPTION.toml", contents=service_description_toml
+        utils.module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
     )
-    fs.add_real_directory("/kb/module/test/data")
+    fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 
 @pytest.fixture
 def my_config_file2(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_file2)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_file2)
+    fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 
 def test_get_config(my_config_file2):
-    c = config.ConfigManager(os.path.join(module_dir(), "deploy/config.toml"))
+    c = config.ConfigManager(utils.module_path("deploy/config.toml"))
     assert c.config().orcid.clientId == "REDACTED-CLIENT-ID"
     assert c.config().orcid.clientSecret == "REDACTED-CLIENT-SECRET"
     assert (

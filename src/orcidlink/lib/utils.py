@@ -10,6 +10,10 @@ def module_dir() -> str:
     return os.path.realpath(os.path.join(my_dir, "../../.."))
 
 
+def module_path(path: str) -> str:
+    return os.path.join(module_dir(), path)
+
+
 def current_time_millis() -> int:
     return int(round(time.time() * 1000))
 

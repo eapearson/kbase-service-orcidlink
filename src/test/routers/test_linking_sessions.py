@@ -4,6 +4,7 @@ import urllib
 
 import pytest
 from fastapi.testclient import TestClient
+from orcidlink.lib import utils
 from orcidlink.lib.config import config
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
@@ -21,7 +22,7 @@ config_yaml = load_data_file("config1.toml")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
+    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     yield fs
 
 

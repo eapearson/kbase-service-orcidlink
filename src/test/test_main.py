@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+from orcidlink.lib import utils
 from orcidlink.main import app
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
@@ -19,8 +20,8 @@ CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
+    fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 

@@ -1,8 +1,11 @@
+import pathlib
 import subprocess
 import sys
+from os import path
 from typing import List
 
 import toml
+from orcidlink.lib import utils
 
 
 def print_lines(prefix: str, lines: List[str]):
@@ -42,7 +45,6 @@ def git_info():
         committer_date,
         *_,
     ] = output.split("\n")
-    # print('hash', commit_hash)
     return {
         "commit_hash": commit_hash,
         "commit_hash_abbreviated": commit_hash_abbreviated,
@@ -81,8 +83,9 @@ def git_config():
     return output.rstrip("\n")
 
 
-def save_info(info):
-    with open("/kb/module/deploy/git-info.toml", "w") as fout:
+def save_info(info, dest):
+    pathlib.Path(dest).mkdir(exist_ok=True)
+    with open(path.join(dest, "git-info.toml"), "w") as fout:
         toml.dump(
             info,
             fout,
@@ -90,6 +93,7 @@ def save_info(info):
 
 
 def main():
+    dest = utils.module_path("build")
     git_config()
     info = git_info()
     url = git_url()
@@ -101,7 +105,7 @@ def main():
     info["branch"] = branch
     info["tag"] = tag
 
-    save_info(info)
+    save_info(info, dest)
 
     sys.exit(0)
 

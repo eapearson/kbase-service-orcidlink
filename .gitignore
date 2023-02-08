@@ -12,6 +12,7 @@ custom.env
 .DS_Store
 docs/api/index.html
 /deploy/*
+/build
 
 
 # Testing

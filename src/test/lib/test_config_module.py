@@ -1,6 +1,5 @@
 import pytest
-from orcidlink.lib import config
-
+from orcidlink.lib import config, utils
 from test.mocks.data import load_data_file
 
 config_yaml = load_data_file("config1.toml")
@@ -9,15 +8,15 @@ config_yaml2 = load_data_file("config2.toml")
 
 @pytest.fixture
 def my_config_file(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(f"{utils.module_dir()}/deploy/config.toml", contents=config_yaml)
+    fs.add_real_directory(f"{utils.module_dir()}/test/data")
     yield fs
 
 
 @pytest.fixture
 def my_config_file2(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml2)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(f"{utils.module_dir()}/deploy/config.toml", contents=config_yaml2)
+    fs.add_real_directory(f"{utils.module_dir()}/test/data")
     yield fs
 
 

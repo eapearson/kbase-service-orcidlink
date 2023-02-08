@@ -2,6 +2,8 @@ name = "ORCIDLink"
 
 title = "ORCID Link"
 
+version = "1.2.3"
+
 language = "Python"
 
 description = """
