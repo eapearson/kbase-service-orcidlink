@@ -24,6 +24,9 @@ jobs:
     needs: code-checks-n-tests
     runs-on: ubuntu-latest
     steps:
+      - name: Check out GitHub Repo
+        uses: actions/checkout@v3
+
       # git-info creates a file git_info.toml in config
       - name: Get git info
         run: ./Taskfile git-info
