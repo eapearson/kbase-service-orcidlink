@@ -12,7 +12,7 @@ from pymongo import MongoClient
 
 class StorageModelMongo:
     def __init__(
-        self, host: str, port: int, database: str, username: str, password: str
+            self, host: str, port: int, database: str, username: str, password: str
     ):
         self.client: MongoClient[Dict[str, Any]] = MongoClient(
             host=host,
@@ -20,6 +20,7 @@ class StorageModelMongo:
             username=username,
             password=password,
             authSource=database,
+            retrywrites=False
         )
         self.db = self.client[database]
 
@@ -60,7 +61,7 @@ class StorageModelMongo:
         self.db.linking_sessions.delete_one({"session_id": session_id})
 
     def get_linking_session(
-        self, session_id: str
+            self, session_id: str
     ) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete | None:
         session = self.db.linking_sessions.find_one({"session_id": session_id})
         if session is None:
@@ -73,7 +74,7 @@ class StorageModelMongo:
             return LinkingSessionInitial.parse_obj(session)
 
     def update_linking_session_to_started(
-        self, session_id: str, return_link: str | None, skip_prompt: str
+            self, session_id: str, return_link: str | None, skip_prompt: str
     ) -> None:
         update = {"return_link": return_link, "skip_prompt": skip_prompt}
         self.db.linking_sessions.update_one(
@@ -81,7 +82,7 @@ class StorageModelMongo:
         )
 
     def update_linking_session_to_finished(
-        self, session_id: str, orcid_auth: ORCIDAuth
+            self, session_id: str, orcid_auth: ORCIDAuth
     ) -> None:
         update = {"orcid_auth": orcid_auth.dict()}
         self.db.linking_sessions.update_one(
