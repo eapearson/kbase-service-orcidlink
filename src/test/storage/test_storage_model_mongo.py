@@ -94,6 +94,7 @@ def test_delete_link_record():
 #
 
 EXAMPLE_LINKING_SESSION_RECORD_1 = {
+    "kind": "initial",
     "session_id": "bar",
     "username": "foo",
     "created_at": 123,

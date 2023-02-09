@@ -118,6 +118,7 @@ def assert_start_linking_session(
 
     assert isinstance(session_info["session_id"], str)
     assert session_info["session_id"] == session_id
+    assert session_info["kind"] == "started"
     assert "orcid_auth" not in session_info
 
     return session_info
@@ -472,7 +473,7 @@ def test_continue_linking_session(fake_fs):
         session_info = assert_get_linking_session(client, initial_session_id)
         assert session_info["session_id"] == initial_session_id
         # session_info is not in the public session info
-        assert "orcid_auth" not in session_info
+        assert "orcid_auth" in session_info
         # TODO: test that it is in the raw session info, though.
 
         #
@@ -817,7 +818,8 @@ def test_finish_linking_session_error_already_finished(fake_fs):
                 session_info = assert_get_linking_session(client, initial_session_id)
                 assert session_info["session_id"] == initial_session_id
                 # The api should not reveal the orcid_auth
-                assert "orcid_auth" not in session_info
+                assert session_info["kind"] == "complete"
+                assert "orcid_auth" in session_info
 
                 #
                 # Finish the linking session; first time, ok.

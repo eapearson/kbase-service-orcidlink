@@ -92,7 +92,7 @@ def test_delete_link_record(fake_fs):
 # LInking session records
 #
 
-EXAMPLE_LINKING_SESSION_RECORD_1 = load_data_json("linking_session_record2.json")
+EXAMPLE_LINKING_SESSION_RECORD_1 = load_data_json("linking_session_record_initial.json")
 
 
 def test_create_linking_session(fake_fs):
