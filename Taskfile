@@ -138,7 +138,6 @@ function server {
   export MONGO_USERNAME=dev
   export MONGO_PASSWORD=d3v
   _dc-up prod-like
-#  docker compose -f etc/docker-compose-prod-like.yml up
 }
 
 # For building a prod-like image locally
