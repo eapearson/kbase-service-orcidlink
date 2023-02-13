@@ -57,13 +57,13 @@ def get_link_record(username: str) -> Optional[LinkRecord]:
         },
         200: {
             "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
-                           + "for this user; contains no secrets",
+            + "for this user; contains no secrets",
             "model": LinkRecordPublic,
         },
     },
 )
 async def get_link(
-        authorization: str | None = AUTHORIZATION_HEADER,
+    authorization: str | None = AUTHORIZATION_HEADER,
 ) -> LinkRecordPublic | JSONResponse:
     """
     Get ORCID Link
@@ -123,10 +123,7 @@ async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
     link_record = get_link_record(token_info.user)
     get_link_elapsed = time.perf_counter() - get_link_start
 
-    log_event("debug-perf", {
-        "auth": auth_elapsed,
-        "get-link": get_link_elapsed
-    })
+    log_event("debug-perf", {"auth": auth_elapsed, "get-link": get_link_elapsed})
 
     return link_record is not None
 
