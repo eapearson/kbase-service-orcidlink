@@ -1064,7 +1064,7 @@ files = [
 name = "types-toml"
 version = "0.10.8.2"
 description = "Typing stubs for toml"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 files = [
@@ -1151,5 +1151,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = "3.11.1"
-content-hash = "e17ab09825406a46ffb43cbc596c620d5fd9a6c4b36401e70c126561f6a6011a"
+python-versions = "3.11.2"
+content-hash = "cc170b5ce6162fbeb7a91ef3641d4dbee03cee99a5ea757097d7f887ea60f7b4"
