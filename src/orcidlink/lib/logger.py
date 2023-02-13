@@ -77,19 +77,4 @@ def log_event(event: str, data: Any, level: int = logging.INFO) -> str:
 
     orcidlink_log.log(level, message)
 
-    # if level == "debug":
-    #     orcidlink_log.debug(message)
-    # elif level == "info":
-    #     orcidlink_log.info(message)
-    # elif level == "warning":
-    #     orcidlink_log.warning(message)
-    # elif level == "error":
-    #     orcidlink_log.error(message)
-    # elif level == "critical":
-    #     orcidlink_log.critical(message)
-    # else:
-    #     raise ValueError(
-    #         f"log level must be one of debug, info, warning, error, or critical; it is '{level}'"
-    #     )
-    print("logged?", log_id, level, message)
     return log_id
