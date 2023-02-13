@@ -29,6 +29,7 @@ from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionCompletePublic,
     LinkingSessionInitial,
+    LinkingSessionPublic,
     LinkingSessionStarted,
     SimpleSuccess,
 )
@@ -143,6 +144,7 @@ async def create_linking_session(
     expires_at = created_at + LINKING_SESSION_TTL * 1000
     session_id = str(uuid.uuid4())
     linking_record = LinkingSessionInitial(
+        kind="initial",
         session_id=session_id,
         username=username,
         created_at=created_at,
@@ -158,9 +160,7 @@ async def create_linking_session(
     responses={
         200: {
             "description": "Returns the linking session",
-            "model": LinkingSessionStarted
-            | LinkingSessionInitial
-            | LinkingSessionCompletePublic,
+            "model": LinkingSessionPublic,
         },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
@@ -174,7 +174,7 @@ async def create_linking_session(
 )
 async def get_linking_session(
     session_id: str = SESSION_ID_PATH_ELEMENT, authorization: str = AUTHORIZATION_HEADER
-) -> LinkingSessionStarted | LinkingSessionInitial | LinkingSessionCompletePublic:
+) -> LinkingSessionPublic:
     """
     Get Linking Session
 
@@ -186,11 +186,15 @@ async def get_linking_session(
     _, token_info = ensure_authorization(authorization)
 
     linking_session = get_linking_session_record(session_id, authorization)
+
     #
     # Convert to public linking session to remove private info.
     #
-    if type(linking_session) == LinkingSessionComplete:
-        linking_session = LinkingSessionCompletePublic.parse_obj(linking_session.dict())
+    # NB 'kind' is configured as the discriminator for the types that compose
+    # the LinkingSession union type. We could do this more simply, but
+    # we need the conditional to satisfy mypy.
+    if linking_session.kind == "complete":
+        return LinkingSessionCompletePublic.parse_obj(linking_session)
 
     return linking_session
 
@@ -495,7 +499,6 @@ async def linking_sessions_continue(
         )
 
     session_id = unpacked_state.get("session_id")
-
     session_record = get_linking_session_record(session_id, authorization)
 
     if not type(session_record) == LinkingSessionStarted:

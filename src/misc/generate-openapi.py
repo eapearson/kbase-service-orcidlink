@@ -1,11 +1,13 @@
 import json
+import sys
 
 from fastapi.openapi.utils import get_openapi
 from orcidlink.main import app
 
 
 def main():
-    with open("/kb/module/docs/api/openapi.json", "w") as out:
+    dest = sys.argv[1]
+    with open(f"{dest}/docs/api/openapi.json", "w") as out:
         json.dump(
             get_openapi(
                 title=app.title,

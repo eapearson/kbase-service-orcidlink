@@ -1,12 +1,14 @@
 import json
 
 import pytest
-from orcidlink.lib import json_file
+from orcidlink.lib import json_file, utils
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/data/foo/bar.json", contents=json.dumps({"baz": "buzz"}))
+    fs.create_file(
+        f"{utils.module_dir()}/data/foo/bar.json", contents=json.dumps({"baz": "buzz"})
+    )
     yield fs
 
 

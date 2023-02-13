@@ -12,7 +12,7 @@ documentation.
 
 """
 
-from typing import List, Optional, Union
+from typing import Annotated, List, Literal, Optional, Union
 
 from orcidlink.lib.type import ServiceBaseModel
 from pydantic import Field
@@ -57,27 +57,54 @@ class ORCIDAuthPublic(ServiceBaseModel):
 # store it.
 
 
-class LinkingSessionInitial(ServiceBaseModel):
+class LinkingSessionBase(ServiceBaseModel):
     session_id: str = Field(...)
     username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
 
 
-class LinkingSessionStarted(LinkingSessionInitial):
+class LinkingSessionInitial(LinkingSessionBase):
+    kind: Literal["initial"]
+
+
+class LinkingSessionStarted(LinkingSessionBase):
+    kind: Literal["started"]
     return_link: str | None = Field(...)
     skip_prompt: str = Field(...)
 
 
-class LinkingSessionComplete(LinkingSessionStarted):
+class LinkingSessionComplete(LinkingSessionBase):
+    kind: Literal["complete"]
+    return_link: str | None = Field(...)
+    skip_prompt: str = Field(...)
     orcid_auth: ORCIDAuth = Field(...)
+
+
+LinkingSession = Annotated[
+    Union[LinkingSessionInitial, LinkingSessionStarted, LinkingSessionComplete],
+    Field(discriminator="kind"),
+]
 
 
 # TODO: maybe just a quick hack, but we use
 # this concept of "public" vs "private" types.
 # Public types are safe for exposing via the api.
-class LinkingSessionCompletePublic(LinkingSessionStarted):
+class LinkingSessionCompletePublic(LinkingSessionBase):
+    kind: Literal["complete"]
+    return_link: str | None = Field(...)
+    skip_prompt: str = Field(...)
     orcid_auth: ORCIDAuthPublic = Field(...)
+
+
+# class LinkingSessionPublic(ServiceBaseModel):
+#     __root__: Union[LinkingSessionInitial, LinkingSessionStarted, LinkingSessionCompletePublic]
+
+
+LinkingSessionPublic = Annotated[
+    Union[LinkingSessionInitial, LinkingSessionStarted, LinkingSessionCompletePublic],
+    Field(discriminator="kind"),
+]
 
 
 class SessionInfo(ServiceBaseModel):
@@ -107,6 +134,7 @@ class LinkRecordPublic(ServiceBaseModel):
 class ServiceDescription(ServiceBaseModel):
     name: str = Field(min_length=2, max_length=50)
     title: str = Field(min_length=5, max_length=100)
+    version: str = Field(min_length=5, max_length=50)
     language: str = Field(min_length=1, max_length=50)
     description: str = Field(min_length=50, max_length=4000)
 

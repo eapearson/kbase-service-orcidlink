@@ -3,21 +3,21 @@ networks:
   kbase-dev:
     name: kbase-dev
 services:
-  orcidlink:
+  testing:
     build:
       context: .
-    dns: 8.8.8.8
+      dockerfile: tools/runner/Dockerfile
     volumes:
-      # Update this to wherever you want VS Code to mount the folder of your project
-      - .:/kb/module
-    # no environment needed as all services are mocked locally
+      - .:/app
+    command:
+      - bash
     depends_on:
       - mongo
   mongo:
     image: mongo:3.6.13
     restart: always
     volumes:
-      - ./scripts/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+      - ./tools/scripts/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
     ports:
       - 27017:27017
     environment:

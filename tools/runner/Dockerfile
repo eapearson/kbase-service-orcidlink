@@ -1,4 +1,4 @@
-FROM python:3.11.1-slim-bullseye
+FROM python:3.11.1-alpine
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -15,7 +15,8 @@ LABEL org.opencontainers.image.licenses=MIT
 # -----------------------------------------
 
 # We need curl to install poetry; git for the git-info tool.
-RUN apt-get update && apt-get install -y curl git
+#RUN apt-get update && apt-get install -y curl git
+RUN apk add curl git bash
 
 SHELL ["/bin/bash", "-c"]
 
@@ -33,38 +34,26 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
 RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
 
 # Don't need curl any more.
-RUN apt-get purge -y curl && apt-get autoremove -y
+#RUN apt-get purge -y curl && apt-get autoremove -y
 
 # Annoyingly it puts it here.
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && mkdir -p /kb/module/build  && chmod -R a+rw /kb/module
+RUN mkdir -p /app && chmod -R a+rw /app
 
 # Copying only files needed for service runtime.
 # Other usages of this image, e.g. testing, mount the project root at /kb/module
 # and have access to everything.
-COPY ./scripts /kb/module/scripts
-COPY ./src/orcidlink /kb/module/src/orcidlink
-COPY ./src/misc /kb/module/src/misc
-COPY ./etc /kb/module/etc
-COPY ./poetry.lock /kb/module
-COPY ./pyproject.toml /kb/module
-COPY ./SERVICE_DESCRIPTION.toml /kb/module
-COPY .git /kb/module
-# NB: build should be populated at build time
-#COPY ./build /kb/module
+COPY ./pyproject.toml /app
+COPY ./poetry.lock /app
+COPY ../tools /app/tools
 
-WORKDIR /kb/module
 
-RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install --no-dev
+WORKDIR /app
 
-RUN poetry run python src/misc/git-info.py
+RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install
 
-RUN rm -rf /kb/module/.git && rm -rf /kb/module/src/misc
+ENTRYPOINT [ "tools/runner/entrypoint.sh" ]
 
-RUN apt-get remove -y git
-
-ENTRYPOINT [ "scripts/entrypoint.sh" ]
-
-CMD [ "scripts/start-server.sh" ]
+CMD [ "bash" ]

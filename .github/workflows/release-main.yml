@@ -7,7 +7,11 @@ on:
       - master
     types: [ published ]
 jobs:
+  pre-build:
+    uses: ./.github/workflows/reusable_pre-build.yml
+    secrets: inherit
   check-source-branch:
+    needs: pre-build
     uses: kbase/.github/.github/workflows/reusable_validate-branch.yml@main
     with:
       build_branch: '${{ github.event.release.target_commitish }}'

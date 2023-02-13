@@ -1,4 +1,5 @@
 {
+  "kind": "initial",
   "session_id": "bar",
   "username": "foo",
   "created_at": 123,

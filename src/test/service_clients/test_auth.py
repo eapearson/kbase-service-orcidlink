@@ -1,4 +1,5 @@
 import pytest
+from orcidlink.lib import utils
 from orcidlink.lib.errors import ServiceError
 from orcidlink.service_clients import auth
 from orcidlink.service_clients.KBaseAuth import TokenInfo
@@ -12,8 +13,8 @@ config_yaml = load_data_file("config1.toml")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
+    fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 

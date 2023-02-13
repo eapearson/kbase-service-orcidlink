@@ -20,6 +20,7 @@ class StorageModelMongo:
             username=username,
             password=password,
             authSource=database,
+            retrywrites=False,
         )
         self.db = self.client[database]
 
@@ -63,13 +64,17 @@ class StorageModelMongo:
         self, session_id: str
     ) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete | None:
         session = self.db.linking_sessions.find_one({"session_id": session_id})
+
         if session is None:
             return None
         if "orcid_auth" in session:
+            session["kind"] = "complete"
             return LinkingSessionComplete.parse_obj(session)
         elif "skip_prompt" in session:
+            session["kind"] = "started"
             return LinkingSessionStarted.parse_obj(session)
         else:
+            session["kind"] = "initial"
             return LinkingSessionInitial.parse_obj(session)
 
     def update_linking_session_to_started(

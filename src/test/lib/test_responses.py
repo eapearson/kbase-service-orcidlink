@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi.responses import JSONResponse, RedirectResponse, Response
-from orcidlink.lib import responses
+from orcidlink.lib import responses, utils
 from orcidlink.lib.responses import error_response_not_found
 from test.mocks.data import load_data_file
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
@@ -21,8 +21,8 @@ def mock_services():
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file("/kb/module/deploy/config.toml", contents=config_yaml)
-    fs.add_real_directory("/kb/module/test/data")
+    fs.create_file(f"{utils.module_dir()}/deploy/config.toml", contents=config_yaml)
+    fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 

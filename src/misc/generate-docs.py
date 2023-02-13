@@ -1,4 +1,5 @@
 import json
+import sys
 from typing import Any, List
 
 import httpx
@@ -31,17 +32,12 @@ def render_html_list(md):
     return "".join(flatten(md))
 
 
-def save_markdown(markdown: List[str], file: str):
-    with open(f"/kb/module/docs/api/{file}", "w") as fout:
+def save_markdown(markdown: List[str], file: str, dest: str):
+    with open(f"/{dest}/docs/api/{file}", "w") as fout:
         fout.write(render_markdown_list(markdown))
 
 
-def save_markdown_json(markdown: List[str], file: str):
-    with open(f"/kb/module/docs/api/{file}", "w") as fout:
-        json.dump({"text": render_markdown_list(markdown), "mode": "gfm"}, fout)
-
-
-def save_markdown_rendered(markdown: List[str], file: str):
+def save_markdown_rendered(markdown: List[str], file: str, dest: str):
     content = json.dumps({"text": render_markdown_list(markdown), "mode": "gfm"})
     result = httpx.post(
         "https://api.github.com/markdown",
@@ -63,7 +59,7 @@ def save_markdown_rendered(markdown: List[str], file: str):
 </body>
 </html>
 """
-    with open(f"/kb/module/docs/api/{file}", "w") as fout:
+    with open(f"{dest}/docs/api/{file}", "w") as fout:
         fout.write(doc)
 
 
@@ -456,7 +452,8 @@ def generate_glossary():
 
 
 def main():
-    with open("/kb/module/docs/api/openapi.json", "r") as fin:
+    dest = sys.argv[1]
+    with open(f"{dest}/docs/api/openapi.json", "r") as fin:
         spec = json.load(fin)
 
         md = []
@@ -495,8 +492,8 @@ alphabetically, which is fine for looking them up, but not for their relationshi
         md.append(md_header("Glossary", 2))
         md.append(generate_glossary())
         md.append("-fin-")
-    save_markdown(md, "index.md")
-    save_markdown_rendered(md, "index.html")
+    save_markdown(md, "index.md", dest)
+    save_markdown_rendered(md, "index.html", dest)
 
 
 main()
