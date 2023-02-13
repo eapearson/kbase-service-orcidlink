@@ -6,22 +6,31 @@ from typing import Any
 from orcidlink.lib.utils import epoch_time_millis
 
 
-def log_event(event: str, data: Any, level: str) -> str:
-    # We use a separate logger, configured to save the
-    # entire message as a simple string ... and that string
-    # is a JSON-encoded message object.
-    # The resulting log file, then, is y it is a JSON stream format, since it
-    # contains multiple objects in sequence.
-    orcidlink_log = logging.getLogger("orcidlink")
-    log_id = str(uuid.uuid4())
-    if len(orcidlink_log.handlers) == 0:
+def get_logger() -> logging.Logger:
+    logger = logging.getLogger("orcidlink")
+    if len(logger.handlers) == 0:
         # Here we may change the logging handler to something like HTTP, syslog, io stream,
         # see https://docs.python.org/3/library/logging.handlers.html
         handler = logging.FileHandler("/tmp/orcidlink.log")
         formatter = logging.Formatter("%(message)s")
         handler.setFormatter(formatter)
-        orcidlink_log.addHandler(handler)
+        logger.addHandler(handler)
+    return logger
 
+
+def log_level(level: int) -> None:
+    logger = get_logger()
+    logger.setLevel(level)
+
+
+def log_event(event: str, data: Any, level: int = logging.INFO) -> str:
+    # We use a separate logger, configured to save the
+    # entire message as a simple string ... and that string
+    # is a JSON-encoded message object.
+    # The resulting log file, then, is y it is a JSON stream format, since it
+    # contains multiple objects in sequence.
+    orcidlink_log = get_logger()
+    log_id = str(uuid.uuid4())
     message = json.dumps(
         {
             # If logs are combined, we need to tie log entries to
@@ -66,18 +75,21 @@ def log_event(event: str, data: Any, level: str) -> str:
         }
     )
 
-    if level == "debug":
-        orcidlink_log.debug(message)
-    elif level == "info":
-        orcidlink_log.info(message)
-    elif level == "warning":
-        orcidlink_log.warning(message)
-    elif level == "error":
-        orcidlink_log.error(message)
-    elif level == "critical":
-        orcidlink_log.critical(message)
-    else:
-        raise ValueError(
-            f"log level must be one of debug, info, warning, error, or critical; it is '{level}'"
-        )
+    orcidlink_log.log(level, message)
+
+    # if level == "debug":
+    #     orcidlink_log.debug(message)
+    # elif level == "info":
+    #     orcidlink_log.info(message)
+    # elif level == "warning":
+    #     orcidlink_log.warning(message)
+    # elif level == "error":
+    #     orcidlink_log.error(message)
+    # elif level == "critical":
+    #     orcidlink_log.critical(message)
+    # else:
+    #     raise ValueError(
+    #         f"log level must be one of debug, info, warning, error, or critical; it is '{level}'"
+    #     )
+    print("logged?", log_id, level, message)
     return log_id

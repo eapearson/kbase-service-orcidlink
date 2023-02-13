@@ -345,19 +345,19 @@
                                     "title": "Response 200 Get Linking Session Linking Sessions  Session Id  Get",
                                     "anyOf": [
                                         {
-                                            "$ref": "#/components/schemas/LinkingSessionStarted"
+                                            "$ref": "#/components/schemas/LinkingSessionInitial"
                                         },
                                         {
-                                            "$ref": "#/components/schemas/LinkingSessionInitial"
+                                            "$ref": "#/components/schemas/LinkingSessionStarted"
                                         },
                                         {
                                             "$ref": "#/components/schemas/LinkingSessionCompletePublic"
                                         },
                                         {
-                                            "$ref": "#/components/schemas/LinkingSessionStarted"
+                                            "$ref": "#/components/schemas/LinkingSessionInitial"
                                         },
                                         {
-                                            "$ref": "#/components/schemas/LinkingSessionInitial"
+                                            "$ref": "#/components/schemas/LinkingSessionStarted"
                                         },
                                         {
                                             "$ref": "#/components/schemas/LinkingSessionCompletePublic"
@@ -1428,6 +1428,7 @@
                     "username",
                     "created_at",
                     "expires_at",
+                    "kind",
                     "return_link",
                     "skip_prompt",
                     "orcid_auth"
@@ -1450,6 +1451,13 @@
                         "title": "Expires At",
                         "type": "integer"
                     },
+                    "kind": {
+                        "title": "Kind",
+                        "enum": [
+                            "complete"
+                        ],
+                        "type": "string"
+                    },
                     "return_link": {
                         "title": "Return Link",
                         "type": "string"
@@ -1469,7 +1477,8 @@
                     "session_id",
                     "username",
                     "created_at",
-                    "expires_at"
+                    "expires_at",
+                    "kind"
                 ],
                 "type": "object",
                 "properties": {
@@ -1488,6 +1497,13 @@
                     "expires_at": {
                         "title": "Expires At",
                         "type": "integer"
+                    },
+                    "kind": {
+                        "title": "Kind",
+                        "enum": [
+                            "initial"
+                        ],
+                        "type": "string"
                     }
                 }
             },
@@ -1498,6 +1514,7 @@
                     "username",
                     "created_at",
                     "expires_at",
+                    "kind",
                     "return_link",
                     "skip_prompt"
                 ],
@@ -1518,6 +1535,13 @@
                     "expires_at": {
                         "title": "Expires At",
                         "type": "integer"
+                    },
+                    "kind": {
+                        "title": "Kind",
+                        "enum": [
+                            "started"
+                        ],
+                        "type": "string"
                     },
                     "return_link": {
                         "title": "Return Link",
