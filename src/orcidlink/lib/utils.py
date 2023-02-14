@@ -26,7 +26,7 @@ def epoch_time_millis() -> int:
 
 
 def make_date(
-        year: int | None = None, month: int | None = None, day: int | None = None
+    year: int | None = None, month: int | None = None, day: int | None = None
 ) -> str:
     if year is not None:
         if month is not None:
@@ -41,4 +41,11 @@ def make_date(
 
 
 def http_client() -> httpx.Client:
+    """
+    A simple wrapper for the httpx client
+
+    Useful for times when we need to apply an option to all http calls.
+    Currently, does nothing, but has been useful in the past so probably
+    will be again.
+    """
     return httpx.Client()
