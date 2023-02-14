@@ -29,7 +29,6 @@ function _run {
   echo "Running: "
   echo "${@:1}"
   docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --rm "${1}" "${@:2}"
-  echo "done"
 }
 
 #
