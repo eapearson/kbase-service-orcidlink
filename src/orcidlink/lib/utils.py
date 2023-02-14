@@ -26,7 +26,7 @@ def epoch_time_millis() -> int:
 
 
 def make_date(
-    year: int | None = None, month: int | None = None, day: int | None = None
+        year: int | None = None, month: int | None = None, day: int | None = None
 ) -> str:
     if year is not None:
         if month is not None:
@@ -41,4 +41,4 @@ def make_date(
 
 
 def http_client() -> httpx.Client:
-    return httpx.Client(transport=httpx.HTTPTransport(local_address="0.0.0.0"))
+    return httpx.Client()
