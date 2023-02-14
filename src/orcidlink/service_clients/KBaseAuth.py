@@ -6,12 +6,12 @@ using httpx, pydantic models.
 import json
 from typing import Dict, Optional
 
-import httpx
 from cache3 import SafeCache  # type: ignore
 from orcidlink import model
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import ErrorResponse
 from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.utils import http_client
 from pydantic import Field
 
 global_cache = None
@@ -74,7 +74,7 @@ class KBaseAuth(object):
 
         # TODO: timeout needs to be configurable
         try:
-            response = httpx.get(
+            response = http_client().get(
                 self.url, headers={"authorization": token}, timeout=10000
             )
             json_response = response.json()

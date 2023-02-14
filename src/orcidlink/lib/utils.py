@@ -4,6 +4,8 @@ import os
 import time
 from datetime import datetime, timezone
 
+import httpx
+
 
 def module_dir() -> str:
     my_dir = os.path.dirname(__file__)
@@ -36,3 +38,7 @@ def make_date(
             return f"{year}"
     else:
         return "** invalid date **"
+
+
+def http_client() -> httpx.Client:
+    return httpx.Client(transport=httpx.HTTPTransport(local_address="0.0.0.0"))

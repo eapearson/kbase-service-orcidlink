@@ -18,6 +18,7 @@ from orcidlink import model
 from orcidlink.lib import errors
 from orcidlink.lib.config import config
 from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.utils import http_client
 from pydantic import Field
 
 
@@ -533,7 +534,9 @@ class ORCIDAPIClient(ORCIDClientBase):
         Thus access to the profile should be through the get_json function,
         which can readily dig into the resulting dict.
         """
-        response = httpx.get(self.url(f"{orcid_id}/record"), headers=self.header())
+        response = http_client().get(
+            self.url(f"{orcid_id}/record"), headers=self.header()
+        )
         return ORCIDProfile.parse_obj(json.loads(response.text))
 
     #
@@ -543,7 +546,9 @@ class ORCIDAPIClient(ORCIDClientBase):
     # TODO: do we want to type the raw works record?
     def get_works(self, orcid_id: str) -> Works:
         # TODO: catch errors here
-        response = httpx.get(self.url(f"{orcid_id}/works"), headers=self.header())
+        response = http_client().get(
+            self.url(f"{orcid_id}/works"), headers=self.header()
+        )
 
         if response.status_code != 200:
             raise make_exception(response, source="get_works")
@@ -553,7 +558,7 @@ class ORCIDAPIClient(ORCIDClientBase):
     def get_work(self, orcid_id: str, put_code: int) -> GetWorkResult:
         # TODO: catch errors here
         url = self.url(f"{orcid_id}/works/{put_code}")
-        response = httpx.get(url, headers=self.header())
+        response = http_client().get(url, headers=self.header())
 
         if response.status_code != 200:
             raise make_exception(response, source="get_work")
@@ -570,7 +575,7 @@ class ORCIDAPIClient(ORCIDClientBase):
         return GetWorkResult.parse_obj(json_response)
 
     def save_work(self, orcid_id: str, put_code: int, work_record: Work) -> Work:
-        response = httpx.put(
+        response = http_client().put(
             self.url(f"{orcid_id}/work/{put_code}"),
             headers=self.header(),
             content=json.dumps(work_record.dict(by_alias=True)),
@@ -598,7 +603,7 @@ class ORCIDOAuthClient(ORCIDClientBase):
         }
         # TODO: determine all possible ORCID errors here, or the
         # pattern with which we can return useful info
-        response = httpx.post(self.url("revoke"), headers=header, data=data)
+        response = http_client().post(self.url("revoke"), headers=header, data=data)
 
         if response.status_code != 200:
             raise make_exception(response, source="revoke_link")
@@ -627,7 +632,7 @@ class ORCIDOAuthClient(ORCIDClientBase):
             "code": code,
             "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
         }
-        response = httpx.post(
+        response = http_client().post(
             f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
         )
         json_response = json.loads(response.text)

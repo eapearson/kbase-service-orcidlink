@@ -2,8 +2,8 @@ import json
 import sys
 from typing import Any, List
 
-import httpx
 from orcidlink.lib.json_file import get_prop
+from orcidlink.lib.utils import http_client
 
 
 def flatten(md: List[Any]):
@@ -39,7 +39,7 @@ def save_markdown(markdown: List[str], file: str, dest: str):
 
 def save_markdown_rendered(markdown: List[str], file: str, dest: str):
     content = json.dumps({"text": render_markdown_list(markdown), "mode": "gfm"})
-    result = httpx.post(
+    result = http_client().post(
         "https://api.github.com/markdown",
         headers={
             "Content-Type": "application/json",
