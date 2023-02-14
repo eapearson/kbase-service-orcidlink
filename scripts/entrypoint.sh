@@ -6,8 +6,8 @@ set -e
 export PYTHONPATH="${PWD}/src"
 
 # Patch resolv.conf to work with a buggy DNS server
-printf "\n# The following line was added by 'entrypoint.sh' to work around an upstream DNS bug" >> /etc/resolv.conf
-printf "\noptions single-request\n" >> /etc/resolv.conf
+#printf "\n# The following line was added by 'entrypoint.sh' to work around an upstream DNS bug" >> /etc/resolv.conf
+#printf "\noptions single-request\n" >> /etc/resolv.conf
 
 #
 # This execs whatever is provided as a COMMAND to the container. By default, as established
