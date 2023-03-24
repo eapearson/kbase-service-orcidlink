@@ -121,44 +121,99 @@ class ORCIDPerson(ServiceBaseModel):
     path: str = Field(...)
 
 
-class ORCIDExternalIdNormalized(ServiceBaseModel):
+class ExternalIdNormalized(ServiceBaseModel):
     value: str = Field(...)
     transient: bool = Field(...)
 
 
-class ORCIDExternalId(ServiceBaseModel):
+class ExternalIdNormalizedError(ServiceBaseModel):
+    error_code: str = Field(..., alias="error-code")
+    error_message: str = Field(..., alias="error-message")
+    transient: bool = Field(...)
+
+
+class ExternalId(ServiceBaseModel):
     external_id_type: str = Field(alias="external-id-type")
     external_id_value: str = Field(alias="external-id-value")
     # TODO: this is a case of a field which is present when fetching, but
     # not saving - so this type should probably be forked int read & write versions
-    external_id_normalized: Optional[ORCIDExternalIdNormalized] = Field(
+    external_id_normalized: Optional[ExternalIdNormalized] = Field(
         default=None, alias="external-id-normalized"
     )
-    # external_id_normalized_error
+    external_id_normalized_error: Optional[ExternalIdNormalizedError] = Field(
+        default=None, alias="external-id-normalized-error"
+    )
     external_id_url: StringValue = Field(alias="external-id-url")
     external_id_relationship: str = Field(alias="external-id-relationship")
 
 
 class ExternalIds(ServiceBaseModel):
-    external_id: List[ORCIDExternalId] = Field(alias="external-id")
+    external_id: List[ExternalId] = Field(alias="external-id")
 
 
-class ORCIDTitle(ServiceBaseModel):
+class Title(ServiceBaseModel):
     title: StringValue = Field(...)
     # subTitle: Optional
     # translated_title
 
 
-class NewWork(ServiceBaseModel):
+class Citation(ServiceBaseModel):
+    citation_type: str = Field(alias="citation-type")
+    citation_value: str = Field(alias="citation-value")
+
+
+class ContributorORCID(ServiceBaseModel):
+    uri: Optional[str] = Field(default=None)
+    path: Optional[str] = Field(default=None)
+    host: Optional[str] = Field(default=None)
+
+
+class ContributorAttributes(ServiceBaseModel):
+    # TODO: this does not seem used either (always null), need to look up
+    # the type.
+    contributor_sequence: Optional[str] = Field(
+        default=None, alias="contributor-sequence"
+    )
+    contributor_role: str = Field(alias="contributor-role")
+
+
+class Contributor(ServiceBaseModel):
+    contributor_orcid: ContributorORCID = Field(alias="contributor-orcid")
+    # TODO: is this optional?
+    credit_name: StringValue = Field(alias="credit-name")
+    # TODO: email is not exposed in the web ui, so I don't yet know
+    # what the type really is
+    contributor_email: Optional[str] = Field(default=None, alias="contributor-email")
+    contributor_attributes: ContributorAttributes = Field(
+        alias="contributor-attributes"
+    )
+
+
+class ContributorWrapper(ServiceBaseModel):
+    contributor: List[Contributor] = Field(...)
+
+
+class WorkBase(ServiceBaseModel):
     type: str = Field(...)
-    title: ORCIDTitle = Field(...)
-    journal_title: Optional[StringValue] = Field(default=None, alias="journal-title")
+    title: Title = Field(...)
     url: StringValue = Field(...)
     publication_date: Date = Field(alias="publication-date")
     external_ids: ExternalIds = Field(alias="external-ids")
 
 
-class PersistedWorkBase(NewWork):
+class NewWork(WorkBase):
+    journal_title: StringValue = Field(alias="journal-title")
+    short_description: str = Field(alias="short-description")
+    citation: Citation = Field(...)
+    contributors: ContributorWrapper = Field(...)
+
+
+class WorkUpdate(NewWork):
+    put_code: int = Field(alias="put-code")
+
+
+class PersistedWork(ServiceBaseModel):
+    put_code: int = Field(alias="put-code")
     # citation:
     # contributors
     # country
@@ -170,19 +225,22 @@ class PersistedWorkBase(NewWork):
     # or defaults to optional, and becomes required for summary.
     path: Optional[str] = Field(default=None)
     # publication_date: Date = Field(alias="publication-date")
-    put_code: int = Field(alias="put-code")
     source: ORCIDSource = Field(...)
     visibility: Visibility = Field(...)
+    journal_title: Optional[StringValue] = Field(default=None, alias="journal-title")
 
 
-class Work(PersistedWorkBase):
-    # path is optional for a standalone work record; or possibly always None
-    short_description: Optional[StringValue] = Field(
-        default=None, alias="short-description"
-    )
+class Work(WorkBase, PersistedWork):
+    """
+    These only appear in the call to get a single work record.
+    """
+
+    short_description: Optional[str] = Field(default=None, alias="short-description")
+    citation: Optional[Citation] = Field(default=None)
+    contributors: ContributorWrapper = Field(...)
 
 
-class WorkSummary(PersistedWorkBase):
+class WorkSummary(WorkBase, PersistedWork):
     display_index: str = Field(alias="display-index")
     path: str = Field(...)
 
@@ -242,13 +300,15 @@ class ORCIDEmploymentSummaryWrapper(ServiceBaseModel):
 
 
 class ORCIDAffiliationGroup(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+    last_modified_date: Optional[ORCIDIntValue] = Field(
+        default=None, alias="last-modified-date"
+    )
     external_ids: ExternalIds = Field(alias="external-ids")
     summaries: Tuple[ORCIDEmploymentSummaryWrapper] = Field(...)
 
 
-class ORCIDEmployments(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+class Affiliations(ServiceBaseModel):
+    last_modified_date: Optional[ORCIDIntValue] = Field(alias="last-modified-date")
     affiliation_group: Union[
         ORCIDAffiliationGroup, List[ORCIDAffiliationGroup]
     ] = Field(alias="affiliation-group")
@@ -257,9 +317,9 @@ class ORCIDEmployments(ServiceBaseModel):
 
 class ORCIDActivitiesSummary(ServiceBaseModel):
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
-    # distinctions
-    # educations
-    employments: ORCIDEmployments = Field(...)
+    distinctions: Affiliations = Field(...)
+    educations: Affiliations = Field(...)
+    employments: Affiliations = Field(...)
     # fundings
     # invited_positions
     # memberships
@@ -574,7 +634,7 @@ class ORCIDAPIClient(ORCIDClientBase):
 
         return GetWorkResult.parse_obj(json_response)
 
-    def save_work(self, orcid_id: str, put_code: int, work_record: Work) -> Work:
+    def save_work(self, orcid_id: str, put_code: int, work_record: WorkUpdate) -> Work:
         response = http_client().put(
             self.url(f"{orcid_id}/work/{put_code}"),
             headers=self.header(),

@@ -142,17 +142,119 @@ class ServiceDescription(ServiceBaseModel):
 # API
 
 
-class ORCIDWork(ServiceBaseModel):
-    putCode: int = Field(...)
-    createdAt: int = Field(...)
-    updatedAt: int = Field(...)
-    source: str = Field(...)
+class ORCIDCitation(ServiceBaseModel):
+    type: str = Field(...)
+    value: str = Field(...)
+
+
+# class ORCIDContributorORCIDInfo(ServiceBaseModel):
+#     uri: str = Field(...)
+#     path: str = Field(...)
+#     # omitting host, seems never used
+
+
+ContributorRole = str
+
+
+class ORCIDContributor(ServiceBaseModel):
+    orcidId: Optional[str] = Field(default=None)
+    # orcidInfo: Optional[ORCIDContributorORCIDInfo] = Field(default=None)
+    # orcidId: Optional[]
+    name: str = Field(...)
+    # omitting email, as it seems never used
+    roles: List[ContributorRole] = Field(...)
+
+
+class ORCIDContributorSelf(ServiceBaseModel):
+    orcidId: str = Field(...)
+    # orcidId: Optional[]
+    name: str = Field(...)
+    # omitting email, as it seems never used
+    roles: List[ContributorRole] = Field(...)
+
+
+class WorkBase(ServiceBaseModel):
+    """
+    Represents the core of a work record, both one persisted to ORCID
+    as well as one which only exists in memory, full work record and
+    summary.
+    """
+
     title: str = Field(...)
-    journal: Optional[str]
     date: str = Field(...)
     workType: str = Field(...)
     url: str = Field(...)
+    doi: str = Field(...)
     externalIds: List[ExternalId] = Field(...)
+    # TODO: is really optional? check out the schema
+
+
+class FullWork(WorkBase):
+    journal: str = Field(...)
+    shortDescription: str = Field(...)
+    citation: ORCIDCitation = Field(...)
+    selfContributor: ORCIDContributorSelf = Field(...)
+    otherContributors: List[ORCIDContributor] = Field(...)
+
+
+class NewWork(FullWork):
+    """
+    Represents a work record that is going to be added to ORCID.
+    """
+
+    pass
+
+
+class PersistedWorkBase(ServiceBaseModel):
+    putCode: int = Field(...)
+
+
+class PersistedWork(PersistedWorkBase):
+    createdAt: int = Field(...)
+    updatedAt: int = Field(...)
+    source: str = Field(...)
+
+    # journal: Optional[str] = Field(default=None)
+    # shortDescription: Optional[str] = Field(default=None)
+    # citation: Optional[ORCIDCitation] = Field(default=None)
+
+
+class Work(FullWork, PersistedWork):
+    pass
+
+
+class WorkUpdate(FullWork, PersistedWorkBase):
+    """
+    Represents a work record which has been fetched from ORCID, modified,
+    and can be sent back to update the ORCID work record
+    """
+
+    pass
+
+
+# TODO: unify these work types; tricky part is that we require fields for creating
+# our own work records which are optional for those created at ORCID.
+
+
+class WorkSummary(WorkBase, PersistedWork):
+    journal: Optional[str] = Field(default=None)
+
+    # Note that these fields have equivalents for NewWork and WorkUpdate
+    # for which they are required, since those types are for our usage of
+    # works. WorkSummary and Work cover all ORCID work records, so loosen
+    # these type definitions to be optional.
+    # Unfortunately pydantic does not seem to allow overriding types.
+    # Okay, solved (hopefully) by only working with KBase generated records,
+    # which will be stricter; i.e. will always ensure that these fields
+    # are populated.
+    # journal: Optional[str] = Field(default=None)
+    # shortDescription: Optional[str] = Field(default=None)
+    # citation: Optional[ORCIDCitation] = Field(default=None)
+
+
+# class ORCIDWork(ORCIDWorkSummary):
+#     selfContributor: ORCIDContributorSelf = Field(...)
+#     otherContributors: Optional[List[ORCIDContributor]] = Field(default=None)
 
 
 # For some reason, a "work" can be composed of more than one
@@ -165,7 +267,7 @@ class ORCIDWork(ServiceBaseModel):
 class ORCIDWorkGroup(ServiceBaseModel):
     updatedAt: int = Field(...)
     externalIds: List[ExternalId] = Field(...)
-    works: List[ORCIDWork] = Field(...)
+    works: List[WorkSummary] = Field(...)
 
 
 class ORCIDAffiliation(ServiceBaseModel):
@@ -179,32 +281,15 @@ class ORCIDProfile(ServiceBaseModel):
     orcidId: str = Field(...)
     firstName: str = Field(...)
     lastName: str = Field(...)
+    creditName: Optional[str] = Field(default=None)
     bio: str = Field(...)
-    affiliations: List[ORCIDAffiliation] = Field(...)
-    works: List[ORCIDWork] = Field(...)
+    distinctions: List[ORCIDAffiliation] = Field(...)
+    education: List[ORCIDAffiliation] = Field(...)
+    employment: List[ORCIDAffiliation] = Field(...)
+    # omit works since it is covered separately, and is somewhat
+    # complicated...
+    # works: List[WorkSummary] = Field(...)
     emailAddresses: List[str] = Field(...)
-
-
-class NewWork(ServiceBaseModel):
-    """
-    Represents a work record that is going to be added to ORCID.
-    """
-
-    title: str = Field(...)
-    journal: str = Field(...)
-    date: str = Field(...)
-    workType: str = Field(...)
-    url: str = Field(...)
-    externalIds: List[ExternalId] = Field(...)
-
-
-class WorkUpdate(NewWork):
-    """
-    Represents a work record which has been fetched from ORCID, modified,
-    and can be sent back to update the ORCID work record
-    """
-
-    putCode: int = Field(...)
 
 
 class JSONDecodeErrorData(ServiceBaseModel):

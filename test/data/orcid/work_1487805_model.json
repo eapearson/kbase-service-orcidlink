@@ -1,0 +1,57 @@
+{
+  "putCode": 1487805,
+  "createdAt": 1659133744594,
+  "updatedAt": 1676639724182,
+  "source": "Erik Pearson",
+  "title": "Test Publication",
+  "journal": "KBase / LBNL / DOE",
+  "date": "2022/7/29",
+  "workType": "online-resource",
+  "url": "https://kbase.us/n/67335/259/",
+  "doi": "123",
+  "externalIds": [
+    {
+      "type": "other-id",
+      "value": "67335/259/",
+      "url": "https://kbase.us/n/67335/259/",
+      "relationship": "self"
+    },
+    {
+      "type": "uri",
+      "value": "kbase_web_services",
+      "url": "https://kbase.us",
+      "relationship": "part-of"
+    }
+  ],
+  "shortDescription": "Delftia is a genus of bacteria with a bunch of cool features! The best studied species, Delftia acidovorans can produce gold nanoparticles from gold ions in solution. This bacteria has been found living in biofolms with Cupriavidis metallidurans on gold nuggets(1). It is also found in soil, in sinks and in rhizospheres of different plants where it promotes their growth(3).",
+  "citation": {
+    "type": "bibtex",
+    "value": " @misc{crocket_krebs_goller_goller_2020, title={Case Study: Can you find Delftia?}, url={https://kbase.us/n/67335/259/}, journal={KBase Narrative - Case Study: Can you find Delftia?}, publisher={KBase / DOE}, author={Crocket, Zach and Krebs, Rose and Goller, Carlos and Goller, Carlos C. C.}, year={2020}, month={Aug}} This is an annotation"
+  },
+  "selfContributor": {
+    "orcidId": "0000-0003-4997-3076",
+    "name": "Erik A Pearson",
+    "roles": [
+      "http://credit.niso.org/contributor-roles/conceptualization/",
+      "http://credit.niso.org/contributor-roles/methodology/",
+      "http://credit.niso.org/contributor-roles/investigation/"
+    ]
+  },
+  "otherContributors": [
+    {
+      "orcidId": null,
+      "name": "Foo Fox",
+      "roles": [
+        "http://credit.niso.org/contributor-roles/data-curation/"
+      ]
+    },
+    {
+      "orcidId": "1111-2222-3333-4444",
+      "name": "Bar Bunny",
+      "roles": [
+        "http://credit.niso.org/contributor-roles/data-curation/",
+        "http://credit.niso.org/contributor-roles/methodology/"
+      ]
+    }
+  ]
+}

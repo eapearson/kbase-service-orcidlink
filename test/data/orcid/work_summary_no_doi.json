@@ -1,0 +1,51 @@
+{
+  "put-code": 1547701,
+  "created-date": {
+    "value": 1666277418439
+  },
+  "last-modified-date": {
+    "value": 1666277418439
+  },
+  "source": {
+    "source-orcid": null,
+    "source-client-id": {
+      "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+      "path": "APP-RC3PM3KSMMV3GKWS",
+      "host": "sandbox.orcid.org"
+    },
+    "source-name": {
+      "value": "KBase CI"
+    },
+    "assertion-origin-orcid": null,
+    "assertion-origin-client-id": null,
+    "assertion-origin-name": null
+  },
+  "title": {
+    "title": {
+      "value": "A KBase Case Study on Genome-wide Transcriptomics and Plant Primary Metabolism in Sorghum"
+    },
+    "subtitle": null,
+    "translated-title": null
+  },
+  "external-ids": {
+    "external-id": [
+    ]
+  },
+  "url": {
+    "value": "https://doi.org/10.25982/101788.79/1828290"
+  },
+  "type": "data-set",
+  "publication-date": {
+    "year": {
+      "value": "2021"
+    },
+    "month": null,
+    "day": null
+  },
+  "journal-title": {
+    "value": "Cold Spring Harbor Laboratory Cold Spring Harbor, NY (United States)"
+  },
+  "visibility": "public",
+  "path": "/0000-0003-4997-3076/work/1547701",
+  "display-index": "0"
+}

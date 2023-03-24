@@ -39,7 +39,9 @@
       "family-name": {
         "value": "Pearson"
       },
-      "credit-name": null,
+      "credit-name": {
+        "value": "Erik A Pearson"
+      },
       "source": null,
       "visibility": "public",
       "path": "0000-0003-4997-3076"

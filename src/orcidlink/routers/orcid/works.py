@@ -17,6 +17,10 @@ from orcidlink.service_clients import orcid_api
 from orcidlink.service_clients.auth import ensure_authorization, get_username
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
+from orcidlink.translators.to_orcid import (
+    transform_contributor_self,
+    transform_contributors,
+)
 from starlette.responses import Response
 
 router = APIRouter(prefix="/orcid/works", responses={404: {"description": "Not found"}})
@@ -44,7 +48,7 @@ def get_link_record(kbase_token: str) -> Optional[model.LinkRecord]:
 #
 @router.get(
     "/{put_code}",
-    response_model=model.ORCIDWork,
+    response_model=model.Work,
     tags=["works"],
     responses={
         **AUTH_RESPONSES,
@@ -58,7 +62,7 @@ async def get_work(
         description="The ORCID `put code` for the work record to fetch"
     ),
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> model.ORCIDWork:
+) -> model.Work:
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
     """
@@ -73,8 +77,10 @@ async def get_work(
     orcid_id = link_record.orcid_auth.orcid
 
     # try:
+    # TODO: move into model
     raw_work = orcid_api.orcid_api(token).get_work(orcid_id, put_code)
-    return to_service.raw_work_to_work(raw_work.bulk[0].work)
+    profile = orcid_api.orcid_api(token).get_profile(orcid_id)
+    return to_service.transform_work(profile, raw_work.bulk[0].work)
     # except errors.ServiceError as err:
     #     # we just catch this so we can release it!
     #     raise err
@@ -134,8 +140,11 @@ async def get_works(
                     for external_id in group.external_ids.external_id
                 ],
                 works=[
-                    to_service.raw_work_summary_to_work(work_summary)
+                    to_service.transform_work_summary(work_summary)
+                    # TODO: Need to make the KBase source configurable, as it will be different,
+                    # between, say, CI and prod, or at least development and prod.
                     for work_summary in group.work_summary
+                    if work_summary.source.source_name.value == "KBase CI"
                 ],
             )
         )
@@ -151,13 +160,13 @@ async def get_works(
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         404: {"description": "Link not available for this user"},
-        200: {"model": model.ORCIDWork},
+        200: {"model": model.Work},
     },
 )
 async def save_work(
     work_update: model.WorkUpdate,
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> model.ORCIDWork:
+) -> model.Work:
     """
     Update a work record; the `work_update` contains the `put code`.
     """
@@ -173,20 +182,15 @@ async def save_work(
 
     put_code = work_update.putCode
 
-    #
-    # First, get the work record.
-    #
-    get_work_result = orcid_api.orcid_api(token).get_work(orcid_id, put_code)
-    work_record = get_work_result.bulk[0].work
-
-    work_record_updated = to_orcid.translate_work_update(work_update, work_record)
+    work_record_updated = to_orcid.translate_work_update(work_update)
 
     # TODO: check this
     raw_work_record = orcid_api.orcid_api(token).save_work(
         orcid_id, put_code, work_record_updated
     )
 
-    return to_service.raw_work_to_work(raw_work_record)
+    profile = orcid_api.orcid_api(token).get_profile(orcid_id)
+    return to_service.transform_work(profile, raw_work_record)
 
 
 @router.delete(
@@ -245,7 +249,7 @@ async def delete_work(
         **STD_RESPONSES,
         200: {
             "description": "Work record successfully created",
-            "model": model.ORCIDWork,
+            "model": model.Work,
         },
     },
 )
@@ -254,7 +258,7 @@ async def create_work(
         description="The new work record to be added to the ORCID profile."
     ),
     authorization: str | None = AUTHORIZATION_HEADER,
-) -> model.ORCIDWork:
+) -> model.Work:
     authorization, _ = ensure_authorization(authorization)
 
     link_record = get_link_record(authorization)
@@ -269,11 +273,24 @@ async def create_work(
     # Create initial work record
     #
 
-    external_ids: List[orcid_api.ORCIDExternalId] = []
+    external_ids: List[orcid_api.ExternalId] = [
+        orcid_api.ExternalId(
+            external_id_type="doi",
+            external_id_value=new_work.doi,
+            external_id_normalized=None,
+            # TODO: doi url should be configurable
+            external_id_url=orcid_api.StringValue(
+                value=f"https://doi.org/{new_work.doi}"
+            ),
+            external_id_relationship="self",
+        )
+    ]
+
+    # external_ids: List[orcid_api.ORCIDExternalId] = []
     if new_work.externalIds is not None:
         for index, externalId in enumerate(new_work.externalIds):
             external_ids.append(
-                orcid_api.ORCIDExternalId(
+                orcid_api.ExternalId(
                     external_id_type=externalId.type,
                     external_id_value=externalId.value,
                     external_id_url=orcid_api.StringValue(value=externalId.url),
@@ -284,13 +301,28 @@ async def create_work(
         # "external-id" which itself is the collection of external ids!
         # work_record["external-ids"] = {"external-id": external_ids}
 
+    citation = orcid_api.Citation(
+        citation_type=new_work.citation.type,
+        citation_value=new_work.citation.value,
+    )
+
+    contributors = []
+
+    self_contributors = transform_contributor_self(new_work.selfContributor)
+    contributors.extend(self_contributors)
+
+    contributors.extend(transform_contributors(new_work.otherContributors))
+
     work_record = orcid_api.NewWork(
         type=new_work.workType,
-        title=orcid_api.ORCIDTitle(title=orcid_api.StringValue(value=new_work.title)),
+        title=orcid_api.Title(title=orcid_api.StringValue(value=new_work.title)),
         journal_title=orcid_api.StringValue(value=new_work.journal),
         url=orcid_api.StringValue(value=new_work.url),
         external_ids=orcid_api.ExternalIds(external_id=external_ids),
         publication_date=to_orcid.parse_date(new_work.date),
+        short_description=new_work.shortDescription,
+        citation=citation,
+        contributors=orcid_api.ContributorWrapper(contributor=contributors),
     )
 
     url = orcid_api.orcid_api_url(f"{orcid_id}/works")
@@ -306,7 +338,7 @@ async def create_work(
     # extract the put code.
     # TODO: also this endpoint and probably many others return a 200 response with error data.
     content = orcid_api.CreateWorkInput(
-        bulk=[orcid_api.NewWorkWrapper(work=work_record)]
+        bulk=(orcid_api.NewWorkWrapper(work=work_record),)
     )
 
     # TODO: propagate everywhere. Or, perhaps better,
@@ -337,7 +369,8 @@ async def create_work(
     if response.status_code == 200:
         work_record2 = orcid_api.GetWorkResult.parse_obj(json.loads(response.text))
         # TODO: handle errors here; they are not always
-        new_work_record = to_service.raw_work_to_work(work_record2.bulk[0].work)
+        profile = orcid_api.orcid_api(token).get_profile(orcid_id)
+        new_work_record = to_service.transform_work(profile, work_record2.bulk[0].work)
         return new_work_record
     elif response.status_code == 500:
         raise errors.UpstreamError(

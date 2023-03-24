@@ -265,7 +265,9 @@ def test_ORCIDAPI_save_work():
             # )
             # TODO: external ids too!
             put_code = 1526002
-            work_update = load_test_data("orcid", f"work_{str(put_code)}")
+            work_update = load_test_data("orcid", f"work_{str(put_code)}")["bulk"][0][
+                "work"
+            ]
             # don't change anything for now
             result = client.save_work(
                 orcid_id, put_code, orcid_api.Work.parse_obj(work_update)
@@ -290,7 +292,7 @@ def test_ORCIDAPI_save_work_error():
             with pytest.raises(errors.ServiceErrorX) as ex:
                 put_code = 1526002
                 work_update = orcid_api.Work.parse_obj(
-                    load_test_data("orcid", f"work_{str(put_code)}")
+                    load_test_data("orcid", f"work_{str(put_code)}")["bulk"][0]["work"]
                 )
                 # don't change anything for now
                 client.save_work(orcid_id, put_code, work_update)

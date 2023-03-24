@@ -776,7 +776,7 @@
                     "orcid"
                 ],
                 "summary": "Get Profile",
-                "description": "Get the ORCID profile for the user associated with the current auth token.\n\nReturns a 404 Not Found if the user is not linked",
+                "description": "Get the ORCID profile for the user associated with the current auth token.\n\nSince ORCID Link is not a general purpose ORCID api, we may not fully\nrepresent the profile as ORCID does, but modify it for purpose.\nE.g. ORCID work records have a lot of optional fields which we\nactually require. This is reflected in the typing. So we can't really\nprovide all work records in the profile, just those created by\nKBase.\n\nReturns a 404 Not Found if the user is not linked",
                 "operationId": "get_profile_orcid_profile_get",
                 "parameters": [
                     {
@@ -870,7 +870,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ORCIDWork"
+                                    "$ref": "#/components/schemas/Work"
                                 }
                             }
                         }
@@ -1061,7 +1061,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ORCIDWork"
+                                    "$ref": "#/components/schemas/Work"
                                 }
                             }
                         }
@@ -1134,7 +1134,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ORCIDWork"
+                                    "$ref": "#/components/schemas/Work"
                                 }
                             }
                         }
@@ -1603,20 +1603,21 @@
                 "title": "NewWork",
                 "required": [
                     "title",
-                    "journal",
                     "date",
                     "workType",
                     "url",
-                    "externalIds"
+                    "doi",
+                    "externalIds",
+                    "journal",
+                    "shortDescription",
+                    "citation",
+                    "selfContributor",
+                    "otherContributors"
                 ],
                 "type": "object",
                 "properties": {
                     "title": {
                         "title": "Title",
-                        "type": "string"
-                    },
-                    "journal": {
-                        "title": "Journal",
                         "type": "string"
                     },
                     "date": {
@@ -1631,11 +1632,36 @@
                         "title": "Url",
                         "type": "string"
                     },
+                    "doi": {
+                        "title": "Doi",
+                        "type": "string"
+                    },
                     "externalIds": {
                         "title": "Externalids",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ExternalId"
+                        }
+                    },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    },
+                    "shortDescription": {
+                        "title": "Shortdescription",
+                        "type": "string"
+                    },
+                    "citation": {
+                        "$ref": "#/components/schemas/ORCIDCitation"
+                    },
+                    "selfContributor": {
+                        "$ref": "#/components/schemas/ORCIDContributorSelf"
+                    },
+                    "otherContributors": {
+                        "title": "Othercontributors",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDContributor"
                         }
                     }
                 },
@@ -1696,6 +1722,24 @@
                     }
                 }
             },
+            "ORCIDCitation": {
+                "title": "ORCIDCitation",
+                "required": [
+                    "type",
+                    "value"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "title": "Type",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "string"
+                    }
+                }
+            },
             "ORCIDConfig": {
                 "title": "ORCIDConfig",
                 "required": [
@@ -1724,6 +1768,57 @@
                     }
                 }
             },
+            "ORCIDContributor": {
+                "title": "ORCIDContributor",
+                "required": [
+                    "name",
+                    "roles"
+                ],
+                "type": "object",
+                "properties": {
+                    "orcidId": {
+                        "title": "Orcidid",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "roles": {
+                        "title": "Roles",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ORCIDContributorSelf": {
+                "title": "ORCIDContributorSelf",
+                "required": [
+                    "orcidId",
+                    "name",
+                    "roles"
+                ],
+                "type": "object",
+                "properties": {
+                    "orcidId": {
+                        "title": "Orcidid",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "roles": {
+                        "title": "Roles",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "ORCIDLinkService": {
                 "title": "ORCIDLinkService",
                 "required": [
@@ -1744,8 +1839,9 @@
                     "firstName",
                     "lastName",
                     "bio",
-                    "affiliations",
-                    "works",
+                    "distinctions",
+                    "education",
+                    "employment",
                     "emailAddresses"
                 ],
                 "type": "object",
@@ -1762,22 +1858,33 @@
                         "title": "Lastname",
                         "type": "string"
                     },
+                    "creditName": {
+                        "title": "Creditname",
+                        "type": "string"
+                    },
                     "bio": {
                         "title": "Bio",
                         "type": "string"
                     },
-                    "affiliations": {
-                        "title": "Affiliations",
+                    "distinctions": {
+                        "title": "Distinctions",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ORCIDAffiliation"
                         }
                     },
-                    "works": {
-                        "title": "Works",
+                    "education": {
+                        "title": "Education",
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/ORCIDWork"
+                            "$ref": "#/components/schemas/ORCIDAffiliation"
+                        }
+                    },
+                    "employment": {
+                        "title": "Employment",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDAffiliation"
                         }
                     },
                     "emailAddresses": {
@@ -1785,66 +1892,6 @@
                         "type": "array",
                         "items": {
                             "type": "string"
-                        }
-                    }
-                }
-            },
-            "ORCIDWork": {
-                "title": "ORCIDWork",
-                "required": [
-                    "putCode",
-                    "createdAt",
-                    "updatedAt",
-                    "source",
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "externalIds"
-                ],
-                "type": "object",
-                "properties": {
-                    "putCode": {
-                        "title": "Putcode",
-                        "type": "integer"
-                    },
-                    "createdAt": {
-                        "title": "Createdat",
-                        "type": "integer"
-                    },
-                    "updatedAt": {
-                        "title": "Updatedat",
-                        "type": "integer"
-                    },
-                    "source": {
-                        "title": "Source",
-                        "type": "string"
-                    },
-                    "title": {
-                        "title": "Title",
-                        "type": "string"
-                    },
-                    "journal": {
-                        "title": "Journal",
-                        "type": "string"
-                    },
-                    "date": {
-                        "title": "Date",
-                        "type": "string"
-                    },
-                    "workType": {
-                        "title": "Worktype",
-                        "type": "string"
-                    },
-                    "url": {
-                        "title": "Url",
-                        "type": "string"
-                    },
-                    "externalIds": {
-                        "title": "Externalids",
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
                         }
                     }
                 }
@@ -1873,7 +1920,7 @@
                         "title": "Works",
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/ORCIDWork"
+                            "$ref": "#/components/schemas/WorkSummary"
                         }
                     }
                 }
@@ -1991,25 +2038,45 @@
                     }
                 }
             },
-            "WorkUpdate": {
-                "title": "WorkUpdate",
+            "Work": {
+                "title": "Work",
                 "required": [
+                    "putCode",
+                    "createdAt",
+                    "updatedAt",
+                    "source",
                     "title",
-                    "journal",
                     "date",
                     "workType",
                     "url",
+                    "doi",
                     "externalIds",
-                    "putCode"
+                    "journal",
+                    "shortDescription",
+                    "citation",
+                    "selfContributor",
+                    "otherContributors"
                 ],
                 "type": "object",
                 "properties": {
-                    "title": {
-                        "title": "Title",
+                    "putCode": {
+                        "title": "Putcode",
+                        "type": "integer"
+                    },
+                    "createdAt": {
+                        "title": "Createdat",
+                        "type": "integer"
+                    },
+                    "updatedAt": {
+                        "title": "Updatedat",
+                        "type": "integer"
+                    },
+                    "source": {
+                        "title": "Source",
                         "type": "string"
                     },
-                    "journal": {
-                        "title": "Journal",
+                    "title": {
+                        "title": "Title",
                         "type": "string"
                     },
                     "date": {
@@ -2024,6 +2091,10 @@
                         "title": "Url",
                         "type": "string"
                     },
+                    "doi": {
+                        "title": "Doi",
+                        "type": "string"
+                    },
                     "externalIds": {
                         "title": "Externalids",
                         "type": "array",
@@ -2031,9 +2102,165 @@
                             "$ref": "#/components/schemas/ExternalId"
                         }
                     },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    },
+                    "shortDescription": {
+                        "title": "Shortdescription",
+                        "type": "string"
+                    },
+                    "citation": {
+                        "$ref": "#/components/schemas/ORCIDCitation"
+                    },
+                    "selfContributor": {
+                        "$ref": "#/components/schemas/ORCIDContributorSelf"
+                    },
+                    "otherContributors": {
+                        "title": "Othercontributors",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDContributor"
+                        }
+                    }
+                },
+                "description": "Represents the core of a work record, both one persisted to ORCID\nas well as one which only exists in memory, full work record and\nsummary."
+            },
+            "WorkSummary": {
+                "title": "WorkSummary",
+                "required": [
+                    "putCode",
+                    "createdAt",
+                    "updatedAt",
+                    "source",
+                    "title",
+                    "date",
+                    "workType",
+                    "url",
+                    "doi",
+                    "externalIds"
+                ],
+                "type": "object",
+                "properties": {
                     "putCode": {
                         "title": "Putcode",
                         "type": "integer"
+                    },
+                    "createdAt": {
+                        "title": "Createdat",
+                        "type": "integer"
+                    },
+                    "updatedAt": {
+                        "title": "Updatedat",
+                        "type": "integer"
+                    },
+                    "source": {
+                        "title": "Source",
+                        "type": "string"
+                    },
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "date": {
+                        "title": "Date",
+                        "type": "string"
+                    },
+                    "workType": {
+                        "title": "Worktype",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "doi": {
+                        "title": "Doi",
+                        "type": "string"
+                    },
+                    "externalIds": {
+                        "title": "Externalids",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        }
+                    },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    }
+                },
+                "description": "Represents the core of a work record, both one persisted to ORCID\nas well as one which only exists in memory, full work record and\nsummary."
+            },
+            "WorkUpdate": {
+                "title": "WorkUpdate",
+                "required": [
+                    "putCode",
+                    "title",
+                    "date",
+                    "workType",
+                    "url",
+                    "doi",
+                    "externalIds",
+                    "journal",
+                    "shortDescription",
+                    "citation",
+                    "selfContributor",
+                    "otherContributors"
+                ],
+                "type": "object",
+                "properties": {
+                    "putCode": {
+                        "title": "Putcode",
+                        "type": "integer"
+                    },
+                    "title": {
+                        "title": "Title",
+                        "type": "string"
+                    },
+                    "date": {
+                        "title": "Date",
+                        "type": "string"
+                    },
+                    "workType": {
+                        "title": "Worktype",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "doi": {
+                        "title": "Doi",
+                        "type": "string"
+                    },
+                    "externalIds": {
+                        "title": "Externalids",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        }
+                    },
+                    "journal": {
+                        "title": "Journal",
+                        "type": "string"
+                    },
+                    "shortDescription": {
+                        "title": "Shortdescription",
+                        "type": "string"
+                    },
+                    "citation": {
+                        "$ref": "#/components/schemas/ORCIDCitation"
+                    },
+                    "selfContributor": {
+                        "$ref": "#/components/schemas/ORCIDContributorSelf"
+                    },
+                    "otherContributors": {
+                        "title": "Othercontributors",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDContributor"
+                        }
                     }
                 },
                 "description": "Represents a work record which has been fetched from ORCID, modified,\nand can be sent back to update the ORCID work record"

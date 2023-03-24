@@ -143,6 +143,7 @@ class ValidationError(ServiceBaseModel):
 # our JSON-RPC 1.1 APIs operate (though not wrapped in an array).
 #
 
+
 # Have this return JSON in our "standard", or at least uniform, format. We don't
 # want users of this api to need to accept FastAPI/Starlette error format.
 # These errors are returned when the API is misused; they should not occur in production.
@@ -244,6 +245,11 @@ async def internal_server_error_handler(
     )
 
 
+@app.on_event("startup")
+async def startup_event() -> None:
+    logger.log_level(logging.DEBUG)
+
+
 class StarletteHTTPDetailData(ServiceBaseModel):
     detail: Any = Field(...)
 
@@ -341,11 +347,3 @@ async def docs(req: Request) -> HTMLResponse:
         openapi_url=openapi_url,
         title="API",
     )
-
-
-#
-# More setup
-#
-
-
-logger.log_level(logging.DEBUG)

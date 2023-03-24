@@ -6,15 +6,14 @@ using httpx, pydantic models.
 import json
 from typing import Dict, Optional
 
-from cache3 import SafeCache  # type: ignore
+# from cache3 import SafeCache  # type: ignore
+from cachetools import TTLCache
 from orcidlink import model
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.responses import ErrorResponse
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import http_client
 from pydantic import Field
-
-global_cache = None
 
 
 class TokenInfo(ServiceBaseModel):
@@ -32,6 +31,8 @@ class KBaseAuth(object):
     """
     A very basic KBase auth client for the Python server.
     """
+
+    cache: TTLCache[str, TokenInfo]
 
     def __init__(
         self,
@@ -54,23 +55,27 @@ class KBaseAuth(object):
             raise TypeError("missing required named argument 'cache_lifetime'")
         self.cache_lifetime: int = cache_lifetime
 
-        global global_cache
+        self.cache: TTLCache[str, TokenInfo] = TTLCache(
+            maxsize=self.cache_max_size, ttl=self.cache_lifetime
+        )
 
-        if global_cache is None:
-            global_cache = SafeCache(
-                max_size=self.cache_max_size, timeout=self.cache_lifetime
-            )
+        # global global_cache
+        #
+        # if global_cache is None:
+        #     global_cache = SafeCache(
+        #         max_size=self.cache_max_size, timeout=self.cache_lifetime
+        #     )
+        #
+        # self.cache = global_cache
 
-        self.cache = global_cache
-
+    # @cachedmethod(lambda self: self.cache, key=partial(hashkey, 'token_info'))
     def get_token_info(self, token: str) -> TokenInfo:
-
         if token == "":
             raise TypeError("Token may not be empty")
 
         cache_value = self.cache.get(token)
         if cache_value is not None:
-            return TokenInfo.parse_obj(cache_value)
+            return cache_value
 
         # TODO: timeout needs to be configurable
         try:
@@ -108,7 +113,7 @@ class KBaseAuth(object):
                 raise KBaseAuthError("Auth Service Error", appcode, message)
 
         token_info: TokenInfo = TokenInfo.parse_obj(json_response)
-        self.cache.set(token, token_info.dict(), timeout=token_info.cachefor)
+        self.cache[token] = token_info
         return token_info
 
     def get_username(self, token: str) -> str:

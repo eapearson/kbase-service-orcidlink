@@ -1,6 +1,9 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 from orcidlink.lib import utils
+from orcidlink.lib.logger import log_event
 from orcidlink.main import app
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
@@ -29,6 +32,16 @@ TEST_LINK = load_data_json("link1.json")
 
 
 # Happy paths
+
+
+def test_startup(fake_fs):
+    with TestClient(app, raise_server_exceptions=False) as client:
+        log_id = log_event("foo", {"bar": "baz"})
+        assert isinstance(log_id, str)
+        with open("/tmp/orcidlink.log", "r") as fin:
+            log = json.load(fin)
+        assert log["event"]["name"] == "foo"
+        assert log["event"]["data"] == {"bar": "baz"}
 
 
 def test_docs(fake_fs):

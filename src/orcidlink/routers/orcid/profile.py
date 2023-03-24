@@ -1,7 +1,4 @@
-from typing import List
-
 from fastapi import APIRouter
-from orcidlink import model
 from orcidlink.lib.errors import NotFoundError
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
@@ -26,89 +23,6 @@ router = APIRouter(
 
 
 #
-# Utilities
-#
-
-
-def transform_affilations(
-    affiliation_group: orcid_api.ORCIDAffiliationGroup
-    | List[orcid_api.ORCIDAffiliationGroup],
-) -> List[model.ORCIDAffiliation]:
-    def coerce_to_list(
-        from_orcid: orcid_api.ORCIDAffiliationGroup
-        | List[orcid_api.ORCIDAffiliationGroup],
-    ) -> List[orcid_api.ORCIDAffiliationGroup]:
-        if isinstance(from_orcid, orcid_api.ORCIDAffiliationGroup):
-            return [from_orcid]
-        elif isinstance(from_orcid, list):
-            return from_orcid
-
-    aff_group = coerce_to_list(affiliation_group)
-
-    affiliations = []
-    for affiliation in aff_group:
-        #
-        # For some reason there is a list of summaries here, but I don't
-        # see such a structure in the XML, so just take the first element.
-        #
-        employment_summary = affiliation.summaries[0].employment_summary
-        name = employment_summary.organization.name
-        role = employment_summary.role_title
-        start_year = employment_summary.start_date.year.value
-        if employment_summary.end_date is not None:
-            end_year = employment_summary.end_date.year.value
-        else:
-            end_year = None
-
-        affiliations.append(
-            model.ORCIDAffiliation(
-                name=name, role=role, startYear=start_year, endYear=end_year
-            )
-        )
-    return affiliations
-
-
-def get_profile_to_ORCIDProfile(
-    orcid_id: str, profile_raw: orcid_api.ORCIDProfile
-) -> ORCIDProfile:
-    email_addresses = []
-    for email in profile_raw.person.emails.email:
-        email_addresses.append(email.email)
-
-    # probably should translate into something much simpler...
-    # also maybe have a method per major chunk of profile?
-
-    first_name = profile_raw.person.name.given_names.value
-    last_name = profile_raw.person.name.family_name.value
-    bio = profile_raw.person.biography.content
-
-    # Organizations / Employment!
-
-    affiliation_group = profile_raw.activities_summary.employments.affiliation_group
-    affiliations = transform_affilations(affiliation_group)
-
-    #
-    # Publications
-    works = []
-
-    activity_works = profile_raw.activities_summary.works.group
-    for work in activity_works:
-        work_summary = work.work_summary[0]
-        # get_raw_prop(work, ["work-summary", 0], None)
-        works.append(to_service.raw_work_summary_to_work(work_summary))
-
-    return ORCIDProfile(
-        orcidId=orcid_id,
-        firstName=first_name,
-        lastName=last_name,
-        bio=bio,
-        affiliations=affiliations,
-        works=works,
-        emailAddresses=email_addresses,
-    )
-
-
-#
 # API
 #
 
@@ -129,6 +43,13 @@ async def get_profile(
 ) -> ORCIDProfile | JSONResponse:
     """
     Get the ORCID profile for the user associated with the current auth token.
+
+    Since ORCID Link is not a general purpose ORCID api, we may not fully
+    represent the profile as ORCID does, but modify it for purpose.
+    E.g. ORCID work records have a lot of optional fields which we
+    actually require. This is reflected in the typing. So we can't really
+    provide all work records in the profile, just those created by
+    KBase.
 
     Returns a 404 Not Found if the user is not linked
     """
@@ -156,4 +77,4 @@ async def get_profile(
     # TODO: what if the profile is not found?
     profile_json = orcid_api.orcid_api(access_token).get_profile(orcid_id)
 
-    return get_profile_to_ORCIDProfile(orcid_id, profile_json)
+    return to_service.orcid_profile(profile_json)

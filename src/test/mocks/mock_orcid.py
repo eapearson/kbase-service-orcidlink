@@ -22,8 +22,11 @@ class MockORCIDAPI(MockService):
 
         elif self.path == "/0000-0003-4997-3076/works/1526002":
             work_record = load_test_data("orcid", "work_1526002")
-            test_data = {"bulk": [{"work": work_record}]}
-            self.send_json(test_data)
+            self.send_json(work_record)
+
+        elif self.path == "/0000-0003-4997-3076/works/1487805":
+            work_record = load_test_data("orcid", "work_1487805")
+            self.send_json(work_record)
 
         elif self.path == "/0000-0003-4997-3076/works/123":
             self.send_text("foobar")
@@ -76,7 +79,7 @@ class MockORCIDAPI(MockService):
 
     def do_PUT(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
-            test_data = load_test_data("orcid", "work_1526002")
+            test_data = load_test_data("orcid", "work_1526002")["bulk"][0]["work"]
 
             # simulates an updated last modified date.
             test_data["last-modified-date"]["value"] = utils.current_time_millis()
@@ -105,8 +108,7 @@ class MockORCIDAPI(MockService):
                 # will probably be dead by the time this is reached.
             else:
                 test_work = load_test_data("orcid", "work_1526002")
-                response_data = {"bulk": [{"work": test_work}]}
-                self.send_json(response_data)
+                self.send_json(test_work)
 
 
 class MockORCIDAPIWithErrors(MockService):

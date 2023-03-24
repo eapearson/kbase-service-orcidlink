@@ -1,4 +1,6 @@
-from orcidlink.model import WorkUpdate
+from typing import List
+
+from orcidlink import model
 from orcidlink.service_clients import orcid_api
 
 
@@ -23,65 +25,128 @@ def parse_date(date_string: str) -> orcid_api.Date:
         )
 
 
+def transform_contributor_self(
+    contributor_update: model.ORCIDContributorSelf,
+) -> List[orcid_api.Contributor]:
+    """
+    Transforms a model Contributor to an orcid_api compatible
+    contributor.
+
+    This transformation is a bit strange, as ORCID has one contributor
+    record per role. So one contributor with multiple roles is stored
+    not as one contributor record with an array of roles, but rather
+    as multiple contributor records with one per role!
+    """
+    contributor_records: List[orcid_api.Contributor] = []
+    for role in contributor_update.roles:
+        contributor_records.append(
+            orcid_api.Contributor(
+                contributor_orcid=orcid_api.ContributorORCID(
+                    path=contributor_update.orcidId, uri=None, host=None
+                ),
+                credit_name=orcid_api.StringValue(value=contributor_update.name),
+                # seems unused - no way to access it in the ORCID ui
+                contributor_email=None,
+                contributor_attributes=orcid_api.ContributorAttributes(
+                    contributor_sequence=None, contributor_role=role
+                ),
+            )
+        )
+    return contributor_records
+
+
+def transform_contributor(
+    contributor_update: model.ORCIDContributor,
+) -> List[orcid_api.Contributor]:
+    """
+    Transforms a model Contributor to an orcid_api compatible
+    contributor.
+
+    This transformation is a bit strange, as ORCID has one contributor
+    record per role. So one contributor with multiple roles is stored
+    not as one contributor record with an array of roles, but rather
+    as multiple contributor records with one per role!
+    """
+    contributor_records: List[orcid_api.Contributor] = []
+    for role in contributor_update.roles:
+        contributor = orcid_api.Contributor(
+            credit_name=orcid_api.StringValue(value=contributor_update.name),
+            # seems unused - no way to access it in the ORCID ui, and we don't need to collect it afaik.
+            contributor_email=None,
+            contributor_attributes=orcid_api.ContributorAttributes(
+                contributor_sequence=None, contributor_role=role
+            ),
+            contributor_orcid=orcid_api.ContributorORCID(
+                path=contributor_update.orcidId, uri=None, host=None
+            ),
+        )
+        # if contributor_update.orcidId is not None:
+        # contributor.contributor_orcid = orcid_api.ContributorORCID(
+        #     uri=contributor_update.orcidId,
+        #     path=None,
+        #     host=None
+        # )
+        contributor_records.append(contributor)
+    return contributor_records
+
+
+def transform_contributors(
+    contributors_update: List[model.ORCIDContributor],
+) -> List[orcid_api.Contributor]:
+    all_contributors = []
+    for contributor in contributors_update:
+        contributors = transform_contributor(contributor)
+        all_contributors.extend(contributors)
+    return all_contributors
+
+
 # TODO: return should be class
-def translate_work_update(
-    work_update: WorkUpdate, work_record: orcid_api.Work
-) -> orcid_api.Work:
-    #
-    # TODO: detected error (status code) HERE
-    #
-
-    #
-    # Then modify it from the request body
-    #
-    if work_update.title is not None:
-        work_record.title.title.value = work_update.title
-
-    if work_update.workType is not None:
-        work_record.type = work_update.workType
-
-    if work_update.journal is not None:
-        work_record.journal_title = orcid_api.StringValue(value=work_update.journal)
-
-    if work_update.date is not None:
-        work_record.publication_date = orcid_api.Date.parse_obj(
-            parse_date(work_update.date)
+def translate_work_update(work_update: model.WorkUpdate) -> orcid_api.WorkUpdate:
+    external_ids: List[orcid_api.ExternalId] = [
+        orcid_api.ExternalId(
+            external_id_type="doi",
+            external_id_value=work_update.doi,
+            external_id_normalized=None,
+            # TODO: doi url should be configurable
+            external_id_url=orcid_api.StringValue(
+                value=f"https://doi.org/{work_update.doi}"
+            ),
+            external_id_relationship="self",
+        )
+    ]
+    for index, externalId in enumerate(work_update.externalIds):
+        external_ids.append(
+            orcid_api.ExternalId(
+                external_id_type=externalId.type,
+                external_id_value=externalId.value,
+                external_id_normalized=None,
+                external_id_url=orcid_api.StringValue(value=externalId.url),
+                external_id_relationship=externalId.relationship,
+            )
         )
 
-    if work_update.workType is not None:
-        work_record.type = work_update.workType
+    citation = orcid_api.Citation(
+        citation_type=work_update.citation.type,
+        citation_value=work_update.citation.value,
+    )
+    # work_record.short_description = work_update.shortDescription
 
-    if work_update.url is not None:
-        work_record.url.value = work_update.url
+    contributors = []
 
-    if work_update.externalIds is not None:
-        for index, externalId in enumerate(work_update.externalIds):
-            if index < len(work_record.external_ids.external_id):
-                external_id = work_record.external_ids.external_id[index]
-                external_id.external_id_type = externalId.type
-                external_id.external_id_value = externalId.value
-                external_id.external_id_url = orcid_api.StringValue(
-                    value=externalId.url
-                )
-                external_id.external_id_relationship = externalId.relationship
-            else:
-                # for work update external ids beyond the last work record
-                # external id. Allows "adding" new external ids
-                id = orcid_api.ORCIDExternalId(
-                    external_id_type=externalId.type,
-                    external_id_value=externalId.value,
-                    external_id_normalized=None,
-                    external_id_url=orcid_api.StringValue(value=externalId.url),
-                    external_id_relationship=externalId.relationship,
-                )
-                work_record.external_ids.external_id.append(
-                    orcid_api.ORCIDExternalId(
-                        external_id_type=externalId.type,
-                        external_id_value=externalId.value,
-                        external_id_normalized=None,
-                        external_id_url=orcid_api.StringValue(value=externalId.url),
-                        external_id_relationship=externalId.relationship,
-                    )
-                )
+    self_contributors = transform_contributor_self(work_update.selfContributor)
+    contributors.extend(self_contributors)
 
-    return work_record
+    contributors.extend(transform_contributors(work_update.otherContributors))
+
+    return orcid_api.WorkUpdate(
+        put_code=work_update.putCode,
+        type=work_update.workType,
+        title=orcid_api.Title(title=orcid_api.StringValue(value=work_update.title)),
+        journal_title=orcid_api.StringValue(value=work_update.journal),
+        url=orcid_api.StringValue(value=work_update.url),
+        publication_date=orcid_api.Date.parse_obj(parse_date(work_update.date)),
+        external_ids=orcid_api.ExternalIds(external_id=external_ids),
+        short_description=work_update.shortDescription,
+        citation=citation,
+        contributors=orcid_api.ContributorWrapper(contributor=contributors),
+    )

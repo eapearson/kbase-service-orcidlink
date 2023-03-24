@@ -1,0 +1,25 @@
+{
+  "putCode": 1526002,
+  "createdAt": 1663706262725,
+  "updatedAt": 1673106994937,
+  "source": "KBase CI",
+  "title": "Some Data Set, yo, bro, whoa",
+  "journal": "Me myself and I and me, and thee",
+  "date": "2021",
+  "workType": "online-resource",
+  "url": "https://kbase.us",
+  "externalIds": [
+  ],
+  "shortDescription": "my short description",
+  "citation": {
+    "type": "vancouver",
+    "value": "my citation"
+  },
+  "selfContributor": {
+    "orcidId": "0000-0003-4997-3076",
+    "name": "Erik A Pearson",
+    "roles": []
+  },
+  "otherContributors": [],
+  "doi": "123"
+}
