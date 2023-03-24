@@ -9,8 +9,6 @@ services:
   orcidlink:
     build:
       context: .
-    #      dockerfile: ../Dockerfile
-    #    image: kbase/orcidlink:dev
     container_name: orcidlink
     hostname: orcidlink
     dns: 8.8.8.8
@@ -23,7 +21,6 @@ services:
       # this port for poking at the API during development.
       - "5001:5000"
     environment:
-      - DEV=no
       - KBASE_ENDPOINT
       - ORCID_API_BASE_URL
       - ORCID_OAUTH_BASE_URL

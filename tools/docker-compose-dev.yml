@@ -1,3 +1,6 @@
+#
+# A dockerfile for running the server under development.
+#
 version: '3.6'
 networks:
   kbase-dev:
@@ -7,7 +10,6 @@ services:
     build:
       context: .
     container_name: orcidlink
-    # We like to use the service module name here.
     hostname: orcidlink
     dns: 8.8.8.8
     volumes:
@@ -22,7 +24,6 @@ services:
       # this port for poking at the API during development.
       - "5001:5000"
     environment:
-      - DEV=yes
       - KBASE_ENDPOINT
       - ORCID_API_BASE_URL
       - ORCID_OAUTH_BASE_URL

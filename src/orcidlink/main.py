@@ -12,11 +12,13 @@ than "root", which implements top level endpoints (other than /docs).
 Routers include: link, linking-sessions, works, orcid, and root.
 
 """
+import logging
 from typing import Any, Generic, List, TypeVar
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
+from orcidlink.lib import logger
 from orcidlink.lib.config import config
 from orcidlink.lib.errors import FASTAPI_ERROR, NOT_FOUND, ServiceError, ServiceErrorX
 from orcidlink.lib.responses import (
@@ -339,3 +341,11 @@ async def docs(req: Request) -> HTMLResponse:
         openapi_url=openapi_url,
         title="API",
     )
+
+
+#
+# More setup
+#
+
+
+logger.log_level(logging.DEBUG)

@@ -29,7 +29,6 @@ function _run {
   echo "Running: "
   echo "${@:1}"
   docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --rm "${1}" "${@:2}"
-  echo "done"
 }
 
 #
@@ -138,7 +137,6 @@ function server {
   export MONGO_USERNAME=dev
   export MONGO_PASSWORD=d3v
   _dc-up prod-like
-#  docker compose -f etc/docker-compose-prod-like.yml up
 }
 
 # For building a prod-like image locally

@@ -4,6 +4,8 @@ import os
 import time
 from datetime import datetime, timezone
 
+import httpx
+
 
 def module_dir() -> str:
     my_dir = os.path.dirname(__file__)
@@ -36,3 +38,14 @@ def make_date(
             return f"{year}"
     else:
         return "** invalid date **"
+
+
+def http_client() -> httpx.Client:
+    """
+    A simple wrapper for the httpx client
+
+    Useful for times when we need to apply an option to all http calls.
+    Currently, does nothing, but has been useful in the past so probably
+    will be again.
+    """
+    return httpx.Client()

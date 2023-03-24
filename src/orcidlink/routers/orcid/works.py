@@ -12,6 +12,7 @@ from orcidlink.lib.responses import (
     STD_RESPONSES,
     success_response_no_data,
 )
+from orcidlink.lib.utils import http_client
 from orcidlink.service_clients import orcid_api
 from orcidlink.service_clients.auth import ensure_authorization, get_username
 from orcidlink.storage.storage_model import storage_model
@@ -218,7 +219,7 @@ async def delete_work(
     }
     url = orcid_api.orcid_api_url(f"{orcid_id}/work/{put_code}")
 
-    response = httpx.delete(url, headers=header)
+    response = http_client().delete(url, headers=header)
 
     if response.status_code == 204:
         return success_response_no_data()
@@ -312,7 +313,7 @@ async def create_work(
     # wrap this common use case into a function or class.
     timeout = config().module.serviceRequestTimeout / 1000
     try:
-        response = httpx.post(
+        response = http_client().post(
             url,
             timeout=timeout,
             headers=header,

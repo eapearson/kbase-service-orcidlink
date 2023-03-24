@@ -1,4 +1,4 @@
-FROM python:3.11.1-alpine
+FROM python:3.11.2-alpine
 # Note that the python version needs to match that used to create
 # poetry.lock.
 

@@ -1,4 +1,4 @@
-FROM python:3.11.1-slim-bullseye
+FROM python:3.11.2-slim-bullseye
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -46,6 +46,7 @@ RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && mkdir -p /kb/module/b
 # and have access to everything.
 COPY ./scripts /kb/module/scripts
 COPY ./src/orcidlink /kb/module/src/orcidlink
+COPY ./src/boot /kb/module/src/boot
 COPY ./src/misc /kb/module/src/misc
 COPY ./etc /kb/module/etc
 COPY ./poetry.lock /kb/module

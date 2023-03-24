@@ -18,11 +18,12 @@ To that end the following endpoints are provided:
                  and revokes the ORCID token in the link. Returns nothing if successful.
 
 """
-
+import time
 from typing import Optional
 
 from fastapi import APIRouter, Response
 from orcidlink.lib import errors
+from orcidlink.lib.logger import log_event
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     AUTH_RESPONSES,
@@ -115,8 +116,15 @@ async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
     Determine if the user associated with the KBase auth token in the "Authorization" header has a
     link to an ORCID account.
     """
+    auth_start = time.perf_counter()
     _, token_info = ensure_authorization(authorization)
+    auth_elapsed = time.perf_counter() - auth_start
+    get_link_start = time.perf_counter()
     link_record = get_link_record(token_info.user)
+    get_link_elapsed = time.perf_counter() - get_link_start
+
+    log_event("debug-perf", {"auth": auth_elapsed, "get-link": get_link_elapsed})
+
     return link_record is not None
 
 

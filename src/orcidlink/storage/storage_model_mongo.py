@@ -1,5 +1,7 @@
+import time
 from typing import Any, Dict, Optional
 
+from orcidlink.lib.logger import log_event
 from orcidlink.model import (
     LinkRecord,
     LinkingSessionComplete,
@@ -30,12 +32,24 @@ class StorageModelMongo:
     # a username and an ORCID Id.
     #
     def get_link_record(self, username: str) -> Optional[LinkRecord]:
+        start = time.perf_counter()
+        log_event("get-link-record-start", {})
         record = self.db.links.find_one({"username": username})
 
+        got_one_at = time.perf_counter()
+        log_event("get-link-record-got-one", {"elapsed": got_one_at - start})
         # record = self.db.get('users', username)
         if record is None:
             return None
-        return LinkRecord.parse_obj(record)
+
+        log_event("get-link-record-parsing", {})
+        parsing_at = time.perf_counter()
+        parsed = LinkRecord.parse_obj(record)
+
+        log_event(
+            "get-link-record-parsed", {"elapsed": time.perf_counter() - parsing_at}
+        )
+        return parsed
 
     def save_link_record(self, record: LinkRecord) -> None:
         self.db.links.update_one({"username": record.username}, {"$set": record.dict()})
