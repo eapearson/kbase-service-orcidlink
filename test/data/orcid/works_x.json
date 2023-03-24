@@ -175,6 +175,19 @@
                   "value": "https://example.com"
                 },
                 "external-id-relationship": "self"
+              },
+              {
+                "external-id-type": "uri",
+                "external-id-value": "kbase_web_services",
+                "external-id-normalized": {
+                  "value": "http://kbase_web_services",
+                  "transient": true
+                },
+                "external-id-normalized-error": null,
+                "external-id-url": {
+                  "value": "https://kbase.us"
+                },
+                "external-id-relationship": "part-of"
               }
             ]
           },

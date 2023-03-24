@@ -74,6 +74,20 @@ def test_get_work(fake_fs):
         assert work["putCode"] == 1526002
 
 
+def test_get_work2(fake_fs):
+    with mock_services():
+        create_link()
+        put_code = 1487805
+        client = TestClient(app)
+        response = client.get(
+            f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
+        )
+        assert response.status_code == 200
+        work = response.json()
+        assert isinstance(work, dict)
+        assert work["putCode"] == 1487805
+
+
 def test_get_work_errors(fake_fs):
     with mock_services():
         client = TestClient(app)
@@ -177,6 +191,7 @@ def test_create_work(fake_fs):
             "date": "2021",
             "workType": "online-resource",
             "url": "https://kbase.us",
+            "doi": "123",
             "externalIds": [
                 {
                     "type": "doi",
@@ -185,6 +200,10 @@ def test_create_work(fake_fs):
                     "relationship": "self",
                 }
             ],
+            "citation": {"type": "vancouver", "value": "my reference here"},
+            "shortDescription": "my short description",
+            "selfContributor": {"orcidId": "foo", "name": "Bar Baz", "roles": []},
+            "otherContributors": [],
         }
         response = client.post(
             "/orcid/works",
@@ -206,10 +225,14 @@ def test_create_work_errors(fake_fs):
 
         # TODO: get from file.
         new_work_data = {
-            "workType": "online-resource",
+            "putCode": 1526002,
+            "createdAt": 1663706262725,
+            "updatedAt": 1671119638386,
+            "source": "KBase CI",
             "title": "Some Data Set, yo, bro, whoa",
             "journal": "Me myself and I and me",
             "date": "2021",
+            "workType": "online-resource",
             "url": "https://kbase.us",
             "externalIds": [
                 {
@@ -219,6 +242,11 @@ def test_create_work_errors(fake_fs):
                     "relationship": "self",
                 }
             ],
+            "citation": {"type": "vancouver", "value": "my reference here"},
+            "shortDescription": "my short description",
+            "doi": "123",
+            "selfContributor": {"orcidId": "foo", "name": "Bar Baz", "roles": []},
+            "otherContributors": [],
         }
 
         # Error: link_record not found
@@ -261,7 +289,7 @@ def test_create_work_errors(fake_fs):
 
 
 def test_external_id():
-    external_id = orcid_api.ORCIDExternalId(
+    external_id = orcid_api.ExternalId(
         external_id_type="foo",
         external_id_value="value",
         external_id_normalized=None,
@@ -311,6 +339,11 @@ def test_save_work(fake_fs):
                     "relationship": "self",
                 },
             ],
+            "citation": {"type": "vancouver", "value": "my reference here"},
+            "shortDescription": "my short description",
+            "doi": "123",
+            "selfContributor": {"orcidId": "foo", "name": "Bar Baz", "roles": []},
+            "otherContributors": [],
         }
         response = client.put(
             f"/orcid/works",
@@ -343,6 +376,11 @@ def test_save_work_errors(fake_fs):
                     "relationship": "self",
                 }
             ],
+            "citation": {"type": "vancouver", "value": "my reference here"},
+            "shortDescription": "my short description",
+            "doi": "123",
+            "selfContributor": {"orcidId": "foo", "name": "Bar Baz", "roles": []},
+            "otherContributors": [],
         }
         response = client.put(
             f"/orcid/works",

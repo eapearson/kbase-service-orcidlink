@@ -111,6 +111,10 @@ function test {
   _run testing tools/scripts/run-tests.sh "${1}"
 }
 
+function viewcov {
+  open "${PWD}/htmlcov/index.html"
+}
+
 function dev-server {
   export KBASE_ENDPOINT=https://ci.kbase.us/services/
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth

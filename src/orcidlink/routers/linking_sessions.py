@@ -296,12 +296,13 @@ async def finish_linking_session(
     model.create_link_record(link_record)
 
     model.delete_linking_session(session_id)
-    return SimpleSuccess(ok="true")
+    return SimpleSuccess(ok=True)
 
 
 #
 # OAuth Interactive Endpoints
 #
+
 
 #
 # The initial url for linking to an ORCID Account
