@@ -3,7 +3,6 @@
 /_local
 /dev/work/data
 /lib/
-.idea
 
 # Development artifacts
 LOCAL_ONLY_README.md
@@ -24,3 +23,7 @@ coverage.lcov
 
 # Deployment
 /deploy
+
+# IDEs
+.idea
+.fleet
