@@ -1,4 +1,4 @@
-FROM python:3.11.2-slim-bullseye
+FROM python:3.11.4-slim-bullseye
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y curl git
 SHELL ["/bin/bash", "-c"]
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1
 
 # Temporary fix for broken Python venv.
 # setuptools is not used by poetry (see the install command below), but it is present
@@ -30,6 +30,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
 # against it. Just upgrading to the latest version, to avoid having to fix this when poetry's
 # venv has a more recent version than 65.5.1 (which fixes the CVE). When the upstream issue is fixed,
 # this line can be removed.
+# TODO: can it be removed now?
 RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
 
 # Don't need curl any more.
