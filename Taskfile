@@ -47,6 +47,10 @@ function git-info {
   _run runner poetry --quiet run python src/misc/git-info.py
 }
 
+function lock {
+  _run runner poetry lock
+}
+
 function render-config {
   mkdir -p deploy
   _run-in-service runner scripts/render-config.sh
@@ -75,6 +79,10 @@ function generate-openapi {
 function generate-docs {
   rm -rf docs/api/openapi/*
   _run runner poetry --quiet run python src/misc/generate-docs.py /app
+}
+
+function extract-schema {
+  _run runner poetry --quiet run python src/misc/extract-schema.py /app "${1}"
 }
 
 function shell {
