@@ -1,14 +1,15 @@
 import json
 import logging
-from typing import Any, Dict, OrderedDict, TypedDict, List
 import os
+from typing import Any, Dict, List, OrderedDict, TypedDict
 
 import pymongo.errors
 from bson import json_util
+from pymongo import MongoClient
+
 from orcidlink.lib import logger
 from orcidlink.lib.config import config, get_service_description
 from orcidlink.lib.utils import posix_time_millis
-from pymongo import MongoClient
 
 
 def test():
@@ -120,15 +121,111 @@ def add_message(messages: List[Message], message: str) -> List[Message]:
     return messages.append({"at": posix_time_millis(), "message": message})
 
 
+def get_schema(service_version, collection_name):
+    return load_schema(f"v{service_version}", collection_name)["validator"]
+
+
 def create_collection(db, name: str, service_version: str):
-    schema = load_schema(f"v{service_version}", name)["validator"]
+    schema = get_schema(service_version, name)
     collection = db.create_collection(name, validator=schema)
     return collection
 
 
-def initialize_v0_2_1(db):
+def migrate_v021_to_v030(db):
+    service_version = "0.3.0"
+
+    # The first migration, which will be the case in this branch, adds index and
+    # then updates the description to show that it has been migrated.
+
+    actions = []
+
+    # Add schema for links
+    db.command("collMod", "links", validator=get_schema(service_version, "links"))
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "added schema for 'links'",
+        }
+    )
+
+    # Remove old linking_sessions
+    db.get_collection("linking_sessions").drop()
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "dropped 'linking_sessions'",
+        }
+    )
+
+    # Add linking_sessions_initial
+    create_collection(db, "linking_sessions_initial", service_version)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "created 'linking_session_initial' collection",
+        }
+    )
+
+    # Add linking_sessions_started
+    create_collection(db, "linking_sessions_started", service_version)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "created 'linking_session_started' collection",
+        }
+    )
+
+    # Add linking_sessions_completed
+    create_collection(db, "linking_sessions_completed", service_version)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "created 'linking_session_completed' collection",
+        }
+    )
+
+    # Update the database description
+    description = db.get_collection("description").find_one()
+    db.get_collection("description").update_one(
+        {"_id": description["_id"]},
+        {"$set": {"version": service_version, "migrated": True}},
+    )
+
+    return {
+        "status": "ok",
+        "message": "Migration successfully completed",
+        "actions": actions,
+    }
+
+
+def initialize_v021(db):
     actions = []
     service_version = "0.2.1"
+
+    # linking sessions are looked up by session_id
+    linking_sessions = db.get_collection("linking_sessions")
+    linking_sessions.create_index("session_id")
+    actions.append("added index on session_id to linking_sessions")
+
+    # links are looked up by username
+    links = db.get_collection("links")
+    links.create_index("username")
+    actions.append("added index on username to links")
+
+    db.get_collection("description").insert_one(
+        {"version": service_version, "at": posix_time_millis(), "migrated": True}
+    )
+
+    return {
+        "status": "ok",
+        "message": "Migration successfully completed",
+        "actions": actions,
+    }
+
+
+def initialize_v030(db):
+    actions = []
+    service_version = "0.3.0"
 
     create_collection(db, "linking_sessions_initial", service_version)
     actions.append(
@@ -198,83 +295,27 @@ def migrate_db():
 
         if service_version == "0.2.1":
             if description is None:
-                return initialize_v0_2_1(db)
-                # Initial migration. In fact, this is the first version for which there is a
-                # migration defined.
-                # actions = []
-                # needs an index
-                # linking sessions are looked up by session_id
-
-                # create_collection(db, "linking_sessions_initial", service_version)
-                # create_collection(db, "linking_sessions_started", service_version)
-                # create_collection(db, "linking_sessions_complete", service_version)
-                # links_collection = create_collection(db, "links", service_version)
-                # links_collection.create_index("username", unique=True)
-                # description_collection = create_collection(db, "description", service_version)
-
-                # linking_sessions_schema = load_schema(f'v{service_version}', 'linking_sessions')['validator']
-                # linking_sessions_collection = db.create_collection("linking_sessions", validator=linking_sessions_schema)
-
-                # # Linking sessions started
-
-                # linking_sessions_schema = load_schema(f'v{service_version}', 'linking_sessions')['validator']
-                # linking_sessions_collection = db.create_collection("linking_session_started", validator=linking_sessions_started_schema)
-
-                # # linking_sessions = db.get_collection("linking_sessions")
-                # linking_sessions_collection.create_index("session_id", unique=True)
-                # actions.append({"at": posix_time_millis(), "message": "added index on session_id to linking_sessions"})
-
-                # links are looked up by username
-                # links_schema = load_schema(f'v{service_version}', 'links_schema')['validator']
-                # links = db.get_collection("links")
-                # links.create_index("username", unique=True)
-                # actions.append({"at": posix_time_millis(), "message": "added unique index on username to links"})
-
-                # # # links can also be looked up by, and must be unique by, orcid id!
-
-                # # # The description collection describes the database!
-
-                # description_schema = load_schema(f'v{service_version}', 'description')["validator"]
-                # # print('About to create description - ', description_schema)
-                # db.create_collection('description', validator=description_schema)
-
-                # print('Created collection "description"')
-
+                return initialize_v021(db)
+            else:
+                return {
+                    "status": "error",
+                    "code": "migration-error",
+                    "message": f"No migration available for version {service_version}",
+                }
+        elif service_version == "0.3.0":
+            if description is None:
+                return initialize_v030(db)
             else:
                 database_version = description["version"]
                 if database_version == service_version:
-                    # I don't think this case ever appeared in the wild, but it did in testing.
-                    if description["migrated"] is True:
-                        return {
-                            "status": "ok",
-                            "code": "migration-not-required",
-                            "message": "Database already migrated for this version",
-                        }
-
-                    # The first migration, which will be the case in this branch, adds index and
-                    # then updates the description to show that it has been migrated.
-
-                    actions = []
-                    # needs an index
-                    # linking sessions are looked up by session_id
-                    linking_sessions = db.get_collection("linking_sessions")
-                    linking_sessions.create_index("session_id")
-                    actions.append("added index on session_id to linking_sessions")
-
-                    # links are looked up by username
-                    links = db.get_collection("links")
-                    links.create_index("username")
-                    actions.append("added index on username to links")
-
-                    db.get_collection("description").update_one(
-                        {"_id": description["_id"]}, {"$set": {"migrated": True}}
-                    )
-
+                    #    if description["migrated"] is True:
                     return {
                         "status": "ok",
-                        "message": "Migration successfully completed",
-                        "actions": actions,
+                        "code": "migration-not-required",
+                        "message": "Database already migrated for this version",
                     }
+                elif database_version == "0.2.1":
+                    return migrate_v021_to_v030(db)
                 else:
                     return {
                         "status": "error",
@@ -282,8 +323,6 @@ def migrate_db():
                         "message": f"No migration available from db version {description['version']} to service version {service_version}",
                     }
         else:
-            # Initialize latest version.
-
             return {
                 "status": "error",
                 "code": "migration-error",
@@ -296,9 +335,6 @@ def migrate_db():
             "code": "migration-error",
             "message": f"The migration failed: {str(dbe)}",
         }
-
-
-# def list_db_collections():
 
 
 def main():

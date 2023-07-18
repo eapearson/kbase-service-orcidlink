@@ -4,7 +4,7 @@ orcidlink = db.getSiblingDB('orcidlink')
 orcidlink.createUser({
     user: "dev",
     pwd: "d3v",
-    roles: [{role: "readWrite", db: "orcidlink"}]
+    roles: [{role: "dbOwner", db: "orcidlink"}]
 })
 
 // The following code can be un-commented to
