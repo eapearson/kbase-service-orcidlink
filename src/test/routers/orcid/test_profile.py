@@ -47,7 +47,7 @@ def around_tests(fake_fs):
 def create_link():
     sm = storage_model.storage_model()
     sm.db.links.drop()
-    sm.create_link_record(model.LinkRecord.parse_obj(TEST_LINK))
+    sm.create_link_record(model.LinkRecord.model_validate(TEST_LINK))
 
 
 #
@@ -58,8 +58,8 @@ def create_link():
 # TODO: How did this ever work?
 # def test_router_profile_to_normalized():
 #     orcid_id = "0000-0003-4997-3076"
-#     raw_profile = orcid_api.ORCIDProfile.parse_obj(load_test_data("orcid", "profile"))
-#     model_profile = model.ORCIDProfile.parse_obj(
+#     raw_profile = orcid_api.ORCIDProfile.model_validate(load_test_data("orcid", "profile"))
+#     model_profile = model.ORCIDProfile.model_validate(
 #         load_test_data("orcid", "profile-model")
 #     )
 #     assert (
@@ -71,9 +71,9 @@ def create_link():
 # def test_router_profile_to_normalized_single_affiliation():
 #     orcid_id = "0000-0003-4997-3076"
 #     orcid_data = load_test_data("orcid", "profile-single-affiliation")
-#     raw_profile = orcid_api.ORCIDProfile.parse_obj(orcid_data)
+#     raw_profile = orcid_api.ORCIDProfile.model_validate(orcid_data)
 #     model_data = load_test_data("orcid", "profile-model-single-affiliation")
-#     model_profile = model.ORCIDProfile.parse_obj(model_data)
+#     model_profile = model.ORCIDProfile.model_validate(model_data)
 #     assert get_profile(orcid_id, raw_profile) == model_profile
 
 

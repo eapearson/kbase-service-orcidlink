@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="xs:schema">
+            <attribute name="elementFormDefault">
+                <data type="NCName"/>
+            </attribute>
+            <attribute name="targetNamespace">
+                <data type="anyURI"/>
+            </attribute>
+            <ref name="annotation"/>
+            <oneOrMore>
+                <element name="xs:import">
+                    <attribute name="namespace">
+                        <data type="anyURI"/>
+                    </attribute>
+                    <attribute name="schemaLocation"/>
+                </element>
+            </oneOrMore>
+            <oneOrMore>
+                <ref name="element"/>
+            </oneOrMore>
+            <oneOrMore>
+                <choice>
+                    <ref name="complexType"/>
+                    <element name="xs:simpleType">
+                        <attribute name="name">
+                            <data type="NCName"/>
+                        </attribute>
+                        <ref name="annotation"/>
+                        <element name="xs:restriction">
+                            <attribute name="base">
+                                <data type="NMTOKEN"/>
+                            </attribute>
+                            <zeroOrMore>
+                                <element name="xs:enumeration">
+                                    <attribute name="value">
+                                        <data type="NCName"/>
+                                    </attribute>
+                                </element>
+                            </zeroOrMore>
+                        </element>
+                    </element>
+                </choice>
+            </oneOrMore>
+        </element>
+    </start>
+    <define name="annotation">
+        <element name="xs:annotation">
+            <element name="xs:documentation">
+                <text/>
+            </element>
+            <optional>
+                <element name="xs:appinfo">
+                    <element name="sch:title">
+                        <text/>
+                    </element>
+                    <element name="sch:ns">
+                        <attribute name="prefix">
+                            <data type="NCName"/>
+                        </attribute>
+                        <attribute name="uri">
+                            <data type="anyURI"/>
+                        </attribute>
+                    </element>
+                </element>
+            </optional>
+        </element>
+    </define>
+    <define name="element">
+        <element name="xs:element">
+            <optional>
+                <attribute name="default">
+                    <data type="NCName"/>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="maxOccurs">
+                    <data type="NMTOKEN"/>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="minOccurs">
+                    <data type="integer"/>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="name">
+                    <data type="NCName"/>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="ref">
+                    <data type="NMTOKEN"/>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="type">
+                    <data type="NMTOKEN"/>
+                </attribute>
+            </optional>
+            <optional>
+                <choice>
+                    <ref name="annotation"/>
+                    <ref name="complexType"/>
+                </choice>
+            </optional>
+        </element>
+    </define>
+    <define name="complexType">
+        <element name="xs:complexType">
+            <optional>
+                <attribute name="name">
+                    <data type="NCName"/>
+                </attribute>
+            </optional>
+            <optional>
+                <ref name="annotation"/>
+            </optional>
+            <choice>
+                <ref name="sequence"/>
+                <element name="xs:complexContent">
+                    <ref name="extension"/>
+                </element>
+                <element name="xs:simpleContent">
+                    <ref name="extension"/>
+                </element>
+            </choice>
+        </element>
+    </define>
+    <define name="extension">
+        <element name="xs:extension">
+            <attribute name="base">
+                <data type="NMTOKEN"/>
+            </attribute>
+            <optional>
+                <ref name="sequence"/>
+            </optional>
+        </element>
+    </define>
+    <define name="sequence">
+        <element name="xs:sequence">
+            <oneOrMore>
+                <ref name="element"/>
+            </oneOrMore>
+        </element>
+    </define>
+</grammar>

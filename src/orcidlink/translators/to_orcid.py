@@ -48,7 +48,9 @@ def transform_contributor_self(
                 # seems unused - no way to access it in the ORCID ui
                 contributor_email=None,
                 contributor_attributes=orcid_api.ContributorAttributes(
-                    contributor_sequence=None, contributor_role=role
+                    # TODO: try removing below
+                    contributor_sequence=None,
+                    contributor_role=role.role,
                 ),
             )
         )
@@ -74,7 +76,7 @@ def transform_contributor(
             # seems unused - no way to access it in the ORCID ui, and we don't need to collect it afaik.
             contributor_email=None,
             contributor_attributes=orcid_api.ContributorAttributes(
-                contributor_sequence=None, contributor_role=role
+                contributor_sequence=None, contributor_role=role.role
             ),
             contributor_orcid=orcid_api.ContributorORCID(
                 path=contributor_update.orcidId, uri=None, host=None
@@ -144,7 +146,7 @@ def translate_work_update(work_update: model.WorkUpdate) -> orcid_api.WorkUpdate
         title=orcid_api.Title(title=orcid_api.StringValue(value=work_update.title)),
         journal_title=orcid_api.StringValue(value=work_update.journal),
         url=orcid_api.StringValue(value=work_update.url),
-        publication_date=orcid_api.Date.parse_obj(parse_date(work_update.date)),
+        publication_date=orcid_api.Date.model_validate(parse_date(work_update.date)),
         external_ids=orcid_api.ExternalIds(external_id=external_ids),
         short_description=work_update.shortDescription,
         citation=citation,

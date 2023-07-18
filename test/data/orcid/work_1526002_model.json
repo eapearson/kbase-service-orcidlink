@@ -12,7 +12,7 @@
   ],
   "shortDescription": "my short description",
   "citation": {
-    "type": "vancouver",
+    "type": "formatted-vancouver",
     "value": "my citation"
   },
   "selfContributor": {

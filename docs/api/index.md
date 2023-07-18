@@ -19,7 +19,7 @@ Once connected, *ORCID Link* enables certain integrations, including:
 <a name="header_contact"></a>
 ## Contact
 KBase, Lawrence Berkeley National Laboratory, DOE  
-<a href="https://www.kbase.us">https://www.kbase.us</a>  
+<a href="https://www.kbase.us/">https://www.kbase.us/</a>  
 engage@kbase.us
 <a name="header_license"></a>
 ## License
@@ -124,12 +124,13 @@ Access to and control over stored ORCID Links
 #### GET /link
 Get ORCID Link
 
-Return the link for the user associated with the KBase auth token passed in the "Authorization" header
+Return the link for the user associated with the KBase auth token passed in
+the "Authorization" header
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -147,7 +148,7 @@ Removes the link for the user associated with the KBase auth token passed in the
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -166,12 +167,31 @@ link to an ORCID account.
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
 #### Output
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns a boolean indicating whether the user account is linked to ORCID</td><td>boolean</td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+
+
+---
+<a name="header_get-/link/share/{username}"></a>
+#### GET /link/share/{username}
+Get whether Is Linked
+
+Determine if the user associated with the KBase auth token in the "Authorization" header has a
+link to an ORCID account.
+
+
+<a name="header_input"></a>
+#### Input
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>username</td><td>The username</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
+
+
+<a name="header_output"></a>
+#### Output
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the shared portion of an ORCID Link record</td><td><a href="#user-content-header_type_linkingrecordshared">LinkingRecordShared</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -189,13 +209,13 @@ directly by the browser, rather than being used within Javascript code.
 #### POST /linking-sessions
 Create Linking Session
 
-Creates a new "linking session"; resulting in a linking session created in the database, and the id for it
-returned for usage in an interactive linking session.
+Creates a new "linking session"; resulting in a linking session created in the database,
+and the id for it returned for usage in an interactive linking session.
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -221,7 +241,7 @@ Note that the
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the linking session</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_linkingsessioninitial">LinkingSessionInitial</a></div><div><a href="#user-content-header_type_linkingsessionstarted">LinkingSessionStarted</a></div><div><a href="#user-content-header_type_linkingsessioncompletepublic">LinkingSessionCompletePublic</a></div><div><a href="#user-content-header_type_linkingsessioninitial">LinkingSessionInitial</a></div><div><a href="#user-content-header_type_linkingsessionstarted">LinkingSessionStarted</a></div><div><a href="#user-content-header_type_linkingsessioncompletepublic">LinkingSessionCompletePublic</a></div></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>403</td><td>User does not own linking session</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Linking session not found</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the linking session</td><td><a href="#user-content-header_type_linkingsessioncompletepublic">LinkingSessionCompletePublic</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>403</td><td>User does not own linking session</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Linking session not found</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -236,7 +256,7 @@ KBase auth token.
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>session_id</td><td>The linking session id</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>session_id</td><td>The linking session id</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -255,7 +275,7 @@ of the link, after OAuth flow has finished.
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>session_id</td><td>The linking session id</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>session_id</td><td>The linking session id</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -279,7 +299,7 @@ KBase for future use by the user.
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>session_id</td><td>The linking session id</td><td>string</td><td>path</td></tr><tr><td>return_link</td><td>A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url</td><td>string</td><td>query</td></tr><tr><td>skip_prompt</td><td>Whether to prompt for confirmation of linking</td><td>string</td><td>query</td></tr><tr><td>kbase_session</td><td>KBase auth token taken from a cookie named 'kbase_session'</td><td>string</td><td>cookie</td></tr><tr><td>kbase_session_backup</td><td>KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service.</td><td>string</td><td>cookie</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>session_id</td><td>The linking session id</td><td>string</td><td>path</td></tr><tr><td>return_link</td><td>A url to redirect to after the entire linking is complete; not to be confused with the ORCID OAuth flow's redirect_url</td><td>n/a</td><td>query</td></tr><tr><td>skip_prompt</td><td>Whether to prompt for confirmation of linking</td><td>boolean</td><td>query</td></tr><tr><td>ui_options</td><td>Opaque string of ui options</td><td>string</td><td>query</td></tr><tr><td>kbase_session</td><td>KBase auth token taken from a cookie named 'kbase_session'</td><td>string</td><td>cookie</td></tr><tr><td>kbase_session_backup</td><td>KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service.</td><td>string</td><td>cookie</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -306,7 +326,7 @@ in the url itself.
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>code</td><td>For a success case, contains an OAuth exchange code parameter</td><td>string</td><td>query</td></tr><tr><td>state</td><td>For a success case, contains an OAuth state parameter</td><td>string</td><td>query</td></tr><tr><td>error</td><td>For an error case, contains an error code parameter</td><td>string</td><td>query</td></tr><tr><td>kbase_session</td><td>KBase auth token taken from a cookie named 'kbase_session'</td><td>string</td><td>cookie</td></tr><tr><td>kbase_session_backup</td><td>KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service.</td><td>string</td><td>cookie</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>code</td><td>For a success case, contains an OAuth exchange code parameter</td><td>n/a</td><td>query</td></tr><tr><td>state</td><td>For a success case, contains an OAuth state parameter</td><td>n/a</td><td>query</td></tr><tr><td>error</td><td>For an error case, contains an error code parameter</td><td>n/a</td><td>query</td></tr><tr><td>kbase_session</td><td>KBase auth token taken from a cookie named 'kbase_session'</td><td>string</td><td>cookie</td></tr><tr><td>kbase_session_backup</td><td>KBase auth token taken from a cookie named 'kbase_session_backup. Required in the KBase production environment since the prod ui and services operate on different hosts; the primary cookie, kbase_session, is host-based so cannot be read by a prod service.</td><td>string</td><td>cookie</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -324,12 +344,19 @@ Direct access to ORCID via ORCID Link
 #### GET /orcid/profile
 Get the ORCID profile for the user associated with the current auth token.
 
+Since ORCID Link is not a general purpose ORCID api, we may not fully
+represent the profile as ORCID does, but modify it for purpose.
+E.g. ORCID work records have a lot of optional fields which we
+actually require. This is reflected in the typing. So we can't really
+provide all work records in the profile, just those created by
+KBase.
+
 Returns a 404 Not Found if the user is not linked
 
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -350,12 +377,12 @@ Fetch the work record, identified by `put_code`, for the user associated with th
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>The ORCID `put code` for the work record to fetch</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>The ORCID `put code` for the work record to fetch</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_orcidwork">ORCIDWork</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_work">Work</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -366,7 +393,7 @@ n/a
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>n/a</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>put_code</td><td>n/a</td><td>integer</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -382,7 +409,7 @@ Fetch all of the "work" records from a user's ORCID account if their KBase accou
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
@@ -398,12 +425,12 @@ Update a work record; the `work_update` contains the `put code`.
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_orcidwork">ORCIDWork</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_work">Work</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -414,12 +441,12 @@ n/a
 
 <a name="header_input"></a>
 #### Input
-<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>string</td><td>header</td></tr></tbody></table>
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
 
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Work record successfully created</td><td><a href="#user-content-header_type_orcidwork">ORCIDWork</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Not found</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Work record successfully created</td><td><a href="#user-content-header_type_work">Work</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Not found</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -439,10 +466,31 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
+<a name="header_type_citationtype"></a>
+##### CitationType
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
+
+
+
 <a name="header_type_config"></a>
 ##### Config
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>services</td><td><a href="#user-content-header_type_services">Services</a></td><td>✓</td></tr><tr><td>ui</td><td><a href="#user-content-header_type_uiconfig">UIConfig</a></td><td>✓</td></tr><tr><td>orcid</td><td><a href="#user-content-header_type_orcidconfig">ORCIDConfig</a></td><td>✓</td></tr><tr><td>mongo</td><td><a href="#user-content-header_type_mongoconfig">MongoConfig</a></td><td>✓</td></tr><tr><td>module</td><td><a href="#user-content-header_type_moduleconfig">ModuleConfig</a></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_contributorrole"></a>
+##### ContributorRole
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>role</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_contributorrolevalue">ContributorRoleValue</a></div></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_contributorrolevalue"></a>
+##### ContributorRoleValue
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
 
 
 
@@ -455,24 +503,35 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 <a name="header_type_errorresponse"></a>
 ##### ErrorResponse
-A generic error object used for all error responses.
 
-See [the error docs](docs/errors.md) for more information.
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><a href="#user-content-header_type_servicebasemodel">ServiceBaseModel</a></td><td></td></tr></tbody></table>
+    A generic error object used for all error responses.
+
+    See [the error docs](docs/errors.md) for more information.
+    
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_servicebasemodel">ServiceBaseModel</a></div><div>null</div></td><td></td></tr></tbody></table>
 
 
 
 <a name="header_type_externalid"></a>
 ##### ExternalId
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>type</td><td>string</td><td>✓</td></tr><tr><td>value</td><td>string</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>relationship</td><td>string</td><td>✓</td></tr></tbody></table>
+    See: https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1025
+    
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>type</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_externalidtype">ExternalIdType</a></div></td><td>✓</td></tr><tr><td>value</td><td>string</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>relationship</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_relationshiptype">RelationshipType</a></div></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_externalidtype"></a>
+##### ExternalIdType
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
 
 
 
 <a name="header_type_gitinfo"></a>
 ##### GitInfo
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>commit_hash</td><td>string</td><td>✓</td></tr><tr><td>commit_hash_abbreviated</td><td>string</td><td>✓</td></tr><tr><td>author_name</td><td>string</td><td>✓</td></tr><tr><td>author_date</td><td>integer</td><td>✓</td></tr><tr><td>committer_name</td><td>string</td><td>✓</td></tr><tr><td>committer_date</td><td>integer</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>branch</td><td>string</td><td>✓</td></tr><tr><td>tag</td><td>string</td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>commit_hash</td><td>string</td><td>✓</td></tr><tr><td>commit_hash_abbreviated</td><td>string</td><td>✓</td></tr><tr><td>author_name</td><td>string</td><td>✓</td></tr><tr><td>author_date</td><td>integer</td><td>✓</td></tr><tr><td>committer_name</td><td>string</td><td>✓</td></tr><tr><td>committer_date</td><td>integer</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>branch</td><td>string</td><td>✓</td></tr><tr><td>tag</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
 
 
 
@@ -490,24 +549,17 @@ See [the error docs](docs/errors.md) for more information.
 
 
 
+<a name="header_type_linkingrecordshared"></a>
+##### LinkingRecordShared
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr></tbody></table>
+
+
+
 <a name="header_type_linkingsessioncompletepublic"></a>
 ##### LinkingSessionCompletePublic
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>session_id</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>kind</td><td>string</td><td>✓</td></tr><tr><td>return_link</td><td>string</td><td>✓</td></tr><tr><td>skip_prompt</td><td>string</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublic">ORCIDAuthPublic</a></td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_linkingsessioninitial"></a>
-##### LinkingSessionInitial
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>session_id</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>kind</td><td>string</td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_linkingsessionstarted"></a>
-##### LinkingSessionStarted
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>session_id</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>kind</td><td>string</td><td>✓</td></tr><tr><td>return_link</td><td>string</td><td>✓</td></tr><tr><td>skip_prompt</td><td>string</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>session_id</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>return_link</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>skip_prompt</td><td>boolean</td><td>✓</td></tr><tr><td>ui_options</td><td>string</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublic">ORCIDAuthPublic</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -527,15 +579,17 @@ See [the error docs](docs/errors.md) for more information.
 
 <a name="header_type_newwork"></a>
 ##### NewWork
-Represents a work record that is going to be added to ORCID.
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td>string</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr></tbody></table>
+
+    Represents a work record that is going to be added to ORCID.
+    
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorself">ORCIDContributorSelf</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
 <a name="header_type_orcidaffiliation"></a>
 ##### ORCIDAffiliation
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>role</td><td>string</td><td>✓</td></tr><tr><td>startYear</td><td>string</td><td>✓</td></tr><tr><td>endYear</td><td>string</td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>role</td><td>string</td><td>✓</td></tr><tr><td>startYear</td><td>string</td><td>✓</td></tr><tr><td>endYear</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
 
 
 
@@ -546,10 +600,34 @@ Represents a work record that is going to be added to ORCID.
 
 
 
+<a name="header_type_orcidcitation"></a>
+##### ORCIDCitation
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>type</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_citationtype">CitationType</a></div></td><td>✓</td></tr><tr><td>value</td><td>string</td><td>✓</td></tr></tbody></table>
+
+
+
 <a name="header_type_orcidconfig"></a>
 ##### ORCIDConfig
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>oauthBaseURL</td><td>string</td><td>✓</td></tr><tr><td>apiBaseURL</td><td>string</td><td>✓</td></tr><tr><td>clientId</td><td>string</td><td>✓</td></tr><tr><td>clientSecret</td><td>string</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidcontributor"></a>
+##### ORCIDContributor
+
+    Note that the orcidId is not required for the "regular" contributor.
+    The "self contributor" described below, does, require it.
+    
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>roles</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidcontributorself"></a>
+##### ORCIDContributorSelf
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>roles</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
@@ -563,14 +641,7 @@ Represents a work record that is going to be added to ORCID.
 <a name="header_type_orcidprofile"></a>
 ##### ORCIDProfile
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>firstName</td><td>string</td><td>✓</td></tr><tr><td>lastName</td><td>string</td><td>✓</td></tr><tr><td>bio</td><td>string</td><td>✓</td></tr><tr><td>affiliations</td><td>array</td><td>✓</td></tr><tr><td>works</td><td>array</td><td>✓</td></tr><tr><td>emailAddresses</td><td>array</td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_orcidwork"></a>
-##### ORCIDWork
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td></td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td>string</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>firstName</td><td>string</td><td>✓</td></tr><tr><td>lastName</td><td>string</td><td>✓</td></tr><tr><td>creditName</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr><tr><td>bio</td><td>string</td><td>✓</td></tr><tr><td>distinctions</td><td>array</td><td>✓</td></tr><tr><td>education</td><td>array</td><td>✓</td></tr><tr><td>employment</td><td>array</td><td>✓</td></tr><tr><td>emailAddresses</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
@@ -578,6 +649,13 @@ Represents a work record that is going to be added to ORCID.
 ##### ORCIDWorkGroup
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>works</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_relationshiptype"></a>
+##### RelationshipType
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
 
 
 
@@ -591,7 +669,7 @@ Represents a work record that is going to be added to ORCID.
 <a name="header_type_servicedescription"></a>
 ##### ServiceDescription
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>version</td><td>string</td><td>✓</td></tr><tr><td>language</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>version</td><td>string</td><td>✓</td></tr><tr><td>language</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr><tr><td>repoURL</td><td>string</td><td>✓</td></tr></tbody></table>
 
 
 
@@ -623,11 +701,34 @@ Represents a work record that is going to be added to ORCID.
 
 
 
+<a name="header_type_work"></a>
+##### Work
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorself">ORCIDContributorSelf</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_worksummary"></a>
+##### WorkSummary
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
+
+
+
+<a name="header_type_worktype"></a>
+##### WorkType
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
+
+
+
 <a name="header_type_workupdate"></a>
 ##### WorkUpdate
-Represents a work record which has been fetched from ORCID, modified,
-and can be sent back to update the ORCID work record
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td>string</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>putCode</td><td>integer</td><td>✓</td></tr></tbody></table>
+
+    Represents a work record which has been fetched from ORCID, modified,
+    and can be sent back to update the ORCID work record
+    
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorself">ORCIDContributorSelf</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 

@@ -1,7 +1,7 @@
 import json
+from test.mocks.mock_server import MockService
 
 from orcidlink.lib import utils
-from test.mocks.mock_server import MockService
 
 
 def load_test_data(filename: str):
@@ -64,6 +64,8 @@ class MockAuthService(MockAuthServiceBase):
                     self.send_json_error(self.error_invalid_token())
                 elif authorization.startswith("bad_json"):
                     self.send_text("Bad JSON!")
+                elif authorization.startswith("text_json"):
+                    self.send_json_text("Bad JSON!")
                 elif authorization.startswith("something_bad"):
                     # just do something bad:
                     x = 1 / 0

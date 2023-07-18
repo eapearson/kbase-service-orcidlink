@@ -42,6 +42,14 @@ class MockService(http.server.BaseHTTPRequestHandler):
         cls.total_call_count = {"success": 0, "error": 0}
         cls.method_call_counts = {}
 
+    def send(self, status_code: int, header: dict[str, str], data: str = None):
+        self.send_response(status_code)
+        for key, value in header.items():
+            self.send_header(key, value)
+        self.end_headers()
+        if data is not None:
+            self.wfile.write(data)
+
     def send_json(self, output_data):
         output = json.dumps(output_data).encode()
         self.send_response(200)
@@ -102,7 +110,7 @@ class MockService(http.server.BaseHTTPRequestHandler):
 
     def get_body_string(self):
         content_length = int(self.headers.get("content-length"))
-        return self.rfile.read(content_length).decode()
+        return self.rfile.read(content_length).decode(encoding="utf-8")
 
     def get_form_data(self):
         content_type = self.headers.get("content-type")
@@ -114,21 +122,30 @@ class MockService(http.server.BaseHTTPRequestHandler):
 class MockServer:
     def __init__(self, ip_address: str, service_class):
         self.ip_address = ip_address
-        # self.port = port
         self.service_class = service_class
         self.server = None
         self.server_thread = None
 
         with socket() as s:
+            # We bind to "" which means all interfaces, and port 0
+            # which means to just pick an available one.
             s.bind(("", 0))
             self.port = s.getsockname()[1]
 
     def base_url(self):
+        """
+        Returns the base url, or origin, of the service as determined
+        in the constructor.
+
+        This is the basis of the mock server being self-binding, with the
+        test able to use the resulting url via this method.
+        """
         return f"http://{self.ip_address}:{self.port}"
 
     def start_service(self):
         if self.server is not None:
             raise Exception("Server is already started")
+
         self.server = http.server.ThreadingHTTPServer(
             (self.ip_address, self.port), self.service_class
         )

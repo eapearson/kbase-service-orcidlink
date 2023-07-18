@@ -1,7 +1,15 @@
 from typing import Dict, List
 
 from orcidlink import model
-from orcidlink.model import ORCIDContributorSelf
+from orcidlink.model import (
+    CitationType,
+    ContributorRole,
+    ContributorRoleValue,
+    ExternalIdType,
+    ORCIDContributorSelf,
+    RelationshipType,
+    WorkType,
+)
 from orcidlink.service_clients import orcid_api
 
 
@@ -34,10 +42,10 @@ def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
 
 def transform_external_id(external_id: orcid_api.ExternalId) -> model.ExternalId:
     return model.ExternalId(
-        type=external_id.external_id_type,
+        type=ExternalIdType(external_id.external_id_type),
         value=external_id.external_id_value,
         url=external_id.external_id_url.value,
-        relationship=external_id.external_id_relationship,
+        relationship=RelationshipType(external_id.external_id_relationship),
     )
 
 
@@ -97,7 +105,7 @@ def transform_work_summary(
         title=work_summary.title.title.value,
         journal=journal,
         date=orcid_date_to_string_date(work_summary.publication_date),
-        workType=work_summary.type,
+        workType=WorkType(work_summary.type),
         url=work_summary.url.value,
         doi=doi,
         externalIds=external_ids,
@@ -160,7 +168,13 @@ def transform_work(
     for contributor in raw_work.contributors.contributor:
         if contributor.contributor_orcid.path == profile.orcid_identifier.path:
             if contributor.contributor_attributes is not None:
-                self_roles.append(contributor.contributor_attributes.contributor_role)
+                self_roles.append(
+                    ContributorRole(
+                        role=ContributorRoleValue(
+                            contributor.contributor_attributes.contributor_role
+                        )
+                    )
+                )
 
     if profile.person.name.credit_name is not None:
         name = profile.person.name.credit_name
@@ -176,7 +190,8 @@ def transform_work(
         raise ValueError('the "citation" field may not be empty')
 
     citation = model.ORCIDCitation(
-        type=raw_work.citation.citation_type, value=raw_work.citation.citation_value
+        type=CitationType(raw_work.citation.citation_type),
+        value=raw_work.citation.citation_value,
     )
 
     # A note on how we deal with building a list of contributors.
@@ -202,7 +217,7 @@ def transform_work(
             role = contributor.contributor_attributes.contributor_role
             new_contributor = model.ORCIDContributor(
                 name=contributor.credit_name.value,
-                roles=[role],
+                roles=[ContributorRole(role=ContributorRoleValue(role))],
                 orcidId=contributor.contributor_orcid.path,
             )
             # We optionally set the orcidId.
@@ -214,7 +229,9 @@ def transform_work(
             # And if we have seen this contributor before, we simply
             # append the role for this entry.
             role = contributor.contributor_attributes.contributor_role
-            contributors_map[contributor.credit_name.value].roles.append(role)
+            contributors_map[contributor.credit_name.value].roles.append(
+                ContributorRole(role=ContributorRoleValue(role))
+            )
 
     other_contributors = list(contributors_map.values())
 
@@ -231,7 +248,7 @@ def transform_work(
         title=title,
         journal=journal,
         date=date,
-        workType=work_type,
+        workType=WorkType(work_type),
         url=url,
         doi=doi,
         externalIds=external_ids,

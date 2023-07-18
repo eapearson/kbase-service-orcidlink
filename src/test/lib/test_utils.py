@@ -3,8 +3,8 @@ import time
 from orcidlink.lib import utils
 
 
-def test_current_time_millis():
-    now = utils.current_time_millis()
+def test_posix_time_millis():
+    now = utils.posix_time_millis()
     assert isinstance(now, int)
     # a reasonable assumption is that the time returned is around
     # the same time as ... now.

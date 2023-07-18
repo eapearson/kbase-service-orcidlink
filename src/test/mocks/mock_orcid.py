@@ -1,6 +1,8 @@
 import json
 from time import sleep
 
+from urllib.parse import parse_qs
+
 from orcidlink.lib import utils
 from test.mocks.data import load_test_data
 from test.mocks.mock_server import MockService
@@ -82,7 +84,7 @@ class MockORCIDAPI(MockService):
             test_data = load_test_data("orcid", "work_1526002")["bulk"][0]["work"]
 
             # simulates an updated last modified date.
-            test_data["last-modified-date"]["value"] = utils.current_time_millis()
+            test_data["last-modified-date"]["value"] = utils.posix_time_millis()
             self.send_json(test_data)
 
     def do_POST(self):
@@ -116,6 +118,7 @@ class MockORCIDAPIWithErrors(MockService):
         if self.path == "/0000-0003-4997-3076/record":
             test_data = load_test_data("orcid", "profile")
             self.send_json(test_data)
+
         elif self.path == "/0000-0003-4997-3076/email":
             test_data = load_test_data("orcid", "email")
             self.send_json(test_data)
@@ -123,6 +126,15 @@ class MockORCIDAPIWithErrors(MockService):
         elif self.path == "/0000-0003-4997-3076/works":
             test_data = load_test_data("orcid", "orcid-works-error")
             self.send_json_error(test_data)
+
+        elif self.path == "/trigger-401/record":
+            test_data = load_test_data("orcid", "get-profile-401-error")
+            self.send_json_error(test_data)
+
+        else:
+            # not found!
+            test_data = load_test_data("orcid", "get-profile-not-found-error")
+            self.send_json_error(test_data, 404)
 
     def do_PUT(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
@@ -133,20 +145,50 @@ class MockORCIDAPIWithErrors(MockService):
 class MockORCIDOAuth(MockService):
     def do_POST(self):
         # TODO: Reminder - switch to normal auth2 endpoint in config and here.
+
         if self.path == "/revoke":
             self.send_empty(status_code=200)
         elif self.path == "/token":
-            test_data = {
-                "access_token": "access_token",
-                "token_type": "Bearer",
-                "refresh_token": "refresh_token",
-                "expires_in": 1000,
-                "scope": "scope1",
-                "name": "Foo Bear",
-                "orcid": "abc123",
-                "id_token": "id_token",
-            }
-            self.send_json(test_data)
+            # print("HELLO??", self.get_body_string())
+            data = parse_qs(self.get_body_string())
+            if data["code"] == ["foo"]:
+                test_data = {
+                    "access_token": "access_token_for_foo",
+                    "token_type": "Bearer",
+                    "refresh_token": "refresh_token",
+                    "expires_in": 1000,
+                    "scope": "scope1",
+                    "name": "Foo Bear",
+                    "orcid": "abc123",
+                    "id_token": "id_token",
+                }
+                self.send_json(test_data)
+            elif data["code"] == ["no-content-type"]:
+                self.send(200, {}, None)
+            elif data["code"] == ["not-json-content-type"]:
+                self.send(200, {"Content-Type": "foo-son"}, None)
+            elif data["code"] == ["error-incorrect-error-format"]:
+                self.send_json_error({"foo": "bar"}, status_code=400)
+            elif data["code"] == ["error-correct-error-format"]:
+                error = {
+                    "error": "some error",
+                    "error_description": "a description of some error",
+                }
+                self.send_json_error(error, status_code=400)
+            elif data["code"] == ["not-json-content"]:
+                self.send_json_text("foo")
+            else:
+                test_data = {
+                    "access_token": "access_token",
+                    "token_type": "Bearer",
+                    "refresh_token": "refresh_token",
+                    "expires_in": 1000,
+                    "scope": "scope1",
+                    "name": "Foo Bear",
+                    "orcid": "abc123",
+                    "id_token": "id_token",
+                }
+                self.send_json(test_data)
 
     def do_GET(self):
         if self.path == "/authorize":

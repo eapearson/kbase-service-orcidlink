@@ -2,8 +2,9 @@ import json
 import sys
 from typing import Any, List
 
+import httpx
+
 from orcidlink.lib.json_file import get_prop
-from orcidlink.lib.utils import http_client
 
 
 def flatten(md: List[Any]):
@@ -39,28 +40,29 @@ def save_markdown(markdown: List[str], file: str, dest: str):
 
 def save_markdown_rendered(markdown: List[str], file: str, dest: str):
     content = json.dumps({"text": render_markdown_list(markdown), "mode": "gfm"})
-    result = http_client().post(
-        "https://api.github.com/markdown",
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/vnd.github+json",
-        },
-        content=content,
-    )
-    doc = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<link type="text/css" rel="stylesheet" href="gfm.css">
-</head>
-<body class="markdown-body">
-{result.text}
-</body>
-</html>
-"""
-    with open(f"{dest}/docs/api/{file}", "w") as fout:
-        fout.write(doc)
+    with httpx.Client() as client:
+        result = client.post(
+            "https://api.github.com/markdown",
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json",
+            },
+            content=content,
+        )
+        doc = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="gfm.css">
+    </head>
+    <body class="markdown-body">
+    {result.text}
+    </body>
+    </html>
+    """
+        with open(f"{dest}/docs/api/{file}", "w") as fout:
+            fout.write(doc)
 
 
 def md_line(n=1):
@@ -240,6 +242,11 @@ def generate_schema(schema):
         html = "<div><i>Any Of</i></div>"
         for any_of in schema["anyOf"]:
             html += f"<div>{generate_schema(any_of)}</div>"
+        return html
+    elif "allOf" in schema:
+        html = "<div><i>All Of</i></div>"
+        for all_of in schema["allOf"]:
+            html += f"<div>{generate_schema(all_of)}</div>"
         return html
     else:
         print("NOT HANDLED", schema)

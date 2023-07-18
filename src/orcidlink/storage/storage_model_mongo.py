@@ -1,13 +1,15 @@
 from typing import Any, Dict, Optional
 
+from pymongo import MongoClient
+
+from orcidlink.lib import errors
 from orcidlink.model import (
-    LinkRecord,
     LinkingSessionComplete,
     LinkingSessionInitial,
     LinkingSessionStarted,
+    LinkRecord,
     ORCIDAuth,
 )
-from pymongo import MongoClient
 
 
 class StorageModelMongo:
@@ -35,15 +37,17 @@ class StorageModelMongo:
         if record is None:
             return None
 
-        parsed = LinkRecord.parse_obj(record)
+        parsed = LinkRecord.model_validate(record)
 
         return parsed
 
     def save_link_record(self, record: LinkRecord) -> None:
-        self.db.links.update_one({"username": record.username}, {"$set": record.dict()})
+        self.db.links.update_one(
+            {"username": record.username}, {"$set": record.model_dump()}
+        )
 
     def create_link_record(self, record: LinkRecord) -> None:
-        self.db.links.insert_one(record.dict())
+        self.db.links.insert_one(record.model_dump())
 
     def delete_link_record(self, username: str) -> None:
         self.db.links.delete_one({"username": username})
@@ -56,45 +60,117 @@ class StorageModelMongo:
     # TODO: operate with the linking session record model, not raw dict.
 
     def create_linking_session(self, linking_record: LinkingSessionInitial) -> None:
-        self.db.linking_sessions.insert_one(linking_record.dict())
+        self.db.linking_sessions_initial.insert_one(linking_record.model_dump())
         # return self.db.create('linking-sessions', session_id, linking_record)
 
     def delete_linking_session(self, session_id: str) -> None:
-        self.db.linking_sessions.delete_one({"session_id": session_id})
+        # The UI api only supports deleting completed sessions.
+        # We'll need an admin API to delete danging initial and started linking sessions.
+        self.db.linking_sessions_completed.delete_one({"session_id": session_id})
 
-    def get_linking_session(
+    # def get_linking_session(
+    #     self, session_id: str
+    # ) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete | None:
+    #     session = self.db.linking_sessions.find_one({"session_id": session_id})
+
+    #     if session is None:
+    #         return None
+    #     if "orcid_auth" in session:
+    #         session["kind"] = "complete"
+    #         return LinkingSessionComplete.model_validate(session)
+    #     elif "skip_prompt" in session:
+    #         session["kind"] = "started"
+    #         return LinkingSessionStarted.model_validate(session)
+    #     else:
+    #         session["kind"] = "initial"
+    #         return LinkingSessionInitial.model_validate(session)
+
+    def get_linking_session_initial(
         self, session_id: str
-    ) -> LinkingSessionInitial | LinkingSessionStarted | LinkingSessionComplete | None:
-        session = self.db.linking_sessions.find_one({"session_id": session_id})
+    ) -> LinkingSessionInitial | None:
+        session = self.db.linking_sessions_initial.find_one({"session_id": session_id})
 
         if session is None:
             return None
-        if "orcid_auth" in session:
-            session["kind"] = "complete"
-            return LinkingSessionComplete.parse_obj(session)
-        elif "skip_prompt" in session:
-            session["kind"] = "started"
-            return LinkingSessionStarted.parse_obj(session)
         else:
-            session["kind"] = "initial"
-            return LinkingSessionInitial.parse_obj(session)
+            # session["kind"] = "initial"
+            return LinkingSessionInitial.model_validate(session)
+
+    def get_linking_session_started(
+        self, session_id: str
+    ) -> LinkingSessionStarted | None:
+        session = self.db.linking_sessions_started.find_one({"session_id": session_id})
+        if session is None:
+            return None
+        else:
+            return LinkingSessionStarted.model_validate(session)
+
+    def get_linking_session_completed(
+        self, session_id: str
+    ) -> LinkingSessionComplete | None:
+        session = self.db.linking_sessions_completed.find_one(
+            {"session_id": session_id}
+        )
+
+        if session is None:
+            return None
+        else:
+            # session["kind"] = "complete"
+            return LinkingSessionComplete.model_validate(session)
 
     def update_linking_session_to_started(
-        self, session_id: str, return_link: str | None, skip_prompt: str
+        self,
+        session_id: str,
+        return_link: str | None,
+        skip_prompt: bool,
+        ui_options: str,
     ) -> None:
-        update = {"return_link": return_link, "skip_prompt": skip_prompt}
-        self.db.linking_sessions.update_one(
-            {"session_id": session_id}, {"$set": update}
-        )
+        with self.client.start_session() as session:
+            # Get the initial linking session.
+            linking_session = self.db.linking_sessions_initial.find_one(
+                {"session_id": session_id}, session=session
+            )
+
+            if linking_session is None:
+                raise errors.NotFoundError("Linking session not found")
+
+            linking_session["return_link"] = return_link
+            linking_session["skip_prompt"] = skip_prompt
+            linking_session["ui_options"] = ui_options
+
+            self.db.linking_sessions_started.insert_one(
+                linking_session, session=session
+            )
+
+            self.db.linking_sessions_initial.delete_one(
+                {"session_id": session_id}, session=session
+            )
 
     def update_linking_session_to_finished(
         self, session_id: str, orcid_auth: ORCIDAuth
     ) -> None:
-        update = {"orcid_auth": orcid_auth.dict()}
-        self.db.linking_sessions.update_one(
-            {"session_id": session_id}, {"$set": update}
-        )
+        with self.client.start_session() as session:
+            # Get the initial linking session.
+            linking_session = self.db.linking_sessions_started.find_one(
+                {"session_id": session_id}, session=session
+            )
+
+            if linking_session is None:
+                raise errors.NotFoundError("Linking session not found")
+
+            linking_session["orcid_auth"] = orcid_auth.model_dump()
+
+            self.db.linking_sessions_completed.insert_one(
+                linking_session, session=session
+            )
+
+            self.db.linking_sessions_started.delete_one(
+                {"session_id": session_id}, session=session
+            )
 
     def reset_database(self) -> None:
         self.db.links.drop()
-        self.db.linking_sessions.drop()
+        self.db.linking_sessions_initial.drop()
+        self.db.linking_sessions_started.drop()
+        self.db.linking_sessions_completed.drop()
+        self.db.description.drop()

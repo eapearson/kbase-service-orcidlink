@@ -1,7 +1,5 @@
 import contextlib
 import os
-
-from orcidlink.lib import config
 from test.mocks.mock_auth import MockAuthService
 from test.mocks.mock_imaginary_service import MockImaginaryService
 from test.mocks.mock_orcid import (
@@ -12,10 +10,12 @@ from test.mocks.mock_orcid import (
 )
 from test.mocks.mock_server import MockSDKJSON11Service, MockServer
 
+from orcidlink.lib import config
+
 
 @contextlib.contextmanager
 def no_stderr():
-    with contextlib.redirect_stderr(open(os.devnull, "w")):
+    with contextlib.redirect_stderr(open(os.devnull, "w", encoding="utf-8")):
         yield
 
 

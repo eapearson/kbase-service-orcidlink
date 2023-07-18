@@ -27,6 +27,7 @@ def fake_fs(fs):
 
 
 TEST_LINK = load_data_json("link1.json")
+TEST_LINK_BAR = load_data_json("link-bar.json")
 
 
 @contextlib.contextmanager
@@ -42,10 +43,10 @@ def around_tests(fake_fs):
     yield
 
 
-def create_link():
+def create_link(link_record):
     sm = storage_model.storage_model()
     sm.db.links.drop()
-    sm.create_link_record(LinkRecord.parse_obj(TEST_LINK))
+    sm.create_link_record(LinkRecord.model_validate(link_record))
 
 
 #
@@ -55,7 +56,7 @@ def create_link():
 
 def test_get_link(fake_fs):
     with mock_services():
-        create_link()
+        create_link(TEST_LINK)
 
         client = TestClient(app)
         response = client.get(
@@ -77,9 +78,36 @@ def test_get_link(fake_fs):
         assert response.status_code == 422
 
 
+def test_get_link_shared(fake_fs):
+    with mock_services():
+        create_link(TEST_LINK_BAR)
+
+        client = TestClient(app)
+        linked_username = "bar"
+        linked_username_does_not_exist = "bore"
+
+        response = client.get(
+            f"/link/share/{linked_username}",
+            headers={"Authorization": generate_kbase_token("foo")},
+        )
+        assert response.status_code == 200
+
+        response = client.get(
+            f"/link/share/{linked_username}",
+            headers={"Authorization": generate_kbase_token("baz")},
+        )
+        assert response.status_code == 401
+
+        response = client.get(
+            f"/link/share/{linked_username_does_not_exist}",
+            headers={"Authorization": generate_kbase_token("foo")},
+        )
+        assert response.status_code == 404
+
+
 def test_is_linked(fake_fs):
     with mock_services():
-        create_link()
+        create_link(TEST_LINK)
 
         client = TestClient(app)
         response = client.get(
@@ -107,7 +135,7 @@ def test_delete_link(fake_fs):
     with no_stderr():
         with mock_auth_service():
             with mock_orcid_oauth_service():
-                create_link()
+                create_link(TEST_LINK)
 
                 client = TestClient(app)
 

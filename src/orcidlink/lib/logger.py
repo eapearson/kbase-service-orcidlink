@@ -3,7 +3,7 @@ import logging
 import uuid
 from typing import Any
 
-from orcidlink.lib.utils import epoch_time_millis
+from orcidlink.lib.utils import posix_time_millis
 
 
 class JSONLogger:
@@ -46,7 +46,7 @@ class JSONLogger:
                 # should be uuid, service + uuid, or omitted and only created
                 # by a logging repository service.
                 "id": log_id,
-                "timestamp": epoch_time_millis(),
+                "timestamp": posix_time_millis(),
                 # The actual, specific event. The event name is a simple
                 # string, the data is a dict or serializable class whose
                 # definition is implied by the event name.

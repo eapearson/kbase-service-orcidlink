@@ -1,0 +1,7 @@
+{
+  "response-code": 401,
+  "developer-message": "Don't know what this message really is",
+  "user-message": "A user message here",
+  "error-code": 9016,
+  "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+}

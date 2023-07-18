@@ -1,13 +1,14 @@
 import json
-
-import pytest
-from fastapi.testclient import TestClient
-from orcidlink.lib import utils
-from orcidlink.lib.logger import log_event
-from orcidlink.main import app
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 from test.mocks.testing_utils import generate_kbase_token
+
+import pytest
+from fastapi.testclient import TestClient
+
+from orcidlink.lib import utils
+from orcidlink.lib.logger import log_event
+from orcidlink.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -18,6 +19,7 @@ INVALID_TOKEN = generate_kbase_token("invalid_token")
 EMPTY_TOKEN = ""
 NO_TOKEN = generate_kbase_token("no_token")
 BAD_JSON = generate_kbase_token("bad_json")
+TEXT_JSON = generate_kbase_token("text_json")
 CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
 
 
@@ -121,6 +123,14 @@ def test_kbase_auth_exception_handler(fake_fs):
 
             # make a call which triggers a bug to trigger a JSON parse error
             response = client.get("/link", headers={"Authorization": BAD_JSON})
+            assert response.status_code == 502
+            assert response.headers["content-type"] == "application/json"
+            content = response.json()
+            assert content["code"] == "badContentType"
+            assert content["title"] == "Received Incorrect Content Type"
+
+            # make a call which triggers a bug to trigger a JSON parse error
+            response = client.get("/link", headers={"Authorization": TEXT_JSON})
             assert response.status_code == 502
             assert response.headers["content-type"] == "application/json"
             content = response.json()

@@ -53,7 +53,7 @@ async def get_profile(
 
     Returns a 404 Not Found if the user is not linked
     """
-    _, token_info = ensure_authorization(authorization)
+    _, token_info = await ensure_authorization(authorization)
     username = token_info.user
 
     #
@@ -75,6 +75,6 @@ async def get_profile(
     #
 
     # TODO: what if the profile is not found?
-    profile_json = orcid_api.orcid_api(access_token).get_profile(orcid_id)
+    profile_json = await orcid_api.orcid_api(access_token).get_profile(orcid_id)
 
     return to_service.orcid_profile(profile_json)

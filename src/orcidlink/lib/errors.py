@@ -153,19 +153,14 @@ class ServiceErrorX(Exception):
         return JSONResponse(status_code=self.status_code or 500, content=content)
 
 
-class InternalError(ServiceErrorX):
+# class ClientError(ServiceErrorX):
+#     def __init__(self, status_code: int, message: str, data: Any = None):
+#         super().__init__("clientError", "Client Error", message, data, status_code)
+
+
+class AlreadyLinkedError(ServiceErrorX):
     def __init__(self, message: str, data: Any = None):
-        super().__init__("internalError", "Internal Error", message, data, 500)
-
-
-class NotFoundError(ServiceErrorX):
-    def __init__(self, message: str, data: Any = None):
-        super().__init__("notFound", "Not Found", message, data, 404)
-
-
-class UnauthorizedError(ServiceErrorX):
-    def __init__(self, message: str, data: Any = None):
-        super().__init__("notAuthorized", "Not Authorized", message, data, 403)
+        super().__init__("alreadyLinked", "Already LInked", message, data, 400)
 
 
 class AuthTokenRequiredError(ServiceErrorX):
@@ -173,11 +168,21 @@ class AuthTokenRequiredError(ServiceErrorX):
         super().__init__("authTokenRequired", "Auth Token Required", message, data, 401)
 
 
+class UnauthorizedError(ServiceErrorX):
+    def __init__(self, message: str, data: Any = None):
+        super().__init__("notAuthorized", "Not Authorized", message, data, 403)
+
+
+class NotFoundError(ServiceErrorX):
+    def __init__(self, message: str, data: Any = None):
+        super().__init__("notFound", "Not Found", message, data, 404)
+
+
+class InternalError(ServiceErrorX):
+    def __init__(self, message: str, data: Any = None):
+        super().__init__("internalError", "Internal Error", message, data, 500)
+
+
 class UpstreamError(ServiceErrorX):
     def __init__(self, message: str, data: Any = None):
         super().__init__("upstreamError", "Upstream Error", message, data, 502)
-
-
-class InvalidStateError(ServiceErrorX):
-    def __init__(self, message: str, data: Any = None):
-        super().__init__("invalidState", "Invalid State", message, data, 400)

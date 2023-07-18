@@ -13,13 +13,14 @@ from typing import (
     Union,
 )
 
-import httpx
+# import httpx
+import aiohttp
+from pydantic import Field
+
 from orcidlink import model
 from orcidlink.lib import errors
 from orcidlink.lib.config import config
 from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.lib.utils import http_client
-from pydantic import Field
 
 
 class ORCIDIdentifier(ServiceBaseModel):
@@ -282,7 +283,7 @@ class ORCIDEmploymentSummary(ServiceBaseModel):
     created_date: ORCIDIntValue = Field(alias="created-date")
     last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     source: ORCIDSource
-    put_code: str = Field(alias="put-code")
+    put_code: int = Field(alias="put-code")
     department_name: str = Field(..., alias="department-name")
     role_title: str = Field(alias="role-title")
     start_date: Date = Field(alias="start-date")
@@ -404,140 +405,53 @@ class APIErrorWrapper(ServiceBaseModel, Generic[DetailType]):
     # error_text: Optional[str] = Field(default=None)
 
 
-def make_exception(response: httpx.Response, source: str) -> errors.ServiceErrorX:
-    try:
-        json_response = json.loads(response.text)
-
-        # Determine which of the 3 types of errors were returned.
-
+def make_exception(
+    status: int, json_response: Any, source: str
+) -> errors.ServiceErrorX:
+    if isinstance(json_response, dict):
+        # Determine which of the 3 types of errors were returned, if we
+        # do have a json_response (not all api endpoints have a response).
         if "error" in json_response:
             # Remove potentially revealing information
             # TODO: send note to the ORCID folks asking them to omit the
             # token from the error response.
-            if response.status_code == 401 or response.status_code == 403:
+            if status == 401 or status == 403:
                 json_response.pop("error_description")
 
             return errors.UpstreamError(
                 "Error fetching data from ORCID",
                 data={
                     "source": source,
-                    "status_code": response.status_code,
+                    "status_code": status,
                     "detail": json_response,
-                }
-                # data=APIErrorWrapper[APIResponseUnauthorized](
-                #     source=source,
-                #     status_code=response.status_code,
-                #     detail=APIResponseUnauthorized.parse_obj(json_response),
-                # ),
+                },
             )
-
-            # return errors.ServiceError(
-            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-            #         code="upstreamError",
-            #         title="Error",
-            #         message="Error fetching data from ORCID Auth api",
-            #         data=APIErrorWrapper[APIResponseUnauthorized](
-            #             source=source,
-            #             status_code=response.status_code,
-            #             detail=APIResponseUnauthorized.parse_obj(json_response),
-            #         ),
-            #     ),
-            #     status_code=400,
-            # )
         elif "message-version" in json_response:
             return errors.UpstreamError(
                 "Error fetching data from ORCID",
                 data={
                     "source": source,
-                    "status_code": response.status_code,
+                    "status_code": status,
                     "detail": json_response,
                 },
             )
-            # return ServiceError(
-            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-            #         code="upstreamError",
-            #         title="Error",
-            #         message="Error fetching data from ORCID Auth api",
-            #         data=APIErrorWrapper[APIResponseInternalServerError](
-            #             source=source,
-            #             status_code=response.status_code,
-            #             detail=APIResponseInternalServerError.parse_obj(json_response),
-            #         ),
-            #     ),
-            #     status_code=400,
-            # )
         elif "response-code" in json_response:
             return errors.UpstreamError(
                 "Error fetching data from ORCID",
                 data={
                     "source": source,
-                    "status_code": response.status_code,
+                    "status_code": status,
                     "detail": json_response,
                 },
             )
-            # return ServiceError(
-            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-            #         code="upstreamError",
-            #         title="Error",
-            #         message="Error fetching data from ORCID Auth api",
-            #         data=APIErrorWrapper[APIResponseError](
-            #             source=source,
-            #             status_code=response.status_code,
-            #             detail=APIResponseError.parse_obj(json_response),
-            #         ),
-            #     ),
-            #     status_code=400,
-            # )
-        else:
-            return errors.UpstreamError(
-                "Error fetching data from ORCID",
-                data={
-                    "source": source,
-                    "status_code": response.status_code,
-                    "detail": json_response,
-                },
-            )
-            # return ServiceError(
-            #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-            #         code="upstreamError",
-            #         title="Error",
-            #         message="Error fetching data from ORCID Auth api",
-            #         data=APIErrorWrapper[APIResponseUnknownError](
-            #             source=source,
-            #             status_code=response.status_code,
-            #             detail=APIResponseUnknownError(detail=json_response),
-            #         ),
-            #     ),
-            #     status_code=400,
-            # )
-
-    except JSONDecodeError:
-        return errors.UpstreamError(
-            "Error decoding data returned from ORCID",
-            data={
-                "source": source,
-                "status_code": response.status_code,
-                "detail": {"error_text": response.text},
-            }
-            # data=APIErrorWrapper[APIParseError](
-            #     source=source,
-            #     status_code=response.status_code,
-            #     detail=APIParseError(error_text=response.text),
-            # ),
-        )
-        # return ServiceError(
-        #     error=ErrorResponse[APIErrorWrapper[ServiceBaseModel]](
-        #         code="upstreamError",
-        #         title="Error",
-        #         message="Error fetching data from ORCID Auth api",
-        #         data=APIErrorWrapper[APIParseError](
-        #             source=source,
-        #             status_code=response.status_code,
-        #             detail=APIParseError(error_text=response.text),
-        #         ),
-        #     ),
-        #     status_code=400,
-        # )
+    return errors.UpstreamError(
+        "Error fetching data from ORCID",
+        data={
+            "source": source,
+            "status_code": status,
+            "detail": json_response,
+        },
+    )
 
 
 class ORCIDClientBase:
@@ -585,7 +499,7 @@ class ORCIDAPIClient(ORCIDClientBase):
     #
     # Profile
     #
-    def get_profile(self, orcid_id: str) -> ORCIDProfile:
+    async def get_profile(self, orcid_id: str) -> ORCIDProfile:
         """
         Get the ORCID profile for the user associated with the orcid_id.
 
@@ -594,64 +508,89 @@ class ORCIDAPIClient(ORCIDClientBase):
         Thus access to the profile should be through the get_json function,
         which can readily dig into the resulting dict.
         """
-        response = http_client().get(
-            self.url(f"{orcid_id}/record"), headers=self.header()
-        )
-        return ORCIDProfile.parse_obj(json.loads(response.text))
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                self.url(f"{orcid_id}/record"), headers=self.header()
+            ) as response:
+                result = await response.json()
+                if response.status == 404:
+                    raise errors.NotFoundError("ORCID user profile not found")
+                elif response.status != 200:
+                    # This will capture any < 500 errors, which we just
+                    # in through as an internal error.
+                    # Remember, actual >= 500 errors will result in an exception
+                    # thrown or possibly trigger a json parse error above, as we
+                    # expect a valid response.
+                    raise make_exception(response.status, result, source="get_profile")
+                    # raise errors.InternalError(
+                    #     "Unknown error fetching ORCID user profile"
+                    # )
+                else:
+                    return ORCIDProfile.model_validate(result)
 
     #
     # Works
     #
 
     # TODO: do we want to type the raw works record?
-    def get_works(self, orcid_id: str) -> Works:
+    async def get_works(self, orcid_id: str) -> Works:
         # TODO: catch errors here
-        response = http_client().get(
-            self.url(f"{orcid_id}/works"), headers=self.header()
-        )
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                self.url(f"{orcid_id}/works"), headers=self.header()
+            ) as response:
+                result = await response.json()
+                if response.status != 200:
+                    raise make_exception(response.status, result, source="get_works")
 
-        if response.status_code != 200:
-            raise make_exception(response, source="get_works")
+                return Works.model_validate(result)
 
-        return Works.parse_obj(json.loads(response.text))
-
-    def get_work(self, orcid_id: str, put_code: int) -> GetWorkResult:
+    async def get_work(self, orcid_id: str, put_code: int) -> GetWorkResult:
         # TODO: catch errors here
         url = self.url(f"{orcid_id}/works/{put_code}")
-        response = http_client().get(url, headers=self.header())
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=self.header()) as response:
+                result = await response.json()
+                if response.status != 200:
+                    raise make_exception(response.status, result, source="get_work")
 
-        if response.status_code != 200:
-            raise make_exception(response, source="get_work")
+                # safe json decode
+                # try:
+                #     json_response = json.loads(response.text)
+                # except JSONDecodeError as jde:
+                #     raise errors.UpstreamError(
+                #         "Error decoding the ORCID response as JSON",
+                #         data={"exception": str(jde)},
+                #     )
 
-        # safe json decode
-        try:
-            json_response = json.loads(response.text)
-        except JSONDecodeError as jde:
-            raise errors.UpstreamError(
-                "Error decoding the ORCID response as JSON",
-                data={"exception": str(jde)},
-            )
+                return GetWorkResult.model_validate(result)
 
-        return GetWorkResult.parse_obj(json_response)
+    async def save_work(
+        self, orcid_id: str, put_code: int, work_record: WorkUpdate
+    ) -> Work:
+        async with aiohttp.ClientSession() as session:
+            async with session.put(
+                self.url(f"{orcid_id}/work/{put_code}"),
+                headers=self.header(),
+                data=json.dumps(work_record.model_dump(by_alias=True)),
+            ) as response:
+                result = await response.json()
+                if response.status != 200:
+                    raise make_exception(response.status, result, source="save_work")
 
-    def save_work(self, orcid_id: str, put_code: int, work_record: WorkUpdate) -> Work:
-        response = http_client().put(
-            self.url(f"{orcid_id}/work/{put_code}"),
-            headers=self.header(),
-            content=json.dumps(work_record.dict(by_alias=True)),
-        )
+                return Work.model_validate(result)
 
-        if response.status_code != 200:
-            raise make_exception(response, source="save_work")
 
-        return Work.parse_obj(json.loads(response.text))
+class ORCIDAPIError(ServiceBaseModel):
+    error: str = Field(...)
+    error_description: str = Field(...)
 
 
 class ORCIDOAuthClient(ORCIDClientBase):
     #
     # Revoke ORCID side of link.
     #
-    def revoke_token(self) -> None:
+    async def revoke_token(self) -> None:
         header = {
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
@@ -663,12 +602,14 @@ class ORCIDOAuthClient(ORCIDClientBase):
         }
         # TODO: determine all possible ORCID errors here, or the
         # pattern with which we can return useful info
-        response = http_client().post(self.url("revoke"), headers=header, data=data)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                self.url("revoke"), headers=header, data=data
+            ) as response:
+                if response.status != 200:
+                    raise make_exception(response.status, None, source="revoke_link")
 
-        if response.status_code != 200:
-            raise make_exception(response, source="revoke_link")
-
-    def exchange_code_for_token(self, code: str) -> model.ORCIDAuth:
+    async def exchange_code_for_token(self, code: str) -> model.ORCIDAuth:
         #
         # Exchange the temporary token from ORCID for the authorized token.
         #
@@ -692,12 +633,40 @@ class ORCIDOAuthClient(ORCIDClientBase):
             "code": code,
             "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
         }
-        response = http_client().post(
-            f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
-        )
-        json_response = json.loads(response.text)
-        # TODO: branch on error
-        return model.ORCIDAuth.parse_obj(json_response)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
+            ) as response:
+                content_type_raw = response.headers.get("Content-Type")
+                if content_type_raw is None:
+                    raise errors.UpstreamError("No content-type in response")
+
+                content_type, _, _ = content_type_raw.partition(";")
+                if content_type == "application/json":
+                    try:
+                        json_response = await response.json()
+                    except JSONDecodeError as jde:
+                        raise errors.UpstreamError(
+                            "Error decoding JSON response"
+                        ) from jde
+
+                    if response.status == 200:
+                        # TODO: branch on error
+                        return model.ORCIDAuth.model_validate(json_response)
+                    else:
+                        print("ERROR!", response.text)
+
+                        if "error" in json_response:
+                            error = ORCIDAPIError.model_validate(json_response)
+                            raise errors.UpstreamError(error.error_description)
+                        else:
+                            raise errors.UpstreamError(
+                                "Unexpected Error Response from ORCID"
+                            )
+                else:
+                    raise errors.UpstreamError(
+                        f"Expected JSON response, got {content_type}"
+                    )
 
 
 def orcid_api(token: str) -> ORCIDAPIClient:

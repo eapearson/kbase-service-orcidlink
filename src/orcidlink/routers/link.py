@@ -20,26 +20,33 @@ To that end the following endpoints are provided:
 """
 from typing import Optional
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Path, Response
+from starlette.responses import JSONResponse
+
 from orcidlink.lib import errors
 from orcidlink.lib.responses import (
-    AUTHORIZATION_HEADER,
     AUTH_RESPONSES,
-    ErrorResponse,
+    AUTHORIZATION_HEADER,
     STD_RESPONSES,
+    ErrorResponse,
 )
-from orcidlink.model import LinkRecord, LinkRecordPublic, ORCIDAuthPublic
+from orcidlink.model import (
+    LinkingRecordShared,
+    LinkRecord,
+    LinkRecordPublic,
+    ORCIDAuthPublic,
+)
 from orcidlink.service_clients.auth import ensure_authorization
 from orcidlink.service_clients.orcid_api import orcid_oauth
 from orcidlink.storage.storage_model import storage_model
-from starlette.responses import JSONResponse
 
 router = APIRouter(prefix="/link")
 
 
-def get_link_record(username: str) -> Optional[LinkRecord]:
-    model = storage_model()
-    return model.get_link_record(username)
+USERNAME_PARAM = Path(
+    description="The username",
+    # It is a uuid, whose string representation is 36 characters.
+)
 
 
 @router.get(
@@ -66,11 +73,13 @@ async def get_link(
     """
     Get ORCID Link
 
-    Return the link for the user associated with the KBase auth token passed in the "Authorization" header
+    Return the link for the user associated with the KBase auth token passed in
+    the "Authorization" header
     """
-    _, token_info = ensure_authorization(authorization)
+    _, token_info = await ensure_authorization(authorization)
 
-    link_record = get_link_record(token_info.user)
+    model = storage_model()
+    link_record = model.get_link_record(token_info.user)
 
     if link_record is None:
         raise errors.NotFoundError("No link record was found for this user")
@@ -114,10 +123,49 @@ async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
     Determine if the user associated with the KBase auth token in the "Authorization" header has a
     link to an ORCID account.
     """
-    _, token_info = ensure_authorization(authorization)
-    link_record = get_link_record(token_info.user)
+    _, token_info = await ensure_authorization(authorization)
+    model = storage_model()
+    link_record = model.get_link_record(token_info.user)
 
     return link_record is not None
+
+
+@router.get(
+    "/share/{username}",
+    response_model=LinkingRecordShared,
+    tags=["link"],
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        200: {
+            "description": "Returns the shared portion of an ORCID Link record",
+            "model": LinkingRecordShared,
+        },
+    },
+)
+async def link_share(
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
+) -> LinkingRecordShared:
+    """
+    Get whether Is Linked
+
+    Determine if the user associated with the KBase auth token in the "Authorization" header has a
+    link to an ORCID account.
+    """
+    await ensure_authorization(authorization)
+
+    model = storage_model()
+    link_record = model.get_link_record(username)
+
+    if link_record is None:
+        raise errors.NotFoundError("Link not found for user")
+
+    # TODO: CRITICAL - check which fields have been shared; for now assume the id is, and perhaps we
+    # want to make it always available to kbase users if linked, even though the ui can offer more
+    # fine grained control?
+    result = LinkingRecordShared(orcidId=link_record.orcid_auth.orcid)
+
+    return result
 
 
 #
@@ -145,20 +193,18 @@ async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Respo
     Removes the link for the user associated with the KBase auth token passed in the "Authorization" header
     """
 
-    _, token_info = ensure_authorization(authorization)
-    username = token_info.user
-    link_record = get_link_record(username)
+    _, token_info = await ensure_authorization(authorization)
+
+    model = storage_model()
+    link_record = model.get_link_record(token_info.user)
 
     if link_record is None:
         raise errors.NotFoundError("User does not have an ORCID Link")
-        # return error_response_not_found("User does not have an ORCID Link")
+
+    # TODO: handle error? or propagate? or in a transaction?
+    await orcid_oauth(link_record.orcid_auth.access_token).revoke_token()
 
     # TODO: handle error? or propagate?
-    orcid_oauth(link_record.orcid_auth.access_token).revoke_token()
-
-    model = storage_model()
-
-    # TODO: handle error? or propagate?
-    model.delete_link_record(username)
+    model.delete_link_record(token_info.user)
 
     return Response(status_code=204)

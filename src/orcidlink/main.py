@@ -18,6 +18,13 @@ from typing import Any, Generic, List, TypeVar
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
+from pydantic import Field
+
+# from pydantic.error_wrappers import ErrorDict
+from starlette import status
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import HTMLResponse, JSONResponse
+
 from orcidlink.lib import logger
 from orcidlink.lib.config import config
 from orcidlink.lib.errors import FASTAPI_ERROR, NOT_FOUND, ServiceError, ServiceErrorX
@@ -35,12 +42,6 @@ from orcidlink.service_clients.KBaseAuth import (
     KBaseAuthErrorInfo,
     KBaseAuthInvalidToken,
 )
-from pydantic import Field
-
-# from pydantic.error_wrappers import ErrorDict
-from starlette import status
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import HTMLResponse, JSONResponse
 
 ###############################################################################
 # FastAPI application setup
@@ -153,7 +154,8 @@ class ValidationError(ServiceBaseModel):
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    data: ValidationError = ValidationError(detail=exc.errors(), body=exc.body)
+    detail = list(exc.errors())
+    data: ValidationError = ValidationError(detail=detail, body=exc.body)
     return error_response(
         "requestParametersInvalid",
         "Request Parameters Invalid",
@@ -237,6 +239,7 @@ async def service_errorx_exception_handler(
 async def internal_server_error_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
+    print("EXCEPTION HANDLER", str(exc), exc.__class__)
     return exception_error_response(
         "internalServerError",
         "Internal Server Error",
