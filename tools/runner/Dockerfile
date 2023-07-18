@@ -1,4 +1,4 @@
-FROM python:3.11.2-alpine
+FROM python:3.11.4-alpine
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -21,7 +21,7 @@ RUN apk add curl git bash
 SHELL ["/bin/bash", "-c"]
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1
 
 # Temporary fix for broken Python venv.
 # setuptools is not used by poetry (see the install command below), but it is present
@@ -31,7 +31,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
 # against it. Just upgrading to the latest version, to avoid having to fix this when poetry's
 # venv has a more recent version than 65.5.1 (which fixes the CVE). When the upstream issue is fixed,
 # this line can be removed.
-RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
+RUN cd /root/.local/share/pypoetry && source venv/bin/activate
 
 # Don't need curl any more.
 #RUN apt-get purge -y curl && apt-get autoremove -y
@@ -52,7 +52,7 @@ COPY ../tools /app/tools
 
 WORKDIR /app
 
-RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install
+RUN poetry config virtualenvs.create false && poetry install
 
 ENTRYPOINT [ "tools/runner/entrypoint.sh" ]
 

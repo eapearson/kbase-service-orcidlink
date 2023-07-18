@@ -19,7 +19,7 @@ services:
     ports:
       # NB cannot use 5000 because macOS uses it; it is handy to expose
       # this port for poking at the API during development.
-      - "5001:5000"
+      - "5003:5000"
     environment:
       - KBASE_ENDPOINT
       - ORCID_API_BASE_URL
