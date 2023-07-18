@@ -64,7 +64,7 @@ async def get_info() -> InfoResponse:
     # TODO: version should either be separate call, or derived from the a
     # file stamped during the build.
     service_description = get_service_description()
-    config_copy = config().copy(deep=True)
+    config_copy = config().model_copy(deep=True)
     config_copy.orcid.clientId = "REDACTED"
     config_copy.orcid.clientSecret = "REDACTED"
     config_copy.mongo.username = "REDACTED"
