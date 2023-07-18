@@ -308,7 +308,6 @@ def migrate_db():
             else:
                 database_version = description["version"]
                 if database_version == service_version:
-                    #    if description["migrated"] is True:
                     return {
                         "status": "ok",
                         "code": "migration-not-required",
