@@ -19,6 +19,9 @@ jobs:
     needs: pre-build
     if: github.base_ref == 'develop' && github.event.pull_request.merged == false
     uses: kbase/.github/.github/workflows/reusable_build-push.yml@main
+    with:
+      name: '${{ github.event.repository.name }}-develop'
+      tags: pr-${{ github.event.number }}
     secrets: inherit
   build-develop-merge:
     needs: pre-build
