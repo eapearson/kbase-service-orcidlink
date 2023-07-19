@@ -1,13 +1,14 @@
 import contextlib
 import json
+from test.mocks.data import load_data_file
+from test.mocks.mock_contexts import mock_auth_service, no_stderr
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi.responses import JSONResponse, RedirectResponse, Response
+
 from orcidlink.lib import responses, utils
 from orcidlink.lib.responses import error_response_not_found
-from test.mocks.data import load_data_file
-from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
 config_yaml = load_data_file("config1.toml")
 

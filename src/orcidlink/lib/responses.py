@@ -6,9 +6,10 @@ from urllib.parse import urlencode
 from fastapi import Header
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
+from pydantic import Field
+
 from orcidlink.lib.config import config
 from orcidlink.lib.type import ServiceBaseModel
-from pydantic import Field
 
 ##
 # Common http responses, implemented as response-generating functions.
@@ -42,6 +43,9 @@ class ErrorResponse(ServiceBaseModel, Generic[T]):
 
 
 def success_response_no_data() -> Response:
+    """
+    Simply returns a simple 204 response with no body.
+    """
     return Response(status_code=204)
 
 
