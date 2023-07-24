@@ -19,6 +19,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import Field
+
 # from pydantic.error_wrappers import ErrorDict
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -26,16 +27,27 @@ from starlette.responses import HTMLResponse, JSONResponse
 
 from orcidlink.lib import logger
 from orcidlink.lib.config import config
-from orcidlink.lib.errors import (FASTAPI_ERROR, NOT_FOUND, ServiceError,
-                                  ServiceErrorX, ServiceErrorXX)
-from orcidlink.lib.responses import (ErrorResponse, error_response,
-                                     error_response2, exception_error_response)
+from orcidlink.lib.errors import (
+    FASTAPI_ERROR,
+    NOT_FOUND,
+    ServiceError,
+    ServiceErrorX,
+    ServiceErrorXX,
+)
+from orcidlink.lib.responses import (
+    ErrorResponse,
+    error_response,
+    error_response2,
+    exception_error_response,
+)
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
-from orcidlink.service_clients.KBaseAuth import (KBaseAuthError,
-                                                 KBaseAuthErrorInfo,
-                                                 KBaseAuthInvalidToken)
+from orcidlink.service_clients.KBaseAuth import (
+    KBaseAuthError,
+    KBaseAuthErrorInfo,
+    KBaseAuthInvalidToken,
+)
 
 ###############################################################################
 # FastAPI application setup

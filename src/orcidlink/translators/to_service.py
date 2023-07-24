@@ -1,9 +1,15 @@
 from typing import Dict, List
 
 from orcidlink import model
-from orcidlink.model import (CitationType, ContributorRole,
-                             ContributorRoleValue, ExternalIdType,
-                             ORCIDContributorSelf, RelationshipType, WorkType)
+from orcidlink.model import (
+    CitationType,
+    ContributorRole,
+    ContributorRoleValue,
+    ExternalIdType,
+    ORCIDContributorSelf,
+    RelationshipType,
+    WorkType,
+)
 from orcidlink.service_clients import orcid_api
 
 

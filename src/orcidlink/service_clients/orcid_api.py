@@ -1,7 +1,17 @@
 import json
 from json import JSONDecodeError
-from typing import (Any, Dict, Generic, List, Literal, Optional, Tuple,
-                    TypeAlias, TypeVar, Union)
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypeAlias,
+    TypeVar,
+    Union,
+)
 
 # import httpx
 import aiohttp
