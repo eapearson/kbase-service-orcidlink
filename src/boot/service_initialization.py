@@ -269,7 +269,7 @@ def initialize_v030(db):
 
     description_collection.insert_one(
         {
-            "version": "0.2.1",
+            "version": service_version,
             "at": posix_time_millis(),
             "migrated": True,
             "messages": actions,
@@ -291,23 +291,23 @@ def migrate_db():
         description = db.get_collection("description").find_one()
 
         service_description = get_service_description()
-        service_version = service_description.version
 
-        if service_version == "0.2.1":
+        if service_description.version == "0.2.1":
             if description is None:
                 return initialize_v021(db)
             else:
                 return {
                     "status": "error",
                     "code": "migration-error",
-                    "message": f"No migration available for version {service_version}",
+                    "message": f"No migration available for version {service_description.version}",
                 }
-        elif service_version == "0.3.0":
+
+        elif service_description.version == "0.3.0":
             if description is None:
                 return initialize_v030(db)
             else:
                 database_version = description["version"]
-                if database_version == service_version:
+                if database_version == service_description.version:
                     return {
                         "status": "ok",
                         "code": "migration-not-required",
@@ -319,13 +319,14 @@ def migrate_db():
                     return {
                         "status": "error",
                         "code": "migration-error",
-                        "message": f"No migration available from db version {description['version']} to service version {service_version}",
+                        "message": f"No migration available from db version {description['version']} to service version {service_description.version}",
                     }
+
         else:
             return {
                 "status": "error",
                 "code": "migration-error",
-                "message": f"No migration available for version {service_version}",
+                "message": f"No migration available for version {service_description.version}",
             }
     except Exception as dbe:
         print("DEBUGgin error", str(dbe))

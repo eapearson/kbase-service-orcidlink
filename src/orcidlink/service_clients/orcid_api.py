@@ -1,17 +1,7 @@
 import json
 from json import JSONDecodeError
-from typing import (
-    Any,
-    Dict,
-    Generic,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeAlias,
-    TypeVar,
-    Union,
-)
+from typing import (Any, Dict, Generic, List, Literal, Optional, Tuple,
+                    TypeAlias, TypeVar, Union)
 
 # import httpx
 import aiohttp
@@ -48,13 +38,14 @@ Visibility: TypeAlias = Literal["public", "limited", "private"]
 
 class ORCIDPersonName(ServiceBaseModel):
     created_date: ORCIDIntValue = Field(alias="created-date")
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     given_names: StringValue = Field(alias="given-names")
     family_name: StringValue = Field(alias="family-name")
     credit_name: Optional[StringValue] = Field(default=None, alias="credit-name")
     source: Optional[StringValue] = Field(default=None)
     visibility: Visibility = Field(...)
     path: str = Field(...)
+    # optional
+    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
 
 
 class ORCIDOtherNames(ServiceBaseModel):
@@ -104,22 +95,28 @@ class ORCIDEmail(ServiceBaseModel):
 
 
 class ORCIDEmails(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     email: List[ORCIDEmail] = Field(...)
     path: str = Field(...)
+    # optional - not populated when profile first created?
+    last_modified_date: ORCIDIntValue | None = Field(
+        default=None, alias="last-modified-date"
+    )
 
 
 class ORCIDPerson(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     name: ORCIDPersonName = Field(...)
     other_names: ORCIDOtherNames = Field(..., alias="other-names")
-    biography: ORCIDBiography
+    biography: ORCIDBiography | None = Field(default=None)
     researcher_urls: ResearcherURLs = Field(alias="researcher-urls")
     emails: ORCIDEmails
     # addresses: ORCIDAddresses
     # keywords
     # external_identifiers
     path: str = Field(...)
+    # optional
+    last_modified_date: ORCIDIntValue | None = Field(
+        default=None, alias="last-modified-date"
+    )
 
 
 class ExternalIdNormalized(ServiceBaseModel):
@@ -221,7 +218,9 @@ class PersistedWork(ServiceBaseModel):
     # haven't seen an actual value for this
     # language_code
     created_date: ORCIDIntValue = Field(alias="created-date")
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+    last_modified_date: ORCIDIntValue | None = Field(
+        default=None, alias="last-modified-date"
+    )
     # TODO: either defaults to str, and overridden in the standalone to optional,
     # or defaults to optional, and becomes required for summary.
     path: Optional[str] = Field(default=None)
@@ -253,9 +252,12 @@ class WorkGroup(ServiceBaseModel):
 
 
 class Works(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     group: List[WorkGroup] = Field(...)
     path: str = Field(...)
+    # optional
+    last_modified_date: ORCIDIntValue | None = Field(
+        default=None, alias="last-modified-date"
+    )
 
 
 class ORCIDOrganizationAddress(ServiceBaseModel):
@@ -317,7 +319,6 @@ class Affiliations(ServiceBaseModel):
 
 
 class ORCIDActivitiesSummary(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
     distinctions: Affiliations = Field(...)
     educations: Affiliations = Field(...)
     employments: Affiliations = Field(...)
@@ -329,6 +330,9 @@ class ORCIDActivitiesSummary(ServiceBaseModel):
     # services
     works: Works
     path: str = Field(...)
+    last_modified_date: ORCIDIntValue | None = Field(
+        default=None, alias="last-modified-date"
+    )
 
 
 #
@@ -405,7 +409,7 @@ class APIErrorWrapper(ServiceBaseModel, Generic[DetailType]):
     # error_text: Optional[str] = Field(default=None)
 
 
-def make_exception(
+def make_upstream_error(
     status: int, json_response: Any, source: str
 ) -> errors.ServiceErrorX:
     if isinstance(json_response, dict):
@@ -514,14 +518,23 @@ class ORCIDAPIClient(ORCIDClientBase):
             ) as response:
                 result = await response.json()
                 if response.status == 404:
-                    raise errors.NotFoundError("ORCID user profile not found")
+                    # raise errors.NotFoundError("ORCID user profile not found")
+                    raise errors.ServiceErrorXX(
+                        errors.NOT_FOUND, "ORCID User Profile Not Found"
+                    )
+                elif response.status == 401:
+                    raise errors.ServiceErrorXX(
+                        errors.ORCID_INVALID_TOKEN, "Not authorized for ORCID Access"
+                    )
                 elif response.status != 200:
                     # This will capture any < 500 errors, which we just
                     # in through as an internal error.
                     # Remember, actual >= 500 errors will result in an exception
                     # thrown or possibly trigger a json parse error above, as we
                     # expect a valid response.
-                    raise make_exception(response.status, result, source="get_profile")
+                    raise make_upstream_error(
+                        response.status, result, source="get_profile"
+                    )
                     # raise errors.InternalError(
                     #     "Unknown error fetching ORCID user profile"
                     # )
@@ -541,7 +554,9 @@ class ORCIDAPIClient(ORCIDClientBase):
             ) as response:
                 result = await response.json()
                 if response.status != 200:
-                    raise make_exception(response.status, result, source="get_works")
+                    raise make_upstream_error(
+                        response.status, result, source="get_works"
+                    )
 
                 return Works.model_validate(result)
 
@@ -552,7 +567,9 @@ class ORCIDAPIClient(ORCIDClientBase):
             async with session.get(url, headers=self.header()) as response:
                 result = await response.json()
                 if response.status != 200:
-                    raise make_exception(response.status, result, source="get_work")
+                    raise make_upstream_error(
+                        response.status, result, source="get_work"
+                    )
 
                 # safe json decode
                 # try:
@@ -576,7 +593,9 @@ class ORCIDAPIClient(ORCIDClientBase):
             ) as response:
                 result = await response.json()
                 if response.status != 200:
-                    raise make_exception(response.status, result, source="save_work")
+                    raise make_upstream_error(
+                        response.status, result, source="save_work"
+                    )
 
                 return Work.model_validate(result)
 
@@ -607,7 +626,9 @@ class ORCIDOAuthClient(ORCIDClientBase):
                 self.url("revoke"), headers=header, data=data
             ) as response:
                 if response.status != 200:
-                    raise make_exception(response.status, None, source="revoke_link")
+                    raise make_upstream_error(
+                        response.status, None, source="revoke_link"
+                    )
 
     async def exchange_code_for_token(self, code: str) -> model.ORCIDAuth:
         #

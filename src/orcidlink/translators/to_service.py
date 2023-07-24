@@ -1,15 +1,9 @@
 from typing import Dict, List
 
 from orcidlink import model
-from orcidlink.model import (
-    CitationType,
-    ContributorRole,
-    ContributorRoleValue,
-    ExternalIdType,
-    ORCIDContributorSelf,
-    RelationshipType,
-    WorkType,
-)
+from orcidlink.model import (CitationType, ContributorRole,
+                             ContributorRoleValue, ExternalIdType,
+                             ORCIDContributorSelf, RelationshipType, WorkType)
 from orcidlink.service_clients import orcid_api
 
 
@@ -100,7 +94,9 @@ def transform_work_summary(
     return model.WorkSummary(
         putCode=work_summary.put_code,
         createdAt=work_summary.created_date.value,
-        updatedAt=work_summary.last_modified_date.value,
+        updatedAt=work_summary.last_modified_date.value
+        if work_summary.last_modified_date is not None
+        else None,
         source=work_summary.source.source_name.value,
         title=work_summary.title.title.value,
         journal=journal,
@@ -124,7 +120,10 @@ def transform_work(
     """
     put_code = raw_work.put_code
     created_at = raw_work.created_date.value
-    updated_at = raw_work.last_modified_date.value
+    if raw_work.last_modified_date is not None:
+        updated_at = raw_work.last_modified_date.value
+    else:
+        updated_at = None
 
     # TODO: should also get the source app id
     source = raw_work.source.source_name.value
@@ -332,12 +331,18 @@ def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
     else:
         creditName = None
 
+    print("BIO?", profile_raw.person)
+
+    bio = None
+    if profile_raw.person.biography is not None:
+        bio = profile_raw.person.biography.content
+
     return model.ORCIDProfile(
         orcidId=profile_raw.orcid_identifier.path,
         firstName=profile_raw.person.name.given_names.value,
         lastName=profile_raw.person.name.family_name.value,
         creditName=creditName,
-        bio=profile_raw.person.biography.content,
+        bio=bio,
         distinctions=transform_affilations(
             profile_raw.activities_summary.distinctions.affiliation_group
         ),

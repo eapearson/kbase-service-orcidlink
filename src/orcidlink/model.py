@@ -757,7 +757,8 @@ class PersistedWork(PersistedWorkBase):
         kbSourceUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#dateTime",
         kbComments="Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
     )
-    updatedAt: int = Field(
+    updatedAt: int | None = Field(
+        default=None,
         title="Updated At",
         description="Moment in time at which the work record was updated; in epoch milliseconds.",
         # our custom fields
@@ -846,7 +847,7 @@ class ORCIDProfile(ServiceBaseModel):
     firstName: str = Field(...)
     lastName: str = Field(...)
     creditName: Optional[str] = Field(default=None)
-    bio: str = Field(...)
+    bio: str | None = Field(...)
     distinctions: List[ORCIDAffiliation] = Field(...)
     education: List[ORCIDAffiliation] = Field(...)
     employment: List[ORCIDAffiliation] = Field(...)

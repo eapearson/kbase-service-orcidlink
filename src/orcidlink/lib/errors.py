@@ -1,3 +1,4 @@
+from dataclasses import asdict, dataclass
 from typing import Any, Optional
 
 from fastapi.encoders import jsonable_encoder
@@ -5,11 +6,12 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 
-class ErrorCode(BaseModel):
+@dataclass
+class ErrorCode:
     code: str
     title: str
     description: str
-    status_code: Optional[int]
+    status_code: int
 
 
 REQUEST_PARAMETERS_INVALID = ErrorCode(
@@ -26,6 +28,17 @@ INVALID_TOKEN = ErrorCode(
     title="Invalid Token",
     description="Converted from an auth client exception, which in turn is in response to the auth "
     + "service reporting an invalid token",
+    status_code=401,
+)
+
+ORCID_INVALID_TOKEN = ErrorCode(
+    code="orcidInvalidToken",
+    title="ORCID Invalid Token",
+    description="""
+Converted from an the ORCID API client exception, which in turn is in response to ORCID 
+api reporting an invalid token. In all probability, this is due to the user having removed 
+access for KBase.
+""",
     status_code=401,
 )
 
@@ -50,7 +63,7 @@ FASTAPI_ERROR = ErrorCode(
     code="fastapiError",
     title="FastAPI Error",
     description="Some other error raised by FastAPI. We let the raised error determine the status code.",
-    status_code=None,
+    status_code=500,
 )
 
 
@@ -116,6 +129,39 @@ class ServiceError(Exception):
             status_code=self.status_code,
             content=jsonable_encoder(self.error, exclude_unset=True),
         )
+
+
+class ServiceErrorXX(Exception):
+    """
+    An exception wrapper for an ErrorResponse and status_code.
+
+    This is the exception to throw if you want to specify the
+    specific error response.
+    """
+
+    error_code: ErrorCode
+
+    def __init__(
+        self,
+        error_code: ErrorCode,
+        message: str,
+    ):
+        super().__init__(message)
+        self.message = message
+        self.error_code = error_code
+
+    def get_response(self) -> JSONResponse:
+        content = asdict(self.error_code)
+        content = {
+            "message": self.message,
+            "code": self.error_code.code,
+            "data": {
+                "description": self.error_code.description,
+                "status_code": self.error_code.status_code,
+            },
+        }
+        content["message"] = self.message
+        return JSONResponse(status_code=self.error_code.status_code, content=content)
 
 
 class ServiceErrorX(Exception):

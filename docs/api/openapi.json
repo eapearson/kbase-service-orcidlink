@@ -2401,7 +2401,14 @@
                         "title": "Creditname"
                     },
                     "bio": {
-                        "type": "string",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Bio"
                     },
                     "distinctions": {
@@ -2628,7 +2635,14 @@
                         "kbUnit": "ms"
                     },
                     "updatedAt": {
-                        "type": "integer",
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Updated At",
                         "description": "Moment in time at which the work record was updated; in epoch milliseconds.",
                         "kbComments": "Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
@@ -2820,7 +2834,6 @@
                 "required": [
                     "putCode",
                     "createdAt",
-                    "updatedAt",
                     "source",
                     "title",
                     "date",
@@ -2859,7 +2872,14 @@
                         "kbUnit": "ms"
                     },
                     "updatedAt": {
-                        "type": "integer",
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Updated At",
                         "description": "Moment in time at which the work record was updated; in epoch milliseconds.",
                         "kbComments": "Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
@@ -2980,7 +3000,6 @@
                 "required": [
                     "putCode",
                     "createdAt",
-                    "updatedAt",
                     "source",
                     "title",
                     "date",
