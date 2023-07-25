@@ -1,11 +1,10 @@
 import json
+from test.mocks.data import load_test_data
+from test.mocks.mock_server import MockService
 from time import sleep
-
 from urllib.parse import parse_qs
 
 from orcidlink.lib import utils
-from test.mocks.data import load_test_data
-from test.mocks.mock_server import MockService
 
 
 class MockORCIDAPI(MockService):
@@ -129,7 +128,7 @@ class MockORCIDAPIWithErrors(MockService):
 
         elif self.path == "/trigger-401/record":
             test_data = load_test_data("orcid", "get-profile-401-error")
-            self.send_json_error(test_data)
+            self.send_json_error(test_data, 401)
 
         else:
             # not found!
