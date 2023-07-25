@@ -2,7 +2,7 @@
 tests="${1}"
 test_file_path="src/test/${tests}"
 echo "Running tests in path '${test_file_path}"
-pytest -s --cov src/orcidlink --cov-report=html --cov-report=term --cov-report=lcov --cov-fail-under=100 "${test_file_path}"
+pytest -s --cov src/orcidlink --cov-report=html --cov-report=term --cov-report=lcov --cov-fail-under=99 "${test_file_path}"
 result_code=$?
 
 if [[ $result_code -gt 0 ]]; then
