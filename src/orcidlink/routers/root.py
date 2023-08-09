@@ -2,6 +2,7 @@ import json
 
 from fastapi import APIRouter
 from pydantic import Field
+from orcidlink.lib.config import GitInfo, get_git_info, get_service_description
 
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
@@ -41,34 +42,27 @@ async def get_status() -> StatusResponse:
     return StatusResponse(status="ok", start_time=0, time=posix_time_millis())
 
 
-# class InfoResponse(ServiceBaseModel):
-#     service_description: ServiceDescription = Field(alias="service-description")
-#     config: Config = Field(...)
-#     git_info: GitInfo = Field(alias="git-info")
+class InfoResponse(ServiceBaseModel):
+    service_description: ServiceDescription = Field(alias="service-description")
+    git_info: GitInfo = Field(alias="git-info")
 
 
-# @router.get("/info", response_model=InfoResponse, tags=["misc"])
-# async def get_info() -> InfoResponse:
-#     """
-#     Get Service Information
+@router.get("/info", response_model=InfoResponse, tags=["misc"])
+async def get_info() -> InfoResponse:
+    """
+    Get Service Information
 
-#     Returns basic information about the service and its runtime configuration.
-#     """
-#     # TODO: version should either be separate call, or derived from the a
-#     # file stamped during the build.
-#     service_description = get_service_description()
-#     config_copy = config().model_copy(deep=True)
-#     config_copy.orcid.clientId = "REDACTED"
-#     config_copy.orcid.clientSecret = "REDACTED"
-#     config_copy.mongo.username = "REDACTED"
-#     config_copy.mongo.password = "REDACTED"
-#     git_info = get_git_info()
+    Returns basic information about the service and its runtime configuration.
+    """
+    # TODO: version should either be separate call, or derived from the a
+    # file stamped during the build.
+    service_description = get_service_description()
+    git_info = get_git_info()
 
-#     # NB we can mix dict and model here.
-#     return InfoResponse.model_validate(
-#         {
-#             "service-description": service_description,
-#             "config": config_copy,
-#             "git-info": git_info,
-#         }
-#     )
+    # NB we can mix dict and model here.
+    return InfoResponse.model_validate(
+        {
+            "service-description": service_description,
+            "git-info": git_info,
+        }
+    )

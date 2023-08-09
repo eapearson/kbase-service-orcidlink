@@ -225,3 +225,9 @@ def get_service_description() -> ServiceDescription:
     file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
     with open(file_path, "r", encoding="utf-8") as file:
         return ServiceDescription.model_validate(toml.load(file))
+
+
+def get_git_info() -> GitInfo:
+    path = os.path.join(module_dir(), "build/git-info.toml")
+    with open(path, "r", encoding="utf-8") as fin:
+        return GitInfo.model_validate(toml.load(fin))
