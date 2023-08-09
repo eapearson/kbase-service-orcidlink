@@ -29,6 +29,7 @@ def fake_fs(fs):
 def my_fs(fs):
     yield fs
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_orcid_api_url(fake_fs):
     value = orcid_api.orcid_api_url("path")
@@ -67,11 +68,13 @@ def test_ORCIDOAuthClient_constructor():
     with pytest.raises(TypeError, match='the "url" named parameter is required'):
         orcid_api.ORCIDOAuthClient()
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDOAuthClient_url():
     client = orcid_api.ORCIDOAuthClient(url="url", access_token="access_token")
     url = client.url("foo")
     assert url == "url/foo"
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDOAuthClient_header():
@@ -84,9 +87,10 @@ def test_ORCIDOAuthClient_header():
 
 
 class FakeResponse:
-    def __init__(self, status_code: int|None = None, text: str|None = None):
+    def __init__(self, status_code: int | None = None, text: str | None = None):
         self.status_code = status_code
         self.text = text
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAuthClient_make_upstream_errorxx():
@@ -98,6 +102,7 @@ def test_ORCIDAuthClient_make_upstream_errorxx():
         raise errors.ServiceErrorXX(errors.NOT_FOUND, "ORCID User Profile Not Found")
     assert exx.value.error_code.status_code == errors.NOT_FOUND.status_code
     assert exx.value.message == "ORCID User Profile Not Found"
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAuthClient_make_upstream_error():
@@ -167,6 +172,7 @@ def test_ORCIDAuthClient_make_upstream_error():
     # assert "originalResponseJSON" not in ex.value.error.data
     # assert ex.value.error.data["originalResponseText"] == "just text, folks"
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDOAuth_success():
     with no_stderr():
@@ -175,6 +181,7 @@ async def test_ORCIDOAuth_success():
             response = await client.revoke_token()
             assert response is None
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDOAuth_error():
     with no_stderr():
@@ -182,6 +189,7 @@ async def test_ORCIDOAuth_error():
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
             with pytest.raises(errors.ServiceErrorX):
                 await client.revoke_token()
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_exchange_code_for_token():
@@ -236,6 +244,7 @@ async def test_exchange_code_for_token_error_incorrect_error_format():
                 await client.exchange_code_for_token(code)
             assert ie.value.message == "Unexpected Error Response from ORCID"
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_exchange_code_for_token_error_correct_error_format():
     with no_stderr():
@@ -250,6 +259,7 @@ async def test_exchange_code_for_token_error_correct_error_format():
 #
 # ORCID API
 #
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAPIClient_constructor():
@@ -268,11 +278,13 @@ def test_ORCIDAPIClient_constructor():
     with pytest.raises(TypeError, match='the "url" named parameter is required'):
         orcid_api.ORCIDAPIClient()
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAPIClient_url():
     client = orcid_api.ORCIDAPIClient(url="url", access_token="access_token")
     url = client.url("foo")
     assert url == "url/foo"
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAPIClient_header():
@@ -302,7 +314,12 @@ async def test_ORCIDAPI_get_profile_not_found():
     with a status code of 404 and an error code of notFound
     """
     with no_stderr():
-        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [_, _, url, port]:
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
             # Just alter the final 6 to 7 so that it doesn't match any testing orcid
             # profiles.
             orcid_id = "0000-0003-4997-3077"
@@ -314,13 +331,19 @@ async def test_ORCIDAPI_get_profile_not_found():
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDAPI_get_profile_not_authorized():
     with no_stderr():
-        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [_, _, url, port]:
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
             # Just alter the final 6 to 7 so that it doesn't match any testing orcid
             # profiles.
             orcid_id = "trigger-401"
             with pytest.raises(errors.ServiceErrorXX):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDAPI_get_works():
@@ -336,7 +359,12 @@ async def test_ORCIDAPI_get_works():
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDAPI_get_works_error():
     with no_stderr():
-        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [_, _, url, port]:
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
             orcid_id = "0000-0003-4997-3076"
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
             with pytest.raises(errors.ServiceErrorX):
@@ -369,13 +397,19 @@ async def test_ORCIDAPI_save_work():
             assert isinstance(result, orcid_api.Work)
             assert result.put_code == put_code
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDAPI_save_work_error():
     #
     # We use the mock ORCID server which returns errors
     #
     with no_stderr():
-        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [_, _, url, port]:
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
             orcid_id = "0000-0003-4997-3076"
             #
             # The client we are testing will access the mock server above since we are
@@ -399,6 +433,7 @@ async def test_ORCIDAPI_save_work_error():
             # assert ex.value.error.response_code == 400
             # assert ex.value.error.data.status_code == 400
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_make_upstream_error_401():
     # A 401 from ORCID
@@ -414,6 +449,7 @@ def test_make_upstream_error_401():
     assert result.data["detail"]["error"] == "My Error"
     assert result.data["detail"].get("error_description") is None
     # assert "error_description" not in result.error.data.detail
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_make_upstream_error_non_401():

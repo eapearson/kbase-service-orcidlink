@@ -35,6 +35,7 @@ TEST_LINK = load_data_json("link1.json")
 
 # Happy paths
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_startup(fake_fs):
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -85,6 +86,7 @@ def test_validation_exception_handler(fake_fs):
         == "This request does not comply with the schema for this endpoint"
     )
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_kbase_auth_exception_handler(fake_fs):
     with no_stderr():
@@ -102,14 +104,17 @@ def test_kbase_auth_exception_handler(fake_fs):
             )
 
             # call with invalid token
-
             response = client.get("/link", headers={"Authorization": INVALID_TOKEN})
             assert response.status_code == 401
             assert response.headers["content-type"] == "application/json"
             content = response.json()
             assert content["code"] == "invalidToken"
-            assert content["title"] == "Invalid KBase Token"
-            
+
+            # TODO: the new ServiceErrorXX does not emit the title, as it is not part of the
+            # JSON-RPC error structure. We want to be compatible with that, as it makes error
+            # handling easier, generally.
+            # assert content["title"] == "Invalid KBase Token"
+
             # Call with actual empty token; should be caught at the validator boundary
             # as it is invalid according to the rules for tokens.
             response = client.get("/link", headers={"Authorization": ""})
@@ -118,7 +123,6 @@ def test_kbase_auth_exception_handler(fake_fs):
             content = response.json()
             assert content["code"] == "requestParametersInvalid"
             assert content["title"] == "Request Parameters Invalid"
-            
 
             # Call with actual empty token; should be caught at the validator boundary
             # as it is invalid according to the rules for tokens.
@@ -128,12 +132,11 @@ def test_kbase_auth_exception_handler(fake_fs):
             content = response.json()
             assert content["code"] == "requestParametersInvalid"
             assert content["title"] == "Request Parameters Invalid"
-     
 
-            # # This one pretends that the /link implementation does not check for 
+            # # This one pretends that the /link implementation does not check for
             # # missing token first, but rather sends the no token. For testing
             # # this is implemented by sending a special testing token that triggers
-            # # the appropriate response from the mock auth service. 
+            # # the appropriate response from the mock auth service.
             # # However, as this cannot be triggered in real usage, we should redo
             # # this test in a test of the client itself.
             # response = client.get("/link", headers={"Authorization": NO_TOKEN})

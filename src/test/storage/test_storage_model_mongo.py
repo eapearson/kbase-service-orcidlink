@@ -58,6 +58,7 @@ EXAMPLE_LINKING_SESSION_COMPLETED_1 = load_data_json(
     "linking_session_record_completed.json"
 )
 
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_link_record():
     sm = storage_model()
@@ -67,8 +68,8 @@ def test_create_link_record():
     assert record is not None
     assert record.orcid_auth.access_token == "foo"
 
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_save_link_record():
     sm = storage_model()
     sm.reset_database()
@@ -83,6 +84,7 @@ def test_save_link_record():
     record = sm.get_link_record("foo")
     assert record is not None
     assert record.orcid_auth.access_token == "fee"
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_link_record():
@@ -109,6 +111,7 @@ EXAMPLE_LINKING_SESSION_RECORD_1 = {
     "created_at": 123,
     "expires_at": 456,
 }
+
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_linking_session():

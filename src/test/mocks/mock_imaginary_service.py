@@ -1,7 +1,7 @@
 import json
 import time
 
-from orcidlink.service_clients.error import INVALID_PARAMS, METHOD_NOT_FOUND
+from orcidlink.lib.errors import INVALID_PARAMS, METHOD_NOT_FOUND
 from test.mocks.mock_server import MockSDKJSON11ServiceBase
 
 

@@ -26,7 +26,6 @@ def run_command(command, ignore_error=False):
         print(str(cpe))
         sys.exit(1)
 
-
     return process.stdout, True
 
 
@@ -78,7 +77,9 @@ def git_tag(commit_hash):
 
 
 def git_config():
-    output, _ = run_command(["git", "config", "--global", "--add", "safe.directory", "*"])
+    output, _ = run_command(
+        ["git", "config", "--global", "--add", "safe.directory", "*"]
+    )
     return output.rstrip("\n")
 
 

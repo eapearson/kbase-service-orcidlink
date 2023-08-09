@@ -101,6 +101,7 @@ def transform_contributors(
         all_contributors.extend(contributors)
     return all_contributors
 
+
 def transform_contributors_self(
     contributors_update: List[model.ORCIDContributorSelf],
 ) -> List[orcid_api.Contributor]:

@@ -51,6 +51,7 @@ def create_link():
     sm.db.links.drop()
     sm.create_link_record(LinkRecord.model_validate(TEST_LINK))
 
+
 MOCK_KBASE_SERVICES_PORT = 9999
 MOCK_ORCID_API_PORT = 9997
 MOCK_ORCID_OAUTH_PORT = 9998
@@ -74,8 +75,6 @@ def mock_services():
         with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
             with mock_orcid_api_service(MOCK_ORCID_API_PORT):
                 yield
-
-
 
 
 def test_get_work(fake_fs):
@@ -117,7 +116,9 @@ def test_get_work_errors(fake_fs):
             # An unlinked user gets a 422, since fastapi validates the url param
             # and it should be int.
             #
-            response = client.get("/orcid/works/bar", headers={"Authorization": TOKEN_BAR})
+            response = client.get(
+                "/orcid/works/bar", headers={"Authorization": TOKEN_BAR}
+            )
             assert response.status_code == 422
 
             #
@@ -160,7 +161,9 @@ def test_get_work_errors(fake_fs):
             #
             # A bad put code results in a 400 from ORCID
             #
-            response = client.get("/orcid/works/456", headers={"Authorization": TOKEN_FOO})
+            response = client.get(
+                "/orcid/works/456", headers={"Authorization": TOKEN_FOO}
+            )
             assert response.status_code == 502
             error = response.json()
             assert error["code"] == "upstreamError"
@@ -239,7 +242,10 @@ def test_create_work(fake_fs):
                         "relationship": "self",
                     }
                 ],
-                "citation": {"type": "formatted-vancouver", "value": "my reference here"},
+                "citation": {
+                    "type": "formatted-vancouver",
+                    "value": "my reference here",
+                },
                 "shortDescription": "my short description",
                 "selfContributor": {
                     "orcidId": "1111-2222-3333-4444",
@@ -286,7 +292,10 @@ def test_create_work_errors(fake_fs):
                         "relationship": "self",
                     }
                 ],
-                "citation": {"type": "formatted-vancouver", "value": "my reference here"},
+                "citation": {
+                    "type": "formatted-vancouver",
+                    "value": "my reference here",
+                },
                 "shortDescription": "my short description",
                 "doi": "123",
                 "selfContributor": {
@@ -389,7 +398,10 @@ def test_save_work(fake_fs):
                         "relationship": "self",
                     },
                 ],
-                "citation": {"type": "formatted-vancouver", "value": "my reference here"},
+                "citation": {
+                    "type": "formatted-vancouver",
+                    "value": "my reference here",
+                },
                 "shortDescription": "my short description",
                 "doi": "123",
                 "selfContributor": {
@@ -431,7 +443,10 @@ def test_save_work_errors(fake_fs):
                         "relationship": "self",
                     }
                 ],
-                "citation": {"type": "formatted-vancouver", "value": "my reference here"},
+                "citation": {
+                    "type": "formatted-vancouver",
+                    "value": "my reference here",
+                },
                 "shortDescription": "my short description",
                 "doi": "123",
                 "selfContributor": {

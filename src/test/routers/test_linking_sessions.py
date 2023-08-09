@@ -70,10 +70,10 @@ def assert_get_linking_session(client, session_id: str):
 def assert_start_linking_session(
     client,
     session_id: str,
-    kbase_session: str|None = None,
-    kbase_session_backup: str|None = None,
-    return_link: str|None = None,
-    skip_prompt: str|None = None,
+    kbase_session: str | None = None,
+    kbase_session_backup: str | None = None,
+    return_link: str | None = None,
+    skip_prompt: str | None = None,
 ):
     headers = {}
     if kbase_session is not None:
@@ -119,8 +119,8 @@ def assert_start_linking_session(
 def assert_continue_linking_session(
     client,
     session_id: str,
-    kbase_session: str|None = None,
-    expected_response_code: int|None = None,
+    kbase_session: str | None = None,
+    expected_response_code: int | None = None,
 ):
     # FINISH
     #
@@ -153,7 +153,7 @@ def assert_continue_linking_session(
 def assert_finish_linking_session(
     client,
     session_id: str,
-    kbase_session: str|None = None,
+    kbase_session: str | None = None,
     expected_response_code: int = 200,
 ):
     # FINISH
@@ -634,12 +634,13 @@ def test_continue_linking_session():
     the linking, after which we exchange the code for an access token.
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+
         def assert_continue_linking_session(
-            kbase_session: str|None = None,
-            kbase_session_backup: str|None = None,
-            return_link: str|None = None,
-            skip_prompt: str|None = None,
-            expected_response_code: int|None = None,
+            kbase_session: str | None = None,
+            kbase_session_backup: str | None = None,
+            return_link: str | None = None,
+            skip_prompt: str | None = None,
+            expected_response_code: int | None = None,
         ):
             client = TestClient(app)
 

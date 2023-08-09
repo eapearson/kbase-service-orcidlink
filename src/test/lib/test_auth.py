@@ -7,15 +7,17 @@ import pytest
 from orcidlink.lib.utils import module_path
 from orcidlink.lib.errors import ServiceError
 from orcidlink.lib.auth import get_username, ensure_authorization
-from orcidlink.service_clients.auth import ensure_authorization
+from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.service_clients.kbase_auth import TokenInfo
 import os
 from unittest import mock
+
 # config_yaml = load_data_file("config1.toml")
 
 MOCK_KBASE_SERVICES_PORT = 9999
 MOCK_ORCID_API_PORT = 9997
 MOCK_ORCID_OAUTH_PORT = 9997
+
 
 @contextlib.contextmanager
 def mock_services():

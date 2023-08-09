@@ -103,19 +103,22 @@ def test_is_linked():
 
             client = TestClient(app)
             response = client.get(
-                "/link/is_linked", headers={"Authorization": generate_kbase_token("foo")}
+                "/link/is_linked",
+                headers={"Authorization": generate_kbase_token("foo")},
             )
             result = response.json()
             assert result is True
 
             response = client.get(
-                "/link/is_linked", headers={"Authorization": generate_kbase_token("bar")}
+                "/link/is_linked",
+                headers={"Authorization": generate_kbase_token("bar")},
             )
             result = response.json()
             assert result is False
 
             response = client.get(
-                "/link/is_linked", headers={"Authorization": generate_kbase_token("baz")}
+                "/link/is_linked",
+                headers={"Authorization": generate_kbase_token("baz")},
             )
             assert response.status_code == 401
 

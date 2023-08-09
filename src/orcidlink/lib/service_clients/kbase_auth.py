@@ -77,7 +77,7 @@ class KBaseAuth(object):
         # TODO: timeout needs to be configurable
         try:
             async with aiohttp.ClientSession() as session:
-                url =  f"{self.url}/api/V2/token"
+                url = f"{self.url}/api/V2/token"
                 async with session.get(
                     url, headers={"authorization": token}, timeout=10000
                 ) as response:
@@ -117,7 +117,8 @@ class KBaseAuth(object):
                     data=model.JSONDecodeErrorData(
                         # Note - we can't get response.status_code without a type error,
                         # TODO: figure out this nesting exceptions thing.
-                        status_code=0, error=str(ex)
+                        status_code=0,
+                        error=str(ex),
                     ),
                 ),
                 status_code=502,
@@ -157,7 +158,9 @@ class KBaseAuth(object):
 class KBaseAuthErrorInfo(ServiceBaseModel):
     code: int = Field(...)
     message: str = Field(...)
-    original_message: str = Field(validation_alias="original-message", serialization_alias="original-message")
+    original_message: str = Field(
+        validation_alias="original-message", serialization_alias="original-message"
+    )
 
 
 class KBaseAuthError(Exception):

@@ -38,6 +38,7 @@ TEST_ENV = {
     "ORCID_OAUTH_BASE_URL": "http://127.0.0.1:9997",
 }
 
+
 def test_kbase_auth_constructor_minimal():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         client = KBaseAuth(url="foo", timeout=1, cache_max_items=1, cache_lifetime=1)
@@ -47,11 +48,7 @@ def test_kbase_auth_constructor_minimal():
 async def test_kbase_auth_get_token_info():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services() as url:
-            client = KBaseAuth(
-                url=url, 
-                timeout=1, 
-                cache_max_items=3, 
-                cache_lifetime=3)
+            client = KBaseAuth(url=url, timeout=1, cache_max_items=3, cache_lifetime=3)
             assert client is not None
             client.cache.clear()
 

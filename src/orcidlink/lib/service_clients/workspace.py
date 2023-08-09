@@ -3,8 +3,15 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, Tuple
 
-import requests
+import aiohttp
 from pydantic import Field
+from orcidlink.lib.errors import (
+    INTERNAL_SERVER_ERROR,
+    JSON_DECODE_ERROR,
+    NOT_JSON,
+    ServiceErrorXX,
+)
+from orcidlink.lib.json_file import JSONLikeObject
 from orcidlink.lib.type import ServiceBaseModel
 
 
@@ -39,7 +46,7 @@ class JSONRPC11Service:
         self.timeout = timeout
         self.authorization = authorization
 
-    def call_func(self, func_name: str, params: Any) -> Any:
+    async def call_func(self, func_name: str, params: Any) -> Any:
         call_params = []
         if params is not None:
             call_params.append(params)
@@ -48,45 +55,104 @@ class JSONRPC11Service:
         if self.authorization is not None:
             headers["Authorization"] = self.authorization
 
+        rpc_call = {
+            "version": "1.1",
+            "id": str(uuid.uuid4()),
+            "method": f"{self.module}.{func_name}",
+            "params": call_params,
+        }
         try:
-            rpc_call = {
-                "version": "1.1",
-                "id": str(uuid.uuid4()),
-                "method": f"{self.module}.{func_name}",
-                "params": call_params,
-            }
-            response = requests.post(self.url, headers=headers, json=rpc_call)
-        # except OSError as ose:
-        #     raise Exception(f'Call to {func_name} failed: {str(ose)}')
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.url, headers=headers, json=rpc_call
+                ) as response:
+                    json_response = await response.json()
+                    if response.status != 200:
+                        return None, json_response.get("error")
+
+                    result = json_response.get("result")
+                    if result is None:
+                        return None, None
+                    return result[0], None
+
+        except aiohttp.ContentTypeError as cte:
+            # Raised if it is not application/json
+
+            data: JSONLikeObject = {}
+
+            if cte.headers is not None:
+                data["originalContentType"] = cte.headers["content-type"]
+
+            raise ServiceErrorXX(
+                NOT_JSON, f"Expected a JSON response", data=data
+            ) from cte
+
+            # raise ServiceError(
+            #     error=ErrorResponse[ServiceBaseModel](
+            #         code="badContentType",
+            #         title="Received Incorrect Content Type",
+            #         message="The auth service responded with wrong content type; expected application/json",
+            #         data=model.JSONDecodeErrorData(
+            #             status_code=cte.status, error=str(cte)
+            #         ),
+            #     ),
+            #     status_code=502,
+            # ) from cte
+        except json.JSONDecodeError as jde:
+            raise ServiceErrorXX(
+                JSON_DECODE_ERROR,
+                f"Expected a JSON response",
+                data={"decodeErrorMessage": str(jde)},
+            ) from jde
+            # Note that here we are raising the default exception for the
+            # httpx library in the case that a deep internal server error
+            # is thrown without an actual json response. In other words, the
+            # error is not a JSON-RPC error thrown by the auth2 service itself,
+            # but some truly internal server error.
+            # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
+            # are 500.
+            # raise ServiceError(
+            #     error=ErrorResponse[ServiceBaseModel](
+            #         code="jsonDecodeError",
+            #         title="Error Decoding Response",
+            #         message="The auth service responded with non-JSON content",
+            #         data=model.JSONDecodeErrorData(
+            #             # Note - we can't get response.status_code without a type error,
+            #             # TODO: figure out this nesting exceptions thing.
+            #             status_code=0, error=str(ex)
+            #         ),
+            #     ),
+            #     status_code=502,
+            # ) from ex
         except Exception as ex:
-            raise ServiceError(
-                message=f"Call to {func_name} failed with unknown exception",
-                status_code=0,
-                code=123,  ## TODO: determine error codes
-                original_message=str(ex),
-            )
-            # raise Exception(
-            #     f"Call to {func_name} failed with unknown exception: {str(ex)}"
-            # )
+            raise ServiceErrorXX(
+                INTERNAL_SERVER_ERROR,
+                f"Unexpected exception caught",
+                data={"exceptionMessage": str(ex)},
+            ) from ex
+            # print("EXCEPTION!!!!", str(ex), ex.__class__)
+            # raise ex
+        # except Exception as ex:
+        #     raise ServiceError(
+        #         message=f"Call to {func_name} failed with unknown exception",
+        #         status_code=0,
+        #         code=123,  ## TODO: determine error codes
+        #         original_message=str(ex),
+        #     )
+        #     # raise Exception(
+        #     #     f"Call to {func_name} failed with unknown exception: {str(ex)}"
+        #     # )
 
-        try:
-            rpc_response = response.json()
-        except json.JSONDecodeError as jsonde:
-            raise ServiceError(
-                message="Cannot parse response as JSON",
-                status_code=0,
-                code=123,  # TODO: make error code table???
-                original_message=str(jsonde),
-            )
-            # raise Exception(f"Did not receive proper json response: {str(jsonde)}")
-        if response.status_code != 200:
-            return None, rpc_response.get("error")
-
-        result = rpc_response.get("result")
-        if result is None:
-            return None
-
-        return result[0]
+        # try:
+        #     rpc_response = response.json()
+        # except json.JSONDecodeError as jsonde:
+        #     raise ServiceError(
+        #         message="Cannot parse response as JSON",
+        #         status_code=0,
+        #         code=123,  # TODO: make error code table???
+        #         original_message=str(jsonde),
+        #     )
+        # raise Exception(f"Did not receive proper json response: {str(jsonde)}")
 
 
 @dataclass
@@ -185,12 +251,12 @@ class WorkspaceService(JSONRPC11Service):
             url=url, module="Workspace", timeout=timeout, authorization=authorization
         )
 
-    def get_status(self) -> Any:
-        result, error = self.call_func("status", None)
+    async def get_status(self) -> Any:
+        result, error = await self.call_func("status", None)
         return result
 
-    def get_object_info(self, ref: str) -> ObjectInfo:
-        result, error = self.call_func(
+    async def get_object_info(self, ref: str) -> ObjectInfo:
+        result, error = await self.call_func(
             "get_object_info3",
             {"objects": [{"ref": ref}], "includeMetadata": 1, "ignoreErrors": 0},
         )
@@ -199,8 +265,8 @@ class WorkspaceService(JSONRPC11Service):
         object_info = result["infos"][0]
         return object_info_to_dict(object_info)
 
-    def get_workspace_info(self, workspace_id: int) -> WorkspaceInfo:
-        result, error = self.call_func("get_workspace_info", {"id": workspace_id})
+    async def get_workspace_info(self, workspace_id: int) -> WorkspaceInfo:
+        result, error = await self.call_func("get_workspace_info", {"id": workspace_id})
         if error is not None:
             raise ServiceError(
                 message="Error fetching workspace info",
@@ -211,8 +277,8 @@ class WorkspaceService(JSONRPC11Service):
             # raise Exception(f'Error fetching workspace info: {error.get("message")}')
         return workspace_info_to_dict(result)
 
-    def get_object(self, ref: str) -> Any:
-        result, error = self.call_func(
+    async def get_object(self, ref: str) -> Any:
+        result, error = await self.call_func(
             "get_objects2",
             {
                 "objects": [{"ref": ref}],
@@ -236,10 +302,10 @@ class WorkspaceService(JSONRPC11Service):
 
         return workspace_object
 
-    def can_access_object(self, ref: str) -> bool:
+    async def can_access_object(self, ref: str) -> bool:
         params = {"objects": [{"ref": ref}]}
         try:
-            self.call_func("get_object_info3", params)
+            await self.call_func("get_object_info3", params)
             return True
         except ServiceError as se:
             print(str(se))

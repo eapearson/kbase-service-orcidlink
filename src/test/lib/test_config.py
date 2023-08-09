@@ -18,6 +18,7 @@ TEST_ENV = {
     "FOO": "123",
 }
 
+
 def test_get_config():
     """
     Test all config properties with default behavior, if available.
@@ -30,7 +31,9 @@ def test_get_config():
         assert config.get_cache_max_items() == 20000
         assert config.get_request_timeout() == 60
         assert config.get_ui_origin() == "http://foo"
-        assert Config2.get_int_constant(IntConstantDefault(value=123, required=True, env_name="FOO"))
+        assert Config2.get_int_constant(
+            IntConstantDefault(value=123, required=True, env_name="FOO")
+        )
 
 
 TEST_ENV_BAD = {
@@ -38,6 +41,8 @@ TEST_ENV_BAD = {
     "MODULE_DIR": os.environ.get("MODULE_DIR"),
     "FOO": "123",
 }
+
+
 def test_get_config_bad_env():
     with mock.patch.dict(os.environ, TEST_ENV_BAD, clear=True):
         with pytest.raises(

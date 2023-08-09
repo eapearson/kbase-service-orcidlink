@@ -100,7 +100,9 @@ def error_response_not_found(message: str) -> JSONResponse:
 
 class ExceptionTraceback(ServiceBaseModel):
     filename: str = Field(...)
-    line_number: Optional[int] = Field(default=None, validation_alias="line-number", serialization_alias="line-number")
+    line_number: Optional[int] = Field(
+        default=None, validation_alias="line-number", serialization_alias="line-number"
+    )
     name: str = Field(...)
     line: Optional[str] = Field(default=None)
 
@@ -120,10 +122,7 @@ def exception_error_response(
     for tb in extract_tb(exception.__traceback__):
         traceback.append(
             ExceptionTraceback(
-                filename=tb.filename, 
-                line_number=tb.lineno, 
-                name=tb.name, 
-                line=tb.line
+                filename=tb.filename, line_number=tb.lineno, name=tb.name, line=tb.line
             )
         )
 

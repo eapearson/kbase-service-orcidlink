@@ -38,28 +38,6 @@
                 }
             }
         },
-        "/info": {
-            "get": {
-                "tags": [
-                    "misc"
-                ],
-                "summary": "Get Info",
-                "description": "Get Service Information\n\nReturns basic information about the service and its runtime configuration.",
-                "operationId": "get_info_info_get",
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/InfoResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/link": {
             "get": {
                 "tags": [
@@ -1021,7 +999,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Work"
+                                    "$ref": "#/components/schemas/WorkOutput"
                                 }
                             }
                         }
@@ -1156,7 +1134,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/ORCIDWorkGroup"
+                                        "$ref": "#/components/schemas/ORCIDWorkGroupInput"
                                     },
                                     "title": "Response 200 Get Works Orcid Works Get"
                                 }
@@ -1233,7 +1211,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Work"
+                                    "$ref": "#/components/schemas/WorkInput"
                                 }
                             }
                         }
@@ -1313,7 +1291,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Work"
+                                    "$ref": "#/components/schemas/WorkInput"
                                 }
                             }
                         }
@@ -1372,29 +1350,6 @@
     },
     "components": {
         "schemas": {
-            "Auth2Service": {
-                "properties": {
-                    "url": {
-                        "type": "string",
-                        "title": "Url"
-                    },
-                    "tokenCacheLifetime": {
-                        "type": "integer",
-                        "title": "Tokencachelifetime"
-                    },
-                    "tokenCacheMaxSize": {
-                        "type": "integer",
-                        "title": "Tokencachemaxsize"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "url",
-                    "tokenCacheLifetime",
-                    "tokenCacheMaxSize"
-                ],
-                "title": "Auth2Service"
-            },
             "CitationType": {
                 "type": "string",
                 "enum": [
@@ -1410,34 +1365,6 @@
                 ],
                 "title": "CitationType"
             },
-            "Config": {
-                "properties": {
-                    "services": {
-                        "$ref": "#/components/schemas/Services"
-                    },
-                    "ui": {
-                        "$ref": "#/components/schemas/UIConfig"
-                    },
-                    "orcid": {
-                        "$ref": "#/components/schemas/ORCIDConfig"
-                    },
-                    "mongo": {
-                        "$ref": "#/components/schemas/MongoConfig"
-                    },
-                    "module": {
-                        "$ref": "#/components/schemas/ModuleConfig"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "services",
-                    "ui",
-                    "orcid",
-                    "mongo",
-                    "module"
-                ],
-                "title": "Config"
-            },
             "ContributorRole": {
                 "properties": {
                     "role": {
@@ -1447,20 +1374,7 @@
                             }
                         ],
                         "title": "Role",
-                        "description": "The role performed by the collaborator or other contributor. ",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Interestingly this is called contributor-attributes in the orcid xsd",
-                            "The role itself is stored as a structure with a sequence (index) and the role itself.",
-                            "Note that this the available values consist of old and new ones.",
-                            "The new ones are all from credit.niso.org.",
-                            "Both are supported in their UI, but we should only support the new ones."
-                        ],
-                        "kbSourceName": "contributor-role",
-                        "kbSourceType": "work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The role performed by the collaborator or other contributor. "
                     }
                 },
                 "type": "object",
@@ -1589,16 +1503,7 @@
                     "url": {
                         "type": "string",
                         "title": "External Id URL",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "See notes for other usages of anyURL"
-                        ],
-                        "kbSourceName": "work:url -> common:url ",
-                        "kbSourceType": "common:url",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-                        "kbUpstreamType": "xs:anyURI",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#anyURI"
+                        "description": ""
                     },
                     "relationship": {
                         "allOf": [
@@ -1607,17 +1512,7 @@
                             }
                         ],
                         "title": "External Id Relationship",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Available values are located in common.xsd itself!",
-                            "along with a reference to a java class that applies 'other rules'see source ref url below"
-                        ],
-                        "kbSourceName": "relationship-type",
-                        "kbSourceType": "common:external-id:external-id-url -> common:relationship-type",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1010",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
+                        "description": ""
                     }
                 },
                 "type": "object",
@@ -1685,85 +1580,6 @@
                     "zbl"
                 ],
                 "title": "ExternalIdType"
-            },
-            "GitInfo": {
-                "properties": {
-                    "commit_hash": {
-                        "type": "string",
-                        "title": "Commit Hash"
-                    },
-                    "commit_hash_abbreviated": {
-                        "type": "string",
-                        "title": "Commit Hash Abbreviated"
-                    },
-                    "author_name": {
-                        "type": "string",
-                        "title": "Author Name"
-                    },
-                    "author_date": {
-                        "type": "integer",
-                        "title": "Author Date"
-                    },
-                    "committer_name": {
-                        "type": "string",
-                        "title": "Committer Name"
-                    },
-                    "committer_date": {
-                        "type": "integer",
-                        "title": "Committer Date"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "Url"
-                    },
-                    "branch": {
-                        "type": "string",
-                        "title": "Branch"
-                    },
-                    "tag": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Tag"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "commit_hash",
-                    "commit_hash_abbreviated",
-                    "author_name",
-                    "author_date",
-                    "committer_name",
-                    "committer_date",
-                    "url",
-                    "branch"
-                ],
-                "title": "GitInfo"
-            },
-            "InfoResponse": {
-                "properties": {
-                    "service-description": {
-                        "$ref": "#/components/schemas/ServiceDescription"
-                    },
-                    "config": {
-                        "$ref": "#/components/schemas/Config"
-                    },
-                    "git-info": {
-                        "$ref": "#/components/schemas/GitInfo"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "service-description",
-                    "config",
-                    "git-info"
-                ],
-                "title": "InfoResponse"
             },
             "LinkRecordPublic": {
                 "properties": {
@@ -1859,78 +1675,18 @@
                 ],
                 "title": "LinkingSessionCompletePublic"
             },
-            "ModuleConfig": {
-                "properties": {
-                    "serviceRequestTimeout": {
-                        "type": "integer",
-                        "title": "Servicerequesttimeout"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "serviceRequestTimeout"
-                ],
-                "title": "ModuleConfig"
-            },
-            "MongoConfig": {
-                "properties": {
-                    "host": {
-                        "type": "string",
-                        "title": "Host"
-                    },
-                    "port": {
-                        "type": "integer",
-                        "title": "Port"
-                    },
-                    "database": {
-                        "type": "string",
-                        "title": "Database"
-                    },
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "password": {
-                        "type": "string",
-                        "title": "Password"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "host",
-                    "port",
-                    "database",
-                    "username",
-                    "password"
-                ],
-                "title": "MongoConfig"
-            },
             "NewWork": {
                 "properties": {
                     "title": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Title",
-                        "description": "The main name or title of the work.",
-                        "kbComment": "",
-                        "kbSourceName": "work:work-title -> common:title",
-                        "kbSourceType": "common:string-1000",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L830",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
+                        "description": "The main name or title of the work."
                     },
                     "date": {
                         "type": "string",
                         "title": "Date",
-                        "description": "",
-                        "kbComment": "should probably rename to publication date; too ambiguous now, if simpler.",
-                        "kbNotes": [
-                            "Note that it is 'fuzzy' because it can be year, year/month, year/month/day",
-                            "Thus cannot be converted to a date, except in the year/month/day form "
-                        ],
-                        "kbSourceName": "work -> publication-date -> fuzzy-date, with subfields for date parts",
-                        "kbSourceType": "common:fuzzy-date",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L623",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "workType": {
                         "allOf": [
@@ -1939,46 +1695,17 @@
                             }
                         ],
                         "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "unfortunately although the linked docs note that there is an api resource providing",
-                            "the list of types, that url redirects to a documentation page, which includes",
-                            "that information splayed out into a table."
-                        ],
-                        "kbSourceName": "work:work-type",
-                        "kbSourceType": "work:work-type",
-                        "kbSourceTypeRef": "https://info.orcid.org/documentation/integration-and-api-faq/#easy-faq-2682",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The type of object that the work is, from a list of available types"
                     },
                     "url": {
                         "type": "string",
                         "title": "URL",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "from common.xsd: Represents a URL in the XML anyURI format",
-                            "weird, it looks like there are to entries for url in common.xsd.",
-                            "the upstream type is very broad, can include relative URLs, ",
-                            "IRIs (International RIs), etc."
-                        ],
-                        "kbSourceName": "work:url -> common:url ",
-                        "kbSourceType": "common:url",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-                        "kbUpstreamType": "xs:anyURI",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#anyURI"
+                        "description": ""
                     },
                     "doi": {
                         "type": "string",
                         "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative",
-                        "kbComment": "This is stored, ultimately, with the externalIds, but separated for simplification.",
-                        "kbSourceName": "",
-                        "kbSourceType": "",
-                        "kbSourceTypeRef": "",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
                     },
                     "externalIds": {
                         "items": {
@@ -1986,37 +1713,19 @@
                         },
                         "type": "array",
                         "title": "External Ids",
-                        "description": "",
-                        "kbComment": "",
-                        "kbSourceName": "work:external-ids -> common:external-ids",
-                        "kbSourceType": "common:external-ids",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1045",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "journal": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published.",
-                        "kbComment": "This is an ORCID 'non-empty-string' with a cap of 1000 characters applied",
-                        "kbSourceName": "",
-                        "kbSourceType": "work:journal-title -> common:string-1000 -> common:non-empty-string",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L753",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The title of the publication or group under which the work was published."
                     },
                     "shortDescription": {
                         "type": "string",
                         "maxLength": 5000,
                         "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item.",
-                        "kbComment": "This is an ORCID 'non-empty-string' with a cap of 5000 characters applied",
-                        "kbSourceName": "",
-                        "kbSourceType": "work:short-description -> common:short-description -> ",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L789",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "A short narrative (few sentences) describing the item."
                     },
                     "citation": {
                         "allOf": [
@@ -2025,56 +1734,24 @@
                             }
                         ],
                         "title": "Citation",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            ""
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:element-summary -> citation -> work:citation ",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L235",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "selfContributor": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf"
+                                "$ref": "#/components/schemas/ORCIDContributorSelfInput"
                             }
                         ],
                         "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "We have separated out the selfContributor in this structure to simplify",
-                            "implementation and apply different rules. E.g. the self contributor must",
-                            "have an ORCID Id (by definition!)",
-                            "Also note that this, like other fields that extend 'element-summary' gets a bunch",
-                            "of fields for free that we ignore - created, modified, source, put-code.",
-                            "ORCID itself will ignore many of these fields like put-code, and some are clearly",
-                            "only relevant for reading records from ORCID."
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The contribution container for the owner of this work record."
                     },
                     "otherContributors": {
                         "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor"
+                            "$ref": "#/components/schemas/ORCIDContributorInput"
                         },
                         "type": "array",
                         "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            ""
-                        ],
-                        "kbSourceType": "work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "Container for the contributors of a Work."
                     }
                 },
                 "type": "object",
@@ -2124,7 +1801,8 @@
                 "required": [
                     "name",
                     "role",
-                    "startYear"
+                    "startYear",
+                    "endYear"
                 ],
                 "title": "ORCIDAffiliation"
             },
@@ -2165,31 +1843,12 @@
                             }
                         ],
                         "title": "Type",
-                        "description": "The type (format) of the citation.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "The available values are cited in work.xsd itself"
-                        ],
-                        "kbSourceName": "citation-type",
-                        "kbSourceType": "work:citation -> citation-type -> work:citation-type",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L251",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The type (format) of the citation."
                     },
                     "value": {
                         "type": "string",
                         "title": "Value",
-                        "description": "Formatted citation text.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "A simple string with no constraints",
-                            "You would think it would be constrained to something large just for sanity "
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:citation -> citation-value",
-                        "kbSourceTypeRef": "",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "Formatted citation text."
                     }
                 },
                 "type": "object",
@@ -2199,35 +1858,7 @@
                 ],
                 "title": "ORCIDCitation"
             },
-            "ORCIDConfig": {
-                "properties": {
-                    "oauthBaseURL": {
-                        "type": "string",
-                        "title": "Oauthbaseurl"
-                    },
-                    "apiBaseURL": {
-                        "type": "string",
-                        "title": "Apibaseurl"
-                    },
-                    "clientId": {
-                        "type": "string",
-                        "title": "Clientid"
-                    },
-                    "clientSecret": {
-                        "type": "string",
-                        "title": "Clientsecret"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "oauthBaseURL",
-                    "apiBaseURL",
-                    "clientId",
-                    "clientSecret"
-                ],
-                "title": "ORCIDConfig"
-            },
-            "ORCIDContributor": {
+            "ORCIDContributorInput": {
                 "properties": {
                     "orcidId": {
                         "anyOf": [
@@ -2240,33 +1871,13 @@
                             }
                         ],
                         "title": "ORCID Id",
-                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Although we simplify to just the orcid id string, at ORCID it is implemented",
-                            "as a more complex object. I won't explain that, just follow the link below to ",
-                            "see it in all it's glory..."
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:contributor -> sequence of -> common:contributor-orcid -> common:orcid-id",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L421",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
                     },
                     "name": {
                         "type": "string",
                         "maxLength": 150,
                         "title": "Name",
-                        "description": "The name to use for the researcher or contributor when credited or cited",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "a string of maximum length 150."
-                        ],
-                        "kbSourceName": "credit-name",
-                        "kbSourceType": "work:contributor -> sequence of -> credit-name -> common:credit-name -> common:string-150",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L811",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The name to use for the researcher or contributor when credited or cited"
                     },
                     "roles": {
                         "items": {
@@ -2274,20 +1885,7 @@
                         },
                         "type": "array",
                         "title": "Roles",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Interestingly this is called contributor-attributes in the orcid xsd",
-                            "The role itself is stored as a structure with a sequence (index) and the role itself.",
-                            "Note that this the available values consist of old and new ones.",
-                            "The new ones are all from credit.niso.org.",
-                            "Both are supported in their UI, but we should only support the new ones."
-                        ],
-                        "kbSourceName": "contributor-role",
-                        "kbSourceType": "work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     }
                 },
                 "type": "object",
@@ -2298,39 +1896,26 @@
                 "title": "ORCIDContributor",
                 "description": "\n    Note that the orcidId is not required for the \"regular\" contributor.\n    The \"self contributor\" described below, does, require it.\n    "
             },
-            "ORCIDContributorSelf": {
+            "ORCIDContributorOutput": {
                 "properties": {
                     "orcidId": {
-                        "type": "string",
-                        "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
-                        "title": "ORCID Id",
-                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Although we simplify to just the orcid id string, at ORCID it is implemented",
-                            "as a more complex object. I won't explain that, just follow the link below to ",
-                            "see it in all it's glory..."
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$"
+                            },
+                            {
+                                "type": "null"
+                            }
                         ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:contributor -> sequence of -> common:contributor-orcid -> common:orcid-id",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L421",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "title": "ORCID Id",
+                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
                     },
                     "name": {
                         "type": "string",
                         "maxLength": 150,
                         "title": "Name",
-                        "description": "The name to use for the researcher or contributor when credited or cited",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "a string of maximum length 150."
-                        ],
-                        "kbSourceName": "credit-name",
-                        "kbSourceType": "work:contributor -> sequence of -> credit-name -> common:credit-name -> common:string-150",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L811",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The name to use for the researcher or contributor when credited or cited"
                     },
                     "roles": {
                         "items": {
@@ -2338,20 +1923,39 @@
                         },
                         "type": "array",
                         "title": "Roles",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Interestingly this is called contributor-attributes in the orcid xsd",
-                            "The role itself is stored as a structure with a sequence (index) and the role itself.",
-                            "Note that this the available values consist of old and new ones.",
-                            "The new ones are all from credit.niso.org.",
-                            "Both are supported in their UI, but we should only support the new ones."
-                        ],
-                        "kbSourceName": "contributor-role",
-                        "kbSourceType": "work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "orcidId",
+                    "name",
+                    "roles"
+                ],
+                "title": "ORCIDContributor",
+                "description": "\n    Note that the orcidId is not required for the \"regular\" contributor.\n    The \"self contributor\" described below, does, require it.\n    "
+            },
+            "ORCIDContributorSelfInput": {
+                "properties": {
+                    "orcidId": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
+                        "title": "ORCID Id",
+                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150,
+                        "title": "Name",
+                        "description": "The name to use for the researcher or contributor when credited or cited"
+                    },
+                    "roles": {
+                        "items": {
+                            "$ref": "#/components/schemas/ContributorRole"
+                        },
+                        "type": "array",
+                        "title": "Roles",
+                        "description": ""
                     }
                 },
                 "type": "object",
@@ -2362,18 +1966,36 @@
                 ],
                 "title": "ORCIDContributorSelf"
             },
-            "ORCIDLinkService": {
+            "ORCIDContributorSelfOutput": {
                 "properties": {
-                    "url": {
+                    "orcidId": {
                         "type": "string",
-                        "title": "Url"
+                        "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
+                        "title": "ORCID Id",
+                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150,
+                        "title": "Name",
+                        "description": "The name to use for the researcher or contributor when credited or cited"
+                    },
+                    "roles": {
+                        "items": {
+                            "$ref": "#/components/schemas/ContributorRole"
+                        },
+                        "type": "array",
+                        "title": "Roles",
+                        "description": ""
                     }
                 },
                 "type": "object",
                 "required": [
-                    "url"
+                    "orcidId",
+                    "name",
+                    "roles"
                 ],
-                "title": "ORCIDLinkService"
+                "title": "ORCIDContributorSelf"
             },
             "ORCIDProfile": {
                 "properties": {
@@ -2445,6 +2067,7 @@
                     "orcidId",
                     "firstName",
                     "lastName",
+                    "creditName",
                     "bio",
                     "distinctions",
                     "education",
@@ -2453,7 +2076,7 @@
                 ],
                 "title": "ORCIDProfile"
             },
-            "ORCIDWorkGroup": {
+            "ORCIDWorkGroupInput": {
                 "properties": {
                     "updatedAt": {
                         "type": "integer",
@@ -2468,7 +2091,36 @@
                     },
                     "works": {
                         "items": {
-                            "$ref": "#/components/schemas/WorkSummary"
+                            "$ref": "#/components/schemas/WorkSummaryInput"
+                        },
+                        "type": "array",
+                        "title": "Works"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "updatedAt",
+                    "externalIds",
+                    "works"
+                ],
+                "title": "ORCIDWorkGroup"
+            },
+            "ORCIDWorkGroupOutput": {
+                "properties": {
+                    "updatedAt": {
+                        "type": "integer",
+                        "title": "Updatedat"
+                    },
+                    "externalIds": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        },
+                        "type": "array",
+                        "title": "Externalids"
+                    },
+                    "works": {
+                        "items": {
+                            "$ref": "#/components/schemas/WorkSummaryOutput"
                         },
                         "type": "array",
                         "title": "Works"
@@ -2496,72 +2148,6 @@
                 "properties": {},
                 "type": "object",
                 "title": "ServiceBaseModel"
-            },
-            "ServiceDescription": {
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 2,
-                        "title": "Name"
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 100,
-                        "minLength": 5,
-                        "title": "Title"
-                    },
-                    "version": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 5,
-                        "title": "Version"
-                    },
-                    "language": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 1,
-                        "title": "Language"
-                    },
-                    "description": {
-                        "type": "string",
-                        "maxLength": 4000,
-                        "minLength": 50,
-                        "title": "Description"
-                    },
-                    "repoURL": {
-                        "type": "string",
-                        "maxLength": 100,
-                        "minLength": 15,
-                        "title": "Repourl"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "name",
-                    "title",
-                    "version",
-                    "language",
-                    "description",
-                    "repoURL"
-                ],
-                "title": "ServiceDescription"
-            },
-            "Services": {
-                "properties": {
-                    "Auth2": {
-                        "$ref": "#/components/schemas/Auth2Service"
-                    },
-                    "ORCIDLink": {
-                        "$ref": "#/components/schemas/ORCIDLinkService"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "Auth2",
-                    "ORCIDLink"
-                ],
-                "title": "Services"
             },
             "SimpleSuccess": {
                 "properties": {
@@ -2599,40 +2185,17 @@
                 ],
                 "title": "StatusResponse"
             },
-            "UIConfig": {
-                "properties": {
-                    "origin": {
-                        "type": "string",
-                        "title": "Origin"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "origin"
-                ],
-                "title": "UIConfig"
-            },
-            "Work": {
+            "WorkInput": {
                 "properties": {
                     "putCode": {
                         "type": "integer",
                         "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record.",
-                        "kbComment": "Note no upstream constraints, just integer",
-                        "kbSourceName": "put-code",
-                        "kbSourceType": "string",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L509"
+                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
                     },
                     "createdAt": {
                         "type": "integer",
                         "title": "Created At",
-                        "description": "Moment in time at which the work record was created; in epoch milliseconds.",
-                        "kbComments": "Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
-                        "kbSourceName": "created-date.value",
-                        "kbSourceType": "xs:dateTime",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
-                        "kbSourceUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#dateTime",
-                        "kbUnit": "ms"
+                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
                     },
                     "updatedAt": {
                         "anyOf": [
@@ -2644,46 +2207,23 @@
                             }
                         ],
                         "title": "Updated At",
-                        "description": "Moment in time at which the work record was updated; in epoch milliseconds.",
-                        "kbComments": "Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
-                        "kbSourceName": "last-modified-date.value",
-                        "kbSourceType": "xs:dateTime",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
-                        "kbSourceUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#dateTime",
-                        "kbUnit": "ms"
+                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
                     },
                     "source": {
                         "type": "string",
                         "title": "Source",
-                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod).",
-                        "kbComments": "Since we now only use work activity records created by KBase, we can probably drop this field.",
-                        "kbSourceName": "work -> source -> source-name -> value",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L107"
+                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
                     },
                     "title": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Title",
-                        "description": "The main name or title of the work.",
-                        "kbComment": "",
-                        "kbSourceName": "work:work-title -> common:title",
-                        "kbSourceType": "common:string-1000",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L830",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
+                        "description": "The main name or title of the work."
                     },
                     "date": {
                         "type": "string",
                         "title": "Date",
-                        "description": "",
-                        "kbComment": "should probably rename to publication date; too ambiguous now, if simpler.",
-                        "kbNotes": [
-                            "Note that it is 'fuzzy' because it can be year, year/month, year/month/day",
-                            "Thus cannot be converted to a date, except in the year/month/day form "
-                        ],
-                        "kbSourceName": "work -> publication-date -> fuzzy-date, with subfields for date parts",
-                        "kbSourceType": "common:fuzzy-date",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L623",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "workType": {
                         "allOf": [
@@ -2692,46 +2232,17 @@
                             }
                         ],
                         "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "unfortunately although the linked docs note that there is an api resource providing",
-                            "the list of types, that url redirects to a documentation page, which includes",
-                            "that information splayed out into a table."
-                        ],
-                        "kbSourceName": "work:work-type",
-                        "kbSourceType": "work:work-type",
-                        "kbSourceTypeRef": "https://info.orcid.org/documentation/integration-and-api-faq/#easy-faq-2682",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The type of object that the work is, from a list of available types"
                     },
                     "url": {
                         "type": "string",
                         "title": "URL",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "from common.xsd: Represents a URL in the XML anyURI format",
-                            "weird, it looks like there are to entries for url in common.xsd.",
-                            "the upstream type is very broad, can include relative URLs, ",
-                            "IRIs (International RIs), etc."
-                        ],
-                        "kbSourceName": "work:url -> common:url ",
-                        "kbSourceType": "common:url",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-                        "kbUpstreamType": "xs:anyURI",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#anyURI"
+                        "description": ""
                     },
                     "doi": {
                         "type": "string",
                         "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative",
-                        "kbComment": "This is stored, ultimately, with the externalIds, but separated for simplification.",
-                        "kbSourceName": "",
-                        "kbSourceType": "",
-                        "kbSourceTypeRef": "",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
                     },
                     "externalIds": {
                         "items": {
@@ -2739,37 +2250,19 @@
                         },
                         "type": "array",
                         "title": "External Ids",
-                        "description": "",
-                        "kbComment": "",
-                        "kbSourceName": "work:external-ids -> common:external-ids",
-                        "kbSourceType": "common:external-ids",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1045",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "journal": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published.",
-                        "kbComment": "This is an ORCID 'non-empty-string' with a cap of 1000 characters applied",
-                        "kbSourceName": "",
-                        "kbSourceType": "work:journal-title -> common:string-1000 -> common:non-empty-string",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L753",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The title of the publication or group under which the work was published."
                     },
                     "shortDescription": {
                         "type": "string",
                         "maxLength": 5000,
                         "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item.",
-                        "kbComment": "This is an ORCID 'non-empty-string' with a cap of 5000 characters applied",
-                        "kbSourceName": "",
-                        "kbSourceType": "work:short-description -> common:short-description -> ",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L789",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "A short narrative (few sentences) describing the item."
                     },
                     "citation": {
                         "allOf": [
@@ -2778,56 +2271,24 @@
                             }
                         ],
                         "title": "Citation",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            ""
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:element-summary -> citation -> work:citation ",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L235",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "selfContributor": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf"
+                                "$ref": "#/components/schemas/ORCIDContributorSelfInput"
                             }
                         ],
                         "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "We have separated out the selfContributor in this structure to simplify",
-                            "implementation and apply different rules. E.g. the self contributor must",
-                            "have an ORCID Id (by definition!)",
-                            "Also note that this, like other fields that extend 'element-summary' gets a bunch",
-                            "of fields for free that we ignore - created, modified, source, put-code.",
-                            "ORCID itself will ignore many of these fields like put-code, and some are clearly",
-                            "only relevant for reading records from ORCID."
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The contribution container for the owner of this work record."
                     },
                     "otherContributors": {
                         "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor"
+                            "$ref": "#/components/schemas/ORCIDContributorInput"
                         },
                         "type": "array",
                         "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            ""
-                        ],
-                        "kbSourceType": "work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "Container for the contributors of a Work."
                     }
                 },
                 "type": "object",
@@ -2849,27 +2310,17 @@
                 ],
                 "title": "Work"
             },
-            "WorkSummary": {
+            "WorkOutput": {
                 "properties": {
                     "putCode": {
                         "type": "integer",
                         "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record.",
-                        "kbComment": "Note no upstream constraints, just integer",
-                        "kbSourceName": "put-code",
-                        "kbSourceType": "string",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L509"
+                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
                     },
                     "createdAt": {
                         "type": "integer",
                         "title": "Created At",
-                        "description": "Moment in time at which the work record was created; in epoch milliseconds.",
-                        "kbComments": "Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
-                        "kbSourceName": "created-date.value",
-                        "kbSourceType": "xs:dateTime",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
-                        "kbSourceUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#dateTime",
-                        "kbUnit": "ms"
+                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
                     },
                     "updatedAt": {
                         "anyOf": [
@@ -2881,46 +2332,23 @@
                             }
                         ],
                         "title": "Updated At",
-                        "description": "Moment in time at which the work record was updated; in epoch milliseconds.",
-                        "kbComments": "Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
-                        "kbSourceName": "last-modified-date.value",
-                        "kbSourceType": "xs:dateTime",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
-                        "kbSourceUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#dateTime",
-                        "kbUnit": "ms"
+                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
                     },
                     "source": {
                         "type": "string",
                         "title": "Source",
-                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod).",
-                        "kbComments": "Since we now only use work activity records created by KBase, we can probably drop this field.",
-                        "kbSourceName": "work -> source -> source-name -> value",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L107"
+                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
                     },
                     "title": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Title",
-                        "description": "The main name or title of the work.",
-                        "kbComment": "",
-                        "kbSourceName": "work:work-title -> common:title",
-                        "kbSourceType": "common:string-1000",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L830",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
+                        "description": "The main name or title of the work."
                     },
                     "date": {
                         "type": "string",
                         "title": "Date",
-                        "description": "",
-                        "kbComment": "should probably rename to publication date; too ambiguous now, if simpler.",
-                        "kbNotes": [
-                            "Note that it is 'fuzzy' because it can be year, year/month, year/month/day",
-                            "Thus cannot be converted to a date, except in the year/month/day form "
-                        ],
-                        "kbSourceName": "work -> publication-date -> fuzzy-date, with subfields for date parts",
-                        "kbSourceType": "common:fuzzy-date",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L623",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "workType": {
                         "allOf": [
@@ -2929,46 +2357,17 @@
                             }
                         ],
                         "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "unfortunately although the linked docs note that there is an api resource providing",
-                            "the list of types, that url redirects to a documentation page, which includes",
-                            "that information splayed out into a table."
-                        ],
-                        "kbSourceName": "work:work-type",
-                        "kbSourceType": "work:work-type",
-                        "kbSourceTypeRef": "https://info.orcid.org/documentation/integration-and-api-faq/#easy-faq-2682",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The type of object that the work is, from a list of available types"
                     },
                     "url": {
                         "type": "string",
                         "title": "URL",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "from common.xsd: Represents a URL in the XML anyURI format",
-                            "weird, it looks like there are to entries for url in common.xsd.",
-                            "the upstream type is very broad, can include relative URLs, ",
-                            "IRIs (International RIs), etc."
-                        ],
-                        "kbSourceName": "work:url -> common:url ",
-                        "kbSourceType": "common:url",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-                        "kbUpstreamType": "xs:anyURI",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#anyURI"
+                        "description": ""
                     },
                     "doi": {
                         "type": "string",
                         "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative",
-                        "kbComment": "This is stored, ultimately, with the externalIds, but separated for simplification.",
-                        "kbSourceName": "",
-                        "kbSourceType": "",
-                        "kbSourceTypeRef": "",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
                     },
                     "externalIds": {
                         "items": {
@@ -2976,13 +2375,133 @@
                         },
                         "type": "array",
                         "title": "External Ids",
-                        "description": "",
-                        "kbComment": "",
-                        "kbSourceName": "work:external-ids -> common:external-ids",
-                        "kbSourceType": "common:external-ids",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1045",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
+                    },
+                    "journal": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "title": "Journal",
+                        "description": "The title of the publication or group under which the work was published."
+                    },
+                    "shortDescription": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "title": "Short Description",
+                        "description": "A short narrative (few sentences) describing the item."
+                    },
+                    "citation": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ORCIDCitation"
+                            }
+                        ],
+                        "title": "Citation",
+                        "description": ""
+                    },
+                    "selfContributor": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ORCIDContributorSelfOutput"
+                            }
+                        ],
+                        "title": "Self Contributor",
+                        "description": "The contribution container for the owner of this work record."
+                    },
+                    "otherContributors": {
+                        "items": {
+                            "$ref": "#/components/schemas/ORCIDContributorOutput"
+                        },
+                        "type": "array",
+                        "title": "Other Contributors",
+                        "description": "Container for the contributors of a Work."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "putCode",
+                    "createdAt",
+                    "updatedAt",
+                    "source",
+                    "title",
+                    "date",
+                    "workType",
+                    "url",
+                    "doi",
+                    "externalIds",
+                    "journal",
+                    "shortDescription",
+                    "citation",
+                    "selfContributor",
+                    "otherContributors"
+                ],
+                "title": "Work"
+            },
+            "WorkSummaryInput": {
+                "properties": {
+                    "putCode": {
+                        "type": "integer",
+                        "title": "Put Code",
+                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
+                    },
+                    "createdAt": {
+                        "type": "integer",
+                        "title": "Created At",
+                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
+                    },
+                    "updatedAt": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At",
+                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "Source",
+                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "title": "Title",
+                        "description": "The main name or title of the work."
+                    },
+                    "date": {
+                        "type": "string",
+                        "title": "Date",
+                        "description": ""
+                    },
+                    "workType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/WorkType"
+                            }
+                        ],
+                        "title": "Work Type",
+                        "description": "The type of object that the work is, from a list of available types"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "URL",
+                        "description": ""
+                    },
+                    "doi": {
+                        "type": "string",
+                        "title": "DOI",
+                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
+                    },
+                    "externalIds": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        },
+                        "type": "array",
+                        "title": "External Ids",
+                        "description": ""
                     },
                     "journal": {
                         "anyOf": [
@@ -3007,6 +2526,101 @@
                     "url",
                     "doi",
                     "externalIds"
+                ],
+                "title": "WorkSummary"
+            },
+            "WorkSummaryOutput": {
+                "properties": {
+                    "putCode": {
+                        "type": "integer",
+                        "title": "Put Code",
+                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
+                    },
+                    "createdAt": {
+                        "type": "integer",
+                        "title": "Created At",
+                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
+                    },
+                    "updatedAt": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At",
+                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "Source",
+                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "title": "Title",
+                        "description": "The main name or title of the work."
+                    },
+                    "date": {
+                        "type": "string",
+                        "title": "Date",
+                        "description": ""
+                    },
+                    "workType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/WorkType"
+                            }
+                        ],
+                        "title": "Work Type",
+                        "description": "The type of object that the work is, from a list of available types"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "URL",
+                        "description": ""
+                    },
+                    "doi": {
+                        "type": "string",
+                        "title": "DOI",
+                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
+                    },
+                    "externalIds": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExternalId"
+                        },
+                        "type": "array",
+                        "title": "External Ids",
+                        "description": ""
+                    },
+                    "journal": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Journal"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "putCode",
+                    "createdAt",
+                    "updatedAt",
+                    "source",
+                    "title",
+                    "date",
+                    "workType",
+                    "url",
+                    "doi",
+                    "externalIds",
+                    "journal"
                 ],
                 "title": "WorkSummary"
             },
@@ -3066,36 +2680,18 @@
                     "putCode": {
                         "type": "integer",
                         "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record.",
-                        "kbComment": "Note no upstream constraints, just integer",
-                        "kbSourceName": "put-code",
-                        "kbSourceType": "string",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L509"
+                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
                     },
                     "title": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Title",
-                        "description": "The main name or title of the work.",
-                        "kbComment": "",
-                        "kbSourceName": "work:work-title -> common:title",
-                        "kbSourceType": "common:string-1000",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L830",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
+                        "description": "The main name or title of the work."
                     },
                     "date": {
                         "type": "string",
                         "title": "Date",
-                        "description": "",
-                        "kbComment": "should probably rename to publication date; too ambiguous now, if simpler.",
-                        "kbNotes": [
-                            "Note that it is 'fuzzy' because it can be year, year/month, year/month/day",
-                            "Thus cannot be converted to a date, except in the year/month/day form "
-                        ],
-                        "kbSourceName": "work -> publication-date -> fuzzy-date, with subfields for date parts",
-                        "kbSourceType": "common:fuzzy-date",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L623",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "workType": {
                         "allOf": [
@@ -3104,46 +2700,17 @@
                             }
                         ],
                         "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "unfortunately although the linked docs note that there is an api resource providing",
-                            "the list of types, that url redirects to a documentation page, which includes",
-                            "that information splayed out into a table."
-                        ],
-                        "kbSourceName": "work:work-type",
-                        "kbSourceType": "work:work-type",
-                        "kbSourceTypeRef": "https://info.orcid.org/documentation/integration-and-api-faq/#easy-faq-2682",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The type of object that the work is, from a list of available types"
                     },
                     "url": {
                         "type": "string",
                         "title": "URL",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "from common.xsd: Represents a URL in the XML anyURI format",
-                            "weird, it looks like there are to entries for url in common.xsd.",
-                            "the upstream type is very broad, can include relative URLs, ",
-                            "IRIs (International RIs), etc."
-                        ],
-                        "kbSourceName": "work:url -> common:url ",
-                        "kbSourceType": "common:url",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-                        "kbUpstreamType": "xs:anyURI",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#anyURI"
+                        "description": ""
                     },
                     "doi": {
                         "type": "string",
                         "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative",
-                        "kbComment": "This is stored, ultimately, with the externalIds, but separated for simplification.",
-                        "kbSourceName": "",
-                        "kbSourceType": "",
-                        "kbSourceTypeRef": "",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
                     },
                     "externalIds": {
                         "items": {
@@ -3151,37 +2718,19 @@
                         },
                         "type": "array",
                         "title": "External Ids",
-                        "description": "",
-                        "kbComment": "",
-                        "kbSourceName": "work:external-ids -> common:external-ids",
-                        "kbSourceType": "common:external-ids",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1045",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "journal": {
                         "type": "string",
                         "maxLength": 1000,
                         "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published.",
-                        "kbComment": "This is an ORCID 'non-empty-string' with a cap of 1000 characters applied",
-                        "kbSourceName": "",
-                        "kbSourceType": "work:journal-title -> common:string-1000 -> common:non-empty-string",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L753",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The title of the publication or group under which the work was published."
                     },
                     "shortDescription": {
                         "type": "string",
                         "maxLength": 5000,
                         "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item.",
-                        "kbComment": "This is an ORCID 'non-empty-string' with a cap of 5000 characters applied",
-                        "kbSourceName": "",
-                        "kbSourceType": "work:short-description -> common:short-description -> ",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L789",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": ""
+                        "description": "A short narrative (few sentences) describing the item."
                     },
                     "citation": {
                         "allOf": [
@@ -3190,56 +2739,24 @@
                             }
                         ],
                         "title": "Citation",
-                        "description": "",
-                        "kbComment": "",
-                        "kbNotes": [
-                            ""
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:element-summary -> citation -> work:citation ",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L235",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": ""
                     },
                     "selfContributor": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf"
+                                "$ref": "#/components/schemas/ORCIDContributorSelfInput"
                             }
                         ],
                         "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "We have separated out the selfContributor in this structure to simplify",
-                            "implementation and apply different rules. E.g. the self contributor must",
-                            "have an ORCID Id (by definition!)",
-                            "Also note that this, like other fields that extend 'element-summary' gets a bunch",
-                            "of fields for free that we ignore - created, modified, source, put-code.",
-                            "ORCID itself will ignore many of these fields like put-code, and some are clearly",
-                            "only relevant for reading records from ORCID."
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "The contribution container for the owner of this work record."
                     },
                     "otherContributors": {
                         "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor"
+                            "$ref": "#/components/schemas/ORCIDContributorInput"
                         },
                         "type": "array",
                         "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work.",
-                        "kbComment": "",
-                        "kbNotes": [
-                            ""
-                        ],
-                        "kbSourceType": "work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-                        "kbSourceTypeRef": "https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-                        "kbUpstreamType": "",
-                        "kbUpstreamTypeRef": ""
+                        "description": "Container for the contributors of a Work."
                     }
                 },
                 "type": "object",

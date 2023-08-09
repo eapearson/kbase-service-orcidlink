@@ -16,7 +16,7 @@ from orcidlink.lib.responses import (
     success_response_no_data,
 )
 from orcidlink.lib.service_clients import orcid_api
-from orcidlink.service_clients.auth import ensure_authorization, get_username
+from orcidlink.lib.auth import ensure_authorization, get_username
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
 from orcidlink.translators.to_orcid import (

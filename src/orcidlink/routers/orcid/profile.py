@@ -7,7 +7,7 @@ from orcidlink.lib.responses import (
 )
 from orcidlink.model import ORCIDProfile
 from orcidlink.lib.service_clients import orcid_api
-from orcidlink.service_clients.auth import ensure_authorization
+from orcidlink.lib.auth import ensure_authorization
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_service
 from starlette.responses import JSONResponse

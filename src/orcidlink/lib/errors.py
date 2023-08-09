@@ -5,6 +5,8 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
+from orcidlink.lib.json_file import JSONLikeObject
+
 
 @dataclass
 class ErrorCode:
@@ -73,6 +75,19 @@ FASTAPI_ERROR = ErrorCode(
     status_code=500,
 )
 
+NOT_JSON = ErrorCode(
+    code="badContentType",
+    title="Received Incorrect Content Type",
+    description="Expected application/json for a json response",
+    status_code=502,
+)
+
+JSON_DECODE_ERROR = ErrorCode(
+    code="jsonDecodeError",
+    title="Error Decoding Response",
+    description="An error was encountered parsing, or decoding, the JSON response string",
+    status_code=502,
+)
 
 #
 #
@@ -149,23 +164,28 @@ class ServiceErrorXX(Exception):
     error_code: ErrorCode
 
     def __init__(
-        self,
-        error_code: ErrorCode,
-        message: str,
+        self, error_code: ErrorCode, message: str, data: JSONLikeObject | None = None
     ):
         super().__init__(message)
         self.message = message
         self.error_code = error_code
+        self.data = data
 
     def get_response(self) -> JSONResponse:
         content = asdict(self.error_code)
+        # We always supply this data
+        data = {
+            "description": self.error_code.description,
+            "status_code": self.error_code.status_code,
+        }
+        # Add more data ...
+        if self.data is not None:
+            data.update(self.data)
+
         content = {
             "message": self.message,
             "code": self.error_code.code,
-            "data": {
-                "description": self.error_code.description,
-                "status_code": self.error_code.status_code,
-            },
+            "data": data,
         }
         content["message"] = self.message
         return JSONResponse(status_code=self.error_code.status_code, content=content)
@@ -239,3 +259,18 @@ class InternalError(ServiceErrorX):
 class UpstreamError(ServiceErrorX):
     def __init__(self, message: str, data: Any = None):
         super().__init__("upstreamError", "Upstream Error", message, data, 502)
+
+
+# Standard JSON-RPC 2.0 errors
+
+# See: https://www.jsonrpc.org/specification#error_object
+PARSE_ERROR = -32700
+INVALID_REQUEST = -32600
+METHOD_NOT_FOUND = -32601
+INVALID_PARAMS = -32602
+INTERNAL_ERROR = -32603
+SERVER_ERROR_MIN = -32000
+SERVER_ERROR_MAX = -32099
+
+# Our own errors.
+# TODO

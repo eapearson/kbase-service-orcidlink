@@ -132,7 +132,7 @@ class Config2:
 
     def get_workspace_url(self) -> str:
         return self.get_service_url(SERVICE_DEFAULTS.workspace)
-    
+
     def get_orcid_link_url(self) -> str:
         return self.get_service_url(SERVICE_DEFAULTS.orcid_link)
 

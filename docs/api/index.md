@@ -79,24 +79,6 @@ i/o or other high-latency calls), or for time synchronization (as it returns the
 
 
 ---
-<a name="header_get-/info"></a>
-#### GET /info
-Get Service Information
-
-Returns basic information about the service and its runtime configuration.
-
-
-<a name="header_input"></a>
-#### Input
-*none*
-
-
-<a name="header_output"></a>
-#### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_inforesponse">InfoResponse</a></td></tr></tbody></table>
-
-
----
 <a name="header_get-/docs"></a>
 #### GET /docs
 Get API Documentation
@@ -382,7 +364,7 @@ Fetch the work record, identified by `put_code`, for the user associated with th
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_work">Work</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_workoutput">WorkOutput</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -430,7 +412,7 @@ Update a work record; the `work_update` contains the `put code`.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_work">Work</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_workinput">WorkInput</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -446,7 +428,7 @@ n/a
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Work record successfully created</td><td><a href="#user-content-header_type_work">Work</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Not found</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Work record successfully created</td><td><a href="#user-content-header_type_workinput">WorkInput</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Not found</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -459,24 +441,10 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 > TODO: a better presentation of related types
 
-<a name="header_type_auth2service"></a>
-##### Auth2Service
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>tokenCacheLifetime</td><td>integer</td><td>✓</td></tr><tr><td>tokenCacheMaxSize</td><td>integer</td><td>✓</td></tr></tbody></table>
-
-
-
 <a name="header_type_citationtype"></a>
 ##### CitationType
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
-
-
-
-<a name="header_type_config"></a>
-##### Config
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>services</td><td><a href="#user-content-header_type_services">Services</a></td><td>✓</td></tr><tr><td>ui</td><td><a href="#user-content-header_type_uiconfig">UIConfig</a></td><td>✓</td></tr><tr><td>orcid</td><td><a href="#user-content-header_type_orcidconfig">ORCIDConfig</a></td><td>✓</td></tr><tr><td>mongo</td><td><a href="#user-content-header_type_mongoconfig">MongoConfig</a></td><td>✓</td></tr><tr><td>module</td><td><a href="#user-content-header_type_moduleconfig">ModuleConfig</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -528,20 +496,6 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
-<a name="header_type_gitinfo"></a>
-##### GitInfo
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>commit_hash</td><td>string</td><td>✓</td></tr><tr><td>commit_hash_abbreviated</td><td>string</td><td>✓</td></tr><tr><td>author_name</td><td>string</td><td>✓</td></tr><tr><td>author_date</td><td>integer</td><td>✓</td></tr><tr><td>committer_name</td><td>string</td><td>✓</td></tr><tr><td>committer_date</td><td>integer</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>branch</td><td>string</td><td>✓</td></tr><tr><td>tag</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
-
-
-
-<a name="header_type_inforesponse"></a>
-##### InfoResponse
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>service-description</td><td><a href="#user-content-header_type_servicedescription">ServiceDescription</a></td><td>✓</td></tr><tr><td>config</td><td><a href="#user-content-header_type_config">Config</a></td><td>✓</td></tr><tr><td>git-info</td><td><a href="#user-content-header_type_gitinfo">GitInfo</a></td><td>✓</td></tr></tbody></table>
-
-
-
 <a name="header_type_linkrecordpublic"></a>
 ##### LinkRecordPublic
 
@@ -563,33 +517,19 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
-<a name="header_type_moduleconfig"></a>
-##### ModuleConfig
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>serviceRequestTimeout</td><td>integer</td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_mongoconfig"></a>
-##### MongoConfig
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>host</td><td>string</td><td>✓</td></tr><tr><td>port</td><td>integer</td><td>✓</td></tr><tr><td>database</td><td>string</td><td>✓</td></tr><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>password</td><td>string</td><td>✓</td></tr></tbody></table>
-
-
-
 <a name="header_type_newwork"></a>
 ##### NewWork
 
     Represents a work record that is going to be added to ORCID.
     
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorself">ORCIDContributorSelf</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfinput">ORCIDContributorSelfInput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
 <a name="header_type_orcidaffiliation"></a>
 ##### ORCIDAffiliation
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>role</td><td>string</td><td>✓</td></tr><tr><td>startYear</td><td>string</td><td>✓</td></tr><tr><td>endYear</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>role</td><td>string</td><td>✓</td></tr><tr><td>startYear</td><td>string</td><td>✓</td></tr><tr><td>endYear</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -607,15 +547,8 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
-<a name="header_type_orcidconfig"></a>
-##### ORCIDConfig
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>oauthBaseURL</td><td>string</td><td>✓</td></tr><tr><td>apiBaseURL</td><td>string</td><td>✓</td></tr><tr><td>clientId</td><td>string</td><td>✓</td></tr><tr><td>clientSecret</td><td>string</td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_orcidcontributor"></a>
-##### ORCIDContributor
+<a name="header_type_orcidcontributorinput"></a>
+##### ORCIDContributorInput
 
     Note that the orcidId is not required for the "regular" contributor.
     The "self contributor" described below, does, require it.
@@ -624,29 +557,46 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
-<a name="header_type_orcidcontributorself"></a>
-##### ORCIDContributorSelf
+<a name="header_type_orcidcontributoroutput"></a>
+##### ORCIDContributorOutput
+
+    Note that the orcidId is not required for the "regular" contributor.
+    The "self contributor" described below, does, require it.
+    
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>roles</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidcontributorselfinput"></a>
+##### ORCIDContributorSelfInput
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>roles</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
-<a name="header_type_orcidlinkservice"></a>
-##### ORCIDLinkService
+<a name="header_type_orcidcontributorselfoutput"></a>
+##### ORCIDContributorSelfOutput
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>url</td><td>string</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>roles</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
 <a name="header_type_orcidprofile"></a>
 ##### ORCIDProfile
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>firstName</td><td>string</td><td>✓</td></tr><tr><td>lastName</td><td>string</td><td>✓</td></tr><tr><td>creditName</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr><tr><td>bio</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>distinctions</td><td>array</td><td>✓</td></tr><tr><td>education</td><td>array</td><td>✓</td></tr><tr><td>employment</td><td>array</td><td>✓</td></tr><tr><td>emailAddresses</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>firstName</td><td>string</td><td>✓</td></tr><tr><td>lastName</td><td>string</td><td>✓</td></tr><tr><td>creditName</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>bio</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>distinctions</td><td>array</td><td>✓</td></tr><tr><td>education</td><td>array</td><td>✓</td></tr><tr><td>employment</td><td>array</td><td>✓</td></tr><tr><td>emailAddresses</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
-<a name="header_type_orcidworkgroup"></a>
-##### ORCIDWorkGroup
+<a name="header_type_orcidworkgroupinput"></a>
+##### ORCIDWorkGroupInput
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>works</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidworkgroupoutput"></a>
+##### ORCIDWorkGroupOutput
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>updatedAt</td><td>integer</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>works</td><td>array</td><td>✓</td></tr></tbody></table>
 
@@ -666,20 +616,6 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
-<a name="header_type_servicedescription"></a>
-##### ServiceDescription
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>version</td><td>string</td><td>✓</td></tr><tr><td>language</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr><tr><td>repoURL</td><td>string</td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_services"></a>
-##### Services
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>Auth2</td><td><a href="#user-content-header_type_auth2service">Auth2Service</a></td><td>✓</td></tr><tr><td>ORCIDLink</td><td><a href="#user-content-header_type_orcidlinkservice">ORCIDLinkService</a></td><td>✓</td></tr></tbody></table>
-
-
-
 <a name="header_type_simplesuccess"></a>
 ##### SimpleSuccess
 
@@ -694,24 +630,31 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
-<a name="header_type_uiconfig"></a>
-##### UIConfig
+<a name="header_type_workinput"></a>
+##### WorkInput
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>origin</td><td>string</td><td>✓</td></tr></tbody></table>
-
-
-
-<a name="header_type_work"></a>
-##### Work
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorself">ORCIDContributorSelf</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfinput">ORCIDContributorSelfInput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
-<a name="header_type_worksummary"></a>
-##### WorkSummary
+<a name="header_type_workoutput"></a>
+##### WorkOutput
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfoutput">ORCIDContributorSelfOutput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_worksummaryinput"></a>
+##### WorkSummaryInput
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
+
+
+
+<a name="header_type_worksummaryoutput"></a>
+##### WorkSummaryOutput
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -728,7 +671,7 @@ alphabetically, which is fine for looking them up, but not for their relationshi
     Represents a work record which has been fetched from ORCID, modified,
     and can be sent back to update the ORCID work record
     
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorself">ORCIDContributorSelf</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfinput">ORCIDContributorSelfInput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 

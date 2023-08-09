@@ -36,7 +36,7 @@ from orcidlink.model import (
     LinkRecordPublic,
     ORCIDAuthPublic,
 )
-from orcidlink.service_clients.auth import ensure_authorization
+from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 
@@ -83,12 +83,6 @@ async def get_link(
 
     if link_record is None:
         raise errors.NotFoundError("No link record was found for this user")
-        # return error_response(
-        #     "notFound",
-        #     "Not Linked",
-        #     "No link record was found for this user",
-        #     status_code=404,
-        # )
 
     return LinkRecordPublic(
         username=link_record.username,

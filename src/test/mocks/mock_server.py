@@ -5,7 +5,7 @@ import time
 from urllib.parse import parse_qs
 from socket import socket
 
-from orcidlink.service_clients.error import INVALID_PARAMS, METHOD_NOT_FOUND
+from orcidlink.lib.errors import INVALID_PARAMS, METHOD_NOT_FOUND
 
 
 class MockService(http.server.BaseHTTPRequestHandler):
@@ -42,7 +42,7 @@ class MockService(http.server.BaseHTTPRequestHandler):
         cls.total_call_count = {"success": 0, "error": 0}
         cls.method_call_counts = {}
 
-    def send(self, status_code: int, header: dict[str, str], data: str|None = None):
+    def send(self, status_code: int, header: dict[str, str], data: str | None = None):
         self.send_response(status_code)
         for key, value in header.items():
             self.send_header(key, value)
@@ -137,7 +137,7 @@ class MockServer:
             # We bind to "" which means all interfaces, and port 0
             # which means to just pick an available one.
             s.bind(("", 0))
-            self.port = port # s.getsockname()[1]
+            self.port = port  # s.getsockname()[1]
 
     def base_url(self):
         """
@@ -344,8 +344,8 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
                     result = error
                 else:
                     if params is None:
-                        raise ValueError('Params is None')
-                    sleep_for = params.get('for')
+                        raise ValueError("Params is None")
+                    sleep_for = params.get("for")
                     if sleep_for is None:
                         raise ValueError('Missing "for" parameter')
                     time.sleep(sleep_for)

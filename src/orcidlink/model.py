@@ -144,36 +144,36 @@ class ExternalId(ServiceBaseModel):
         description="The type of an external identifier",
         # custom
         json_schema_extra={
-            'kbComment': "",
-            'kbNotes': [
+            "kbComment": "",
+            "kbNotes": [
                 "Supported external-id-type values can be found at https://pub.orcid.org/v2.0/identifiers",
                 "Note that the above is an html table, although the page is simple, unstyled.",
                 "From common.xsd: Must contain one or more charaters that are not a space, carriage return or linefeed",
                 "Uses this regex as a rule to ensure this:  ",
                 r"[\s\S]*[^\s\n\r]+[\s\S]*",
             ],
-            'kbSourceName':"",
-            'kbSourceType':"common:non-empty-string",
-            'kbSourceTypeRef':"",
-            'kbSourceValues':"https://pub.orcid.org/v2.0/identifiers",
-            'kbUpstreamType':"xs:string",
-            'kbUpstreamTypeRef':"https://www.w3.org/TR/xmlschema11-2/#string",
-        }
+            "kbSourceName": "",
+            "kbSourceType": "common:non-empty-string",
+            "kbSourceTypeRef": "",
+            "kbSourceValues": "https://pub.orcid.org/v2.0/identifiers",
+            "kbUpstreamType": "xs:string",
+            "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string",
+        },
     )
     value: str = Field(
         title="External Id Value",
         description="The value of an external identifier",
         # custom
-         json_schema_extra={
-            'kbComment':"",
-            'kbNotes':["Same generic 'non-empty-string' as above."],
-            'kbSourceName':"",
-            'kbSourceType':"common:non-empty-string",
-            'kbSourceTypeRef':"",
-            'kbSourceValues':"https://pub.orcid.org/v2.0/identifiers",
-            'kbUpstreamType':"xs:string",
-            'kbUpstreamTypeRef':"https://www.w3.org/TR/xmlschema11-2/#string",
-         }
+        json_schema_extra={
+            "kbComment": "",
+            "kbNotes": ["Same generic 'non-empty-string' as above."],
+            "kbSourceName": "",
+            "kbSourceType": "common:non-empty-string",
+            "kbSourceTypeRef": "",
+            "kbSourceValues": "https://pub.orcid.org/v2.0/identifiers",
+            "kbUpstreamType": "xs:string",
+            "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string",
+        },
     )
     # Note that we skip ext external-id-normalized and external-id-normalized-error as there is nothing we can
     # clearly do with them. Actually, it is the type "transient-non-empty-string" meaning that it is populated
@@ -862,7 +862,9 @@ class ORCIDProfile(ServiceBaseModel):
 
 
 class JSONDecodeErrorData(ServiceBaseModel):
-    status_code: int = Field(serialization_alias="status-code", validation_alias="status-code")
+    status_code: int = Field(
+        serialization_alias="status-code", validation_alias="status-code"
+    )
     error: str = Field(...)
 
 

@@ -340,9 +340,7 @@ def migrate_db():
 
 def main():
     log_level(logging.DEBUG)
-    log_event(
-        "initialization-start", {"message": "initializing orcidlink service"}
-    )
+    log_event("initialization-start", {"message": "initializing orcidlink service"})
 
     result = check_db_connection()
     log_event("initialization-check-connection", result)

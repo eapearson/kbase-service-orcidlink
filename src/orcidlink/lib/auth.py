@@ -1,8 +1,16 @@
 from typing import Tuple
 
 from orcidlink.lib.config import Config2
-from orcidlink.lib.errors import TOKEN_REQUIRED_BUT_MISSING, INVALID_TOKEN, ServiceErrorXX
-from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, KBaseAuthInvalidToken, TokenInfo
+from orcidlink.lib.errors import (
+    TOKEN_REQUIRED_BUT_MISSING,
+    INVALID_TOKEN,
+    ServiceErrorXX,
+)
+from orcidlink.lib.service_clients.kbase_auth import (
+    KBaseAuth,
+    KBaseAuthInvalidToken,
+    TokenInfo,
+)
 
 """
 A 
@@ -33,13 +41,13 @@ async def ensure_authorization(
 ) -> Tuple[str, TokenInfo]:
     """
     Ensures that the "authorization" value, the KBase auth token, is
-    not none. This is a convenience function for endpoints, whose sole
-    purpose is to ensure that the provided token is good and valid.
+    not none. This is a convenience function for endpoints, and provides consistent
+    error handling. Its sole purpose is to ensure that the provided token is good and valid.
     """
     if authorization is None or authorization == "":
-        # TODO: Better exception
-        # raise Exception("Authorization required")
-        raise ServiceErrorXX(TOKEN_REQUIRED_BUT_MISSING, "Authorization required but missing")
+        raise ServiceErrorXX(
+            TOKEN_REQUIRED_BUT_MISSING, "Authorization required but missing"
+        )
 
     config = Config2()
     auth = KBaseAuth(
@@ -52,6 +60,7 @@ async def ensure_authorization(
         token_info = await auth.get_token_info(authorization)
         return authorization, token_info
     except KBaseAuthInvalidToken as auth_error:
+        print("HERE???", str(auth_error))
         raise ServiceErrorXX(INVALID_TOKEN, "Authorization presented, but is invalid")
 
 
