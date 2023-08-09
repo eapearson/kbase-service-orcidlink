@@ -3,7 +3,6 @@
 #
 # Render the config file from environment variables.
 #
-scripts/render-config.sh
 exit_code=$?
 if [ $exit_code != 0 ]; then
   echo "Error ${exit_code} encountered rendering the service configuration, NOT STARTING SERVER"
