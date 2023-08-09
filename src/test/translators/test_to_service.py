@@ -3,8 +3,8 @@ from test.mocks.data import load_test_data
 import pytest
 
 from orcidlink import model
-from orcidlink.service_clients import orcid_api
-from orcidlink.service_clients.orcid_api import ExternalId, ExternalIds, StringValue
+from orcidlink.lib.service_clients import orcid_api
+from orcidlink.lib.service_clients.orcid_api import ExternalId, ExternalIds, StringValue
 from orcidlink.translators import to_service
 
 # TODO: should rename file to test_orcid.py, but need a test config tweak, because it gets confused

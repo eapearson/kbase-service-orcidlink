@@ -8,14 +8,14 @@ from starlette.responses import Response
 
 from orcidlink import model
 from orcidlink.lib import errors
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     AUTHORIZATION_HEADER,
     STD_RESPONSES,
     success_response_no_data,
 )
-from orcidlink.service_clients import orcid_api
+from orcidlink.lib.service_clients import orcid_api
 from orcidlink.service_clients.auth import ensure_authorization, get_username
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
@@ -345,7 +345,7 @@ async def create_work(
 
     # TODO: propagate everywhere. Or, perhaps better,
     # wrap this common use case into a function or class.
-    timeout = config().module.serviceRequestTimeout / 1000
+    timeout = Config2().get_request_timeout()
     try:
         async with aiohttp.ClientSession(raise_for_status=True) as session:
             async with session.post(

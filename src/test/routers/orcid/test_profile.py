@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from orcidlink import model
 from orcidlink.lib import utils
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.main import app
 from orcidlink.storage import storage_model
 from test.mocks.data import load_data_file, load_data_json
@@ -14,15 +14,18 @@ from test.mocks.mock_contexts import (
     no_stderr,
 )
 from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
+import os
+from unittest import mock
 
 client = TestClient(app)
 
-config_yaml = load_data_file("config1.toml")
+# config_yaml = load_data_file("config1.toml")
+
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
+    # fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
@@ -33,16 +36,14 @@ TEST_LINK = load_data_json("link2.json")
 @contextlib.contextmanager
 def mock_services():
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_api_service():
+        with mock_auth_service(9999):
+            with mock_orcid_api_service(9998):
                 yield
 
 
 @pytest.fixture(autouse=True)
 def around_tests(fake_fs):
-    config(True)
     yield
-
 
 def create_link():
     sm = storage_model.storage_model()
@@ -93,6 +94,19 @@ def create_link():
 #         server.stop_service()
 
 
+TEST_ENV = {
+    "KBASE_ENDPOINT": f"http://foo/services/",
+    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "MONGO_HOST": "mongo",
+    "MONGO_PORT": "27017",
+    "MONGO_DATABASE": "orcidlink",
+    "MONGO_USERNAME": "dev",
+    "MONGO_PASSWORD": "d3v",
+    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",    
+    "ORCID_OAUTH_BASE_URL": ""
+}
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_profile(fake_fs):
     with mock_services():
         create_link()
@@ -102,6 +116,8 @@ def test_get_profile(fake_fs):
         assert response.status_code == 200
 
 
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_profile_not_found(fake_fs):
     with mock_services():
         response = TestClient(app).get(

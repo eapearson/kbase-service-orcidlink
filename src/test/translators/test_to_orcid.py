@@ -1,6 +1,6 @@
 import pytest
 from orcidlink import model
-from orcidlink.service_clients import orcid_api
+from orcidlink.lib.service_clients import orcid_api
 from orcidlink.translators import to_orcid
 
 

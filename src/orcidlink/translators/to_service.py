@@ -10,7 +10,7 @@ from orcidlink.model import (
     RelationshipType,
     WorkType,
 )
-from orcidlink.service_clients import orcid_api
+from orcidlink.lib.service_clients import orcid_api
 
 
 def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
@@ -336,8 +336,6 @@ def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
         creditName = profile_raw.person.name.credit_name.value
     else:
         creditName = None
-
-    print("BIO?", profile_raw.person)
 
     bio = None
     if profile_raw.person.biography is not None:

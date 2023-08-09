@@ -143,33 +143,37 @@ class ExternalId(ServiceBaseModel):
         title="External Id Type",
         description="The type of an external identifier",
         # custom
-        kbComment="",
-        kbNotes=[
-            "Supported external-id-type values can be found at https://pub.orcid.org/v2.0/identifiers",
-            "Note that the above is an html table, although the page is simple, unstyled.",
-            "From common.xsd: Must contain one or more charaters that are not a space, carriage return or linefeed",
-            "Uses this regex as a rule to ensure this:  ",
-            r"[\s\S]*[^\s\n\r]+[\s\S]*",
-        ],
-        kbSourceName="",
-        kbSourceType="common:non-empty-string",
-        kbSourceTypeRef="",
-        kbSourceValues="https://pub.orcid.org/v2.0/identifiers",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#string",
+        json_schema_extra={
+            'kbComment': "",
+            'kbNotes': [
+                "Supported external-id-type values can be found at https://pub.orcid.org/v2.0/identifiers",
+                "Note that the above is an html table, although the page is simple, unstyled.",
+                "From common.xsd: Must contain one or more charaters that are not a space, carriage return or linefeed",
+                "Uses this regex as a rule to ensure this:  ",
+                r"[\s\S]*[^\s\n\r]+[\s\S]*",
+            ],
+            'kbSourceName':"",
+            'kbSourceType':"common:non-empty-string",
+            'kbSourceTypeRef':"",
+            'kbSourceValues':"https://pub.orcid.org/v2.0/identifiers",
+            'kbUpstreamType':"xs:string",
+            'kbUpstreamTypeRef':"https://www.w3.org/TR/xmlschema11-2/#string",
+        }
     )
     value: str = Field(
         title="External Id Value",
         description="The value of an external identifier",
         # custom
-        kbComment="",
-        kbNotes=["Same generic 'non-empty-string' as above."],
-        kbSourceName="",
-        kbSourceType="common:non-empty-string",
-        kbSourceTypeRef="",
-        kbSourceValues="https://pub.orcid.org/v2.0/identifiers",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#string",
+         json_schema_extra={
+            'kbComment':"",
+            'kbNotes':["Same generic 'non-empty-string' as above."],
+            'kbSourceName':"",
+            'kbSourceType':"common:non-empty-string",
+            'kbSourceTypeRef':"",
+            'kbSourceValues':"https://pub.orcid.org/v2.0/identifiers",
+            'kbUpstreamType':"xs:string",
+            'kbUpstreamTypeRef':"https://www.w3.org/TR/xmlschema11-2/#string",
+         }
     )
     # Note that we skip ext external-id-normalized and external-id-normalized-error as there is nothing we can
     # clearly do with them. Actually, it is the type "transient-non-empty-string" meaning that it is populated
@@ -179,29 +183,29 @@ class ExternalId(ServiceBaseModel):
         title="External Id URL",
         description="",
         # custom
-        kbComment="",
-        kbNotes=["See notes for other usages of anyURL"],
-        kbSourceName="work:url -> common:url ",
-        kbSourceType="common:url",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-        kbUpstreamType="xs:anyURI",
-        kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#anyURI",
+        # kbComment="",
+        # kbNotes=["See notes for other usages of anyURL"],
+        # kbSourceName="work:url -> common:url ",
+        # kbSourceType="common:url",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
+        # kbUpstreamType="xs:anyURI",
+        # kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#anyURI",
     )
     relationship: RelationshipType = Field(
         title="External Id Relationship",
         description="",
         # custom
-        kbComment="",
-        kbNotes=[
-            "Available values are located in common.xsd itself!",
-            "along with a reference to a java class that applies 'other rules'"
-            "see source ref url below",
-        ],
-        kbSourceName="relationship-type",
-        kbSourceType="common:external-id:external-id-url -> common:relationship-type",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1010",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#string",
+        # kbComment="",
+        # kbNotes=[
+        #     "Available values are located in common.xsd itself!",
+        #     "along with a reference to a java class that applies 'other rules'"
+        #     "see source ref url below",
+        # ],
+        # kbSourceName="relationship-type",
+        # kbSourceType="common:external-id:external-id-url -> common:relationship-type",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1010",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#string",
     )
 
 
@@ -334,28 +338,28 @@ class ORCIDCitation(ServiceBaseModel):
         title="Type",
         description="The type (format) of the citation.",
         # custom
-        kbComment="",
-        kbNotes=["The available values are cited in work.xsd itself"],
-        kbSourceName="citation-type",
-        kbSourceType="work:citation -> citation-type -> work:citation-type",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L251",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=["The available values are cited in work.xsd itself"],
+        # kbSourceName="citation-type",
+        # kbSourceType="work:citation -> citation-type -> work:citation-type",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L251",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
     value: str = Field(
         title="Value",
         description="Formatted citation text.",
         # custom
-        kbComment="",
-        kbNotes=[
-            "A simple string with no constraints",
-            "You would think it would be constrained to something large just for sanity ",
-        ],
-        kbSourceName="",
-        kbSourceType="work:citation -> citation-value",
-        kbSourceTypeRef="",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "A simple string with no constraints",
+        #     "You would think it would be constrained to something large just for sanity ",
+        # ],
+        # kbSourceName="",
+        # kbSourceType="work:citation -> citation-value",
+        # kbSourceTypeRef="",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
 
 
@@ -371,19 +375,19 @@ class ContributorRole(ServiceBaseModel):
         title="Role",
         description="The role performed by the collaborator or other contributor. ",
         # custom
-        kbComment="",
-        kbNotes=[
-            "Interestingly this is called contributor-attributes in the orcid xsd",
-            "The role itself is stored as a structure with a sequence (index) and the role itself.",
-            "Note that this the available values consist of old and new ones.",
-            "The new ones are all from credit.niso.org.",
-            "Both are supported in their UI, but we should only support the new ones.",
-        ],
-        kbSourceName="contributor-role",
-        kbSourceType="work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "Interestingly this is called contributor-attributes in the orcid xsd",
+        #     "The role itself is stored as a structure with a sequence (index) and the role itself.",
+        #     "Note that this the available values consist of old and new ones.",
+        #     "The new ones are all from credit.niso.org.",
+        #     "Both are supported in their UI, but we should only support the new ones.",
+        # ],
+        # kbSourceName="contributor-role",
+        # kbSourceType="work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
 
 
@@ -399,49 +403,49 @@ class ORCIDContributor(ServiceBaseModel):
         description="ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor",
         pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
         # custom
-        kbComment="",
-        kbNotes=[
-            "Although we simplify to just the orcid id string, at ORCID it is implemented",
-            "as a more complex object. I won't explain that, just follow the link below to ",
-            "see it in all it's glory...",
-        ],
-        kbSourceName="",
-        kbSourceType="work:contributor -> sequence of -> common:contributor-orcid -> common:orcid-id",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L421",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "Although we simplify to just the orcid id string, at ORCID it is implemented",
+        #     "as a more complex object. I won't explain that, just follow the link below to ",
+        #     "see it in all it's glory...",
+        # ],
+        # kbSourceName="",
+        # kbSourceType="work:contributor -> sequence of -> common:contributor-orcid -> common:orcid-id",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L421",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
     name: str = Field(
         title="Name",
         description="The name to use for the researcher or contributor when credited or cited",
         max_length=150,
         # custom
-        kbComment="",
-        kbNotes=["a string of maximum length 150."],
-        kbSourceName="credit-name",
-        kbSourceType="work:contributor -> sequence of -> credit-name -> common:credit-name -> common:string-150",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L811",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=["a string of maximum length 150."],
+        # kbSourceName="credit-name",
+        # kbSourceType="work:contributor -> sequence of -> credit-name -> common:credit-name -> common:string-150",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L811",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
     # omitting email, as it seems never used
     roles: List[ContributorRole] = Field(
         title="Roles",
         description="",
         # custom
-        kbComment="",
-        kbNotes=[
-            "Interestingly this is called contributor-attributes in the orcid xsd",
-            "The role itself is stored as a structure with a sequence (index) and the role itself.",
-            "Note that this the available values consist of old and new ones.",
-            "The new ones are all from credit.niso.org.",
-            "Both are supported in their UI, but we should only support the new ones.",
-        ],
-        kbSourceName="contributor-role",
-        kbSourceType="work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "Interestingly this is called contributor-attributes in the orcid xsd",
+        #     "The role itself is stored as a structure with a sequence (index) and the role itself.",
+        #     "Note that this the available values consist of old and new ones.",
+        #     "The new ones are all from credit.niso.org.",
+        #     "Both are supported in their UI, but we should only support the new ones.",
+        # ],
+        # kbSourceName="contributor-role",
+        # kbSourceType="work:contributor -> sequence of -> contributor-attributes -> work:contributor-attributes -> sequence of -> contributor-role -> common:contributor-role",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L191",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
 
 
@@ -451,17 +455,17 @@ class ORCIDContributorSelf(ORCIDContributor):
         description="ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor",
         pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
         # custom
-        kbComment="",
-        kbNotes=[
-            "Although we simplify to just the orcid id string, at ORCID it is implemented",
-            "as a more complex object. I won't explain that, just follow the link below to ",
-            "see it in all it's glory...",
-        ],
-        kbSourceName="",
-        kbSourceType="work:contributor -> sequence of -> common:contributor-orcid -> common:orcid-id",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L421",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "Although we simplify to just the orcid id string, at ORCID it is implemented",
+        #     "as a more complex object. I won't explain that, just follow the link below to ",
+        #     "see it in all it's glory...",
+        # ],
+        # kbSourceName="",
+        # kbSourceType="work:contributor -> sequence of -> common:contributor-orcid -> common:orcid-id",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L421",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
 
 
@@ -577,80 +581,80 @@ class WorkBase(ServiceBaseModel):
         description="The main name or title of the work.",
         max_length=1000,
         # custom
-        kbComment="",
-        kbSourceName="work:work-title -> common:title",
-        kbSourceType="common:string-1000",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L830",
-        kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#string",
+        # kbComment="",
+        # kbSourceName="work:work-title -> common:title",
+        # kbSourceType="common:string-1000",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L830",
+        # kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#string",
     )
     date: str = Field(
         title="Date",
         description="",
         # custom
-        kbComment="should probably rename to publication date; too ambiguous now, if simpler.",
-        kbNotes=[
-            "Note that it is 'fuzzy' because it can be year, year/month, year/month/day",
-            "Thus cannot be converted to a date, except in the year/month/day form ",
-        ],
-        kbSourceName="work -> publication-date -> fuzzy-date, with subfields for date parts",
-        kbSourceType="common:fuzzy-date",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L623",
-        kbUpstreamTypeRef="",
+        # kbComment="should probably rename to publication date; too ambiguous now, if simpler.",
+        # kbNotes=[
+        #     "Note that it is 'fuzzy' because it can be year, year/month, year/month/day",
+        #     "Thus cannot be converted to a date, except in the year/month/day form ",
+        # ],
+        # kbSourceName="work -> publication-date -> fuzzy-date, with subfields for date parts",
+        # kbSourceType="common:fuzzy-date",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L623",
+        # kbUpstreamTypeRef="",
     )
     workType: WorkType = Field(
         title="Work Type",
         description="The type of object that the work is, from a list of available types",
         # custom
-        kbComment="",
-        kbNotes=[
-            "unfortunately although the linked docs note that there is an api resource providing",
-            "the list of types, that url redirects to a documentation page, which includes",
-            "that information splayed out into a table.",
-        ],
-        kbSourceName="work:work-type",
-        kbSourceType="work:work-type",
-        kbSourceTypeRef="https://info.orcid.org/documentation/integration-and-api-faq/#easy-faq-2682",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "unfortunately although the linked docs note that there is an api resource providing",
+        #     "the list of types, that url redirects to a documentation page, which includes",
+        #     "that information splayed out into a table.",
+        # ],
+        # kbSourceName="work:work-type",
+        # kbSourceType="work:work-type",
+        # kbSourceTypeRef="https://info.orcid.org/documentation/integration-and-api-faq/#easy-faq-2682",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
     url: str = Field(
         title="URL",
         description="",
         # custom
-        kbComment="",
-        kbNotes=[
-            "from common.xsd: Represents a URL in the XML anyURI format",
-            "weird, it looks like there are to entries for url in common.xsd.",
-            "the upstream type is very broad, can include relative URLs, ",
-            "IRIs (International RIs), etc.",
-        ],
-        kbSourceName="work:url -> common:url ",
-        kbSourceType="common:url",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
-        kbUpstreamType="xs:anyURI",
-        kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#anyURI",
+        # kbComment="",
+        # kbNotes=[
+        #     "from common.xsd: Represents a URL in the XML anyURI format",
+        #     "weird, it looks like there are to entries for url in common.xsd.",
+        #     "the upstream type is very broad, can include relative URLs, ",
+        #     "IRIs (International RIs), etc.",
+        # ],
+        # kbSourceName="work:url -> common:url ",
+        # kbSourceType="common:url",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L353",
+        # kbUpstreamType="xs:anyURI",
+        # kbUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#anyURI",
     )
     doi: str = Field(
         title="DOI",
         description="The Digitial Object Identifier (DOI) assigned to the Narrative",
         # custom
-        kbComment="This is stored, ultimately, with the externalIds, but separated for simplification.",
-        kbSourceName="",
-        kbSourceType="",
-        kbSourceTypeRef="",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="This is stored, ultimately, with the externalIds, but separated for simplification.",
+        # kbSourceName="",
+        # kbSourceType="",
+        # kbSourceTypeRef="",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
     externalIds: List[ExternalId] = Field(
         title="External Ids",
         description="",
         # custom
-        kbComment="",
-        kbSourceName="work:external-ids -> common:external-ids",
-        kbSourceType="common:external-ids",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1045",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbSourceName="work:external-ids -> common:external-ids",
+        # kbSourceType="common:external-ids",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1045",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
     # TODO: is really optional? check out the schema
 
@@ -661,67 +665,67 @@ class FullWork(WorkBase):
         description="The title of the publication or group under which the work was published.",
         max_length=1000,
         # custom
-        kbComment="This is an ORCID 'non-empty-string' with a cap of 1000 characters applied",
-        kbSourceName="",
-        kbSourceType="work:journal-title -> common:string-1000 -> common:non-empty-string",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L753",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="This is an ORCID 'non-empty-string' with a cap of 1000 characters applied",
+        # kbSourceName="",
+        # kbSourceType="work:journal-title -> common:string-1000 -> common:non-empty-string",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L753",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
     shortDescription: str = Field(
         title="Short Description",
         description="A short narrative (few sentences) describing the item.",
         max_length=5000,
         # custom
-        kbComment="This is an ORCID 'non-empty-string' with a cap of 5000 characters applied",
-        kbSourceName="",
-        kbSourceType="work:short-description -> common:short-description -> ",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L789",
-        kbUpstreamType="xs:string",
-        kbUpstreamTypeRef="",
+        # kbComment="This is an ORCID 'non-empty-string' with a cap of 5000 characters applied",
+        # kbSourceName="",
+        # kbSourceType="work:short-description -> common:short-description -> ",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L789",
+        # kbUpstreamType="xs:string",
+        # kbUpstreamTypeRef="",
     )
     citation: ORCIDCitation = Field(
         title="Citation",
         description="",
         # custom
-        kbComment="",
-        kbNotes=[""],
-        kbSourceName="",
-        kbSourceType="work:element-summary -> citation -> work:citation ",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L235",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[""],
+        # kbSourceName="",
+        # kbSourceType="work:element-summary -> citation -> work:citation ",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L235",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
     selfContributor: ORCIDContributorSelf = Field(
         title="Self Contributor",
         description="The contribution container for the owner of this work record.",
         # custom
-        kbComment="",
-        kbNotes=[
-            "We have separated out the selfContributor in this structure to simplify",
-            "implementation and apply different rules. E.g. the self contributor must",
-            "have an ORCID Id (by definition!)",
-            "Also note that this, like other fields that extend 'element-summary' gets a bunch",
-            "of fields for free that we ignore - created, modified, source, put-code.",
-            "ORCID itself will ignore many of these fields like put-code, and some are clearly",
-            "only relevant for reading records from ORCID.",
-        ],
-        kbSourceName="",
-        kbSourceType="work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[
+        #     "We have separated out the selfContributor in this structure to simplify",
+        #     "implementation and apply different rules. E.g. the self contributor must",
+        #     "have an ORCID Id (by definition!)",
+        #     "Also note that this, like other fields that extend 'element-summary' gets a bunch",
+        #     "of fields for free that we ignore - created, modified, source, put-code.",
+        #     "ORCID itself will ignore many of these fields like put-code, and some are clearly",
+        #     "only relevant for reading records from ORCID.",
+        # ],
+        # kbSourceName="",
+        # kbSourceType="work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
     otherContributors: List[ORCIDContributor] = Field(
         title="Other Contributors",
         description="Container for the contributors of a Work.",
         # custom
-        kbComment="",
-        kbNotes=[""],
-        kbSourceType="work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
-        kbUpstreamType="",
-        kbUpstreamTypeRef="",
+        # kbComment="",
+        # kbNotes=[""],
+        # kbSourceType="work:work -> extends common:element-summary -> contributors -> work:contributors -> contributor -> work:contributor",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/record_3.0/work-3.0.xsd#L160",
+        # kbUpstreamType="",
+        # kbUpstreamTypeRef="",
     )
 
 
@@ -738,10 +742,10 @@ class PersistedWorkBase(ServiceBaseModel):
         title="Put Code",
         description="Uniquely identifies a work record for a given user; required when updating or deleting a work record.",
         # custom fields
-        kbComment="Note no upstream constraints, just integer",
-        kbSourceName="put-code",
-        kbSourceType="string",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L509",
+        # kbComment="Note no upstream constraints, just integer",
+        # kbSourceName="put-code",
+        # kbSourceType="string",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L509",
     )
 
 
@@ -750,33 +754,33 @@ class PersistedWork(PersistedWorkBase):
         title="Created At",
         description="Moment in time at which the work record was created; in epoch milliseconds.",
         # our custom fields
-        kbUnit="ms",
-        kbSourceName="created-date.value",
-        kbSourceType="xs:dateTime",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
-        kbSourceUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#dateTime",
-        kbComments="Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
+        # kbUnit="ms",
+        # kbSourceName="created-date.value",
+        # kbSourceType="xs:dateTime",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
+        # kbSourceUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#dateTime",
+        # kbComments="Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
     )
     updatedAt: int | None = Field(
         default=None,
         title="Updated At",
         description="Moment in time at which the work record was updated; in epoch milliseconds.",
         # our custom fields
-        kbUnit="ms",
-        kbSourceName="last-modified-date.value",
-        kbSourceType="xs:dateTime",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
-        kbSourceUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#dateTime",
-        kbComments="Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
+        # kbUnit="ms",
+        # kbSourceName="last-modified-date.value",
+        # kbSourceType="xs:dateTime",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L47",
+        # kbSourceUpstreamTypeRef="https://www.w3.org/TR/xmlschema11-2/#dateTime",
+        # kbComments="Defined ultimately in the XSD datatypes documentation; Source: created-date.value; xs:dateTime; generally not required in upstream",
     )
 
     source: str = Field(
         title="Source",
         description="Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod).",
         # custom
-        kbComments="Since we now only use work activity records created by KBase, we can probably drop this field.",
-        kbSourceName="work -> source -> source-name -> value",
-        kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L107",
+        # kbComments="Since we now only use work activity records created by KBase, we can probably drop this field.",
+        # kbSourceName="work -> source -> source-name -> value",
+        # kbSourceTypeRef="https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L107",
     )
 
     # journal: Optional[str] = Field(default=None)
@@ -858,7 +862,7 @@ class ORCIDProfile(ServiceBaseModel):
 
 
 class JSONDecodeErrorData(ServiceBaseModel):
-    status_code: int = Field(alias="status-code")
+    status_code: int = Field(serialization_alias="status-code", validation_alias="status-code")
     error: str = Field(...)
 
 

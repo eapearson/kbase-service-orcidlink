@@ -7,25 +7,24 @@ import pymongo.errors
 from bson import json_util
 from pymongo import MongoClient
 
-from orcidlink.lib import logger
-from orcidlink.lib.config import config, get_service_description
+from orcidlink.lib.logger import log_level, log_event
+from orcidlink.lib.config import Config2, get_service_description
 from orcidlink.lib.utils import posix_time_millis
 
 
 def test():
-    print("logging?")
-    logger.log_level(logging.DEBUG)
-    logger.log_event("initialization-test", {"is_a": "test"}, logging.INFO)
+    log_level(logging.DEBUG)
+    log_event("initialization-test", {"is_a": "test"}, logging.INFO)
 
 
 def make_db_client() -> MongoClient[Dict[str, Any]]:
-    c = config()
+    config = Config2()
     return MongoClient(
-        host=c.mongo.host,
-        port=c.mongo.port,
-        username=c.mongo.username,
-        password=c.mongo.password,
-        authSource=c.mongo.database,
+        host=config.get_mongo_host(),
+        port=config.get_mongo_port(),
+        username=config.get_mongo_username(),
+        password=config.get_mongo_password(),
+        authSource=config.get_mongo_database(),
         retrywrites=False,
     )
 
@@ -51,7 +50,8 @@ def check_db_database():
         client = make_db_client()
     except pymongo.errors.ConnectionFailure as cf:
         return {"status": "error", "code": "connection-failure", "message": str(cf)}
-    database_name = config().mongo.database
+    config = Config2()
+    database_name = config.get_mongo_database()
     try:
         db = client.get_database(database_name)
     except Exception as dbe:
@@ -118,7 +118,8 @@ class Message(TypedDict):
 
 
 def add_message(messages: List[Message], message: str) -> List[Message]:
-    return messages.append({"at": posix_time_millis(), "message": message})
+    messages.append({"at": posix_time_millis(), "message": message})
+    return messages
 
 
 def get_schema(service_version, collection_name):
@@ -286,7 +287,7 @@ def initialize_v030(db):
 def migrate_db():
     try:
         client = make_db_client()
-        database_name = config().mongo.database
+        database_name = Config2().get_mongo_database()
         db = client.get_database(database_name)
         description = db.get_collection("description").find_one()
 
@@ -338,23 +339,23 @@ def migrate_db():
 
 
 def main():
-    logger.log_level(logging.DEBUG)
-    logger.log_event(
+    log_level(logging.DEBUG)
+    log_event(
         "initialization-start", {"message": "initializing orcidlink service"}
     )
 
     result = check_db_connection()
-    logger.log_event("initialization-check-connection", result)
+    log_event("initialization-check-connection", result)
     if result["status"] == "error":
         raise Exception("mongodb connection check failed - see logs")
 
     result = check_db_database()
-    logger.log_event("initialization-check-database", result)
+    log_event("initialization-check-database", result)
     if result["status"] == "error":
         raise Exception("mongodb database check failed - see logs")
 
     result = migrate_db()
-    logger.log_event("initialization-migrate-database", result)
+    log_event("initialization-migrate-database", result)
     if result["status"] == "error":
         raise Exception("mongodb database migration failed - see logs")
 

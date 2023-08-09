@@ -6,7 +6,7 @@ import pytest
 
 from orcidlink.lib import utils
 from orcidlink.lib.errors import ServiceError
-from orcidlink.service_clients.KBaseAuth import KBaseAuth, KBaseAuthError, TokenInfo
+from _attic.KBaseAuth import KBaseAuth, KBaseAuthError, TokenInfo
 
 config_yaml = load_data_file("config1.toml")
 

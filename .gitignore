@@ -12,6 +12,7 @@ custom.env
 docs/api/index.html
 /deploy/*
 /build
+/_attic
 
 
 # Testing

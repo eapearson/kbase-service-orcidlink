@@ -1,7 +1,12 @@
-from typing import Any, Tuple
+from typing import Tuple
 
 from orcidlink.lib.config import Config2
 from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
+
+"""
+A 
+"""
+
 
 async def get_username(kbase_auth_token: str) -> str:
     """
@@ -42,3 +47,27 @@ async def ensure_authorization(
     )
     token_info = await auth.get_token_info(authorization)
     return authorization, token_info
+
+
+# def ensure_authorization_cookie(
+#     kbase_session: str | None, kbase_session_backup: str | None
+# ) -> Tuple[str, TokenInfo]:
+#     """
+#     Ensures that the "authorization" value, the KBase auth token, is
+#     not none. This is a convenience function for endpoints, whose sole
+#     purpose is to ensure that the provided token is good and valid.
+#     """
+#     authorization = kbase_session or kbase_session_backup
+#     if authorization is None or authorization == "":
+#         raise Exception("Authorization required")
+
+#     config = Config2()
+#     auth = KBaseAuth(
+#         url=config.get_auth_url(),
+#         timeout=config.get_request_timeout(),
+#         cache_lifetime=config.get_cache_lifetime(),
+#         cache_max_items=config.get_cache_max_items(),
+#     )
+#     token_info = auth.get_token_info(authorization)
+
+#     return authorization, token_info

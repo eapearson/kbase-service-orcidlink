@@ -39,27 +39,21 @@ class KBaseAuth(object):
 
     def __init__(
         self,
-        url: Optional[str] = None,
-        cache_max_size: Optional[int] = None,
-        cache_lifetime: Optional[int] = None,
+        url: str,
+        timeout: int,
+        cache_max_items: int,
+        cache_lifetime: int,
     ):
         """
         Constructor
         """
-        if url is None:
-            raise TypeError("missing required named argument 'url'")
-        self.url: str = url
-
-        if cache_max_size is None:
-            raise TypeError("missing required named argument 'cache_max_size'")
-        self.cache_max_size: int = cache_max_size
-
-        if cache_lifetime is None:
-            raise TypeError("missing required named argument 'cache_lifetime'")
-        self.cache_lifetime: int = cache_lifetime
+        self.url = url
+        self.timeout = timeout
+        self.cache_max_items = cache_max_items
+        self.cache_lifetime = cache_lifetime
 
         self.cache: TTLCache[str, TokenInfo] = TTLCache(
-            maxsize=self.cache_max_size, ttl=self.cache_lifetime
+            maxsize=self.cache_max_items, ttl=self.cache_lifetime
         )
 
         # global global_cache
@@ -87,7 +81,7 @@ class KBaseAuth(object):
                     self.url, headers={"authorization": token}, timeout=10000
                 ) as response:
                     json_response = await response.json()
-        except aiohttp.client_exceptions.ContentTypeError as cte:
+        except aiohttp.ContentTypeError as cte:
             # Note that here we are raising the default exception for the
             # httpx library in the case that a deep internal server error
             # is thrown without an actual json response. In other words, the
@@ -101,7 +95,7 @@ class KBaseAuth(object):
                     title="Received Incorrect Content Type",
                     message="The auth service responded with wrong content type; expected application/json",
                     data=model.JSONDecodeErrorData(
-                        status_code=response.status, error=str(cte)
+                        status_code=cte.status, error=str(cte)
                     ),
                 ),
                 status_code=502,
@@ -120,7 +114,9 @@ class KBaseAuth(object):
                     title="Error Decoding Response",
                     message="The auth service responded with non-JSON content",
                     data=model.JSONDecodeErrorData(
-                        status_code=response.status, error=str(ex)
+                        # Note - we can't get response.status_code without a type error,
+                        # TODO: figure out this nesting exceptions thing.
+                        status_code=0, error=str(ex)
                     ),
                 ),
                 status_code=502,
@@ -160,7 +156,7 @@ class KBaseAuth(object):
 class KBaseAuthErrorInfo(ServiceBaseModel):
     code: int = Field(...)
     message: str = Field(...)
-    original_message: str = Field(alias="original-message")
+    original_message: str = Field(validation_alias="original-message", serialization_alias="original-message")
 
 
 class KBaseAuthError(Exception):

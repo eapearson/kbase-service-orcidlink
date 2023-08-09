@@ -8,7 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from pydantic import Field
 
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.lib.type import ServiceBaseModel
 
 ##
@@ -100,7 +100,7 @@ def error_response_not_found(message: str) -> JSONResponse:
 
 class ExceptionTraceback(ServiceBaseModel):
     filename: str = Field(...)
-    line_number: Optional[int] = Field(default=None, alias="line-number")
+    line_number: Optional[int] = Field(default=None, validation_alias="line-number", serialization_alias="line-number")
     name: str = Field(...)
     line: Optional[str] = Field(default=None)
 
@@ -120,7 +120,10 @@ def exception_error_response(
     for tb in extract_tb(exception.__traceback__):
         traceback.append(
             ExceptionTraceback(
-                filename=tb.filename, line_number=tb.lineno, name=tb.name, line=tb.line
+                filename=tb.filename, 
+                line_number=tb.lineno, 
+                name=tb.name, 
+                line=tb.line
             )
         )
 
@@ -142,7 +145,7 @@ def exception_error_response(
 def ui_error_response(code: str, title: str, message: str) -> RedirectResponse:
     error_params = urlencode({"code": code, "title": title, "message": message})
     return RedirectResponse(
-        f"{config().ui.origin}?{error_params}#orcidlink/error", status_code=302
+        f"{Config2().get_ui_origin()}?{error_params}#orcidlink/error", status_code=302
     )
 
 

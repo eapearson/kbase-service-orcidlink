@@ -19,7 +19,7 @@ from pydantic import Field
 
 from orcidlink import model
 from orcidlink.lib import errors
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.lib.type import ServiceBaseModel
 
 
@@ -47,26 +47,26 @@ Visibility: TypeAlias = Literal["public", "limited", "private"]
 
 
 class ORCIDPersonName(ServiceBaseModel):
-    created_date: ORCIDIntValue = Field(alias="created-date")
-    given_names: StringValue = Field(alias="given-names")
-    family_name: StringValue = Field(alias="family-name")
-    credit_name: Optional[StringValue] = Field(default=None, alias="credit-name")
+    created_date: ORCIDIntValue = Field(validation_alias="created-date", serialization_alias="created-date")
+    given_names: StringValue = Field(validation_alias="given-names", serialization_alias="given-names")
+    family_name: StringValue = Field(validation_alias="family-name", serialization_alias="family-name")
+    credit_name: Optional[StringValue] = Field(default=None,validation_alias="credit-name", serialization_alias="credit-name")
     source: Optional[StringValue] = Field(default=None)
     visibility: Visibility = Field(...)
     path: str = Field(...)
     # optional
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+    last_modified_date: ORCIDIntValue = Field(validation_alias="last-modified-date", serialization_alias="last-modified-date")
 
 
 class ORCIDOtherNames(ServiceBaseModel):
     last_modified_date: Optional[ORCIDIntValue] = Field(default=None)
-    other_name: List[str] = Field(alias="other-name")
+    other_name: List[str] = Field(validation_alias="other-name", serialization_alias="other-name")
     path: str = Field(...)
 
 
 class ORCIDBiography(ServiceBaseModel):
-    created_date: ORCIDIntValue = Field(alias="created-date")
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+    created_date: ORCIDIntValue = Field(validation_alias="created-date", serialization_alias="created-date")
+    last_modified_date: ORCIDIntValue = Field(validation_alias="last-modified-date", serialization_alias="last-modified-date")
     content: str = Field(...)
     visibility: Visibility = Field(...)
     path: str = Field(...)
@@ -74,18 +74,18 @@ class ORCIDBiography(ServiceBaseModel):
 
 class ResearcherURLs(ServiceBaseModel):
     last_modified_date: Optional[ORCIDIntValue] = Field(
-        default=None, alias="last-modified-date"
+        default=None,validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
-    researcher_url: List[str] = Field(alias="researcher-url")
+    researcher_url: List[str] = Field(validation_alias="researcher-url", serialization_alias="researcher-url")
     path: str = Field(...)
 
 
 class ORCIDSource(ServiceBaseModel):
-    source_orcid: Optional[ORCIDIdentifier] = Field(default=None, alias="source-orcid")
+    source_orcid: Optional[ORCIDIdentifier] = Field(default=None,validation_alias="source-orcid", serialization_alias="source-orcid")
     source_client_id: Optional[ORCIDIdentifier] = Field(
-        default=None, alias="source-client-id"
+        default=None,validation_alias="source-client-id", serialization_alias="source-client-id"
     )
-    source_name: StringValue = Field(alias="source-name")
+    source_name: StringValue = Field(validation_alias="source-name", serialization_alias="source-name")
     # just null in my record
     # assertion_origin_orcid
     # assertion_origin_client_id
@@ -93,15 +93,15 @@ class ORCIDSource(ServiceBaseModel):
 
 
 class ORCIDEmail(ServiceBaseModel):
-    created_date: ORCIDIntValue = Field(alias="created-date")
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+    created_date: ORCIDIntValue = Field(validation_alias="created-date", serialization_alias="created-date")
+    last_modified_date: ORCIDIntValue = Field(validation_alias="last-modified-date", serialization_alias="last-modified-date")
     source: ORCIDSource = Field(...)
     email: str = Field(...)
     path: Optional[str] = Field(default=None)
     visibility: Visibility = Field(...)
     verified: bool = Field(...)
     primary: bool = Field(...)
-    put_code: Optional[int] = Field(default=None, alias="put-code")
+    put_code: Optional[int] = Field(default=None,validation_alias="put-code", serialization_alias="put-code")
 
 
 class ORCIDEmails(ServiceBaseModel):
@@ -109,15 +109,15 @@ class ORCIDEmails(ServiceBaseModel):
     path: str = Field(...)
     # optional - not populated when profile first created?
     last_modified_date: ORCIDIntValue | None = Field(
-        default=None, alias="last-modified-date"
+        default=None,validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
 
 
 class ORCIDPerson(ServiceBaseModel):
     name: ORCIDPersonName = Field(...)
-    other_names: ORCIDOtherNames = Field(..., alias="other-names")
+    other_names: ORCIDOtherNames = Field(validation_alias="other-names", serialization_alias="other-names")
     biography: ORCIDBiography | None = Field(default=None)
-    researcher_urls: ResearcherURLs = Field(alias="researcher-urls")
+    researcher_urls: ResearcherURLs = Field(validation_alias="researcher-urls", serialization_alias="researcher-urls")
     emails: ORCIDEmails
     # addresses: ORCIDAddresses
     # keywords
@@ -125,7 +125,7 @@ class ORCIDPerson(ServiceBaseModel):
     path: str = Field(...)
     # optional
     last_modified_date: ORCIDIntValue | None = Field(
-        default=None, alias="last-modified-date"
+        default=None, validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
 
 
@@ -135,28 +135,28 @@ class ExternalIdNormalized(ServiceBaseModel):
 
 
 class ExternalIdNormalizedError(ServiceBaseModel):
-    error_code: str = Field(..., alias="error-code")
-    error_message: str = Field(..., alias="error-message")
+    error_code: str = Field(validation_alias="error-code", serialization_alias="error-code")
+    error_message: str = Field(validation_alias="error-message", serialization_alias="error-message")
     transient: bool = Field(...)
 
 
 class ExternalId(ServiceBaseModel):
-    external_id_type: str = Field(alias="external-id-type")
-    external_id_value: str = Field(alias="external-id-value")
+    external_id_type: str = Field(validation_alias="external-id-type", serialization_alias="external-id-type")
+    external_id_value: str = Field(validation_alias="external-id-value", serialization_alias="external-id-value")
     # TODO: this is a case of a field which is present when fetching, but
     # not saving - so this type should probably be forked int read & write versions
     external_id_normalized: Optional[ExternalIdNormalized] = Field(
-        default=None, alias="external-id-normalized"
+        default=None,validation_alias="external-id-normalized", serialization_alias="external-id-normalized"
     )
     external_id_normalized_error: Optional[ExternalIdNormalizedError] = Field(
-        default=None, alias="external-id-normalized-error"
+        default=None,validation_alias="external-id-normalized-error", serialization_alias="external-id-normalized-error"
     )
-    external_id_url: StringValue = Field(alias="external-id-url")
-    external_id_relationship: str = Field(alias="external-id-relationship")
+    external_id_url: StringValue = Field(validation_alias="external-id-url", serialization_alias="external-id-url")
+    external_id_relationship: str = Field(validation_alias="external-id-relationship", serialization_alias="external-id-relationship")
 
 
 class ExternalIds(ServiceBaseModel):
-    external_id: List[ExternalId] = Field(alias="external-id")
+    external_id: List[ExternalId] = Field(validation_alias="external-id", serialization_alias="external-id")
 
 
 class Title(ServiceBaseModel):
@@ -166,8 +166,8 @@ class Title(ServiceBaseModel):
 
 
 class Citation(ServiceBaseModel):
-    citation_type: str = Field(alias="citation-type")
-    citation_value: str = Field(alias="citation-value")
+    citation_type: str = Field(validation_alias="citation-type", serialization_alias="citation-type")
+    citation_value: str = Field(validation_alias="citation-value", serialization_alias="citation-value")
 
 
 class ContributorORCID(ServiceBaseModel):
@@ -180,20 +180,20 @@ class ContributorAttributes(ServiceBaseModel):
     # TODO: this does not seem used either (always null), need to look up
     # the type.
     contributor_sequence: Optional[str] = Field(
-        default=None, alias="contributor-sequence"
+        default=None,validation_alias="contributor-sequence", serialization_alias="contributor-sequence"
     )
-    contributor_role: str = Field(alias="contributor-role")
+    contributor_role: str = Field(validation_alias="contributor-role", serialization_alias="contributor-role")
 
 
 class Contributor(ServiceBaseModel):
-    contributor_orcid: ContributorORCID = Field(alias="contributor-orcid")
+    contributor_orcid: ContributorORCID = Field(validation_alias="contributor-orcid", serialization_alias="contributor-orcid")
     # TODO: is this optional?
-    credit_name: StringValue = Field(alias="credit-name")
+    credit_name: StringValue = Field(validation_alias="credit-name", serialization_alias="credit-name")
     # TODO: email is not exposed in the web ui, so I don't yet know
     # what the type really is
-    contributor_email: Optional[str] = Field(default=None, alias="contributor-email")
+    contributor_email: Optional[str] = Field(default=None,validation_alias="contributor-email", serialization_alias="contributor-email")
     contributor_attributes: ContributorAttributes = Field(
-        alias="contributor-attributes"
+       validation_alias="contributor-attributes", serialization_alias="contributor-attributes"
     )
 
 
@@ -205,39 +205,39 @@ class WorkBase(ServiceBaseModel):
     type: str = Field(...)
     title: Title = Field(...)
     url: StringValue = Field(...)
-    publication_date: Date = Field(alias="publication-date")
-    external_ids: ExternalIds = Field(alias="external-ids")
+    publication_date: Date = Field(validation_alias="publication-date", serialization_alias="publication-date")
+    external_ids: ExternalIds = Field(validation_alias="external-ids", serialization_alias="external-ids")
 
 
 class NewWork(WorkBase):
-    journal_title: StringValue = Field(alias="journal-title")
-    short_description: str = Field(alias="short-description")
+    journal_title: StringValue = Field(validation_alias="journal-title", serialization_alias="journal-title")
+    short_description: str = Field(validation_alias="short-description", serialization_alias="short-description")
     citation: Citation = Field(...)
     contributors: ContributorWrapper = Field(...)
 
 
 class WorkUpdate(NewWork):
-    put_code: int = Field(alias="put-code")
+    put_code: int = Field(validation_alias="put-code", serialization_alias="put-code")
 
 
 class PersistedWork(ServiceBaseModel):
-    put_code: int = Field(alias="put-code")
+    put_code: int = Field(validation_alias="put-code", serialization_alias="put-code")
     # citation:
     # contributors
     # country
     # haven't seen an actual value for this
     # language_code
-    created_date: ORCIDIntValue = Field(alias="created-date")
+    created_date: ORCIDIntValue = Field(validation_alias="created-date", serialization_alias="created-date")
     last_modified_date: ORCIDIntValue | None = Field(
-        default=None, alias="last-modified-date"
+        default=None,validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
     # TODO: either defaults to str, and overridden in the standalone to optional,
     # or defaults to optional, and becomes required for summary.
     path: Optional[str] = Field(default=None)
-    # publication_date: Date = Field(alias="publication-date")
+    # publication_date: Date = Field(validation_alias="publication-date", serialization_alias="publication-date")
     source: ORCIDSource = Field(...)
     visibility: Visibility = Field(...)
-    journal_title: Optional[StringValue] = Field(default=None, alias="journal-title")
+    journal_title: Optional[StringValue] = Field(default=None,validation_alias="journal-title", serialization_alias="journal-title")
 
 
 class Work(WorkBase, PersistedWork):
@@ -245,20 +245,20 @@ class Work(WorkBase, PersistedWork):
     These only appear in the call to get a single work record.
     """
 
-    short_description: Optional[str] = Field(default=None, alias="short-description")
+    short_description: Optional[str] = Field(default=None,validation_alias="short-description", serialization_alias="short-description")
     citation: Optional[Citation] = Field(default=None)
     contributors: ContributorWrapper = Field(...)
 
 
 class WorkSummary(WorkBase, PersistedWork):
-    display_index: str = Field(alias="display-index")
+    display_index: str = Field(validation_alias="display-index", serialization_alias="display-index")
     path: str = Field(...)
 
 
 class WorkGroup(ServiceBaseModel):
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
-    external_ids: ExternalIds = Field(alias="external-ids")
-    work_summary: List[WorkSummary] = Field(alias="work-summary")
+    last_modified_date: ORCIDIntValue = Field(validation_alias="last-modified-date", serialization_alias="last-modified-date")
+    external_ids: ExternalIds = Field(validation_alias="external-ids", serialization_alias="external-ids")
+    work_summary: List[WorkSummary] = Field(validation_alias="work-summary", serialization_alias="work-summary")
 
 
 class Works(ServiceBaseModel):
@@ -266,7 +266,7 @@ class Works(ServiceBaseModel):
     path: str = Field(...)
     # optional
     last_modified_date: ORCIDIntValue | None = Field(
-        default=None, alias="last-modified-date"
+        default=None,validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
 
 
@@ -278,53 +278,53 @@ class ORCIDOrganizationAddress(ServiceBaseModel):
 
 class ORCIDDisambiguatedOrganization(ServiceBaseModel):
     disambiguated_organization_identifier: str = Field(
-        alias="disambiguated-organization-identifier"
+       validation_alias="disambiguated-organization-identifier", serialization_alias="disambiguated-organization-identifier"
     )
-    disambiguation_source: str = Field(alias="disambiguation-source")
+    disambiguation_source: str = Field(validation_alias="disambiguation-source", serialization_alias="disambiguation-source")
 
 
 class ORCIDOrganization(ServiceBaseModel):
     name: str = Field(...)
     address: ORCIDOrganizationAddress = Field(...)
     disambiguated_organization: ORCIDDisambiguatedOrganization = Field(
-        alias="disambiguated-organization"
+       validation_alias="disambiguated-organization", serialization_alias="disambiguated-organization"
     )
 
 
 class ORCIDEmploymentSummary(ServiceBaseModel):
-    created_date: ORCIDIntValue = Field(alias="created-date")
-    last_modified_date: ORCIDIntValue = Field(alias="last-modified-date")
+    created_date: ORCIDIntValue = Field(validation_alias="created-date", serialization_alias="created-date")
+    last_modified_date: ORCIDIntValue = Field(validation_alias="last-modified-date", serialization_alias="last-modified-date")
     source: ORCIDSource
-    put_code: int = Field(alias="put-code")
-    department_name: str = Field(..., alias="department-name")
-    role_title: str = Field(alias="role-title")
-    start_date: Date = Field(alias="start-date")
-    end_date: Optional[Date] = Field(default=None, alias="end-date")
+    put_code: int = Field(validation_alias="put-code", serialization_alias="put-code")
+    department_name: str = Field(...,validation_alias="department-name", serialization_alias="department-name")
+    role_title: str = Field(validation_alias="role-title", serialization_alias="role-title")
+    start_date: Date = Field(validation_alias="start-date", serialization_alias="start-date")
+    end_date: Optional[Date] = Field(default=None,validation_alias="end-date", serialization_alias="end-date")
     organization: ORCIDOrganization = Field(...)
     url: Optional[StringValue] = Field(default=None)
-    external_ids: Optional[ExternalIds] = Field(default=None, alias="external-ids")
-    display_index: str = Field(alias="display-index")
+    external_ids: Optional[ExternalIds] = Field(default=None,validation_alias="external-ids", serialization_alias="external-ids")
+    display_index: str = Field(validation_alias="display-index", serialization_alias="display-index")
     visibility: Visibility = Field(...)
     path: str = Field(...)
 
 
 class ORCIDEmploymentSummaryWrapper(ServiceBaseModel):
-    employment_summary: ORCIDEmploymentSummary = Field(alias="employment-summary")
+    employment_summary: ORCIDEmploymentSummary = Field(validation_alias="employment-summary", serialization_alias="employment-summary")
 
 
 class ORCIDAffiliationGroup(ServiceBaseModel):
     last_modified_date: Optional[ORCIDIntValue] = Field(
-        default=None, alias="last-modified-date"
+        default=None,validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
-    external_ids: ExternalIds = Field(alias="external-ids")
+    external_ids: ExternalIds = Field(validation_alias="external-ids", serialization_alias="external-ids")
     summaries: Tuple[ORCIDEmploymentSummaryWrapper] = Field(...)
 
 
 class Affiliations(ServiceBaseModel):
-    last_modified_date: Optional[ORCIDIntValue] = Field(alias="last-modified-date")
+    last_modified_date: Optional[ORCIDIntValue] = Field(validation_alias="last-modified-date", serialization_alias="last-modified-date")
     affiliation_group: Union[
         ORCIDAffiliationGroup, List[ORCIDAffiliationGroup]
-    ] = Field(alias="affiliation-group")
+    ] = Field(validation_alias="affiliation-group", serialization_alias="affiliation-group")
     path: str = Field(...)
 
 
@@ -341,7 +341,7 @@ class ORCIDActivitiesSummary(ServiceBaseModel):
     works: Works
     path: str = Field(...)
     last_modified_date: ORCIDIntValue | None = Field(
-        default=None, alias="last-modified-date"
+        default=None,validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
 
 
@@ -353,11 +353,11 @@ class ORCIDActivitiesSummary(ServiceBaseModel):
 
 
 class ORCIDProfile(ServiceBaseModel):
-    orcid_identifier: ORCIDIdentifier = Field(alias="orcid-identifier")
+    orcid_identifier: ORCIDIdentifier = Field(validation_alias="orcid-identifier", serialization_alias="orcid-identifier")
     # preferences: Dict[str, str] = Field(...)
     # history: ORCIDHistory = Field(...)
     person: ORCIDPerson = Field(...)
-    activities_summary: ORCIDActivitiesSummary = Field(..., alias="activities-summary")
+    activities_summary: ORCIDActivitiesSummary = Field(...,validation_alias="activities-summary", serialization_alias="activities-summary")
 
 
 class AuthorizeParams(ServiceBaseModel):
@@ -370,32 +370,32 @@ class AuthorizeParams(ServiceBaseModel):
 
 
 def orcid_api_url(path: str) -> str:
-    return f"{config().orcid.apiBaseURL}/{path}"
+    return f"{Config2().get_orcid_api_base_url()}/{path}"
 
 
 # This is the usual error response for 4xx
 class APIResponseError(ServiceBaseModel):
-    response_code: int = Field(alias="response-code")
-    developer_message: str = Field(alias="developer-message")
-    user_message: str = Field(alias="user-message")
-    error_code: int = Field(alias="error-code")
-    more_info: str = Field(alias="more-info")
+    response_code: int = Field(validation_alias="response-code", serialization_alias="response-code")
+    developer_message: str = Field(validation_alias="developer-message", serialization_alias="developer-message")
+    user_message: str = Field(validation_alias="user-message", serialization_alias="user-message")
+    error_code: int = Field(validation_alias="error-code", serialization_alias="error-code")
+    more_info: str = Field(validation_alias="more-info", serialization_alias="more-info")
 
 
 # This is the usual error response for 500
 class APIResponseInternalServerError(ServiceBaseModel):
-    message_version: str = Field(alias="message-version")
-    orcid_profile: Optional[Any] = Field(default=None, alias="orcid-profile")
+    message_version: str = Field(validation_alias="message-version", serialization_alias="message-version")
+    orcid_profile: Optional[Any] = Field(default=None,validation_alias="orcid-profile", serialization_alias="orcid-profile")
     orcid_search_results: Optional[Any] = Field(
-        default=None, alias="orcid-search-results"
+        default=None,validation_alias="orcid-search-results", serialization_alias="orcid-search-results"
     )
-    error_desc: StringValue = Field(alias="error-desc")
+    error_desc: StringValue = Field(validation_alias="error-desc", serialization_alias="error-desc")
 
 
 # This is return for at least 401
 class APIResponseUnauthorized(ServiceBaseModel):
     error: str = Field(...)
-    error_description: Optional[str] = Field(default=None, alias="error-description")
+    error_description: Optional[str] = Field(default=None,validation_alias="error-description", serialization_alias="error-description")
 
 
 class APIResponseUnknownError(ServiceBaseModel):
@@ -403,7 +403,7 @@ class APIResponseUnknownError(ServiceBaseModel):
 
 
 class APIParseError(ServiceBaseModel):
-    error_text: str = Field(alias="error-text")
+    error_text: str = Field(validation_alias="error-text", serialization_alias="error-text")
 
 
 DetailType = TypeVar("DetailType", bound=ServiceBaseModel)
@@ -624,9 +624,10 @@ class ORCIDOAuthClient(ORCIDClientBase):
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
         }
+        config = Config2()
         data = {
-            "client_id": config().orcid.clientId,
-            "client_secret": config().orcid.clientSecret,
+            "client_id": config.get_orcid_client_id(),
+            "client_secret": config.get_orcid_client_secret(),
             "token": self.access_token,
         }
         # TODO: determine all possible ORCID errors here, or the
@@ -657,16 +658,17 @@ class ORCIDOAuthClient(ORCIDClientBase):
         # for redirection in this case.
         # TODO: investigate and point to the docs, because this is weird.
         # TODO: put in orcid client!
+        config = Config2()
         data = {
-            "client_id": config().orcid.clientId,
-            "client_secret": config().orcid.clientSecret,
+            "client_id": config.get_orcid_client_id(),
+            "client_secret": config.get_orcid_client_secret(),
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
+            "redirect_uri": f"{config.get_orcid_link_url()}/linking-sessions/oauth/continue",
         }
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{config().orcid.oauthBaseURL}/token", headers=header, data=data
+                f"{config.get_orcid_oauth_base_url()}/token", headers=header, data=data
             ) as response:
                 content_type_raw = response.headers.get("Content-Type")
                 if content_type_raw is None:
@@ -707,7 +709,7 @@ def orcid_api(token: str) -> ORCIDAPIClient:
     This API provides all interactions we support with ORCID on behalf of a user, other
     than OAuth flow and OAuth/Auth interactions below.
     """
-    return ORCIDAPIClient(url=config().orcid.apiBaseURL, access_token=token)
+    return ORCIDAPIClient(url=Config2().get_orcid_api_base_url(), access_token=token)
 
 
 def orcid_oauth(token: str) -> ORCIDOAuthClient:
@@ -717,4 +719,4 @@ def orcid_oauth(token: str) -> ORCIDOAuthClient:
     This not for support of OAuth flow, but rather interactions with ORCID OAuth or
     simply Auth services.
     """
-    return ORCIDOAuthClient(url=config().orcid.oauthBaseURL, access_token=token)
+    return ORCIDOAuthClient(url=Config2().get_orcid_oauth_base_url(), access_token=token)

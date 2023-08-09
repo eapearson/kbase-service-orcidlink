@@ -1,6 +1,6 @@
 import contextlib
 import json
-import urllib
+from urllib.parse import urlparse, parse_qs
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.mock_contexts import (
     mock_auth_service,
@@ -9,33 +9,38 @@ from test.mocks.mock_contexts import (
 )
 from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO, clear_storage_model
 
+import os
+from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
 from orcidlink.lib import utils
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage.storage_model import storage_model
+from test.routers.orcid.test_works import MOCK_ORCID_API_PORT
 
-config_yaml = load_data_file("config1.toml")
+# config_yaml = load_data_file("config1.toml")
 
 
-@pytest.fixture(name="fake_fs")
-def fake_fs_fixture(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
-    yield fs
+# @pytest.fixture(name="fake_fs")
+# def fake_fs_fixture(fs):
+#     fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
+#     yield fs
 
 
 TEST_LINK = load_data_json("link2.json")
-
 TEST_LINK1 = load_data_json("link1.json")
 
+MOCK_AUTH_PORT = 9999
+MOCK_ORCID_OAUTH_PORT = 9997
 
-@pytest.fixture(autouse=True)
-def around_tests(fake_fs):
-    config(True)
-    yield
+
+# @pytest.fixture(autouse=True)
+# def around_tests(fake_fs):
+#     config(True)
+#     yield
 
 
 def create_link(link_data):
@@ -81,10 +86,10 @@ def assert_get_linking_session(client, session_id: str):
 def assert_start_linking_session(
     client,
     session_id: str,
-    kbase_session: str = None,
-    kbase_session_backup: str = None,
-    return_link: str = None,
-    skip_prompt: str = None,
+    kbase_session: str|None = None,
+    kbase_session_backup: str|None = None,
+    return_link: str|None = None,
+    skip_prompt: str|None = None,
 ):
     headers = {}
     if kbase_session is not None:
@@ -130,8 +135,8 @@ def assert_start_linking_session(
 def assert_continue_linking_session(
     client,
     session_id: str,
-    kbase_session: str = None,
-    expected_response_code: int = None,
+    kbase_session: str|None = None,
+    expected_response_code: int|None = None,
 ):
     # FINISH
     #
@@ -164,7 +169,7 @@ def assert_continue_linking_session(
 def assert_finish_linking_session(
     client,
     session_id: str,
-    kbase_session: str = None,
+    kbase_session: str|None = None,
     expected_response_code: int = 200,
 ):
     # FINISH
@@ -194,8 +199,8 @@ def assert_finish_linking_session(
 
 def assert_location_params(response, params):
     location = response.headers["location"]
-    location_url = urllib.parse.urlparse(location)
-    location_params = urllib.parse.parse_qs(location_url.query)
+    location_url = urlparse(location)
+    location_params = parse_qs(location_url.query)
     for key, value in params.items():
         assert key in location_params
         assert location_params[key][0] == value
@@ -204,7 +209,7 @@ def assert_location_params(response, params):
 @contextlib.contextmanager
 def mock_services():
     with no_stderr():
-        with mock_auth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
             yield
 
 
@@ -212,18 +217,31 @@ def mock_services():
 # Tests
 #
 
+TEST_ENV = {
+    "KBASE_ENDPOINT": f"http://foo/services/",
+    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "MONGO_HOST": "mongo",
+    "MONGO_PORT": "27017",
+    "MONGO_DATABASE": "orcidlink",
+    "MONGO_USERNAME": "dev",
+    "MONGO_PASSWORD": "d3v",
+    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",
+    "ORCID_OAUTH_BASE_URL": "http://127.0.0.1:9997",
+}
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_linking_session():
     with no_stderr():
-        with mock_auth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
             clear_storage_model()
             client = TestClient(app)
             assert_create_linking_session(client, TOKEN_FOO)
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_linking_session_already_linked():
     with no_stderr():
-        with mock_auth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
             #
             #
             #
@@ -252,13 +270,14 @@ def test_create_linking_session_already_linked():
             # return session_info
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_linking_session():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
     """
     with mock_services():
-        with mock_orcid_oauth_service():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
             client = TestClient(app)
 
             clear_storage_model()
@@ -319,13 +338,14 @@ def test_get_linking_session():
             # assert "orcid_auth" not in initial_session_info
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_linking_session():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
     """
     with mock_services():
-        with mock_orcid_oauth_service():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
             client = TestClient(app)
 
             clear_storage_model()
@@ -398,14 +418,15 @@ def test_delete_linking_session():
             # assert "orcid_auth" not in initial_session_info
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_linking_session_errors(fake_fs):
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
     """
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
                 clear_storage_model()
@@ -481,6 +502,7 @@ def test_get_linking_session_errors(fake_fs):
                 # assert response.status_code == 403
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_start_linking_session(fake_fs):
     """
     Now we create a session, and get it back, in order
@@ -488,8 +510,8 @@ def test_start_linking_session(fake_fs):
     """
 
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
                 clear_storage_model()
@@ -535,14 +557,15 @@ def test_start_linking_session(fake_fs):
                 # assert session_record['skip_prompt'] == "yes"
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_start_linking_session_backup_cookie(fake_fs):
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
     """
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
                 clear_storage_model()
@@ -562,6 +585,7 @@ def test_start_linking_session_backup_cookie(fake_fs):
                 )
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_start_linking_session_errors(fake_fs):
     """
     Now we create a session, and get it back, in order
@@ -633,6 +657,7 @@ def test_start_linking_session_errors(fake_fs):
         # TODO more assertions?
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_continue_linking_session(fake_fs):
     """
     Here we simulate the oauth flow with ORCID - in which
@@ -642,11 +667,11 @@ def test_continue_linking_session(fake_fs):
     """
 
     def assert_continue_linking_session(
-        kbase_session: str = None,
-        kbase_session_backup: str = None,
-        return_link: str = None,
-        skip_prompt: str = None,
-        expected_response_code: int = None,
+        kbase_session: str|None = None,
+        kbase_session_backup: str|None = None,
+        return_link: str|None = None,
+        skip_prompt: str|None = None,
+        expected_response_code: int|None = None,
     ):
         client = TestClient(app)
 
@@ -736,8 +761,8 @@ def test_continue_linking_session(fake_fs):
     # setup once. If we need to use it again, we can can it in a
     # function above.
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 clear_storage_model()
 
                 assert_continue_linking_session(
@@ -760,6 +785,7 @@ def test_continue_linking_session(fake_fs):
                 )
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_continue_linking_session_errors(fake_fs):
     """
     Here we simulate the oauth flow with ORCID - in which
@@ -768,8 +794,8 @@ def test_continue_linking_session_errors(fake_fs):
     the linking, after which we exchange the code for an access token.
     """
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
                 clear_storage_model()
 
@@ -892,6 +918,7 @@ def test_continue_linking_session_errors(fake_fs):
                 )
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_continue_linking_session_error_already_continued(fake_fs):
     """
     Here we simulate the oauth flow with ORCID - in which
@@ -900,8 +927,8 @@ def test_continue_linking_session_error_already_continued(fake_fs):
     the linking, after which we exchange the code for an access token.
     """
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
                 clear_storage_model()
@@ -984,6 +1011,7 @@ def test_continue_linking_session_error_already_continued(fake_fs):
                 # )
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_finish_linking_session_error_already_finished(fake_fs):
     """
     Here we simulate the oauth flow with ORCID - in which
@@ -992,8 +1020,8 @@ def test_finish_linking_session_error_already_finished(fake_fs):
     the linking, after which we exchange the code for an access token.
     """
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_oauth_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
                 clear_storage_model()

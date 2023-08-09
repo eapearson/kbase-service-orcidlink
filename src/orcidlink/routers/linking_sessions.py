@@ -16,7 +16,7 @@ from pydantic import Field
 from starlette.responses import RedirectResponse, Response
 
 from orcidlink.lib import errors
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from orcidlink.lib.responses import (
     AUTH_RESPONSES,
@@ -37,7 +37,7 @@ from orcidlink.model import (
     SimpleSuccess,
 )
 from orcidlink.service_clients.auth import ensure_authorization
-from orcidlink.service_clients.orcid_api import AuthorizeParams, orcid_oauth
+from orcidlink.lib.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/linking-sessions")
@@ -437,15 +437,16 @@ async def start_linking_session(
     # problem.
     # I think we just need to assume we are running on the "most released"; I don't think
     # there is a way for a dynamic service to know where it is running...
+    config = Config2()
     params = AuthorizeParams(
-        client_id=config().orcid.clientId,
+        client_id=config.get_orcid_client_id(),
         response_type="code",
         scope=scope,
-        redirect_uri=f"{config().services.ORCIDLink.url}/linking-sessions/oauth/continue",
+        redirect_uri=f"{config.get_orcid_link_url()}/linking-sessions/oauth/continue",
         prompt="login",
         state=json.dumps({"session_id": session_id}),
     )
-    url = f"{config().orcid.oauthBaseURL}/authorize?{urlencode(params.model_dump())}"
+    url = f"{config.get_orcid_oauth_base_url()}/authorize?{urlencode(params.model_dump())}"
     return responses.RedirectResponse(url, status_code=302)
 
 
@@ -592,6 +593,6 @@ async def linking_sessions_continue(
     params["ui_options"] = session_record.ui_options
 
     return RedirectResponse(
-        f"{config().ui.origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        f"{Config2().get_ui_origin()}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )

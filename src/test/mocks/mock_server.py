@@ -2,7 +2,7 @@ import http.server
 import json
 import threading
 import time
-import urllib
+from urllib.parse import parse_qs
 from socket import socket
 
 from orcidlink.service_clients.error import INVALID_PARAMS, METHOD_NOT_FOUND
@@ -42,13 +42,13 @@ class MockService(http.server.BaseHTTPRequestHandler):
         cls.total_call_count = {"success": 0, "error": 0}
         cls.method_call_counts = {}
 
-    def send(self, status_code: int, header: dict[str, str], data: str = None):
+    def send(self, status_code: int, header: dict[str, str], data: str|None = None):
         self.send_response(status_code)
         for key, value in header.items():
             self.send_header(key, value)
         self.end_headers()
         if data is not None:
-            self.wfile.write(data)
+            self.wfile.write(bytes(data, encoding="utf-8"))
 
     def send_json(self, output_data):
         output = json.dumps(output_data).encode()
@@ -58,7 +58,7 @@ class MockService(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(output)
 
-    def send_json_error(self, error_info, status_code: str = 500):
+    def send_json_error(self, error_info, status_code: int = 500):
         output = json.dumps(error_info).encode()
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
@@ -66,7 +66,7 @@ class MockService(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(output)
 
-    def send_text_error(self, text: str, status_code: str = 500):
+    def send_text_error(self, text: str, status_code: int = 500):
         # This is done intentionally by the backing http server,
         # which would correctly set the content type.
         self.send_response(status_code)
@@ -105,23 +105,30 @@ class MockService(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def get_body_bytes(self):
-        content_length = int(self.headers.get("content-length"))
+        content_length_raw = self.headers.get("content-length")
+        if content_length_raw is None:
+            raise ValueError("Content length not present - cannot read")
+        content_length = int(content_length_raw)
         return self.rfile.read(content_length)
 
     def get_body_string(self):
-        content_length = int(self.headers.get("content-length"))
+        content_length_raw = self.headers.get("content-length")
+        if content_length_raw is None:
+            raise ValueError("Content length not present - cannot read")
+        content_length = int(content_length_raw)
         return self.rfile.read(content_length).decode(encoding="utf-8")
 
     def get_form_data(self):
         content_type = self.headers.get("content-type")
         if content_type != "application/x-www-form-urlencoded":
             raise Exception("expected 'application/x-www-form-urlencoded'")
-        return urllib.parse.parse_qs(self.get_body_string())
+        return parse_qs(self.get_body_string())
 
 
 class MockServer:
-    def __init__(self, ip_address: str, service_class):
+    def __init__(self, ip_address: str, port: int, service_class):
         self.ip_address = ip_address
+        self.port = port
         self.service_class = service_class
         self.server = None
         self.server_thread = None
@@ -130,7 +137,7 @@ class MockServer:
             # We bind to "" which means all interfaces, and port 0
             # which means to just pick an available one.
             s.bind(("", 0))
-            self.port = s.getsockname()[1]
+            self.port = port # s.getsockname()[1]
 
     def base_url(self):
         """
@@ -336,7 +343,12 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
                 if error is not None:
                     result = error
                 else:
-                    time.sleep(params.get("for"))
+                    if params is None:
+                        raise ValueError('Params is None')
+                    sleep_for = params.get('for')
+                    if sleep_for is None:
+                        raise ValueError('Missing "for" parameter')
+                    time.sleep(sleep_for)
                     self.increment_method_call_count(method, "success")
                     result = self.success_response({"bar": "baz"})
             else:

@@ -14,7 +14,7 @@ import pytest
 
 from orcidlink.lib import errors, utils
 from orcidlink.lib.config import config
-from orcidlink.service_clients import orcid_api
+from orcidlink.lib.service_clients import orcid_api
 
 config_yaml = load_data_file("config1.toml")
 

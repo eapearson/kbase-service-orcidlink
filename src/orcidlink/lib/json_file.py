@@ -5,8 +5,10 @@ JSONLike = Union["JSONLikeObject", "JSONLikeArray", int, str, bool, None]
 JSONLikeObject = Dict[str, JSONLike]
 JSONLikeArray = List[JSONLike]
 
+JSONLikeCollection = JSONLikeObject | JSONLikeArray
 
-def get_prop(value: JSONLikeObject, path: List[str | int]) -> Tuple[JSONLike, bool]:
+
+def get_prop(value: JSONLikeCollection, path: List[str | int]) -> Tuple[JSONLike, bool]:
     temp: JSONLike = value
     for name in path:
         if isinstance(temp, dict):

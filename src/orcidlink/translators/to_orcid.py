@@ -1,7 +1,7 @@
 from typing import List
 
 from orcidlink import model
-from orcidlink.service_clients import orcid_api
+from orcidlink.lib.service_clients import orcid_api
 
 
 def parse_date(date_string: str) -> orcid_api.Date:

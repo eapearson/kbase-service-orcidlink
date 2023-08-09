@@ -37,7 +37,7 @@ from orcidlink.model import (
     ORCIDAuthPublic,
 )
 from orcidlink.service_clients.auth import ensure_authorization
-from orcidlink.service_clients.orcid_api import orcid_oauth
+from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/link")

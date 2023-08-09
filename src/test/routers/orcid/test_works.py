@@ -15,15 +15,14 @@ from fastapi.testclient import TestClient
 from orcidlink.lib import utils
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
-from orcidlink.service_clients import orcid_api
+from orcidlink.lib.service_clients import orcid_api
 from orcidlink.storage import storage_model
-
-config_yaml = load_data_file("config1.toml")
+import os
+from unittest import mock
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
@@ -52,16 +51,32 @@ def create_link():
     sm.db.links.drop()
     sm.create_link_record(LinkRecord.model_validate(TEST_LINK))
 
+MOCK_AUTH_PORT = 9999
+MOCK_ORCID_API_PORT = 9998
+
 
 @contextlib.contextmanager
 def mock_services():
     # config(True)
     with no_stderr():
-        with mock_auth_service():
-            with mock_orcid_api_service():
+        with mock_auth_service(MOCK_AUTH_PORT):
+            with mock_orcid_api_service(MOCK_ORCID_API_PORT):
                 yield
 
 
+TEST_ENV = {
+    "KBASE_ENDPOINT": f"http://foo/services/",
+    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "MONGO_HOST": "mongo",
+    "MONGO_PORT": "27017",
+    "MONGO_DATABASE": "orcidlink",
+    "MONGO_USERNAME": "dev",
+    "MONGO_PASSWORD": "d3v",
+    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",
+    "ORCID_OAUTH_BASE_URL": ""
+}
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_work(fake_fs):
     with mock_services():
         create_link()
@@ -76,6 +91,7 @@ def test_get_work(fake_fs):
         assert work["putCode"] == 1526002
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_work2(fake_fs):
     with mock_services():
         create_link()
@@ -90,6 +106,7 @@ def test_get_work2(fake_fs):
         assert work["putCode"] == 1487805
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_work_errors(fake_fs):
     with mock_services():
         client = TestClient(app)
@@ -129,7 +146,7 @@ def test_get_work_errors(fake_fs):
             response = client.get(
                 "/orcid/works/123", headers={"Authorization": TOKEN_FOO}
             )
-        except aiohttp.client_exceptions.ContentTypeError as cte:
+        except aiohttp.ContentTypeError as cte:
             # assert response.status_code == 502
             # error = response.json()
             # assert error["code"] == "upstreamError"
@@ -166,6 +183,7 @@ def test_get_work_errors(fake_fs):
         # assert error == expected
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_works(fake_fs):
     with mock_services():
         create_link()
@@ -177,6 +195,7 @@ def test_get_works(fake_fs):
         # assert work['putCode'] == '1526002'
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_works_errors(fake_fs):
     with mock_services():
         client = TestClient(app)
@@ -191,6 +210,7 @@ def test_get_works_errors(fake_fs):
 # TODO: left off here, copied from test_get_work - added work_1526002_normalized.json to
 # serve as a basis for input work records - will need to copy that and perhaps modify slightly for
 # put_work.
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_work(fake_fs):
     with mock_services():
         create_link()
@@ -237,6 +257,7 @@ def test_create_work(fake_fs):
         assert work["putCode"] == 1526002
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_work_errors(fake_fs):
     with mock_services():
         # Note that we do not need to launch a mock server here,
@@ -313,6 +334,7 @@ def test_create_work_errors(fake_fs):
         assert response.status_code == 502
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_external_id():
     external_id = orcid_api.ExternalId(
         external_id_type="foo",
@@ -332,6 +354,7 @@ def test_external_id():
     # })
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_save_work(fake_fs):
     with mock_services():
         create_link()
@@ -423,6 +446,7 @@ def test_save_work_errors(fake_fs):
         assert response.status_code == 404
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_work(fake_fs):
     with mock_services():
         create_link()
@@ -434,6 +458,7 @@ def test_delete_work(fake_fs):
         assert response.status_code == 204
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_work_bad_no_link(fake_fs):
     with mock_services():
         create_link()
@@ -445,6 +470,7 @@ def test_delete_work_bad_no_link(fake_fs):
         assert response.status_code == 404
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_work_not_source(fake_fs):
     with mock_services():
         create_link()
@@ -469,6 +495,7 @@ def test_delete_work_not_source(fake_fs):
         # # programmatically
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_work_put_code_not_found(fake_fs):
     with mock_services():
         create_link()

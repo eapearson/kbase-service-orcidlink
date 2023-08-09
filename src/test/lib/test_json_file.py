@@ -20,19 +20,19 @@ def bad_fake_fs1(fs):
 
 def test_get_prop():
     # simple object
-    simple_object_value = {"foo": "bar"}
+    simple_object_value: json_file.JSONLikeObject = {"foo": "bar"}
     value, found = json_file.get_prop(simple_object_value, ["foo"])
     assert found is True
     assert value == "bar"
 
     # simple array
-    simple_array_value = ["bar"]
+    simple_array_value: json_file.JSONLikeArray = ["bar"]
     value, found = json_file.get_prop(simple_array_value, [0])
     assert found is True
     assert value == "bar"
 
     # mixed object and array
-    mixed_value = {"foo": ["bar"]}
+    mixed_value: json_file.JSONLikeObject = {"foo": ["bar"]}
     value, found = json_file.get_prop(mixed_value, ["foo", 0])
     assert found is True
     assert value == "bar"

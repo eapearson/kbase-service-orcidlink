@@ -26,7 +26,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import HTMLResponse, JSONResponse
 
 from orcidlink.lib import logger
-from orcidlink.lib.config import config
+from orcidlink.lib.config import Config2
 from orcidlink.lib.errors import (
     FASTAPI_ERROR,
     NOT_FOUND,
@@ -43,7 +43,7 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
-from orcidlink.service_clients.KBaseAuth import (
+from _attic.KBaseAuth import (
     KBaseAuthError,
     KBaseAuthErrorInfo,
     KBaseAuthInvalidToken,
@@ -358,7 +358,7 @@ async def docs(req: Request) -> HTMLResponse:
             status_code=404,
         )
 
-    openapi_url = config().services.ORCIDLink.url + app.openapi_url
+    openapi_url = Config2().get_orcid_link_url() + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",

@@ -26,13 +26,12 @@ def run_command(command, ignore_error=False):
         print(str(cpe))
         sys.exit(1)
 
-    if ignore_error:
-        return process.stdout, True
-    return process.stdout
+
+    return process.stdout, True
 
 
 def git_info():
-    output = run_command(
+    output, _ = run_command(
         ["git", "show", "--format=%H%n%h%n%an%n%at%n%cn%n%ct%n%d", "--name-status"]
     )
 
@@ -56,7 +55,7 @@ def git_info():
 
 
 def git_url():
-    output = run_command(["git", "config", "--get", "remote.origin.url"])
+    output, _ = run_command(["git", "config", "--get", "remote.origin.url"])
     url = output.rstrip("\n")
     if url.endswith(".git"):
         url = url[0:-4]
@@ -64,7 +63,7 @@ def git_url():
 
 
 def git_branch():
-    output = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    output, _ = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     return output.rstrip("\n")
 
 
@@ -79,7 +78,7 @@ def git_tag(commit_hash):
 
 
 def git_config():
-    output = run_command(["git", "config", "--global", "--add", "safe.directory", "*"])
+    output, _ = run_command(["git", "config", "--global", "--add", "safe.directory", "*"])
     return output.rstrip("\n")
 
 

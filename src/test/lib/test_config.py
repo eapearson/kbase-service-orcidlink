@@ -1,42 +1,45 @@
-import pytest
-from orcidlink.lib import config, utils
-from orcidlink.model import ServiceDescription
+import os
 from test.mocks.data import load_data_file
+from unittest import mock
+import pytest
+from orcidlink.lib.config import Config2
+from orcidlink.lib.utils import module_dir
+from orcidlink.model import ServiceDescription
 
-config_file = load_data_file("config1.toml")
-config_file2 = load_data_file("config2.toml")
-service_description_toml = load_data_file("service_description1.toml")
+from orcidlink.lib.config import IntConstantDefault
 
-
-@pytest.fixture
-def my_config_file(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_file)
-    fs.create_file(
-        utils.module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
-    )
-    fs.add_real_directory(utils.module_path("test/data"))
-    yield fs
+# config_file = load_data_file("config1.toml")
+# config_file2 = load_data_file("config2.toml")
 
 
-@pytest.fixture
-def my_config_file2(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_file2)
-    fs.add_real_directory(utils.module_path("test/data"))
-    yield fs
+TEST_ENV = {
+    "KBASE_ENDPOINT": f"http://foo/services/",
+    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "FOO": "123",
+}
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+def test_get_config():
+    """
+    Test all config properties with default behavior, if available.
+    """
+    config = Config2()
+    assert config.get_auth_url() == "http://foo/services/auth"
+    assert config.get_workspace_url() == "http://foo/services/ws"
+    assert config.get_cache_lifetime() == 300
+    assert config.get_cache_max_items() == 20000
+    assert config.get_request_timeout() == 60
+    assert config.get_ui_origin() == "http://foo"
+    assert Config2.get_int_constant(IntConstantDefault(value=123, required=True, env_name="FOO"))
 
 
-def test_get_config(my_config_file2):
-    c = config.ConfigManager(utils.module_path("deploy/config.toml"))
-    assert c.config().orcid.clientId == "REDACTED-CLIENT-ID"
-    assert c.config().orcid.clientSecret == "REDACTED-CLIENT-SECRET"
-    assert (
-        c.config().services.Auth2.url
-        == "https://ci.kbase.us/services/auth/api/V2/token"
-    )
-
-
-def test_get_service_description():
-    value = config.get_service_description()
-    assert type(value) == ServiceDescription
-    assert value.name == "ORCIDLink"
-    assert value.language == "Python"
+TEST_ENV_BAD = {
+    "NO_KBASE_ENDPOINT": f"http://foo/services/",
+    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "FOO": "123",
+}
+@mock.patch.dict(os.environ, TEST_ENV_BAD, clear=True)
+def test_get_config_bad_env():
+    with pytest.raises(
+        ValueError, match='The "KBASE_ENDPOINT" environment variable was not found'
+    ):
+        Config2()

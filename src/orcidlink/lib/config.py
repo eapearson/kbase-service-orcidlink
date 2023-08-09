@@ -10,64 +10,14 @@ Because configuration is needed throughout the service's code, it is provided by
 which is populated when the module is first loaded.
 """
 import os
-import threading
 from typing import Optional
+from urllib.parse import urljoin, urlparse
 
-import toml
 from pydantic import Field
-
 from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.lib.utils import module_dir
 from orcidlink.model import ServiceDescription
-
-
-class KBaseService(ServiceBaseModel):
-    url: str = Field(...)
-
-
-class Auth2Service(KBaseService):
-    tokenCacheLifetime: int = Field(...)
-    tokenCacheMaxSize: int = Field(...)
-
-
-class ORCIDLinkService(KBaseService):
-    pass
-
-
-class ORCIDConfig(ServiceBaseModel):
-    oauthBaseURL: str = Field(...)
-    apiBaseURL: str = Field(...)
-    clientId: str = Field(...)
-    clientSecret: str = Field(...)
-
-
-class MongoConfig(ServiceBaseModel):
-    host: str = Field(...)
-    port: int = Field(...)
-    database: str = Field(...)
-    username: str = Field(...)
-    password: str = Field(...)
-
-
-class ModuleConfig(ServiceBaseModel):
-    serviceRequestTimeout: int = Field(...)
-
-
-class Services(ServiceBaseModel):
-    Auth2: Auth2Service
-    ORCIDLink: ORCIDLinkService = Field(...)
-
-
-class UIConfig(ServiceBaseModel):
-    origin: str = Field(...)
-
-
-class Config(ServiceBaseModel):
-    services: Services = Field(...)
-    ui: UIConfig = Field(...)
-    orcid: ORCIDConfig = Field(...)
-    mongo: MongoConfig = Field(...)
-    module: ModuleConfig = Field(...)
+from orcidlink.lib.utils import module_dir
+import toml
 
 
 class GitInfo(ServiceBaseModel):
@@ -82,45 +32,201 @@ class GitInfo(ServiceBaseModel):
     tag: Optional[str] = Field(default=None)
 
 
-class ConfigManager:
-    def __init__(self, config_path: str):
-        self.config_path = config_path
-        self.lock = threading.RLock()
-        self.config_data = self.get_config_data()
-
-    def get_config_data(self) -> Config:
-        with self.lock:
-            file_name = self.config_path
-            with open(file_name, "r") as in_file:
-                config_yaml = toml.load(in_file)
-                return Config.model_validate(config_yaml)
-
-    def config(self, reload: bool = False) -> Config:
-        if reload:
-            self.config_data = self.get_config_data()
-
-        return self.config_data
+class ServiceDefault(ServiceBaseModel):
+    path: str = Field(...)
+    env_name: str = Field(...)
 
 
-GLOBAL_CONFIG_MANAGER = None
+class ServiceDefaults(ServiceBaseModel):
+    auth2: ServiceDefault = Field(...)
+    workspace: ServiceDefault = Field(...)
+    orcid_link: ServiceDefault = Field(...)
 
 
-def config(reload: bool = False) -> Config:
-    global GLOBAL_CONFIG_MANAGER
-    if GLOBAL_CONFIG_MANAGER is None:
-        GLOBAL_CONFIG_MANAGER = ConfigManager(
-            os.path.join(module_dir(), "deploy/config.toml")
+SERVICE_DEFAULTS = ServiceDefaults(
+    auth2=ServiceDefault(path="auth", env_name="KBASE_SERVICE_AUTH"),
+    workspace=ServiceDefault(path="ws", env_name="KBASE_SERVICE_WORKSPACE"),
+    orcid_link=ServiceDefault(path="orcidlink", env_name="KBASE_SERVICE_ORCID_LINK"),
+)
+
+
+class IntConstantDefault(ServiceBaseModel):
+    value: Optional[int] = Field(default=None)
+    required: bool = Field(...)
+    env_name: str = Field(...)
+
+
+class IntConstantDefaults(ServiceBaseModel):
+    token_cache_lifetime: IntConstantDefault = Field(...)
+    token_cache_max_items: IntConstantDefault = Field(...)
+    request_timeout: IntConstantDefault = Field(...)
+    mongo_port: IntConstantDefault = Field(...)
+
+
+INT_CONSTANT_DEFAULTS = IntConstantDefaults(
+    token_cache_lifetime=IntConstantDefault(
+        value=300, required=True, env_name="TOKEN_CACHE_LIFETIME"
+    ),
+    token_cache_max_items=IntConstantDefault(
+        value=20000, required=True, env_name="TOKEN_CACHE_MAX_ITEMS"
+    ),
+    request_timeout=IntConstantDefault(
+        value=60, required=True, env_name="REQUEST_TIMEOUT"
+    ),
+    mongo_port=IntConstantDefault(required=True, env_name="MONGO_PORT"),
+)
+
+
+# String constants
+
+
+class StrConstantDefault(ServiceBaseModel):
+    value: Optional[str] = Field(default=None)
+    required: bool = Field(...)
+    env_name: str = Field(...)
+
+
+class StrConstantDefaults(ServiceBaseModel):
+    orcid_api_base_url: StrConstantDefault = Field(...)
+    orcid_oauth_base_url: StrConstantDefault = Field(...)
+    orcid_client_id: StrConstantDefault = Field(...)
+    orcid_client_secret: StrConstantDefault = Field(...)
+    mongo_host: StrConstantDefault = Field(...)
+    mongo_database: StrConstantDefault = Field(...)
+    mongo_username: StrConstantDefault = Field(...)
+    mongo_password: StrConstantDefault = Field(...)
+
+
+STR_CONSTANT_DEFAULTS = StrConstantDefaults(
+    orcid_api_base_url=StrConstantDefault(required=True, env_name="ORCID_API_BASE_URL"),
+    orcid_oauth_base_url=StrConstantDefault(
+        required=True, env_name="ORCID_OAUTH_BASE_URL"
+    ),
+    orcid_client_id=StrConstantDefault(required=True, env_name="ORCID_CLIENT_ID"),
+    orcid_client_secret=StrConstantDefault(
+        required=True, env_name="ORCID_CLIENT_SECRET"
+    ),
+    mongo_host=StrConstantDefault(required=True, env_name="MONGO_HOST"),
+    mongo_database=StrConstantDefault(required=True, env_name="MONGO_DATABASE"),
+    mongo_username=StrConstantDefault(required=True, env_name="MONGO_USERNAME"),
+    mongo_password=StrConstantDefault(required=True, env_name="MONGO_PASSWORD"),
+)
+
+
+class Config2:
+    kbase_endpoint: str
+
+    def __init__(self) -> None:
+        kbase_endpoint = os.environ.get("KBASE_ENDPOINT")
+        if kbase_endpoint is None or len(kbase_endpoint) == 0:
+            raise ValueError('The "KBASE_ENDPOINT" environment variable was not found')
+        self.kbase_endpoint = kbase_endpoint
+
+    def get_service_url(self, service_default: ServiceDefault) -> str:
+        env_path = os.environ.get(service_default.env_name)
+        path = env_path or service_default.path
+        return urljoin(self.kbase_endpoint, path)
+
+    def get_auth_url(self) -> str:
+        return self.get_service_url(SERVICE_DEFAULTS.auth2)
+
+    def get_workspace_url(self) -> str:
+        return self.get_service_url(SERVICE_DEFAULTS.workspace)
+    
+    def get_orcid_link_url(self) -> str:
+        return self.get_service_url(SERVICE_DEFAULTS.orcid_link)
+
+    # MORE...
+
+    # Integer constants
+
+    @staticmethod
+    def get_int_constant(constant_default: IntConstantDefault) -> int:
+        value = os.environ.get(constant_default.env_name)
+        if value is None:
+            if constant_default.required:
+                raise ValueError(
+                    f'The required environment variable "{constant_default.env_name}" is missing'
+                )
+            else:
+                if constant_default.value is None:
+                    raise ValueError(
+                        f'The required environment variable "{constant_default.env_name}" is missing and there is no default value'
+                    )
+                else:
+                    return constant_default.value
+        else:
+            return int(value)
+
+    def get_cache_lifetime(self) -> int:
+        return self.get_int_constant(INT_CONSTANT_DEFAULTS.token_cache_lifetime)
+
+    def get_cache_max_items(self) -> int:
+        return self.get_int_constant(INT_CONSTANT_DEFAULTS.token_cache_max_items)
+
+    def get_request_timeout(self) -> int:
+        return self.get_int_constant(INT_CONSTANT_DEFAULTS.request_timeout)
+
+    # String constants
+    @staticmethod
+    def get_str_constant(constant_default: StrConstantDefault) -> str:
+        value = os.environ.get(constant_default.env_name)
+        if value is None:
+            if constant_default.required:
+                raise ValueError(
+                    f'The required environment variable "{constant_default.env_name}" is missing'
+                )
+            else:
+                if constant_default.value is None:
+                    raise ValueError(
+                        f'The required environment variable "{constant_default.env_name}" is missing and there is no default value'
+                    )
+                else:
+                    return constant_default.value
+        else:
+            return value
+
+    def get_orcid_api_base_url(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_api_base_url)
+
+    def get_orcid_oauth_base_url(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_oauth_base_url)
+
+    def get_orcid_client_id(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_client_id)
+
+    def get_orcid_client_secret(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_client_secret)
+
+    def get_mongo_host(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_host)
+
+    def get_mongo_port(self) -> int:
+        return self.get_int_constant(INT_CONSTANT_DEFAULTS.mongo_port)
+
+    def get_mongo_database(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_database)
+
+    def get_mongo_username(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_username)
+
+    def get_mongo_password(self) -> str:
+        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_password)
+
+    # misc
+
+    def get_ui_origin(self) -> str:
+        endpoint_url = urlparse(self.kbase_endpoint)
+        # [protocol, _, endpoint_host] = self.kbase_endpoint.split('/')[2]
+        host = (
+            "narrative.kbase.us"
+            if endpoint_url.hostname == "kbase.us"
+            else endpoint_url.netloc
         )
-    return GLOBAL_CONFIG_MANAGER.config(reload)
+        return f"{endpoint_url.scheme}://{endpoint_url.hostname}"
 
 
 def get_service_description() -> ServiceDescription:
     file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
     with open(file_path, "r", encoding="utf-8") as file:
         return ServiceDescription.model_validate(toml.load(file))
-
-
-def get_git_info() -> GitInfo:
-    path = os.path.join(module_dir(), "build/git-info.toml")
-    with open(path, "r", encoding="utf-8") as fin:
-        return GitInfo.model_validate(toml.load(fin))
