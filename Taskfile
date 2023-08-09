@@ -51,10 +51,6 @@ function lock {
   _run runner poetry lock
 }
 
-function render-config {
-  mkdir -p deploy
-  _run-in-service runner scripts/render-config.sh
-}
 
 #
 # Generates the openapi spec in memory, and compares it to the one already existing in docs/api/openapi.json.
@@ -93,23 +89,7 @@ function shell {
 #  docker compose -f tools/docker-compose-prod-like.yml
 #}
 
-#
-# For generating a config to be used
-# Environment variables are filled with either test
-#
-function render-config-dev {
-  export KBASE_ENDPOINT=https://ci.kbase.us/services/
-  export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
-  export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
-  export ORCID_CLIENT_ID=${ORCID_CLIENT_ID}
-  export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET}
-  export MONGO_HOST=mongo
-  export MONGO_PORT=27017
-  export MONGO_DATABASE=orcidlink
-  export MONGO_USERNAME=dev
-  export MONGO_PASSWORD=d3v
-  _run-in-server runner scripts/render-config.sh
-}
+
 
 function test {
   # Testing only touches locally controlled services, either mock
