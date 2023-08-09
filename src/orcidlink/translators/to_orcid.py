@@ -101,6 +101,15 @@ def transform_contributors(
         all_contributors.extend(contributors)
     return all_contributors
 
+def transform_contributors_self(
+    contributors_update: List[model.ORCIDContributorSelf],
+) -> List[orcid_api.Contributor]:
+    all_contributors = []
+    for contributor in contributors_update:
+        contributors = transform_contributor_self(contributor)
+        all_contributors.extend(contributors)
+    return all_contributors
+
 
 # TODO: return should be class
 def translate_work_update(work_update: model.WorkUpdate) -> orcid_api.WorkUpdate:

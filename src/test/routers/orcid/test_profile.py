@@ -17,15 +17,26 @@ from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
 import os
 from unittest import mock
 
+MOCK_KBASE_SERVICES_PORT = 9999
+MOCK_ORCID_API_PORT = 9997
+MOCK_ORCID_OAUTH_PORT = 9998
+TEST_ENV = {
+    "KBASE_ENDPOINT": f"http://127.0.0.1:{MOCK_KBASE_SERVICES_PORT}/services/",
+    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "MONGO_HOST": "mongo",
+    "MONGO_PORT": "27017",
+    "MONGO_DATABASE": "orcidlink",
+    "MONGO_USERNAME": "dev",
+    "MONGO_PASSWORD": "d3v",
+    "ORCID_API_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_API_PORT}",
+    "ORCID_OAUTH_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_OAUTH_PORT}",
+}
+
 client = TestClient(app)
-
-# config_yaml = load_data_file("config1.toml")
-
 
 
 @pytest.fixture
 def fake_fs(fs):
-    # fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
@@ -36,14 +47,15 @@ TEST_LINK = load_data_json("link2.json")
 @contextlib.contextmanager
 def mock_services():
     with no_stderr():
-        with mock_auth_service(9999):
-            with mock_orcid_api_service(9998):
+        with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
+            with mock_orcid_api_service(MOCK_ORCID_API_PORT):
                 yield
 
 
 @pytest.fixture(autouse=True)
 def around_tests(fake_fs):
     yield
+
 
 def create_link():
     sm = storage_model.storage_model()
@@ -94,33 +106,20 @@ def create_link():
 #         server.stop_service()
 
 
-TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://foo/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
-    "MONGO_HOST": "mongo",
-    "MONGO_PORT": "27017",
-    "MONGO_DATABASE": "orcidlink",
-    "MONGO_USERNAME": "dev",
-    "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",    
-    "ORCID_OAUTH_BASE_URL": ""
-}
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_profile(fake_fs):
-    with mock_services():
-        create_link()
-        response = TestClient(app).get(
-            "/orcid/profile", headers={"Authorization": TOKEN_FOO}
-        )
-        assert response.status_code == 200
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            create_link()
+            response = TestClient(app).get(
+                "/orcid/profile", headers={"Authorization": TOKEN_FOO}
+            )
+            assert response.status_code == 200
 
 
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_profile_not_found(fake_fs):
-    with mock_services():
-        response = TestClient(app).get(
-            "/orcid/profile", headers={"Authorization": TOKEN_BAR}
-        )
-        assert response.status_code == 404
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            response = TestClient(app).get(
+                "/orcid/profile", headers={"Authorization": TOKEN_BAR}
+            )
+            assert response.status_code == 404

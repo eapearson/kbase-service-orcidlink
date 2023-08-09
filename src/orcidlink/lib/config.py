@@ -144,17 +144,12 @@ class Config2:
     def get_int_constant(constant_default: IntConstantDefault) -> int:
         value = os.environ.get(constant_default.env_name)
         if value is None:
-            if constant_default.required:
+            if constant_default.value is None:
                 raise ValueError(
-                    f'The required environment variable "{constant_default.env_name}" is missing'
+                    f'The required environment variable "{constant_default.env_name}" is missing and there is no default value'
                 )
             else:
-                if constant_default.value is None:
-                    raise ValueError(
-                        f'The required environment variable "{constant_default.env_name}" is missing and there is no default value'
-                    )
-                else:
-                    return constant_default.value
+                return constant_default.value
         else:
             return int(value)
 

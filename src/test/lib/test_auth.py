@@ -13,13 +13,14 @@ import os
 from unittest import mock
 # config_yaml = load_data_file("config1.toml")
 
-MOCK_AUTH_PORT = 9999
+MOCK_KBASE_SERVICES_PORT = 9999
+MOCK_ORCID_API_PORT = 9997
 MOCK_ORCID_OAUTH_PORT = 9997
 
 @contextlib.contextmanager
 def mock_services():
     with no_stderr():
-        with mock_auth_service(MOCK_AUTH_PORT):
+        with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
             yield
 
 
@@ -31,31 +32,32 @@ def fake_fs_fixture(fs):
 
 
 TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://foo/services/",
+    "KBASE_ENDPOINT": f"http://127.0.0.1:{MOCK_KBASE_SERVICES_PORT}/services/",
     "MODULE_DIR": os.environ.get("MODULE_DIR"),
     "MONGO_HOST": "mongo",
     "MONGO_PORT": "27017",
     "MONGO_DATABASE": "orcidlink",
     "MONGO_USERNAME": "dev",
     "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",
-    "ORCID_OAUTH_BASE_URL": "http://127.0.0.1:9997",
+    "ORCID_API_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_API_PORT}",
+    "ORCID_OAUTH_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_OAUTH_PORT}",
 }
 
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+
 async def test_auth_get_username(fake_fs):
-    with mock_services():
-        username = await get_username("foo")
-        assert username == "foo"
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            username = await get_username("foo")
+            assert username == "foo"
 
 
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ensure_authorization():
-    with mock_services():
-        authorization, value = await ensure_authorization("foo")
-        assert isinstance(authorization, str)
-        assert authorization == "foo"
-        assert isinstance(value, TokenInfo)
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            authorization, value = await ensure_authorization("foo")
+            assert isinstance(authorization, str)
+            assert authorization == "foo"
+            assert isinstance(value, TokenInfo)
 
-    with pytest.raises(ServiceError, match="API call requires a KBase auth token"):
-        await ensure_authorization(None)
+        with pytest.raises(Exception, match="Authorization required"):
+            await ensure_authorization(None)

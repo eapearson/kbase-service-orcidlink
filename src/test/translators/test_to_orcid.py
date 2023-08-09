@@ -98,5 +98,5 @@ def test_transform_contributors():
         ),
     ]
 
-    orcid_contributors = to_orcid.transform_contributors(model_contributors)
+    orcid_contributors = to_orcid.transform_contributors_self(model_contributors)
     assert len(orcid_contributors) == 4

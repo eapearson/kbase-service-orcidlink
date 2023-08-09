@@ -7,21 +7,19 @@ from fastapi.testclient import TestClient
 
 from orcidlink.lib import utils
 from orcidlink.main import app
+from test.mocks.env import TEST_ENV
 
 client = TestClient(app, raise_server_exceptions=False)
 
 # config_yaml = load_data_file("config1.toml")
 service_description_toml = load_data_file("service_description1.toml")
-# gitinfo_toml = load_data_file("git_info1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    # fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.create_file(
         utils.module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
     )
-    # fs.create_file(utils.module_path("build/git-info.toml"), contents=gitinfo_toml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
@@ -31,17 +29,6 @@ TEST_LINK = load_data_json("link1.json")
 
 # Happy paths
 
-TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://foo/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
-    "MONGO_HOST": "mongo",
-    "MONGO_PORT": "27017",
-    "MONGO_DATABASE": "orcidlink",
-    "MONGO_USERNAME": "dev",
-    "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",
-    "ORCID_OAUTH_BASE_URL": "http://127.0.0.1:9997",
-}
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_main_status(fake_fs):

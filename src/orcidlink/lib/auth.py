@@ -1,14 +1,15 @@
 from typing import Tuple
 
 from orcidlink.lib.config import Config2
-from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
+from orcidlink.lib.errors import TOKEN_REQUIRED_BUT_MISSING, INVALID_TOKEN, ServiceErrorXX
+from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, KBaseAuthInvalidToken, TokenInfo
 
 """
 A 
 """
 
 
-async def get_username(kbase_auth_token: str) -> str:
+async def get_username(authorization: str) -> str:
     """
     Given a KBase browser auth token (aka "kbase_session"), return the username associated with the
     user account.
@@ -21,10 +22,10 @@ async def get_username(kbase_auth_token: str) -> str:
         url=config.get_auth_url(),
         timeout=config.get_request_timeout(),
         cache_lifetime=config.get_cache_lifetime(),
-        cache_max_items=config.get_cache_max_items(),
+        cache_max_items=config.get_cache_lifetime(),
     )
 
-    return (await auth_client.get_token_info(kbase_auth_token)).user
+    return (await auth_client.get_token_info(authorization)).user
 
 
 async def ensure_authorization(
@@ -36,7 +37,9 @@ async def ensure_authorization(
     purpose is to ensure that the provided token is good and valid.
     """
     if authorization is None or authorization == "":
-        raise Exception("Authorization required")
+        # TODO: Better exception
+        # raise Exception("Authorization required")
+        raise ServiceErrorXX(TOKEN_REQUIRED_BUT_MISSING, "Authorization required but missing")
 
     config = Config2()
     auth = KBaseAuth(
@@ -45,8 +48,11 @@ async def ensure_authorization(
         cache_lifetime=config.get_cache_lifetime(),
         cache_max_items=config.get_cache_max_items(),
     )
-    token_info = await auth.get_token_info(authorization)
-    return authorization, token_info
+    try:
+        token_info = await auth.get_token_info(authorization)
+        return authorization, token_info
+    except KBaseAuthInvalidToken as auth_error:
+        raise ServiceErrorXX(INVALID_TOKEN, "Authorization presented, but is invalid")
 
 
 # def ensure_authorization_cookie(

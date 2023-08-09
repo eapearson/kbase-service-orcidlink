@@ -77,8 +77,9 @@ class KBaseAuth(object):
         # TODO: timeout needs to be configurable
         try:
             async with aiohttp.ClientSession() as session:
+                url =  f"{self.url}/api/V2/token"
                 async with session.get(
-                    self.url, headers={"authorization": token}, timeout=10000
+                    url, headers={"authorization": token}, timeout=10000
                 ) as response:
                     json_response = await response.json()
         except aiohttp.ContentTypeError as cte:

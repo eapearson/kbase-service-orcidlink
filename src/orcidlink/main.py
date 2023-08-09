@@ -43,7 +43,7 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
-from _attic.KBaseAuth import (
+from orcidlink.lib.service_clients.kbase_auth import (
     KBaseAuthError,
     KBaseAuthErrorInfo,
     KBaseAuthInvalidToken,

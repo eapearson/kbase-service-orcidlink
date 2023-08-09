@@ -13,6 +13,8 @@ services:
     # no environment needed as all services are mocked locally
     depends_on:
       - mongo
+    environment:
+      - MODULE_DIR
   mongo:
     image: mongo:3.6.13
     restart: always

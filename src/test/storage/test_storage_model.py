@@ -1,31 +1,23 @@
 from test.mocks.data import load_data_file, load_data_json
 
 import pytest
-
+import os
+from unittest import mock
 from orcidlink.lib import utils
-from orcidlink.lib.config import config
 from orcidlink.model import LinkingSessionInitial, LinkRecord, ORCIDAuth
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.storage.storage_model_mongo import StorageModelMongo
-
-config_yaml = load_data_file("config1.toml")
+from test.mocks.env import TEST_ENV
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 
-@pytest.fixture
-def temp_config(fake_fs):
-    yield config()
-    # reload config
-    config(True)
-
-
-def test_constructor(temp_config):
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+def test_constructor():
     sm = storage_model()
     assert sm is not None
 
@@ -51,6 +43,7 @@ def test_constructor(temp_config):
 EXAMPLE_LINK_RECORD_1 = load_data_json("link3.json")
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_link_record(fake_fs):
     sm = storage_model()
     sm.reset_database()
@@ -60,6 +53,7 @@ def test_create_link_record(fake_fs):
     assert record.orcid_auth.access_token == "foo"
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_save_link_record(fake_fs):
     sm = storage_model()
     sm.reset_database()
@@ -76,6 +70,7 @@ def test_save_link_record(fake_fs):
     assert record.orcid_auth.access_token == "fee"
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_link_record(fake_fs):
     sm = storage_model()
     sm.reset_database()
@@ -100,6 +95,7 @@ EXAMPLE_LINKING_SESSION_COMPLETED_1 = load_data_json(
 )
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_linking_session(fake_fs):
     sm = storage_model()
     sm.reset_database()
@@ -161,6 +157,7 @@ def test_create_linking_session(fake_fs):
 #     assert record is None
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_save_linking_record():
     sm = storage_model()
     sm.reset_database()

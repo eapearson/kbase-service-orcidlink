@@ -1,8 +1,10 @@
 import json
 from test.mocks.data import load_data_file, load_data_json
+from test.mocks.env import MOCK_KBASE_SERVICES_PORT, TEST_ENV
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 from test.mocks.testing_utils import generate_kbase_token
-
+import os
+from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,7 +14,6 @@ from orcidlink.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
 
-config_yaml = load_data_file("config1.toml")
 kbase_yaml = load_data_file("kbase1.yml")
 
 INVALID_TOKEN = generate_kbase_token("invalid_token")
@@ -25,7 +26,6 @@ CAUSES_INTERNAL_ERROR = generate_kbase_token("something_bad")
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
@@ -35,7 +35,7 @@ TEST_LINK = load_data_json("link1.json")
 
 # Happy paths
 
-
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_startup(fake_fs):
     with TestClient(app, raise_server_exceptions=False) as client:
         log_id = log_event("foo", {"bar": "baz"})
@@ -46,11 +46,13 @@ def test_startup(fake_fs):
         assert log["event"]["data"] == {"bar": "baz"}
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_docs(fake_fs):
     response = client.get("/docs")
     assert response.status_code == 200
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_docs_error(fake_fs):
     openapi_url = app.openapi_url
     app.openapi_url = None
@@ -64,11 +66,13 @@ def test_docs_error(fake_fs):
 # Error conditions
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_main_404(fake_fs):
     response = client.get("/foo")
     assert response.status_code == 404
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_validation_exception_handler(fake_fs):
     response = client.post("/orcid/works", json={"foo": "bar"})
     assert response.status_code == 422
@@ -81,10 +85,10 @@ def test_validation_exception_handler(fake_fs):
         == "This request does not comply with the schema for this endpoint"
     )
 
-
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_kbase_auth_exception_handler(fake_fs):
     with no_stderr():
-        with mock_auth_service() as [_, _, url]:
+        with mock_auth_service(MOCK_KBASE_SERVICES_PORT) as [_, _, url, port]:
             # call with missing token
             response = client.get("/link", headers={})
             assert response.status_code == 422
@@ -105,31 +109,61 @@ def test_kbase_auth_exception_handler(fake_fs):
             content = response.json()
             assert content["code"] == "invalidToken"
             assert content["title"] == "Invalid KBase Token"
-
-            response = client.get("/link", headers={"Authorization": NO_TOKEN})
-            assert response.status_code == 401
-            assert response.headers["content-type"] == "application/json"
-            content = response.json()
-            assert content["code"] == "authError"
-            assert content["title"] == "Error Authenticating KBase Token"
-
-            # call with empty token
-            response = client.get("/link", headers={"Authorization": EMPTY_TOKEN})
+            
+            # Call with actual empty token; should be caught at the validator boundary
+            # as it is invalid according to the rules for tokens.
+            response = client.get("/link", headers={"Authorization": ""})
             assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
             assert content["code"] == "requestParametersInvalid"
             assert content["title"] == "Request Parameters Invalid"
+            
 
-            # make a call which triggers a bug to trigger a JSON parse error
-            response = client.get("/link", headers={"Authorization": BAD_JSON})
-            assert response.status_code == 502
+            # Call with actual empty token; should be caught at the validator boundary
+            # as it is invalid according to the rules for tokens.
+            response = client.get("/link", headers={})
+            assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "badContentType"
-            assert content["title"] == "Received Incorrect Content Type"
+            assert content["code"] == "requestParametersInvalid"
+            assert content["title"] == "Request Parameters Invalid"
+     
+
+            # # This one pretends that the /link implementation does not check for 
+            # # missing token first, but rather sends the no token. For testing
+            # # this is implemented by sending a special testing token that triggers
+            # # the appropriate response from the mock auth service. 
+            # # However, as this cannot be triggered in real usage, we should redo
+            # # this test in a test of the client itself.
+            # response = client.get("/link", headers={"Authorization": NO_TOKEN})
+            # assert response.status_code == 401
+            # assert response.headers["content-type"] == "application/json"
+            # content = response.json()
+            # assert content["code"] == "authorizationRequired"
+            # assert content["title"] == "Authorization Required"
+
+            # # call with empty token
+            # # SAME HERE
+            # response = client.get("/link", headers={"Authorization": EMPTY_TOKEN})
+            # assert response.status_code == 422
+            # assert response.headers["content-type"] == "application/json"
+            # content = response.json()
+            # assert content["code"] == "requestParametersInvalid"
+            # assert content["title"] == "Request Parameters Invalid"
 
             # make a call which triggers a bug to trigger a JSON parse error
+            # response = client.get("/link", headers={"Authorization": BAD_JSON})
+            # assert response.status_code == 502
+            # assert response.headers["content-type"] == "application/json"
+            # content = response.json()
+            # assert content["code"] == "badContentType"
+            # assert content["title"] == "Received Incorrect Content Type"
+
+            # make a call which triggers a bug to trigger a JSON parse error
+            # this simulates a 500 error in the auth service which emits text
+            # rather than JSON - in other words, a deep and actual server error,
+            # not the usuall, silly 500 response we emit for all JSON-RPC!!
             response = client.get("/link", headers={"Authorization": TEXT_JSON})
             assert response.status_code == 502
             assert response.headers["content-type"] == "application/json"

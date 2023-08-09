@@ -31,6 +31,13 @@ INVALID_TOKEN = ErrorCode(
     status_code=401,
 )
 
+TOKEN_REQUIRED_BUT_MISSING = ErrorCode(
+    code="authorizationRequired",
+    title="Authorization Required",
+    description="The resource requires authorization, but not is present ",
+    status_code=401,
+)
+
 ORCID_INVALID_TOKEN = ErrorCode(
     code="orcidInvalidToken",
     title="ORCID Invalid Token",

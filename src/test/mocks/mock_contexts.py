@@ -22,7 +22,7 @@ def mock_auth_service(port: int):
     service = MockServer("127.0.0.1", port, MockAuthService)
     try:
         service.start_service()
-        url = f"{service.base_url()}/services/auth/api/V2/token"
+        url = f"{service.base_url()}/services/auth"
         yield [service, MockAuthService, url, port]
     finally:
         service.stop_service()

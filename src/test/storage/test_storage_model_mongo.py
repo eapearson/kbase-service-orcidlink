@@ -1,9 +1,10 @@
 from test.mocks.data import load_data_file, load_data_json
 
 import pytest
+import os
+from unittest import mock
 
 from orcidlink.lib import utils, errors
-from orcidlink.lib.config import config
 from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionInitial,
@@ -14,17 +15,16 @@ from orcidlink.model import (
 # TODO: is it really worth it separately testing the mongo storage model? If so,
 # we should not use the generic storage_model!
 from orcidlink.storage.storage_model import storage_model
-
-config_yaml = load_data_file("config1.toml")
+from test.mocks.env import TEST_ENV
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file(utils.module_path("deploy/config.toml"), contents=config_yaml)
     fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_constructor():
     model = storage_model()
     assert model is not None
@@ -58,13 +58,7 @@ EXAMPLE_LINKING_SESSION_COMPLETED_1 = load_data_json(
     "linking_session_record_completed.json"
 )
 
-
-@pytest.fixture(autouse=True)
-def around_tests(fake_fs):
-    config(True)
-    yield
-
-
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_link_record():
     sm = storage_model()
     sm.reset_database()
@@ -73,6 +67,7 @@ def test_create_link_record():
     assert record is not None
     assert record.orcid_auth.access_token == "foo"
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 
 def test_save_link_record():
     sm = storage_model()
@@ -89,7 +84,7 @@ def test_save_link_record():
     assert record is not None
     assert record.orcid_auth.access_token == "fee"
 
-
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_delete_link_record():
     sm = storage_model()
     sm.reset_database()
@@ -115,7 +110,7 @@ EXAMPLE_LINKING_SESSION_RECORD_1 = {
     "expires_at": 456,
 }
 
-
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_create_linking_session():
     sm = storage_model()
     sm.reset_database()
@@ -127,6 +122,7 @@ def test_create_linking_session():
     assert record.session_id == "bar"
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_save_linking_record():
     sm = storage_model()
     sm.reset_database()
@@ -167,6 +163,7 @@ def test_save_linking_record():
     assert record is None
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_update_linking_session_to_started_bad_session_id():
     sm = storage_model()
     sm.reset_database()
@@ -182,6 +179,7 @@ def test_update_linking_session_to_started_bad_session_id():
         sm.update_linking_session_to_started("baz", "return-link", False, "ui-options")
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_update_linking_session_to_finished_bad_session_id():
     sm = storage_model()
     sm.reset_database()
