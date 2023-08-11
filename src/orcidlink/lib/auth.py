@@ -1,16 +1,8 @@
 from typing import Tuple
 
+from orcidlink.lib import errors, exceptions
 from orcidlink.lib.config import Config2
-from orcidlink.lib.errors import (
-    TOKEN_REQUIRED_BUT_MISSING,
-    INVALID_TOKEN,
-    ServiceErrorXX,
-)
-from orcidlink.lib.service_clients.kbase_auth import (
-    KBaseAuth,
-    KBaseAuthInvalidToken,
-    TokenInfo,
-)
+from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
 
 """
 A 
@@ -45,8 +37,8 @@ async def ensure_authorization(
     error handling. Its sole purpose is to ensure that the provided token is good and valid.
     """
     if authorization is None or authorization == "":
-        raise ServiceErrorXX(
-            TOKEN_REQUIRED_BUT_MISSING, "Authorization required but missing"
+        raise exceptions.AuthorizationRequiredError(
+            "Authorization required but missing"
         )
 
     config = Config2()
@@ -56,12 +48,8 @@ async def ensure_authorization(
         cache_lifetime=config.get_cache_lifetime(),
         cache_max_items=config.get_cache_max_items(),
     )
-    try:
-        token_info = await auth.get_token_info(authorization)
-        return authorization, token_info
-    except KBaseAuthInvalidToken as auth_error:
-        print("HERE???", str(auth_error))
-        raise ServiceErrorXX(INVALID_TOKEN, "Authorization presented, but is invalid")
+    token_info = await auth.get_token_info(authorization)
+    return authorization, token_info
 
 
 # def ensure_authorization_cookie(

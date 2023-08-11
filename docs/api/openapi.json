@@ -38,6 +38,28 @@
                 }
             }
         },
+        "/info": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "summary": "Get Info",
+                "description": "Get Service Information\n\nReturns basic information about the service and its runtime configuration.",
+                "operationId": "get_info_info_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InfoResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/link": {
             "get": {
                 "tags": [
@@ -785,7 +807,7 @@
                     "linking-sessions"
                 ],
                 "summary": "Linking Sessions Continue",
-                "description": "Continue Linking Session\n\nThis endpoint implements the end point for the ORCID OAuth flow. That is, it\nserves as the redirection target after the user has successfully completed\ntheir interaction with ORCID, at which they may have logged in and provided\ntheir consent to issuing the linking token to KBase.\n\nNote that since this is an \"interactive\" endpoint, which does not have its own\nuser interface, rather redirects to kbase-ui when finished. This applies to\nerrors as well. Errors are displayed by redirecting the browser to an endpoint\nin kbase-ui which is designed to expect the error values for display to be\nin the url itself.",
+                "description": "Continue Linking Session\n\nThis endpoint implements the handoff from frmo the ORCID authorization sktep in\nthe ORCID OAuth flow. That is, it\nserves as the redirection target after the user has successfully completed\ntheir interaction with ORCID, at which they may have logged in and provided\ntheir consent to issuing the linking token to KBase.\n\nNote that since this is an \"interactive\" endpoint, which does not have its own\nuser interface, rather redirects to kbase-ui when finished. This applies to\nerrors as well. Errors are displayed by redirecting the browser to an endpoint\nin kbase-ui which is designed to expect the error values for display to be\nin the url itself.",
                 "operationId": "linking_sessions_continue_linking_sessions_oauth_continue_get",
                 "parameters": [
                     {
@@ -1422,9 +1444,24 @@
             "ErrorResponse": {
                 "properties": {
                     "code": {
-                        "type": "string",
-                        "maxLength": 25,
-                        "minLength": 5,
+                        "type": "integer",
+                        "enum": [
+                            1000,
+                            1010,
+                            1011,
+                            1020,
+                            1030,
+                            1040,
+                            1041,
+                            1050,
+                            1051,
+                            1052,
+                            1060,
+                            1070,
+                            1080,
+                            1081,
+                            1099
+                        ],
                         "title": "Code",
                         "description": "A unique code associated with this specific type of error"
                     },
@@ -1580,6 +1617,82 @@
                     "zbl"
                 ],
                 "title": "ExternalIdType"
+            },
+            "GitInfo": {
+                "properties": {
+                    "commit_hash": {
+                        "type": "string",
+                        "title": "Commit Hash"
+                    },
+                    "commit_hash_abbreviated": {
+                        "type": "string",
+                        "title": "Commit Hash Abbreviated"
+                    },
+                    "author_name": {
+                        "type": "string",
+                        "title": "Author Name"
+                    },
+                    "author_date": {
+                        "type": "integer",
+                        "title": "Author Date"
+                    },
+                    "committer_name": {
+                        "type": "string",
+                        "title": "Committer Name"
+                    },
+                    "committer_date": {
+                        "type": "integer",
+                        "title": "Committer Date"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "Url"
+                    },
+                    "branch": {
+                        "type": "string",
+                        "title": "Branch"
+                    },
+                    "tag": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Tag"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "commit_hash",
+                    "commit_hash_abbreviated",
+                    "author_name",
+                    "author_date",
+                    "committer_name",
+                    "committer_date",
+                    "url",
+                    "branch",
+                    "tag"
+                ],
+                "title": "GitInfo"
+            },
+            "InfoResponse": {
+                "properties": {
+                    "service-description": {
+                        "$ref": "#/components/schemas/ServiceDescription"
+                    },
+                    "git-info": {
+                        "$ref": "#/components/schemas/GitInfo"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "service-description",
+                    "git-info"
+                ],
+                "title": "InfoResponse"
             },
             "LinkRecordPublic": {
                 "properties": {
@@ -2148,6 +2261,56 @@
                 "properties": {},
                 "type": "object",
                 "title": "ServiceBaseModel"
+            },
+            "ServiceDescription": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "title": "Name"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 5,
+                        "title": "Title"
+                    },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 5,
+                        "title": "Version"
+                    },
+                    "language": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "title": "Language"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 4000,
+                        "minLength": 50,
+                        "title": "Description"
+                    },
+                    "repoURL": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 15,
+                        "title": "Repourl"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "title",
+                    "version",
+                    "language",
+                    "description",
+                    "repoURL"
+                ],
+                "title": "ServiceDescription"
             },
             "SimpleSuccess": {
                 "properties": {

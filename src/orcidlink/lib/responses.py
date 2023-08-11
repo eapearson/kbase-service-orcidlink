@@ -1,55 +1,19 @@
-# from fastapi import HTTPException
 from traceback import extract_tb
-from typing import Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 from urllib.parse import urlencode
 
 from fastapi import Header
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import Field
 
 from orcidlink.lib.config import Config2
+from orcidlink.lib.errors import ErrorCode, ErrorCode2, ErrorResponse
 from orcidlink.lib.type import ServiceBaseModel
 
 ##
 # Common http responses, implemented as response-generating functions.
 #
-
-T = TypeVar("T", bound=ServiceBaseModel)
-
-
-class ErrorResponse(ServiceBaseModel, Generic[T]):
-    """
-    A generic error object used for all error responses.
-
-    See [the error docs](docs/errors.md) for more information.
-    """
-
-    # see lib/errors.py for all available error codes.
-    code: str = Field(
-        min_length=5,
-        max_length=25,
-        description="A unique code associated with this specific type of error",
-    )
-    title: str = Field(
-        min_length=5,
-        max_length=50,
-        description="A human-readable title for this error; displayable as an error dialog title",
-    )
-    message: str = Field(
-        description="A human-readable error message, meant to be displayed to an end user or developer",
-    )
-    data: Optional[T] = Field(default=None)
-
-
-def success_response_no_data() -> Response:
-    """
-    Simply returns a simple 204 response with no body.
-    """
-    return Response(status_code=204)
-
-
-R = TypeVar("R", bound=ServiceBaseModel)
 
 
 def error_response2(
@@ -74,15 +38,14 @@ def error_response2(
 
 
 def error_response(
-    code: str,
-    title: str,
+    error: ErrorCode2,
     message: str,
     data: Optional[ServiceBaseModel] = None,
     status_code: int = 400,
 ) -> JSONResponse:
     response = ErrorResponse[ServiceBaseModel](
-        code=code,
-        title=title,
+        code=error.code,
+        title=error.title,
         message=message,
     )
 
@@ -92,10 +55,6 @@ def error_response(
     return JSONResponse(
         status_code=status_code, content=jsonable_encoder(response, exclude_unset=True)
     )
-
-
-def error_response_not_found(message: str) -> JSONResponse:
-    return error_response("notFound", "Not Found", message, status_code=404)
 
 
 class ExceptionTraceback(ServiceBaseModel):
@@ -113,8 +72,7 @@ class ExceptionData(ServiceBaseModel):
 
 
 def exception_error_response(
-    code: str,
-    title: str,
+    error: ErrorCode2,
     exception: Exception,
     status_code: int = 400,
 ) -> JSONResponse:
@@ -126,12 +84,11 @@ def exception_error_response(
             )
         )
 
-    # data.update({"exception": str(exception), "traceback": traceback})
     data = ExceptionData(exception=str(exception), traceback=traceback)
 
     response = ErrorResponse[Any](
-        code=code or "exception",
-        title=title or "Exception",
+        code=error.code,
+        title=error.title or "Exception",
         message=str(exception),
         data=data,
     )
@@ -141,8 +98,10 @@ def exception_error_response(
     )
 
 
-def ui_error_response(code: str, title: str, message: str) -> RedirectResponse:
-    error_params = urlencode({"code": code, "title": title, "message": message})
+def ui_error_response(error: ErrorCode2, message: str) -> RedirectResponse:
+    error_params = urlencode(
+        {"code": error.code, "title": error.title, "message": message}
+    )
     return RedirectResponse(
         f"{Config2().get_ui_origin()}?{error_params}#orcidlink/error", status_code=302
     )

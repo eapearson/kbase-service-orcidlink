@@ -1,16 +1,9 @@
 import os
-from test.mocks.data import load_data_file
 from unittest import mock
+
 import pytest
-from orcidlink.lib.config import Config2
-from orcidlink.lib.utils import module_dir
-from orcidlink.model import ServiceDescription
 
-from orcidlink.lib.config import IntConstantDefault
-
-# config_file = load_data_file("config1.toml")
-# config_file2 = load_data_file("config2.toml")
-
+from orcidlink.lib.config import Config2, IntConstantDefault
 
 TEST_ENV = {
     "KBASE_ENDPOINT": f"http://foo/services/",

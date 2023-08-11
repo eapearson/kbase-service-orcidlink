@@ -1,21 +1,16 @@
-from test.mocks.data import load_data_file, load_data_json
-
-import pytest
 import os
+from test.mocks.data import load_data_json
+from test.mocks.env import TEST_ENV
 from unittest import mock
 
-from orcidlink.lib import utils, errors
-from orcidlink.model import (
-    LinkingSessionComplete,
-    LinkingSessionInitial,
-    LinkRecord,
-    ORCIDAuth,
-)
+import pytest
+
+from orcidlink.lib import errors, exceptions, utils
+from orcidlink.model import LinkingSessionInitial, LinkRecord, ORCIDAuth
 
 # TODO: is it really worth it separately testing the mongo storage model? If so,
 # we should not use the generic storage_model!
 from orcidlink.storage.storage_model import storage_model
-from test.mocks.env import TEST_ENV
 
 
 @pytest.fixture
@@ -178,7 +173,7 @@ def test_update_linking_session_to_started_bad_session_id():
     assert record.session_id == "bar"
 
     # updated_record = copy.deepcopy(EXAMPLE_LINKING_SESSION_RECORD_1)
-    with pytest.raises(errors.NotFoundError):
+    with pytest.raises(exceptions.NotFoundError):
         sm.update_linking_session_to_started("baz", "return-link", False, "ui-options")
 
 
@@ -206,5 +201,8 @@ def test_update_linking_session_to_finished_bad_session_id():
         id_token="g",
     )
 
-    with pytest.raises(errors.NotFoundError):
+    with pytest.raises(exceptions.ServiceErrorY) as error:
         sm.update_linking_session_to_finished("baz", orcid_auth)
+
+    assert error.value.message == "Linking session not found"
+    assert error.value.error.code == errors.ERRORS.not_found.code

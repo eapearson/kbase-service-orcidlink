@@ -1,6 +1,6 @@
 import pytest
-from orcidlink.lib import errors
 
+from orcidlink.lib import errors, exceptions
 
 # def test_ServiceError():
 #     # Minimal
@@ -46,10 +46,9 @@ from orcidlink.lib import errors
 
 
 def test_internal_server_error():
-    with pytest.raises(errors.InternalError) as ie:
-        raise errors.InternalError("Hello, I'm an internal error", data={"foo": "bar"})
+    with pytest.raises(exceptions.InternalServerError) as ie:
+        raise exceptions.InternalServerError("Hello, I'm an internal error")
     exception = ie.value
-    assert exception.status_code == 500
-    assert exception.code == "internalError"
+    assert exception.status_code == errors.ERRORS.internal_server_error.status_code
+    assert exception.code == errors.ERRORS.internal_server_error.code
     assert exception.message == "Hello, I'm an internal error"
-    assert exception.data["foo"] == "bar"

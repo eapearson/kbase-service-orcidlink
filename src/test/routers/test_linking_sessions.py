@@ -1,7 +1,7 @@
 import contextlib
 import json
-from urllib.parse import urlparse, parse_qs
-from test.mocks.data import load_data_file, load_data_json
+import os
+from test.mocks.data import load_data_json
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_OAUTH_PORT, TEST_ENV
 from test.mocks.mock_contexts import (
     mock_auth_service,
@@ -9,19 +9,15 @@ from test.mocks.mock_contexts import (
     no_stderr,
 )
 from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO, clear_storage_model
-
-import os
 from unittest import mock
-import pytest
+from urllib.parse import parse_qs, urlparse
+
 from fastapi.testclient import TestClient
 
-from orcidlink.lib import utils
-from orcidlink.lib.config import Config2
+from orcidlink.lib import errors
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage.storage_model import storage_model
-from test.routers.orcid.test_works import MOCK_ORCID_API_PORT
-
 
 TEST_LINK = load_data_json("link2.json")
 TEST_LINK1 = load_data_json("link1.json")
@@ -842,8 +838,10 @@ def test_continue_linking_session_errors():
             assert_location_params(
                 response,
                 {
-                    "code": "link.code_missing",
-                    "title": "Linking code missing",
+                    "code": str(
+                        errors.ERRORS.linking_session_continue_invalid_param.code
+                    ),
+                    "title": errors.ERRORS.linking_session_continue_invalid_param.title,
                     "message": "The 'code' query param is required but missing",
                 },
             )
@@ -860,8 +858,10 @@ def test_continue_linking_session_errors():
             assert_location_params(
                 response,
                 {
-                    "code": "link.state_missing",
-                    "title": "Linking state missing",
+                    "code": str(
+                        errors.ERRORS.linking_session_continue_invalid_param.code
+                    ),
+                    "title": errors.ERRORS.linking_session_continue_invalid_param.title,
                     "message": "The 'state' query param is required but missing",
                 },
             )
@@ -878,8 +878,10 @@ def test_continue_linking_session_errors():
             assert_location_params(
                 response,
                 {
-                    "code": "link.session_id_missing",
-                    "title": "Linking Error",
+                    "code": str(
+                        errors.ERRORS.linking_session_continue_invalid_param.code
+                    ),
+                    "title": errors.ERRORS.linking_session_continue_invalid_param.title,
                     "message": "The 'session_id' was not provided in the 'state' query param",
                 },
             )

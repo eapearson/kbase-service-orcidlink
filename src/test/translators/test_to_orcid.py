@@ -1,4 +1,5 @@
 import pytest
+
 from orcidlink import model
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.translators import to_orcid
@@ -41,12 +42,8 @@ def test_transform_contributor_self():
         orcidId="1111-2222-3333-4444",
         name="bar",
         roles=[
-            model.ContributorRole(
-                role="http://credit.niso.org/contributor-roles/conceptualization/"
-            ),
-            model.ContributorRole(
-                role="http://credit.niso.org/contributor-roles/validation/"
-            ),
+            model.ContributorRole(role=model.ContributorRoleValue.conceptualization),
+            model.ContributorRole(role=model.ContributorRoleValue.validation),
         ],
     )
     orcid_contributor_record = to_orcid.transform_contributor_self(model_contributor)
@@ -58,12 +55,8 @@ def test_transform_contributor():
         orcidId="1111-2222-3333-4444",
         name="bar",
         roles=[
-            model.ContributorRole(
-                role="http://credit.niso.org/contributor-roles/conceptualization/"
-            ),
-            model.ContributorRole(
-                role="http://credit.niso.org/contributor-roles/validation/"
-            ),
+            model.ContributorRole(role=model.ContributorRoleValue.conceptualization),
+            model.ContributorRole(role=model.ContributorRoleValue.validation),
         ],
     )
     orcid_contributor_record = to_orcid.transform_contributor(model_contributor)
@@ -77,22 +70,18 @@ def test_transform_contributors():
             name="bar",
             roles=[
                 model.ContributorRole(
-                    role="http://credit.niso.org/contributor-roles/conceptualization/"
+                    role=model.ContributorRoleValue.conceptualization
                 ),
-                model.ContributorRole(
-                    role="http://credit.niso.org/contributor-roles/validation/"
-                ),
+                model.ContributorRole(role=model.ContributorRoleValue.validation),
             ],
         ),
         model.ORCIDContributorSelf(
             orcidId="1111-2222-3333-4444",
             name="mouse",
             roles=[
+                model.ContributorRole(role=model.ContributorRoleValue.formal_analysis),
                 model.ContributorRole(
-                    role="http://credit.niso.org/contributor-roles/formal-analysis/"
-                ),
-                model.ContributorRole(
-                    role="http://credit.niso.org/contributor-roles/writing-review-editing/"
+                    role=model.ContributorRoleValue.writing_review_editing
                 ),
             ],
         ),

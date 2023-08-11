@@ -1,0 +1,206 @@
+@startuml
+
+title Usage Flow
+
+|%darken("aqua", 20)|User|
+|#aqua|Browser|
+|#silver|orcidlink home|
+|%darken("silver", 20)|orcidlink link|
+|%darken("silver", 30)|orcidlink start|
+|%darken("silver", 40)|orcidlink confirm|
+|#lime|orcidlink service|
+|%darken("lime", 20)|orcidlink db|
+|#yellow|ORCID OAuth|
+
+|User|
+start
+
+|User|
+:User navigates to #orcidlink;
+-[#blue]->;
+
+|orcidlink home|
+:Display orcidlink home page;
+
+:Request check if have orcid link;
+
+-[dashed]-> kbase auth token;
+
+|orcidlink service|
+:Check if have orcid link;
+:Get orcid link for user;
+-[dashed]-> get orcid link;
+
+|orcidlink db|
+:Return link record or null;
+-[dashed]-> has orcid link?;
+
+|orcidlink service|
+:Return whether has link or null;
+
+-[dashed]-> has orcid link?;
+
+|orcidlink home|
+
+if (Has ORCID Link) then (yes)
+    :Display orcidlink info;
+    -[#blue]->;
+    |User|
+    : Done ;
+    stop
+else (no)
+    |orcidlink home|
+    :display orcidlink background and button;
+    -[#blue]->;
+endif
+
+|User|
+:User reads it and decides to create a link;
+:User clicks the "Create ORCID Link" button;
+-[dashed]-> kbase auth cookie;
+
+|orcidlink link|
+:Request create Link Session;
+-[dashed]-> kbase auth token;
+
+|orcidlink service|
+:Create link session and return session id;
+-[dashed]-> session id;
+
+|orcidlink link|
+:Return linking session id;
+-[dashed]-> session id;
+
+|User|
+:User grocks info, clicks button to proceed;
+-[#blue]->;
+
+|orcidlink start|
+:Move link session into "started" mode;
+-[dashed]-> session id;
+
+|orcidlink db|
+:Delete "created", create "started" record;
+-[dashed]-> session id;
+
+|orcidlink start|
+:Redirect browser to ORCID Oauth;
+-[#blue]->;
+
+|ORCID OAuth|
+if (Logged in?) then (no)
+    :Display login form;
+    :Handle login;
+else (yes)
+endif
+
+:Show permissions form;
+-[#blue]->;
+
+|User|
+:Reads form...;
+:Clicks button to grant permission to KBase;
+-[#blue]->;
+
+|ORCID OAuth|
+:Process permissions grant, adding to user account;
+:Redirects to special "page";
+-[#blue]->;
+
+|orcidlink service|
+:Process redirect with parameters;
+:Change orcidlink session from started to completed;
+-[dashed]-> 
+
+|orcidlink db|
+:Delete started session record;
+:Create completed session record;
+-[dashed]-> 
+
+|orcidlink service|
+:Redirect browser to confirmation page;
+-[#blue]->;
+
+|orcidlink confirm|
+:Show confirmation view;
+-[#blue]->;
+
+|User|
+:Reads confirmation view;
+
+if (User confirms) then (yes)
+    :Clicks "confirm" button;
+    -[dashed]-> 
+else (no)
+    :Clicks cancel button;
+    -[dashed]-> 
+
+    |orcidlink service|
+    :Cancels linking session;
+    -[dashed]-> 
+
+    |orcidlink db|
+    :Delete linking session doc;
+    -[dashed]-> 
+
+    |orcidlink service|
+    :Return ok;
+    -[dashed]-> 
+
+    |User|
+    :Go to ORCID Link home;
+    -[#blue]->;
+
+    |orcidlink home|
+    :Show orcidlink home page;
+    -[#blue]->;
+
+    |User|
+    :Views orcidlink home page;
+    :Regrets not having created orcid link!;
+    stop
+endif
+
+|orcidlink confirm|
+:Request finish linking session;
+-[dashed]->
+
+|orcidlink service|
+:Exchange temp orcid code for permanent token;
+-[dashed]-> 
+
+|ORCID OAuth|
+:Grant KBase access to user's account;
+:Return user's private token info;
+-[dashed]-> 
+
+
+|orcidlink service|
+:Create link, remove linking session;
+-[dashed]-> 
+
+|orcidlink db|
+:Create Link record;
+:Delete linking session record;
+-[dashed]->
+
+|orcidlink service|
+:Return link record;
+-[dashed]->
+
+|orcidlink confirm|
+:Navigate to orcid link home;
+-[#blue]->;
+
+|orcidlink home|
+:Show home with orcidlink info!;
+-[#blue]->;
+
+|User|
+:Views their orcidlink;
+:Revels in the vision;
+
+stop
+
+
+@enduml

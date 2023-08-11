@@ -25,17 +25,9 @@ from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import HTMLResponse, JSONResponse
 
-from orcidlink.lib import logger
+from orcidlink.lib import errors, exceptions, logger
 from orcidlink.lib.config import Config2
-from orcidlink.lib.errors import (
-    FASTAPI_ERROR,
-    NOT_FOUND,
-    ServiceError,
-    ServiceErrorX,
-    ServiceErrorXX,
-)
 from orcidlink.lib.responses import (
-    ErrorResponse,
     error_response,
     error_response2,
     exception_error_response,
@@ -43,11 +35,6 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
-from orcidlink.lib.service_clients.kbase_auth import (
-    KBaseAuthError,
-    KBaseAuthErrorInfo,
-    KBaseAuthInvalidToken,
-)
 
 ###############################################################################
 # FastAPI application setup
@@ -163,82 +150,23 @@ async def validation_exception_handler(
     detail = list(exc.errors())
     data: ValidationError = ValidationError(detail=detail, body=exc.body)
     return error_response(
-        "requestParametersInvalid",
-        "Request Parameters Invalid",
+        errors.ERRORS.request_validation_error,
         "This request does not comply with the schema for this endpoint",
         data=data,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
 
 
-#
-# We rely upon the auth client to raise this exception if a bad, invalid, expired token
-# is used. Service endpoint handlers should not attempt to catch this exception.
-# Note that we do not handle missing token errors. These are caught directly by
-# service endpoint handlers as part of defensive programming practices.
-#
-@app.exception_handler(KBaseAuthInvalidToken)
-async def kbase_auth_invalid_token_handler(
-    request: Request, exc: KBaseAuthInvalidToken
-) -> JSONResponse:
-    data: WrappedError[KBaseAuthErrorInfo] = WrappedError[KBaseAuthErrorInfo](
-        detail=exc.to_obj()
-    )
-    return error_response(
-        "invalidToken",
-        "Invalid KBase Token",
-        "KBase auth token is invalid",
-        data=data,
-        status_code=status.HTTP_401_UNAUTHORIZED,
-    )
-
-
-#
-# This covers all other potential auth errors. From experience other potential errors are
-# very rare.
-# See https://github.com/kbase/auth2/blob/master/src/us/kbase/auth2/lib/exceptions/ErrorType.java
-#
-
-
-class KBaseAuthErrorDetails(ServiceBaseModel):
-    details: KBaseAuthErrorInfo
-
-
-@app.exception_handler(KBaseAuthError)
-async def kbase_auth_exception_handler(
-    request: Request, exc: KBaseAuthError
-) -> JSONResponse:
-    # TODO: this should reflect the nature of the auth error,
-    return error_response(
-        "authError",
-        "Error Authenticating KBase Token",
-        "Unknown error authenticating with KBase",
-        data=KBaseAuthErrorDetails(details=exc.to_obj()),
-        status_code=status.HTTP_401_UNAUTHORIZED,
-    )
-
-
-#
-# ServiceError is a generic wrapper around an ErrorResponse and status code, and can create
-# its own error response dict.
-#
-@app.exception_handler(ServiceError)
-async def service_error_exception_handler(
-    _: Request, exc: ServiceError
-) -> JSONResponse:
-    return exc.get_response()
-
-
-@app.exception_handler(ServiceErrorX)
+@app.exception_handler(exceptions.ServiceErrorX)
 async def service_errorx_exception_handler(
-    _: Request, exc: ServiceErrorX
+    _: Request, exc: exceptions.ServiceErrorX
 ) -> JSONResponse:
     return exc.get_response()
 
 
-@app.exception_handler(ServiceErrorXX)
-async def service_errorxx_exception_handler(
-    _: Request, exc: ServiceErrorXX
+@app.exception_handler(exceptions.ServiceErrorY)
+async def service_errory_exception_handler(
+    _: Request, exc: exceptions.ServiceErrorY
 ) -> JSONResponse:
     return exc.get_response()
 
@@ -252,10 +180,8 @@ async def service_errorxx_exception_handler(
 async def internal_server_error_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
-    print("EXCEPTION HANDLER", str(exc), exc.__class__)
     return exception_error_response(
-        "internalServerError",
-        "Internal Server Error",
+        errors.ERRORS.internal_server_error,
         exc,
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
@@ -286,9 +212,9 @@ async def http_exception_handler(
 ) -> JSONResponse:
     if exc.status_code == 404:
         return error_response2(
-            ErrorResponse[StarletteHTTPNotFoundData](
-                code=NOT_FOUND.code,
-                title=NOT_FOUND.title,
+            errors.ErrorResponse[StarletteHTTPNotFoundData](
+                code=errors.ERRORS.not_found.code,
+                title=errors.ERRORS.not_found.title,
                 message="The requested resource was not found",
                 data=StarletteHTTPNotFoundData(
                     detail=exc.detail, path=request.url.path
@@ -298,9 +224,9 @@ async def http_exception_handler(
         )
 
     return error_response2(
-        ErrorResponse[StarletteHTTPDetailData](
-            code=FASTAPI_ERROR.code,
-            title="FastAPI Error",
+        errors.ErrorResponse[StarletteHTTPDetailData](
+            code=errors.ERRORS.fastapi_error.code,
+            title=errors.ERRORS.fastapi_error.title,
             message="Internal FastAPI Exception",
             data=StarletteHTTPDetailData(detail=exc.detail),
         ),

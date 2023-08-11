@@ -1,24 +1,24 @@
 import contextlib
 import json
-from test.mocks.data import load_data_file
+import os
+from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_API_PORT, TEST_ENV
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_api_service,
     no_stderr,
 )
 from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
+from unittest import mock
 
 import aiohttp
 import pytest
 from fastapi.testclient import TestClient
 
-from orcidlink.lib import utils
+from orcidlink.lib import errors, utils
+from orcidlink.lib.service_clients import orcid_api
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
-from orcidlink.lib.service_clients import orcid_api
 from orcidlink.storage import storage_model
-import os
-from unittest import mock
 
 
 @pytest.fixture
@@ -50,22 +50,6 @@ def create_link():
     sm = storage_model.storage_model()
     sm.db.links.drop()
     sm.create_link_record(LinkRecord.model_validate(TEST_LINK))
-
-
-MOCK_KBASE_SERVICES_PORT = 9999
-MOCK_ORCID_API_PORT = 9997
-MOCK_ORCID_OAUTH_PORT = 9998
-TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://127.0.0.1:{MOCK_KBASE_SERVICES_PORT}/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
-    "MONGO_HOST": "mongo",
-    "MONGO_PORT": "27017",
-    "MONGO_DATABASE": "orcidlink",
-    "MONGO_USERNAME": "dev",
-    "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_API_PORT}",
-    "ORCID_OAUTH_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_OAUTH_PORT}",
-}
 
 
 @contextlib.contextmanager
@@ -166,9 +150,9 @@ def test_get_work_errors(fake_fs):
             )
             assert response.status_code == 502
             error = response.json()
-            assert error["code"] == "upstreamError"
+            assert error["code"] == errors.ERRORS.upstream_orcid_error.code
             assert error["message"] == "Error fetching data from ORCID"
-            # print('OH really', type(error), error)
+
             # expected = {
             #     "code": "upstreamError",
             #     "title": "Error",
@@ -501,7 +485,7 @@ def test_delete_work_not_source(fake_fs):
             )
             assert response.status_code == 502
             result = response.json()
-            assert result["code"] == "upstreamError"
+            assert result["code"] == errors.ERRORS.upstream_error.code
             assert result["title"] == "Upstream Error"
             # assert (
             #         result["message"]
@@ -526,7 +510,7 @@ def test_delete_work_put_code_not_found(fake_fs):
             )
             assert response.status_code == 502
             result = response.json()
-            assert result["code"] == "upstreamError"
+            assert result["code"] == errors.ERRORS.upstream_error.code
             assert result["title"] == "Upstream Error"
             # assert (
             #         result["message"]

@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 from pymongo import MongoClient
 
-from orcidlink.lib import errors
+from orcidlink.lib import errors, exceptions
 from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionInitial,
@@ -132,7 +132,7 @@ class StorageModelMongo:
             )
 
             if linking_session is None:
-                raise errors.NotFoundError("Linking session not found")
+                raise exceptions.NotFoundError("Linking session not found")
 
             linking_session["return_link"] = return_link
             linking_session["skip_prompt"] = skip_prompt
@@ -156,7 +156,10 @@ class StorageModelMongo:
             )
 
             if linking_session is None:
-                raise errors.NotFoundError("Linking session not found")
+                raise exceptions.ServiceErrorY(
+                    error=errors.ERRORS.not_found,
+                    message="Linking session not found",
+                )
 
             linking_session["orcid_auth"] = orcid_auth.model_dump()
 

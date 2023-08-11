@@ -1,29 +1,15 @@
 import json
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple, cast
 
 import aiohttp
 from pydantic import Field
-from orcidlink.lib.errors import (
-    INTERNAL_SERVER_ERROR,
-    JSON_DECODE_ERROR,
-    NOT_JSON,
-    ServiceErrorXX,
-)
+
+from orcidlink.lib import errors, exceptions
 from orcidlink.lib.json_file import JSONLikeObject
+from orcidlink.lib.service_clients.jsonrpc import JSONRPCError
 from orcidlink.lib.type import ServiceBaseModel
-
-
-class ServiceError(Exception):
-    def __init__(
-        self, message: str, status_code: int, code: int, original_message: str
-    ):
-        super().__init__(self, message)
-        self.status_code = status_code
-        self.code = code
-        self.message = message
-        self.original_message = original_message
 
 
 def parse_workspace_ref(ref: str) -> Tuple[int, int, int]:
@@ -46,7 +32,9 @@ class JSONRPC11Service:
         self.timeout = timeout
         self.authorization = authorization
 
-    async def call_func(self, func_name: str, params: Any) -> Any:
+    async def call_func(
+        self, func_name: str, params: Any
+    ) -> Tuple[Optional[JSONLikeObject], Optional[JSONRPCError]]:
         call_params = []
         if params is not None:
             call_params.append(params)
@@ -77,82 +65,11 @@ class JSONRPC11Service:
 
         except aiohttp.ContentTypeError as cte:
             # Raised if it is not application/json
-
-            data: JSONLikeObject = {}
-
-            if cte.headers is not None:
-                data["originalContentType"] = cte.headers["content-type"]
-
-            raise ServiceErrorXX(
-                NOT_JSON, f"Expected a JSON response", data=data
-            ) from cte
-
-            # raise ServiceError(
-            #     error=ErrorResponse[ServiceBaseModel](
-            #         code="badContentType",
-            #         title="Received Incorrect Content Type",
-            #         message="The auth service responded with wrong content type; expected application/json",
-            #         data=model.JSONDecodeErrorData(
-            #             status_code=cte.status, error=str(cte)
-            #         ),
-            #     ),
-            #     status_code=502,
-            # ) from cte
+            raise exceptions.ContentTypeError("Wrong content type", cte)
         except json.JSONDecodeError as jde:
-            raise ServiceErrorXX(
-                JSON_DECODE_ERROR,
-                f"Expected a JSON response",
-                data={"decodeErrorMessage": str(jde)},
-            ) from jde
-            # Note that here we are raising the default exception for the
-            # httpx library in the case that a deep internal server error
-            # is thrown without an actual json response. In other words, the
-            # error is not a JSON-RPC error thrown by the auth2 service itself,
-            # but some truly internal server error.
-            # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
-            # are 500.
-            # raise ServiceError(
-            #     error=ErrorResponse[ServiceBaseModel](
-            #         code="jsonDecodeError",
-            #         title="Error Decoding Response",
-            #         message="The auth service responded with non-JSON content",
-            #         data=model.JSONDecodeErrorData(
-            #             # Note - we can't get response.status_code without a type error,
-            #             # TODO: figure out this nesting exceptions thing.
-            #             status_code=0, error=str(ex)
-            #         ),
-            #     ),
-            #     status_code=502,
-            # ) from ex
+            raise exceptions.JSONDecodeError("Error decoding JSON", jde)
         except Exception as ex:
-            raise ServiceErrorXX(
-                INTERNAL_SERVER_ERROR,
-                f"Unexpected exception caught",
-                data={"exceptionMessage": str(ex)},
-            ) from ex
-            # print("EXCEPTION!!!!", str(ex), ex.__class__)
-            # raise ex
-        # except Exception as ex:
-        #     raise ServiceError(
-        #         message=f"Call to {func_name} failed with unknown exception",
-        #         status_code=0,
-        #         code=123,  ## TODO: determine error codes
-        #         original_message=str(ex),
-        #     )
-        #     # raise Exception(
-        #     #     f"Call to {func_name} failed with unknown exception: {str(ex)}"
-        #     # )
-
-        # try:
-        #     rpc_response = response.json()
-        # except json.JSONDecodeError as jsonde:
-        #     raise ServiceError(
-        #         message="Cannot parse response as JSON",
-        #         status_code=0,
-        #         code=123,  # TODO: make error code table???
-        #         original_message=str(jsonde),
-        #     )
-        # raise Exception(f"Did not receive proper json response: {str(jsonde)}")
+            raise exceptions.InternalServerError("Unexpected error")
 
 
 @dataclass
@@ -261,21 +178,36 @@ class WorkspaceService(JSONRPC11Service):
             {"objects": [{"ref": ref}], "includeMetadata": 1, "ignoreErrors": 0},
         )
         if error is not None:
-            raise Exception(f'Error fetching object info: {error.get("message")}')
-        object_info = result["infos"][0]
-        return object_info_to_dict(object_info)
+            # TODO: more specific message from errors
+            raise Exception(f"Error fetching object info: {error.message}")
+        elif result is not None and isinstance(result, dict):
+            infos = result.get("infos")
+            if isinstance(infos, list):
+                object_info = infos[0]
+                if isinstance(object_info, list):
+                    # just trust for now:
+                    return object_info_to_dict(cast(RawObjectInfo, object_info))
+                else:
+                    raise exceptions.ImpossibleError(
+                        "Expected object info to be a list"
+                    )
+            else:
+                raise exceptions.ImpossibleError("Expected object infos to be a list")
+
+        else:
+            raise exceptions.ImpossibleError(
+                "Should not get a null object info since not ignoring errors"
+            )
 
     async def get_workspace_info(self, workspace_id: int) -> WorkspaceInfo:
         result, error = await self.call_func("get_workspace_info", {"id": workspace_id})
         if error is not None:
-            raise ServiceError(
-                message="Error fetching workspace info",
-                status_code=500,  # or should we propagate form the call?
-                code=error.get("code"),
-                original_message=error.get("message"),
-            )
-            # raise Exception(f'Error fetching workspace info: {error.get("message")}')
-        return workspace_info_to_dict(result)
+            exceptions.UpstreamJSONRPCError("Error fetching workspace info", data=error)
+            # upstream_jsonrpc_error(error)
+
+        # Just trust
+        # TODO: be paranoid and validate.
+        return workspace_info_to_dict(cast(RawWorkspaceInfo, result))
 
     async def get_object(self, ref: str) -> Any:
         result, error = await self.call_func(
@@ -289,24 +221,36 @@ class WorkspaceService(JSONRPC11Service):
             },
         )
         if error is not None:
-            raise ServiceError(
-                message="Error fetching object info",
-                status_code=500,  # or should we propagate form the call?
-                code=error.get("code"),
-                original_message=error.get("message"),
-            )
-            # raise Exception(f'Error fetching object info: {error.get("message")}')
+            exceptions.UpstreamJSONRPCError("Error fetching workspace info", data=error)
+            # upstream_jsonrpc_error(error)
 
-        workspace_object = result["data"][0]
-        workspace_object["info"] = object_info_to_dict(workspace_object["info"])
+        if result is None:
+            raise exceptions.ImpossibleError("Expected object data to be a list")
+
+        data = result.get("data")
+        if not isinstance(data, list):
+            raise exceptions.ImpossibleError("Expected object data to be a list")
+
+        workspace_object = cast(JSONLikeObject, data[0])
+
+        # if not isinstance(workspace_object, dict):
+        #     raise errors.ImpossibleError("Expected object data to be an object")
+
+        # TODO: we should type the result, which may obviate the need for a cast?
+        # or otherwise find a more graceful way.
+        workspace_object["info"] = cast(
+            JSONLikeObject,
+            object_info_to_dict(cast(RawObjectInfo, workspace_object["info"])),
+        )
 
         return workspace_object
 
+    # TODO: not sure about this.
     async def can_access_object(self, ref: str) -> bool:
         params = {"objects": [{"ref": ref}]}
         try:
             await self.call_func("get_object_info3", params)
             return True
-        except ServiceError as se:
+        except exceptions.ServiceErrorX as se:
             print(str(se))
             return False

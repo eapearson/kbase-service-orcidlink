@@ -4,18 +4,13 @@ The SDK version has been modified to integrate with this codebase, such as
 using httpx, pydantic models.
 """
 import json
-from typing import Dict, Optional
+from typing import Dict
 
-# import httpx
 import aiohttp
-
-# from cache3 import SafeCache  # type: ignore
 from cachetools import TTLCache
 from pydantic import Field
 
-from orcidlink import model
-from orcidlink.lib.errors import ServiceError
-from orcidlink.lib.responses import ErrorResponse
+from orcidlink.lib import errors, exceptions
 from orcidlink.lib.type import ServiceBaseModel
 
 
@@ -68,7 +63,8 @@ class KBaseAuth(object):
     # @cachedmethod(lambda self: self.cache, key=partial(hashkey, 'token_info'))
     async def get_token_info(self, token: str) -> TokenInfo:
         if token == "":
-            raise TypeError("Token may not be empty")
+            # raise TypeError("Token may not be empty")
+            raise exceptions.AuthorizationRequiredError("Token may not be empty")
 
         cache_value = self.cache.get(token)
         if cache_value is not None:
@@ -83,59 +79,30 @@ class KBaseAuth(object):
                 ) as response:
                     json_response = await response.json()
         except aiohttp.ContentTypeError as cte:
-            # Note that here we are raising the default exception for the
-            # httpx library in the case that a deep internal server error
-            # is thrown without an actual json response. In other words, the
-            # error is not a JSON-RPC error thrown by the auth2 service itself,
-            # but some truly internal server error.
-            # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
-            # are 500.
-            raise ServiceError(
-                error=ErrorResponse[ServiceBaseModel](
-                    code="badContentType",
-                    title="Received Incorrect Content Type",
-                    message="The auth service responded with wrong content type; expected application/json",
-                    data=model.JSONDecodeErrorData(
-                        status_code=cte.status, error=str(cte)
-                    ),
-                ),
-                status_code=502,
-            ) from cte
-        except json.JSONDecodeError as ex:
-            # Note that here we are raising the default exception for the
-            # httpx library in the case that a deep internal server error
-            # is thrown without an actual json response. In other words, the
-            # error is not a JSON-RPC error thrown by the auth2 service itself,
-            # but some truly internal server error.
-            # Note that ALL errors returned by stock KBase JSON-RPC 1.1 servers
-            # are 500.
-            raise ServiceError(
-                error=ErrorResponse[ServiceBaseModel](
-                    code="jsonDecodeError",
-                    title="Error Decoding Response",
-                    message="The auth service responded with non-JSON content",
-                    data=model.JSONDecodeErrorData(
-                        # Note - we can't get response.status_code without a type error,
-                        # TODO: figure out this nesting exceptions thing.
-                        status_code=0,
-                        error=str(ex),
-                    ),
-                ),
-                status_code=502,
-            ) from ex
+            # Raised if it is not application/json
+            raise exceptions.ContentTypeError("Wrong content type", cte)
+        except json.JSONDecodeError as jde:
+            raise exceptions.JSONDecodeError("Error decoding JSON", jde)
         except Exception as ex:
-            print("EXCEPTION!!!!", str(ex), ex.__class__)
-            raise ex
-
+            raise exceptions.InternalServerError("Unexpected error")
+        # TODO: convert the below to ServerErrorXX
         if not response.ok:
             # The auth service should return a 500 for all errors
             # Make an attempt to handle a specific auth error
             appcode = json_response["error"]["appcode"]
             message = json_response["error"]["message"]
             if appcode == 10020:
-                raise KBaseAuthInvalidToken("Invalid token")
+                raise exceptions.ServiceErrorY(
+                    errors.ERRORS.authorization_required,
+                    "Invalid token, authorization required",
+                )
+            elif appcode == 10010:
+                raise exceptions.ServiceErrorY(
+                    errors.ERRORS.authorization_required,
+                    "Token missing, authorization required",
+                )
             else:
-                raise KBaseAuthError("Auth Service Error", appcode, message)
+                raise exceptions.UpstreamError("Error authenticating with auth service")
 
         token_info: TokenInfo = TokenInfo.model_validate(json_response)
         self.cache[token] = token_info
@@ -155,31 +122,31 @@ class KBaseAuth(object):
 #     pass
 
 
-class KBaseAuthErrorInfo(ServiceBaseModel):
-    code: int = Field(...)
-    message: str = Field(...)
-    original_message: str = Field(
-        validation_alias="original-message", serialization_alias="original-message"
-    )
+# class KBaseAuthErrorInfo(ServiceBaseModel):
+#     code: int = Field(...)
+#     message: str = Field(...)
+#     original_message: str = Field(
+#         validation_alias="original-message", serialization_alias="original-message"
+#     )
 
 
-class KBaseAuthError(Exception):
-    message: str
-    code: int
-    original_message: str
+# class KBaseAuthError(Exception):
+#     message: str
+#     code: int
+#     original_message: str
 
-    def __init__(self, message: str, code: int, original_message: str):
-        super().__init__(message)
-        self.code = code
-        self.message = message
-        self.original_message = original_message
+#     def __init__(self, message: str, code: int, original_message: str):
+#         super().__init__(message)
+#         self.code = code
+#         self.message = message
+#         self.original_message = original_message
 
-    def to_obj(self) -> KBaseAuthErrorInfo:
-        return KBaseAuthErrorInfo(
-            code=self.code, message=self.message, original_message=self.original_message
-        )
+#     def to_obj(self) -> KBaseAuthErrorInfo:
+#         return KBaseAuthErrorInfo(
+#             code=self.code, message=self.message, original_message=self.original_message
+#         )
 
 
-class KBaseAuthInvalidToken(KBaseAuthError):
-    def __init__(self, original_message: str):
-        super().__init__("Invalid token", 1020, original_message)
+# class KBaseAuthInvalidToken(KBaseAuthError):
+#     def __init__(self, original_message: str):
+#         super().__init__("Invalid token", 1020, original_message)

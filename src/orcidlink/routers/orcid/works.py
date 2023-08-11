@@ -3,20 +3,15 @@ from typing import List, Optional
 
 # import httpx
 import aiohttp
-from fastapi import APIRouter, Body, Path
+from fastapi import APIRouter, Body, Path, status
 from starlette.responses import Response
 
 from orcidlink import model
-from orcidlink.lib import errors
-from orcidlink.lib.config import Config2
-from orcidlink.lib.responses import (
-    AUTH_RESPONSES,
-    AUTHORIZATION_HEADER,
-    STD_RESPONSES,
-    success_response_no_data,
-)
-from orcidlink.lib.service_clients import orcid_api
+from orcidlink.lib import exceptions
 from orcidlink.lib.auth import ensure_authorization, get_username
+from orcidlink.lib.config import Config2
+from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
+from orcidlink.lib.service_clients import orcid_api
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
 from orcidlink.translators.to_orcid import (
@@ -71,7 +66,7 @@ async def get_work(
     link_record = await get_link_record(authorization)
 
     if link_record is None:
-        raise errors.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -124,7 +119,7 @@ async def get_works(
     link_record = await get_link_record(authorization)
 
     if link_record is None:
-        raise errors.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -177,7 +172,7 @@ async def save_work(
     link_record = await get_link_record(authorization)
 
     if link_record is None:
-        raise errors.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -214,7 +209,7 @@ async def delete_work(
     link_record = await get_link_record(authorization)
 
     if link_record is None:
-        raise errors.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -228,11 +223,12 @@ async def delete_work(
     async with aiohttp.ClientSession() as session:
         async with session.delete(url, headers=header) as response:
             if response.status == 204:
-                return success_response_no_data()
+                return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-            raise errors.UpstreamError(
+            # TODO: richer error
+            raise exceptions.UpstreamError(
                 "The ORCID API reported an error fo this request, see 'data' for cause",
-                data={"upstreamError": await response.json()},
+                # data={"upstreamError": await response.json()},
             )
 
     # return error_response(
@@ -266,7 +262,7 @@ async def create_work(
     link_record = await get_link_record(authorization)
 
     if link_record is None:
-        raise errors.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError("ORCID link record not found for user")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -363,11 +359,12 @@ async def create_work(
                 )
                 return new_work_record
     except aiohttp.ClientError as ex:
-        raise errors.UpstreamError(
+        # TODO: richer error here.
+        raise exceptions.UpstreamError(
             "An error was encountered saving the work record",
-            data={
-                "description": str(ex),
-            },
+            # data={
+            #     "description": str(ex),
+            # },
         )
 
         # raise HTTPException(

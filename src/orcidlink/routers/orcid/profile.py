@@ -1,16 +1,13 @@
 from fastapi import APIRouter
-from orcidlink.lib.errors import NotFoundError
-from orcidlink.lib.responses import (
-    AUTHORIZATION_HEADER,
-    AUTH_RESPONSES,
-    STD_RESPONSES,
-)
-from orcidlink.model import ORCIDProfile
-from orcidlink.lib.service_clients import orcid_api
+from starlette.responses import JSONResponse
+
+from orcidlink.lib import errors, exceptions
 from orcidlink.lib.auth import ensure_authorization
+from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
+from orcidlink.lib.service_clients import orcid_api
+from orcidlink.model import ORCIDProfile
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_service
-from starlette.responses import JSONResponse
 
 ################################
 # API
@@ -61,7 +58,10 @@ async def get_profile(
     #
     user_link_record = storage_model().get_link_record(username)
     if user_link_record is None:
-        raise NotFoundError(message="User link record not found")
+        raise exceptions.ServiceErrorY(
+            error=errors.ERRORS.not_found, message="ORCID Profile Not Found"
+        )
+        # raise NotFoundError(message="User link record not found")
         # return error_response(
         #     "notfound", "Not Found", "User link record not found", status_code=404
         # )

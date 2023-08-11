@@ -23,21 +23,16 @@ from typing import Optional
 from fastapi import APIRouter, Path, Response
 from starlette.responses import JSONResponse
 
-from orcidlink.lib import errors
-from orcidlink.lib.responses import (
-    AUTH_RESPONSES,
-    AUTHORIZATION_HEADER,
-    STD_RESPONSES,
-    ErrorResponse,
-)
+from orcidlink.lib import errors, exceptions
+from orcidlink.lib.auth import ensure_authorization
+from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
+from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.model import (
     LinkingRecordShared,
     LinkRecord,
     LinkRecordPublic,
     ORCIDAuthPublic,
 )
-from orcidlink.lib.auth import ensure_authorization
-from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/link")
@@ -58,7 +53,7 @@ USERNAME_PARAM = Path(
         **STD_RESPONSES,
         404: {
             "description": "Link not available for this user",
-            "model": ErrorResponse,
+            "model": errors.ErrorResponse,
         },
         200: {
             "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
@@ -82,7 +77,7 @@ async def get_link(
     link_record = model.get_link_record(token_info.user)
 
     if link_record is None:
-        raise errors.NotFoundError("No link record was found for this user")
+        raise exceptions.NotFoundError("No link record was found for this user")
 
     return LinkRecordPublic(
         username=link_record.username,
@@ -152,7 +147,7 @@ async def link_share(
     link_record = model.get_link_record(username)
 
     if link_record is None:
-        raise errors.NotFoundError("Link not found for user")
+        raise exceptions.NotFoundError("Link not found for user")
 
     # TODO: CRITICAL - check which fields have been shared; for now assume the id is, and perhaps we
     # want to make it always available to kbase users if linked, even though the ui can offer more
@@ -176,7 +171,7 @@ async def link_share(
         204: {"description": "Successfully deleted the link"},
         404: {
             "description": "Link not available for this user",
-            "model": ErrorResponse,
+            "model": errors.ErrorResponse,
         },
     },
 )
@@ -193,7 +188,7 @@ async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Respo
     link_record = model.get_link_record(token_info.user)
 
     if link_record is None:
-        raise errors.NotFoundError("User does not have an ORCID Link")
+        raise exceptions.NotFoundError("User does not have an ORCID Link")
 
     # TODO: handle error? or propagate? or in a transaction?
     await orcid_oauth(link_record.orcid_auth.access_token).revoke_token()

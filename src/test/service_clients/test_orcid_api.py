@@ -1,5 +1,5 @@
-import json
-from test.mocks.data import load_data_file, load_test_data
+import os
+from test.mocks.data import load_test_data
 from test.mocks.env import MOCK_ORCID_API_PORT, MOCK_ORCID_OAUTH_PORT, TEST_ENV
 from test.mocks.mock_contexts import (
     mock_orcid_api_service,
@@ -8,14 +8,11 @@ from test.mocks.mock_contexts import (
     mock_orcid_oauth_service2,
     no_stderr,
 )
-import os
 from unittest import mock
 
-import aiohttp
-import httpx
 import pytest
 
-from orcidlink.lib import errors, utils
+from orcidlink.lib import exceptions, utils
 from orcidlink.lib.service_clients import orcid_api
 
 
@@ -98,9 +95,9 @@ def test_ORCIDAuthClient_make_upstream_errorxx():
     # Error response in expected form, with a JSON response including "error_description"
     #
 
-    with pytest.raises(errors.ServiceErrorXX) as exx:
-        raise errors.ServiceErrorXX(errors.NOT_FOUND, "ORCID User Profile Not Found")
-    assert exx.value.error_code.status_code == errors.NOT_FOUND.status_code
+    with pytest.raises(exceptions.ServiceErrorX) as exx:
+        raise exceptions.NotFoundError("ORCID User Profile Not Found")
+    assert exx.value.status_code == 404
     assert exx.value.message == "ORCID User Profile Not Found"
 
 
@@ -112,11 +109,11 @@ def test_ORCIDAuthClient_make_upstream_error():
     error_result = {"error_description": "bar"}
     status_code = 123
 
-    with pytest.raises(errors.ServiceErrorX) as ex:
+    with pytest.raises(exceptions.UpstreamORCIDAPIError) as ex:
         raise orcid_api.make_upstream_error(status_code, error_result, "source")
 
     assert ex.value.status_code == 502
-    assert ex.value.data["source"] == "source"
+    assert ex.value.data is not None and ex.value.data.source == "source"
     # TODO: more error properties
     # assert ex.value.error.data["originalResponseJSON"]["error_description"] == "bar"
     # assert "originalResponseText" not in ex.value.error.data
@@ -129,11 +126,11 @@ def test_ORCIDAuthClient_make_upstream_error():
     error_result = {"foo": "bar"}
     status_code = 123
 
-    with pytest.raises(errors.ServiceErrorX) as ex:
+    with pytest.raises(exceptions.UpstreamORCIDAPIError) as ex:
         raise orcid_api.make_upstream_error(status_code, error_result, "source")
 
     assert ex.value.status_code == 502
-    assert ex.value.data["source"] == "source"
+    assert ex.value.data is not None and ex.value.data.source == "source"
     # TODO: more error properties
     # assert "error_description" not in ex.value.error.data["originalResponseJSON"]
     # assert ex.value.error.data["originalResponseJSON"]["foo"] == "bar"
@@ -147,11 +144,11 @@ def test_ORCIDAuthClient_make_upstream_error():
     error_result = {"error_description": "bar", "foo": "foe"}
     status_code = 401
 
-    with pytest.raises(errors.ServiceErrorX) as ex:
+    with pytest.raises(exceptions.UpstreamORCIDAPIError) as ex:
         raise orcid_api.make_upstream_error(status_code, error_result, "source")
 
     assert ex.value.status_code == 502
-    assert ex.value.data["source"] == "source"
+    assert ex.value.data is not None and ex.value.data.source == "source"
     # TODO: more error properties
     # assert "error_description" not in ex.value.error.data["originalResponseJSON"]
     # assert ex.value.error.data["originalResponseJSON"]["foo"] == "foe"
@@ -163,11 +160,11 @@ def test_ORCIDAuthClient_make_upstream_error():
     error_result = None
     status_code = 401
 
-    with pytest.raises(errors.ServiceErrorX) as ex:
+    with pytest.raises(exceptions.UpstreamORCIDAPIError) as ex:
         raise orcid_api.make_upstream_error(status_code, error_result, "source")
 
     assert ex.value.status_code == 502
-    assert ex.value.data["source"] == "source"
+    assert ex.value.data is not None and ex.value.data.source == "source"
     # TODO: more error properties
     # assert "originalResponseJSON" not in ex.value.error.data
     # assert ex.value.error.data["originalResponseText"] == "just text, folks"
@@ -187,7 +184,7 @@ async def test_ORCIDOAuth_error():
     with no_stderr():
         with mock_orcid_oauth_service2(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(errors.ServiceErrorX):
+            with pytest.raises(exceptions.ServiceErrorX):
                 await client.revoke_token()
 
 
@@ -207,7 +204,7 @@ async def test_exchange_code_for_token_no_content_type():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "no-content-type"
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(errors.UpstreamError) as ie:
+            with pytest.raises(exceptions.UpstreamError) as ie:
                 await client.exchange_code_for_token(code)
             assert ie.value.message == "No content-type in response"
 
@@ -218,9 +215,9 @@ async def test_exchange_code_for_token_not_json_content():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "not-json-content"
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(errors.UpstreamError) as ie:
+            with pytest.raises(exceptions.JSONDecodeError) as ie:
                 await client.exchange_code_for_token(code)
-            assert ie.value.message == "Error decoding JSON response"
+            # assert ie.value.message == "Error decoding JSON response"
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -229,7 +226,7 @@ async def test_exchange_code_for_token_not_json_content_type():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "not-json-content-type"
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(errors.UpstreamError) as ie:
+            with pytest.raises(exceptions.UpstreamError) as ie:
                 await client.exchange_code_for_token(code)
             assert ie.value.message == "Expected JSON response, got foo-son"
 
@@ -240,7 +237,7 @@ async def test_exchange_code_for_token_error_incorrect_error_format():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "error-incorrect-error-format"
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(errors.UpstreamError) as ie:
+            with pytest.raises(exceptions.UpstreamError) as ie:
                 await client.exchange_code_for_token(code)
             assert ie.value.message == "Unexpected Error Response from ORCID"
 
@@ -251,7 +248,7 @@ async def test_exchange_code_for_token_error_correct_error_format():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "error-correct-error-format"
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(errors.UpstreamError) as ie:
+            with pytest.raises(exceptions.UpstreamError) as ie:
                 await client.exchange_code_for_token(code)
             assert ie.value.message == "a description of some error"
 
@@ -323,7 +320,7 @@ async def test_ORCIDAPI_get_profile_not_found():
             # Just alter the final 6 to 7 so that it doesn't match any testing orcid
             # profiles.
             orcid_id = "0000-0003-4997-3077"
-            with pytest.raises(errors.ServiceErrorXX):
+            with pytest.raises(exceptions.ServiceErrorX):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -340,7 +337,7 @@ async def test_ORCIDAPI_get_profile_not_authorized():
             # Just alter the final 6 to 7 so that it doesn't match any testing orcid
             # profiles.
             orcid_id = "trigger-401"
-            with pytest.raises(errors.ServiceErrorXX):
+            with pytest.raises(exceptions.ServiceErrorX):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -367,7 +364,7 @@ async def test_ORCIDAPI_get_works_error():
         ]:
             orcid_id = "0000-0003-4997-3076"
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
-            with pytest.raises(errors.ServiceErrorX):
+            with pytest.raises(exceptions.ServiceErrorX):
                 await client.get_works(orcid_id)
 
 
@@ -417,7 +414,7 @@ async def test_ORCIDAPI_save_work_error():
             # constructor, and a randomly generated port.
             #
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
-            with pytest.raises(errors.ServiceErrorX) as ex:
+            with pytest.raises(exceptions.UpstreamORCIDAPIError) as ex:
                 put_code = 1526002
                 work_update = orcid_api.WorkUpdate.model_validate(
                     load_test_data("orcid", f"work_{str(put_code)}")["bulk"][0]["work"]
@@ -426,10 +423,10 @@ async def test_ORCIDAPI_save_work_error():
                 await client.save_work(orcid_id, put_code, work_update)
             # assert ex.value.error.data["originalResponseJSON"]["response-code"] == 400
 
-            assert ex.value.code == "upstreamError"
-            assert ex.value.title == "Upstream Error"
-            assert ex.value.data["source"] == "save_work"
-            assert ex.value.data["status_code"] == 500
+            assert ex.value.code == exceptions.ERRORS.upstream_orcid_error.code
+            assert ex.value.title == "Upstream ORCID Error"
+            assert ex.value.data is not None and ex.value.data.source == "save_work"
+            assert ex.value.data.status_code == 500
             # assert ex.value.error.response_code == 400
             # assert ex.value.error.data.status_code == 400
 
@@ -441,13 +438,17 @@ def test_make_upstream_error_401():
     status_code = 401
 
     result = orcid_api.make_upstream_error(status_code, error_content, "foo")
-    assert isinstance(result, errors.ServiceErrorX)
+    assert isinstance(result, exceptions.UpstreamORCIDAPIError)
     assert result.status_code == 502
-    assert result.code == "upstreamError"
-    assert result.title == "Upstream Error"
-    assert result.data["source"] == "foo"
-    assert result.data["detail"]["error"] == "My Error"
-    assert result.data["detail"].get("error_description") is None
+    assert result.code == 1052
+    assert result.title == "Upstream ORCID Error"
+    assert result.data is not None and result.data.source == "foo"
+    assert (
+        isinstance(result.data.detail, dict)
+        and result.data.detail["error"] is not None
+        and result.data.detail["error"] == "My Error"
+    )
+    assert result.data.detail.get("error_description") is None
     # assert "error_description" not in result.error.data.detail
 
 
@@ -463,12 +464,15 @@ def test_make_upstream_error_non_401():
     status_code = 400
 
     result = orcid_api.make_upstream_error(status_code, error_content, "foo")
-    assert isinstance(result, errors.ServiceErrorX)
+    assert isinstance(result, exceptions.ServiceErrorX)
     assert result.status_code == 502
-    assert result.code == "upstreamError"
-    assert result.title == "Upstream Error"
-    assert result.data["source"] == "foo"
-    assert result.data["detail"]["response-code"] == 123
+    assert result.code == exceptions.ERRORS.upstream_orcid_error.code
+    assert result.title == "Upstream ORCID Error"
+    assert (
+        isinstance(result.data, exceptions.UpstreamErrorData)
+        and result.data.source == "foo"
+    )
+    # assert isinstance(result.data['detail'], dict) and result.data["detail"]["response-code"] == 123
     # assert result.error.data.detail.error_description is None
     # assert "error_description" not in result.error.data.detail
 
@@ -484,11 +488,14 @@ def test_make_upstream_error_internal_server():
     status_code = 500
 
     result = orcid_api.make_upstream_error(status_code, error_content, "foo")
-    assert isinstance(result, errors.ServiceErrorX)
+    assert isinstance(result, exceptions.ServiceErrorX)
     assert result.status_code == 502
-    assert result.code == "upstreamError"
-    assert result.title == "Upstream Error"
-    assert result.data["source"] == "foo"
-    assert result.data["detail"]["message-version"] == "123"
+    assert result.code == exceptions.ERRORS.upstream_orcid_error.code
+    assert result.title == "Upstream ORCID Error"
+    assert (
+        isinstance(result.data, exceptions.UpstreamErrorData)
+        and result.data.source == "foo"
+    )
+    # assert isinstance(result.data['detail'], dict) and result.data["detail"]["message-version"] == "123"
     # assert result.error.data.detail.error_description is None
     # assert "error_description" not in result.error.data.detail

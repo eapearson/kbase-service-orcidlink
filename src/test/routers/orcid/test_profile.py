@@ -1,36 +1,22 @@
 import contextlib
-
-import pytest
-from fastapi.testclient import TestClient
-from orcidlink import model
-from orcidlink.lib import utils
-from orcidlink.lib.config import Config2
-from orcidlink.main import app
-from orcidlink.storage import storage_model
-from test.mocks.data import load_data_file, load_data_json
+import os
+from test.mocks.data import load_data_json
+from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_API_PORT, TEST_ENV
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_api_service,
     no_stderr,
 )
 from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
-import os
 from unittest import mock
 
-MOCK_KBASE_SERVICES_PORT = 9999
-MOCK_ORCID_API_PORT = 9997
-MOCK_ORCID_OAUTH_PORT = 9998
-TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://127.0.0.1:{MOCK_KBASE_SERVICES_PORT}/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
-    "MONGO_HOST": "mongo",
-    "MONGO_PORT": "27017",
-    "MONGO_DATABASE": "orcidlink",
-    "MONGO_USERNAME": "dev",
-    "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_API_PORT}",
-    "ORCID_OAUTH_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_OAUTH_PORT}",
-}
+import pytest
+from fastapi.testclient import TestClient
+
+from orcidlink import model
+from orcidlink.lib import utils
+from orcidlink.main import app
+from orcidlink.storage import storage_model
 
 client = TestClient(app)
 

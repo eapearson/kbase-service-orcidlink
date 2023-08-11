@@ -79,6 +79,24 @@ i/o or other high-latency calls), or for time synchronization (as it returns the
 
 
 ---
+<a name="header_get-/info"></a>
+#### GET /info
+Get Service Information
+
+Returns basic information about the service and its runtime configuration.
+
+
+<a name="header_input"></a>
+#### Input
+*none*
+
+
+<a name="header_output"></a>
+#### Output
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_inforesponse">InfoResponse</a></td></tr></tbody></table>
+
+
+---
 <a name="header_get-/docs"></a>
 #### GET /docs
 Get API Documentation
@@ -294,7 +312,8 @@ KBase for future use by the user.
 #### GET /linking-sessions/oauth/continue
 Continue Linking Session
 
-This endpoint implements the end point for the ORCID OAuth flow. That is, it
+This endpoint implements the handoff from frmo the ORCID authorization sktep in
+the ORCID OAuth flow. That is, it
 serves as the redirection target after the user has successfully completed
 their interaction with ORCID, at which they may have logged in and provided
 their consent to issuing the linking token to KBase.
@@ -476,7 +495,7 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
     See [the error docs](docs/errors.md) for more information.
     
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_servicebasemodel">ServiceBaseModel</a></div><div>null</div></td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>integer</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_servicebasemodel">ServiceBaseModel</a></div><div>null</div></td><td></td></tr></tbody></table>
 
 
 
@@ -493,6 +512,20 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 ##### ExternalIdType
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
+
+
+
+<a name="header_type_gitinfo"></a>
+##### GitInfo
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>commit_hash</td><td>string</td><td>✓</td></tr><tr><td>commit_hash_abbreviated</td><td>string</td><td>✓</td></tr><tr><td>author_name</td><td>string</td><td>✓</td></tr><tr><td>author_date</td><td>integer</td><td>✓</td></tr><tr><td>committer_name</td><td>string</td><td>✓</td></tr><tr><td>committer_date</td><td>integer</td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>branch</td><td>string</td><td>✓</td></tr><tr><td>tag</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_inforesponse"></a>
+##### InfoResponse
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>service-description</td><td><a href="#user-content-header_type_servicedescription">ServiceDescription</a></td><td>✓</td></tr><tr><td>git-info</td><td><a href="#user-content-header_type_gitinfo">GitInfo</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -613,6 +646,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 ##### ServiceBaseModel
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
+
+
+
+<a name="header_type_servicedescription"></a>
+##### ServiceDescription
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>version</td><td>string</td><td>✓</td></tr><tr><td>language</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr><tr><td>repoURL</td><td>string</td><td>✓</td></tr></tbody></table>
 
 
 

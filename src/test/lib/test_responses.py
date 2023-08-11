@@ -1,62 +1,26 @@
-import contextlib
 import json
-from typing import AnyStr
-from orcidlink.lib.type import ServiceBaseModel
-from test.mocks.data import load_data_file
-from test.mocks.mock_contexts import mock_auth_service, no_stderr
+import os
+from test.mocks.env import TEST_ENV
+from unittest import mock
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse
 
-from orcidlink.lib.utils import module_path
+from orcidlink.lib.errors import ERRORS
 from orcidlink.lib.responses import (
-    success_response_no_data,
     error_response,
-    exception_error_response,
     exception_error_response,
     ui_error_response,
 )
-from orcidlink.lib.responses import error_response_not_found
-import os
-from unittest import mock
-
-# config_yaml = load_data_file("config1.toml")
-MOCK_KBASE_SERVICES_PORT = 9999
-MOCK_ORCID_API_PORT = 9997
-MOCK_ORCID_OAUTH_PORT = 9997
-
-TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://127.0.0.1:{MOCK_KBASE_SERVICES_PORT}/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
-    "MONGO_HOST": "mongo",
-    "MONGO_PORT": "27017",
-    "MONGO_DATABASE": "orcidlink",
-    "MONGO_USERNAME": "dev",
-    "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_API_PORT}",
-    "ORCID_OAUTH_BASE_URL": f"http://127.0.0.1:{MOCK_ORCID_OAUTH_PORT}",
-}
-
-
-# @contextlib.contextmanager
-# def mock_services():
-#     with no_stderr():
-#         with mock_auth_service():
-#             yield
+from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.utils import module_path
 
 
 @pytest.fixture
 def fake_fs(fs):
-    # fs.create_file(f"{utils.module_dir()}/deploy/config.toml", contents=config_yaml)
     fs.add_real_directory(module_path("test/data"))
     yield fs
-
-
-def test_success_response_no_data():
-    value = success_response_no_data()
-    assert isinstance(value, Response)
-    assert value.status_code == 204
 
 
 def test_error_response():
@@ -64,7 +28,10 @@ def test_error_response():
         some: str
 
     value = error_response(
-        "codex", "title", "message", data=TestData(some="data"), status_code=123
+        ERRORS.impossible_error,
+        "message",
+        data=TestData(some="data"),
+        status_code=123,
     )
     assert isinstance(value, JSONResponse)
     assert value.status_code == 123
@@ -77,7 +44,7 @@ def test_exception_error_response():
     try:
         raise Exception("I am exceptional")
     except Exception as ex:
-        value = exception_error_response("codex", "title", ex, status_code=123)
+        value = exception_error_response(ERRORS.impossible_error, ex, status_code=123)
         assert isinstance(value, JSONResponse)
         assert value.status_code == 123
         # The JSONResponse structure is not in scope for this project; it is simply provided to
@@ -86,8 +53,8 @@ def test_exception_error_response():
         # so ... here we go.
         assert value.body is not None
         data = json.loads(value.body)
-        assert data["code"] == "codex"
-        assert data["title"] == "title"
+        assert data["code"] == ERRORS.impossible_error.code
+        assert data["title"] == ERRORS.impossible_error.title
         assert data["message"] == "I am exceptional"
         assert isinstance(data["data"]["traceback"], list)
 
@@ -96,7 +63,7 @@ def test_exception_error_response_no_data():
     try:
         raise Exception("I am exceptional")
     except Exception as ex:
-        value = exception_error_response("codex", "title", ex, status_code=123)
+        value = exception_error_response(ERRORS.impossible_error, ex, status_code=123)
         assert isinstance(value, JSONResponse)
         assert value.status_code == 123
         # The JSONResponse structure is not in scope for this project; it is simply provided to
@@ -105,8 +72,8 @@ def test_exception_error_response_no_data():
         # so ... here we go.
         assert value.body is not None
         data = json.loads(value.body)
-        assert data["code"] == "codex"
-        assert data["title"] == "title"
+        assert data["code"] == ERRORS.impossible_error.code
+        assert data["title"] == ERRORS.impossible_error.title
         assert data["message"] == "I am exceptional"
         assert data["data"]["exception"] == "I am exceptional"
         assert isinstance(data["data"]["traceback"], list)
@@ -121,7 +88,7 @@ def as_str(something: str | bytes) -> str:
 
 def test_ui_error_response(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ui_error_response("codex", "title", "message")
+        value = ui_error_response(ERRORS.impossible_error, "message")
         assert isinstance(value, RedirectResponse)
         assert value.status_code == 302
         assert "location" in value.headers
@@ -139,22 +106,8 @@ def test_ui_error_response(fake_fs):
         query_string = as_str(url.query)
         query = parse_qs(query_string)  # type: ignore
         assert "code" in query
-        assert query["code"] == ["codex"]
+        assert query["code"] == [str(ERRORS.impossible_error.code)]
 
         # assert data["code"] == "code"
         # assert data["title"] == "title"
         # assert data["message"] == "message"
-
-
-def test_error_response_not_found():
-    value = error_response_not_found("Foo not found")
-
-    assert isinstance(value, JSONResponse)
-    assert value.status_code == 404
-    # the response body is bytes, which we can convert
-    # back to a dict...
-    body_json = json.loads(value.body)
-    assert isinstance(body_json, dict)
-    assert body_json["code"] == "notFound"
-    assert body_json["title"] == "Not Found"
-    assert body_json["message"] == "Foo not found"

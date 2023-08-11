@@ -1,42 +1,24 @@
 import contextlib
-
-import pytest
-from orcidlink.lib.errors import ServiceError
-from orcidlink.lib.service_clients.kbase_auth import (
-    KBaseAuth,
-    KBaseAuthError,
-    TokenInfo,
-)
-from test.mocks.mock_contexts import mock_auth_service, no_stderr
 import os
+from test.mocks.env import MOCK_KBASE_SERVICES_PORT, TEST_ENV
+from test.mocks.mock_contexts import mock_auth_service, no_stderr
 from unittest import mock
 
-# Test parameters
-SERVICE_PORT = 9999
+import pytest
+
+from orcidlink.lib import errors, exceptions
+from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
 
 
 @contextlib.contextmanager
 def mock_services():
     with no_stderr():
-        with mock_auth_service(SERVICE_PORT) as [_, _, url, port]:
+        with mock_auth_service(MOCK_KBASE_SERVICES_PORT) as [_, _, url, port]:
             yield url
 
 
 #
 # Auth Client
-#
-
-TEST_ENV = {
-    "KBASE_ENDPOINT": f"http://127.0.0.1:{SERVICE_PORT}/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
-    "MONGO_HOST": "mongo",
-    "MONGO_PORT": "27017",
-    "MONGO_DATABASE": "orcidlink",
-    "MONGO_USERNAME": "dev",
-    "MONGO_PASSWORD": "d3v",
-    "ORCID_API_BASE_URL": "http://127.0.0.1:9998",
-    "ORCID_OAUTH_BASE_URL": "http://127.0.0.1:9997",
-}
 
 
 def test_kbase_auth_constructor_minimal():
@@ -72,8 +54,7 @@ async def test_kbase_auth_get_token_info_other_error():
             assert client is not None
             client.cache.clear()
 
-            # First fetch of token from service
-            with pytest.raises(KBaseAuthError):
+            with pytest.raises(exceptions.ServiceErrorY):
                 await client.get_token_info("exception")
 
 
@@ -87,7 +68,7 @@ async def test_kbase_auth_get_token_info_internal_error():
             # The call should trigger a JSON decode error, since this mimics
             # an actual, unexpected, unhandled error response with a text
             # body.
-            with pytest.raises(ServiceError):
+            with pytest.raises(exceptions.ContentTypeError):
                 await client.get_token_info("internal_server_error")
 
 
@@ -106,16 +87,15 @@ async def test_kbase_auth_get_token_info_no_token():
             # The call should trigger a JSON decode error, since this mimics
             # an actual, unexpected, unhandled error response with a text
             # body.
-            with pytest.raises(KBaseAuthError, match="Auth Service Error") as kae:
+            with pytest.raises(
+                exceptions.ServiceErrorY, match="Token missing, authorization required"
+            ) as kae:
                 await client.get_token_info("no_token")
 
-            error = kae.value.to_obj()
-            assert error.code == 10010
-            assert error.message == "Auth Service Error"
-            assert (
-                error.original_message
-                == "10010 No authentication token: No user token provided"
-            )
+            # error = kae.value.to_obj()
+            assert kae.value.error.code == errors.ERRORS.authorization_required.code
+            assert kae.value.error.title == errors.ERRORS.authorization_required.title
+            assert kae.value.message == "Token missing, authorization required"
 
 
 async def test_kbase_auth_get_token_info_param_errors():
@@ -127,5 +107,5 @@ async def test_kbase_auth_get_token_info_param_errors():
             cache_lifetime=1,
         )
         assert client is not None
-        with pytest.raises(TypeError) as e:
+        with pytest.raises(exceptions.AuthorizationRequiredError) as e:
             await client.get_token_info("")

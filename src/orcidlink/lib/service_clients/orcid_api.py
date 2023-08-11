@@ -18,7 +18,7 @@ import aiohttp
 from pydantic import Field
 
 from orcidlink import model
-from orcidlink.lib import errors
+from orcidlink.lib import exceptions
 from orcidlink.lib.config import Config2
 from orcidlink.lib.type import ServiceBaseModel
 
@@ -596,7 +596,7 @@ class APIErrorWrapper(ServiceBaseModel, Generic[DetailType]):
 
 def make_upstream_error(
     status: int, json_response: Any, source: str
-) -> errors.ServiceErrorX:
+) -> exceptions.ServiceErrorX:
     if isinstance(json_response, dict):
         # Determine which of the 3 types of errors were returned, if we
         # do have a json_response (not all api endpoints have a response).
@@ -607,39 +607,39 @@ def make_upstream_error(
             if status == 401 or status == 403:
                 json_response.pop("error_description")
 
-            return errors.UpstreamError(
+            return exceptions.UpstreamORCIDAPIError(
                 "Error fetching data from ORCID",
-                data={
-                    "source": source,
-                    "status_code": status,
-                    "detail": json_response,
-                },
+                data=exceptions.UpstreamErrorData(
+                    source=source,
+                    status_code=status,
+                    detail=json_response,
+                ),
             )
         elif "message-version" in json_response:
-            return errors.UpstreamError(
+            return exceptions.UpstreamORCIDAPIError(
                 "Error fetching data from ORCID",
-                data={
-                    "source": source,
-                    "status_code": status,
-                    "detail": json_response,
-                },
+                data=exceptions.UpstreamErrorData(
+                    source=source,
+                    status_code=status,
+                    detail=json_response,
+                ),
             )
         elif "response-code" in json_response:
-            return errors.UpstreamError(
+            return exceptions.UpstreamORCIDAPIError(
                 "Error fetching data from ORCID",
-                data={
-                    "source": source,
-                    "status_code": status,
-                    "detail": json_response,
-                },
+                data=exceptions.UpstreamErrorData(
+                    source=source,
+                    status_code=status,
+                    detail=json_response,
+                ),
             )
-    return errors.UpstreamError(
+    return exceptions.UpstreamORCIDAPIError(
         "Error fetching data from ORCID",
-        data={
-            "source": source,
-            "status_code": status,
-            "detail": json_response,
-        },
+        data=exceptions.UpstreamErrorData(
+            source=source,
+            status_code=status,
+            detail=json_response,
+        ),
     )
 
 
@@ -703,13 +703,10 @@ class ORCIDAPIClient(ORCIDClientBase):
             ) as response:
                 result = await response.json()
                 if response.status == 404:
-                    # raise errors.NotFoundError("ORCID user profile not found")
-                    raise errors.ServiceErrorXX(
-                        errors.NOT_FOUND, "ORCID User Profile Not Found"
-                    )
+                    raise exceptions.NotFoundError("ORCID User Profile Not Found")
                 elif response.status == 401:
-                    raise errors.ServiceErrorXX(
-                        errors.ORCID_INVALID_TOKEN, "Not authorized for ORCID Access"
+                    raise exceptions.AuthorizationRequiredError(
+                        "Not authorized for ORCID Access"
                     )
                 elif response.status != 200:
                     # This will capture any < 500 errors, which we just
@@ -720,9 +717,6 @@ class ORCIDAPIClient(ORCIDClientBase):
                     raise make_upstream_error(
                         response.status, result, source="get_profile"
                     )
-                    # raise errors.InternalError(
-                    #     "Unknown error fetching ORCID user profile"
-                    # )
                 else:
                     return ORCIDProfile.model_validate(result)
 
@@ -847,32 +841,29 @@ class ORCIDOAuthClient(ORCIDClientBase):
             ) as response:
                 content_type_raw = response.headers.get("Content-Type")
                 if content_type_raw is None:
-                    raise errors.UpstreamError("No content-type in response")
+                    raise exceptions.UpstreamError("No content-type in response")
 
                 content_type, _, _ = content_type_raw.partition(";")
                 if content_type == "application/json":
                     try:
                         json_response = await response.json()
                     except JSONDecodeError as jde:
-                        raise errors.UpstreamError(
-                            "Error decoding JSON response"
-                        ) from jde
-
+                        raise exceptions.JSONDecodeError(
+                            "Error decoding JSON response", jde
+                        )
                     if response.status == 200:
                         # TODO: branch on error
                         return model.ORCIDAuth.model_validate(json_response)
                     else:
-                        print("ERROR!", response.text)
-
                         if "error" in json_response:
                             error = ORCIDAPIError.model_validate(json_response)
-                            raise errors.UpstreamError(error.error_description)
+                            raise exceptions.UpstreamError(error.error_description)
                         else:
-                            raise errors.UpstreamError(
+                            raise exceptions.UpstreamError(
                                 "Unexpected Error Response from ORCID"
                             )
                 else:
-                    raise errors.UpstreamError(
+                    raise exceptions.UpstreamError(
                         f"Expected JSON response, got {content_type}"
                     )
 

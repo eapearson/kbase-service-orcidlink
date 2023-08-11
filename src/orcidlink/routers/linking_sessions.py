@@ -11,21 +11,21 @@ import uuid
 from urllib.parse import urlencode
 
 from bson.json_util import dumps
-from fastapi import APIRouter, Cookie, Path, Query, responses
+from fastapi import APIRouter, Cookie, Path, Query, responses, status
 from pydantic import Field
 from starlette.responses import RedirectResponse, Response
 
-from orcidlink.lib import errors
+from orcidlink.lib import errors, exceptions
+from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.config import Config2
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     AUTHORIZATION_HEADER,
     STD_RESPONSES,
-    ErrorResponse,
-    success_response_no_data,
     ui_error_response,
 )
+from orcidlink.lib.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
@@ -36,8 +36,6 @@ from orcidlink.model import (
     LinkRecord,
     SimpleSuccess,
 )
-from orcidlink.lib.auth import ensure_authorization
-from orcidlink.lib.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/linking-sessions")
@@ -80,10 +78,10 @@ async def get_linking_session_initial(
     session_record = model.get_linking_session_initial(session_id)
 
     if session_record is None:
-        raise errors.NotFoundError("Linking session not found")
+        raise exceptions.NotFoundError("Linking session not found")
 
     if not session_record.username == username:
-        raise errors.UnauthorizedError("Username does not match linking session")
+        raise exceptions.UnauthorizedError("Username does not match linking session")
 
     return session_record
 
@@ -100,10 +98,10 @@ async def get_linking_session_started(
     session_record = model.get_linking_session_started(session_id)
 
     if session_record is None:
-        raise errors.NotFoundError("Linking session not found")
+        raise exceptions.NotFoundError("Linking session not found")
 
     if not session_record.username == username:
-        raise errors.UnauthorizedError("Username does not match linking session")
+        raise exceptions.UnauthorizedError("Username does not match linking session")
 
     return session_record
 
@@ -120,10 +118,10 @@ async def get_linking_session_completed(
     session_record = model.get_linking_session_completed(session_id)
 
     if session_record is None:
-        raise errors.NotFoundError("Linking session not found")
+        raise exceptions.NotFoundError("Linking session not found")
 
     if session_record.username != username:
-        raise errors.UnauthorizedError("Username does not match linking session")
+        raise exceptions.UnauthorizedError("Username does not match linking session")
 
     return session_record
 
@@ -206,7 +204,7 @@ async def create_linking_session(
     link_record = model.get_link_record(username)
 
     if link_record is not None:
-        raise errors.AlreadyLinkedError("User already has a link")
+        raise exceptions.AlreadyLinkedError("User already has a link")
 
     created_at = posix_time_millis()
     # Expiration of the linking session, currently hardwired in the constants file.
@@ -232,10 +230,13 @@ async def create_linking_session(
         },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        404: {"description": "Linking session not found", "model": ErrorResponse},
+        404: {
+            "description": "Linking session not found",
+            "model": errors.ErrorResponse,
+        },
         403: {
             "description": "User does not own linking session",
-            "model": ErrorResponse,
+            "model": errors.ErrorResponse,
         },
     },
     tags=["linking-sessions"],
@@ -277,9 +278,12 @@ async def get_linking_session(
         **STD_RESPONSES,
         403: {
             "description": "Username does not match linking session",
-            "model": ErrorResponse,
+            "model": errors.ErrorResponse,
         },
-        404: {"description": "Linking session not found", "model": ErrorResponse},
+        404: {
+            "description": "Linking session not found",
+            "model": errors.ErrorResponse,
+        },
     },
     tags=["linking-sessions"],
 )
@@ -300,7 +304,7 @@ async def delete_linking_session(
 
     model = storage_model()
     model.delete_linking_session(session_record.session_id)
-    return success_response_no_data()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 #
@@ -320,9 +324,12 @@ async def delete_linking_session(
         **STD_RESPONSES,
         403: {
             "description": "Username does not match linking session",
-            "model": ErrorResponse,
+            "model": errors.ErrorResponse,
         },
-        404: {"description": "Linking session not found", "model": ErrorResponse},
+        404: {
+            "description": "Linking session not found",
+            "model": errors.ErrorResponse,
+        },
     },
     tags=["linking-sessions"],
 )
@@ -377,7 +384,7 @@ async def finish_linking_session(
         **STD_RESPONSES,
         404: {
             "description": "Response when a linking session not found for the supplied session id",
-            "model": ErrorResponse,
+            "model": errors.ErrorResponse,
         },
     },
     tags=["linking-sessions"],
@@ -405,7 +412,9 @@ async def start_linking_session(
 
     if kbase_session is None:
         if kbase_session_backup is None:
-            raise errors.AuthTokenRequiredError("Linking requires authentication")
+            raise exceptions.AuthorizationRequiredError(
+                "Linking requires authentication"
+            )
             # raise HTTPException(401, "Linking requires authentication")
         else:
             authorization = kbase_session_backup
@@ -503,7 +512,8 @@ async def linking_sessions_continue(
     """
     Continue Linking Session
 
-    This endpoint implements the end point for the ORCID OAuth flow. That is, it
+    This endpoint implements the handoff from frmo the ORCID authorization sktep in
+    the ORCID OAuth flow. That is, it
     serves as the redirection target after the user has successfully completed
     their interaction with ORCID, at which they may have logged in and provided
     their consent to issuing the linking token to KBase.
@@ -522,7 +532,9 @@ async def linking_sessions_continue(
         if kbase_session_backup is None:
             # TODO: this should be our own exception, otherwise it will be caught by
             # the global fastapi hooks.
-            raise errors.AuthTokenRequiredError("Linking requires authentication")
+            raise exceptions.AuthorizationRequiredError(
+                "Linking requires authentication"
+            )
             # raise HTTPException(401, "Linking requires authentication")
         else:
             authorization = kbase_session_backup
@@ -536,19 +548,17 @@ async def linking_sessions_continue(
     #
 
     if error is not None:
-        return ui_error_response("link.orcid_error", "ORCID Error Linking", error)
+        return ui_error_response(errors.ERRORS.linking_session_error, error)
 
     if code is None:
         return ui_error_response(
-            "link.code_missing",
-            "Linking code missing",
+            errors.ERRORS.linking_session_continue_invalid_param,
             "The 'code' query param is required but missing",
         )
 
     if state is None:
         return ui_error_response(
-            "link.state_missing",
-            "Linking state missing",
+            errors.ERRORS.linking_session_continue_invalid_param,
             "The 'state' query param is required but missing",
         )
 
@@ -556,8 +566,7 @@ async def linking_sessions_continue(
 
     if "session_id" not in unpacked_state:
         return ui_error_response(
-            "link.session_id_missing",
-            "Linking Error",
+            errors.ERRORS.linking_session_continue_invalid_param,
             "The 'session_id' was not provided in the 'state' query param",
         )
 

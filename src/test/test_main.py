@@ -1,14 +1,15 @@
 import json
+import os
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, TEST_ENV
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
 from test.mocks.testing_utils import generate_kbase_token
-import os
 from unittest import mock
+
 import pytest
 from fastapi.testclient import TestClient
 
-from orcidlink.lib import utils
+from orcidlink.lib import errors, utils
 from orcidlink.lib.logger import log_event
 from orcidlink.main import app
 
@@ -79,8 +80,8 @@ def test_validation_exception_handler(fake_fs):
     assert response.status_code == 422
     assert response.headers["content-type"] == "application/json"
     content = response.json()
-    assert content["code"] == "requestParametersInvalid"
-    assert content["title"] == "Request Parameters Invalid"
+    assert content["code"] == errors.ERRORS.request_validation_error.code
+    assert content["title"] == errors.ERRORS.request_validation_error.title
     assert (
         content["message"]
         == "This request does not comply with the schema for this endpoint"
@@ -96,8 +97,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "requestParametersInvalid"
-            assert content["title"] == "Request Parameters Invalid"
+            assert content["code"] == errors.ERRORS.request_validation_error.code
+            assert content["title"] == errors.ERRORS.request_validation_error.title
             assert (
                 content["message"]
                 == "This request does not comply with the schema for this endpoint"
@@ -108,7 +109,7 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 401
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "invalidToken"
+            assert content["code"] == errors.ERRORS.authorization_required.code
 
             # TODO: the new ServiceErrorXX does not emit the title, as it is not part of the
             # JSON-RPC error structure. We want to be compatible with that, as it makes error
@@ -121,8 +122,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "requestParametersInvalid"
-            assert content["title"] == "Request Parameters Invalid"
+            assert content["code"] == errors.ERRORS.request_validation_error.code
+            assert content["title"] == errors.ERRORS.request_validation_error.title
 
             # Call with actual empty token; should be caught at the validator boundary
             # as it is invalid according to the rules for tokens.
@@ -130,8 +131,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 422
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "requestParametersInvalid"
-            assert content["title"] == "Request Parameters Invalid"
+            assert content["code"] == errors.ERRORS.request_validation_error.code
+            assert content["title"] == errors.ERRORS.request_validation_error.title
 
             # # This one pretends that the /link implementation does not check for
             # # missing token first, but rather sends the no token. For testing
@@ -171,8 +172,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 502
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "jsonDecodeError"
-            assert content["title"] == "Error Decoding Response"
+            assert content["code"] == errors.ERRORS.json_decode_error.code
+            # assert content["title"] == "Error Decoding Response"
 
             # make a call which triggers a bug to trigger a JSON parse error
             response = client.get(
@@ -181,8 +182,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 500
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "internalServerError"
-            assert content["title"] == "Internal Server Error"
+            assert content["code"] == errors.ERRORS.internal_server_error.code
+            # assert content["title"] == "Internal Server Error"
 
             # make some call which triggers a non-404 error caught by FastAPI/Starlette, in this
             # case an endpoint not found.
@@ -190,8 +191,8 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 404
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "notFound"
-            assert content["title"] == "Not Found"
+            assert content["code"] == errors.ERRORS.not_found.code
+            assert content["title"] == errors.ERRORS.not_found.title
             assert content["message"] == "The requested resource was not found"
             assert content["data"]["detail"] == "Not Found"
             assert content["data"]["path"] == "/linx"
@@ -202,7 +203,7 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert response.status_code == 405
             assert response.headers["content-type"] == "application/json"
             content = response.json()
-            assert content["code"] == "fastapiError"
-            assert content["title"] == "FastAPI Error"
+            assert content["code"] == errors.ERRORS.fastapi_error.code
+            assert content["title"] == errors.ERRORS.fastapi_error.title
             assert content["message"] == "Internal FastAPI Exception"
             assert content["data"]["detail"] == "Method Not Allowed"

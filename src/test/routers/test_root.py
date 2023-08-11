@@ -1,17 +1,17 @@
+import os
 from datetime import datetime, timezone
 from test.mocks.data import load_data_file, load_data_json
-import os
+from test.mocks.env import TEST_ENV
 from unittest import mock
+
 import pytest
 from fastapi.testclient import TestClient
 
 from orcidlink.lib import utils
 from orcidlink.main import app
-from test.mocks.env import TEST_ENV
 
 client = TestClient(app, raise_server_exceptions=False)
 
-# config_yaml = load_data_file("config1.toml")
 service_description_toml = load_data_file("service_description1.toml")
 
 
