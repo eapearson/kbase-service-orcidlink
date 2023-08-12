@@ -43,10 +43,10 @@ def around_tests(fake_fs):
     yield
 
 
-def create_link():
+async def create_link():
     sm = storage_model.storage_model()
-    sm.db.links.drop()
-    sm.create_link_record(model.LinkRecord.model_validate(TEST_LINK))
+    await sm.db.links.drop()
+    await sm.create_link_record(model.LinkRecord.model_validate(TEST_LINK))
 
 
 #
@@ -92,10 +92,10 @@ def create_link():
 #         server.stop_service()
 
 
-def test_get_profile(fake_fs):
+async def test_get_profile(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             response = TestClient(app).get(
                 "/orcid/profile", headers={"Authorization": TOKEN_FOO}
             )

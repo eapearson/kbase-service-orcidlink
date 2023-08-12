@@ -32,10 +32,10 @@ def mock_services():
             yield
 
 
-def create_link(link_record):
+async def create_link(link_record):
     sm = storage_model.storage_model()
-    sm.db.links.drop()
-    sm.create_link_record(LinkRecord.model_validate(link_record))
+    await sm.db.links.drop()
+    await sm.create_link_record(LinkRecord.model_validate(link_record))
 
 
 #
@@ -43,10 +43,10 @@ def create_link(link_record):
 #
 
 
-def test_get_link():
+async def test_get_link():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link(TEST_LINK)
+            await create_link(TEST_LINK)
 
             client = TestClient(app)
             response = client.get(
@@ -68,10 +68,10 @@ def test_get_link():
             assert response.status_code == 422
 
 
-def test_get_link_shared():
+async def test_get_link_shared():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link(TEST_LINK_BAR)
+            await create_link(TEST_LINK_BAR)
 
             client = TestClient(app)
             linked_username = "bar"
@@ -96,10 +96,10 @@ def test_get_link_shared():
             assert response.status_code == 404
 
 
-def test_is_linked():
+async def test_is_linked():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link(TEST_LINK)
+            await create_link(TEST_LINK)
 
             client = TestClient(app)
             response = client.get(
@@ -126,11 +126,11 @@ def test_is_linked():
             assert response.status_code == 422
 
 
-def test_delete_link():
+async def test_delete_link():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-                create_link(TEST_LINK)
+                await create_link(TEST_LINK)
 
                 client = TestClient(app)
 

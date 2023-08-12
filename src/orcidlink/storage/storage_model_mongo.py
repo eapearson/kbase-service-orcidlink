@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from pymongo import MongoClient
+import motor.motor_asyncio
 
 from orcidlink.lib import errors, exceptions
 from orcidlink.model import (
@@ -16,7 +16,7 @@ class StorageModelMongo:
     def __init__(
         self, host: str, port: int, database: str, username: str, password: str
     ):
-        self.client: MongoClient[Dict[str, Any]] = MongoClient(
+        self.client = motor.motor_asyncio.AsyncIOMotorClient(
             host=host,
             port=port,
             username=username,
@@ -31,33 +31,32 @@ class StorageModelMongo:
     # The user record is the primary linking document, providing a linkage between
     # a username and an ORCID Id.
     #
-    def get_link_record(self, username: str) -> Optional[LinkRecord]:
-        record = self.db.links.find_one({"username": username})
-
-        if record is None:
-            return None
-
-        return LinkRecord.model_validate(record)
-    
-    def get_link_record_for_orcid_id(self, orcid_id: str) -> Optional[LinkRecord]:
-        record = self.db.links.find_one({"orcid_auth.orcid": orcid_id})
+    async def get_link_record(self, username: str) -> Optional[LinkRecord]:
+        record = await self.db.links.find_one({"username": username})
 
         if record is None:
             return None
 
         return LinkRecord.model_validate(record)
 
+    async def get_link_record_for_orcid_id(self, orcid_id: str) -> Optional[LinkRecord]:
+        record = await self.db.links.find_one({"orcid_auth.orcid": orcid_id})
 
-    def save_link_record(self, record: LinkRecord) -> None:
-        self.db.links.update_one(
+        if record is None:
+            return None
+
+        return LinkRecord.model_validate(record)
+
+    async def save_link_record(self, record: LinkRecord) -> None:
+        await self.db.links.update_one(
             {"username": record.username}, {"$set": record.model_dump()}
         )
 
-    def create_link_record(self, record: LinkRecord) -> None:
-        self.db.links.insert_one(record.model_dump())
+    async def create_link_record(self, record: LinkRecord) -> None:
+        await self.db.links.insert_one(record.model_dump())
 
-    def delete_link_record(self, username: str) -> None:
-        self.db.links.delete_one({"username": username})
+    async def delete_link_record(self, username: str) -> None:
+        await self.db.links.delete_one({"username": username})
 
     ################################
     # OAuth state persistence
@@ -66,14 +65,15 @@ class StorageModelMongo:
     # Linking session
     # TODO: operate with the linking session record model, not raw dict.
 
-    def create_linking_session(self, linking_record: LinkingSessionInitial) -> None:
-        self.db.linking_sessions_initial.insert_one(linking_record.model_dump())
-        # return self.db.create('linking-sessions', session_id, linking_record)
+    async def create_linking_session(
+        self, linking_record: LinkingSessionInitial
+    ) -> None:
+        await self.db.linking_sessions_initial.insert_one(linking_record.model_dump())
 
-    def delete_linking_session(self, session_id: str) -> None:
+    async def delete_linking_session(self, session_id: str) -> None:
         # The UI api only supports deleting completed sessions.
         # We'll need an admin API to delete danging initial and started linking sessions.
-        self.db.linking_sessions_completed.delete_one({"session_id": session_id})
+        await self.db.linking_sessions_completed.delete_one({"session_id": session_id})
 
     # def get_linking_session(
     #     self, session_id: str
@@ -92,10 +92,12 @@ class StorageModelMongo:
     #         session["kind"] = "initial"
     #         return LinkingSessionInitial.model_validate(session)
 
-    def get_linking_session_initial(
+    async def get_linking_session_initial(
         self, session_id: str
     ) -> LinkingSessionInitial | None:
-        session = self.db.linking_sessions_initial.find_one({"session_id": session_id})
+        session = await self.db.linking_sessions_initial.find_one(
+            {"session_id": session_id}
+        )
 
         if session is None:
             return None
@@ -103,19 +105,21 @@ class StorageModelMongo:
             # session["kind"] = "initial"
             return LinkingSessionInitial.model_validate(session)
 
-    def get_linking_session_started(
+    async def get_linking_session_started(
         self, session_id: str
     ) -> LinkingSessionStarted | None:
-        session = self.db.linking_sessions_started.find_one({"session_id": session_id})
+        session = await self.db.linking_sessions_started.find_one(
+            {"session_id": session_id}
+        )
         if session is None:
             return None
         else:
             return LinkingSessionStarted.model_validate(session)
 
-    def get_linking_session_completed(
+    async def get_linking_session_completed(
         self, session_id: str
     ) -> LinkingSessionComplete | None:
-        session = self.db.linking_sessions_completed.find_one(
+        session = await self.db.linking_sessions_completed.find_one(
             {"session_id": session_id}
         )
 
@@ -125,40 +129,42 @@ class StorageModelMongo:
             # session["kind"] = "complete"
             return LinkingSessionComplete.model_validate(session)
 
-    def update_linking_session_to_started(
+    async def update_linking_session_to_started(
         self,
         session_id: str,
         return_link: str | None,
         skip_prompt: bool,
         ui_options: str,
     ) -> None:
-        with self.client.start_session() as session:
+        async with await self.client.start_session() as session:
             # Get the initial linking session.
-            linking_session = self.db.linking_sessions_initial.find_one(
+            linking_session = await self.db.linking_sessions_initial.find_one(
                 {"session_id": session_id}, session=session
             )
 
             if linking_session is None:
                 raise exceptions.NotFoundError("Linking session not found")
 
-            linking_session["return_link"] = return_link
-            linking_session["skip_prompt"] = skip_prompt
-            linking_session["ui_options"] = ui_options
+            updated_linking_session = dict(linking_session)
 
-            self.db.linking_sessions_started.insert_one(
-                linking_session, session=session
+            updated_linking_session["return_link"] = return_link
+            updated_linking_session["skip_prompt"] = skip_prompt
+            updated_linking_session["ui_options"] = ui_options
+
+            await self.db.linking_sessions_started.insert_one(
+                updated_linking_session, session=session
             )
 
-            self.db.linking_sessions_initial.delete_one(
+            await self.db.linking_sessions_initial.delete_one(
                 {"session_id": session_id}, session=session
             )
 
-    def update_linking_session_to_finished(
+    async def update_linking_session_to_finished(
         self, session_id: str, orcid_auth: ORCIDAuth
     ) -> None:
-        with self.client.start_session() as session:
+        async with await self.client.start_session() as session:
             # Get the initial linking session.
-            linking_session = self.db.linking_sessions_started.find_one(
+            linking_session = await self.db.linking_sessions_started.find_one(
                 {"session_id": session_id}, session=session
             )
 
@@ -168,19 +174,21 @@ class StorageModelMongo:
                     message="Linking session not found",
                 )
 
-            linking_session["orcid_auth"] = orcid_auth.model_dump()
+            updated_linking_session = dict(linking_session)
 
-            self.db.linking_sessions_completed.insert_one(
-                linking_session, session=session
+            updated_linking_session["orcid_auth"] = orcid_auth.model_dump()
+
+            await self.db.linking_sessions_completed.insert_one(
+                updated_linking_session, session=session
             )
 
-            self.db.linking_sessions_started.delete_one(
+            await self.db.linking_sessions_started.delete_one(
                 {"session_id": session_id}, session=session
             )
 
-    def reset_database(self) -> None:
-        self.db.links.drop()
-        self.db.linking_sessions_initial.drop()
-        self.db.linking_sessions_started.drop()
-        self.db.linking_sessions_completed.drop()
-        self.db.description.drop()
+    async def reset_database(self) -> None:
+        await self.db.links.drop()
+        await self.db.linking_sessions_initial.drop()
+        await self.db.linking_sessions_started.drop()
+        await self.db.linking_sessions_completed.drop()
+        await self.db.description.drop()

@@ -23,9 +23,9 @@ TEST_LINK = load_data_json("link2.json")
 TEST_LINK1 = load_data_json("link1.json")
 
 
-def create_link(link_data):
+async def create_link(link_data):
     sm = storage_model()
-    sm.create_link_record(LinkRecord.model_validate(link_data))
+    await sm.create_link_record(LinkRecord.model_validate(link_data))
 
 
 #
@@ -33,11 +33,11 @@ def create_link(link_data):
 #
 
 
-def assert_create_linking_session(client, authorization: str):
+async def assert_create_linking_session(client, authorization: str):
     #
     # Create linking session.
     #
-    clear_storage_model()
+    await clear_storage_model()
     response = client.post(
         "/linking-sessions", headers={"Authorization": authorization}
     )
@@ -198,26 +198,26 @@ def mock_services():
 #
 
 
-def test_create_linking_session():
+async def test_create_linking_session():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            clear_storage_model()
+            await clear_storage_model()
             client = TestClient(app)
-            assert_create_linking_session(client, TOKEN_FOO)
+            await assert_create_linking_session(client, TOKEN_FOO)
 
 
-def test_create_linking_session_already_linked():
+async def test_create_linking_session_already_linked():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             #
             #
             #
-            clear_storage_model()
+            await clear_storage_model()
 
             #
             # Create a link for user "foo"
             #
-            create_link(TEST_LINK1)
+            await create_link(TEST_LINK1)
 
             #
             # Create linking session; this should fail with errors.AlreadyLinkedError
@@ -237,7 +237,7 @@ def test_create_linking_session_already_linked():
             # return session_info
 
 
-def test_get_linking_session():
+async def test_get_linking_session():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
@@ -247,12 +247,12 @@ def test_get_linking_session():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
-                clear_storage_model()
+                await clear_storage_model()
 
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -305,7 +305,7 @@ def test_get_linking_session():
                 # assert "orcid_auth" not in initial_session_info
 
 
-def test_delete_linking_session():
+async def test_delete_linking_session():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
@@ -315,12 +315,12 @@ def test_delete_linking_session():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
-                clear_storage_model()
+                await clear_storage_model()
 
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -385,7 +385,7 @@ def test_delete_linking_session():
                 # assert "orcid_auth" not in initial_session_info
 
 
-def test_get_linking_session_errors():
+async def test_get_linking_session_errors():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
@@ -395,7 +395,7 @@ def test_get_linking_session_errors():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
-                clear_storage_model()
+                await clear_storage_model()
 
                 # Get a non-existent linking session id
                 response = client.get(
@@ -420,7 +420,7 @@ def test_get_linking_session_errors():
                 assert response.status_code == 422
 
                 # Should also be 404, because it is not completed yet.
-                session_info = assert_create_linking_session(client, TOKEN_FOO)
+                session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 response = client.get(
                     f"/linking-sessions/{session_info['session_id']}",
                     headers={"Authorization": TOKEN_FOO},
@@ -459,7 +459,7 @@ def test_get_linking_session_errors():
                     expected_response_code=403,
                 )
 
-                # # session_info = assert_create_linking_session(client, TOKEN_FOO)
+                # # session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 # # Provide a bad auth token, also a 401; i.e., same as no auth
                 # response = client.get(
                 #     f"/linking-sessions/{session_info['session_id']}",
@@ -469,7 +469,7 @@ def test_get_linking_session_errors():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_start_linking_session():
+async def test_start_linking_session():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
@@ -479,12 +479,12 @@ def test_start_linking_session():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
-                clear_storage_model()
+                await clear_storage_model()
 
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 # #
@@ -522,7 +522,7 @@ def test_start_linking_session():
                 # assert session_record['skip_prompt'] == "yes"
 
 
-def test_start_linking_session_backup_cookie():
+async def test_start_linking_session_backup_cookie():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
@@ -532,12 +532,12 @@ def test_start_linking_session_backup_cookie():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 client = TestClient(app)
 
-                clear_storage_model()
+                await clear_storage_model()
 
                 #
                 # Create linking session.
                 #
-                initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -549,7 +549,7 @@ def test_start_linking_session_backup_cookie():
                 )
 
 
-def test_start_linking_session_errors():
+async def test_start_linking_session_errors():
     """
     Now we create a session, and get it back, in order
     to test the "get linking session" call.
@@ -558,12 +558,12 @@ def test_start_linking_session_errors():
         with mock_services():
             client = TestClient(app)
 
-            clear_storage_model()
+            await clear_storage_model()
 
             #
             # Create linking session.
             #
-            initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -622,7 +622,7 @@ def test_start_linking_session_errors():
 
 
 # @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_continue_linking_session():
+async def test_continue_linking_session():
     """
     Here we simulate the oauth flow with ORCID - in which
     we redirect the browser to ORCID, which ends up returning
@@ -631,7 +631,7 @@ def test_continue_linking_session():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
 
-        def assert_continue_linking_session(
+        async def assert_continue_linking_session(
             kbase_session: str | None = None,
             kbase_session_backup: str | None = None,
             return_link: str | None = None,
@@ -643,7 +643,7 @@ def test_continue_linking_session():
             #
             # Create linking session.
             #
-            initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -727,21 +727,23 @@ def test_continue_linking_session():
         # function above.
         with mock_services():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-                clear_storage_model()
+                await clear_storage_model()
 
-                assert_continue_linking_session(
+                await assert_continue_linking_session(
                     kbase_session=TOKEN_FOO,
                     skip_prompt="no",
                     expected_response_code=302,
                 )
-                clear_storage_model()
-                assert_continue_linking_session(
+
+                await clear_storage_model()
+                await assert_continue_linking_session(
                     kbase_session_backup=TOKEN_FOO,
                     skip_prompt="no",
                     expected_response_code=302,
                 )
-                clear_storage_model()
-                assert_continue_linking_session(
+
+                await clear_storage_model()
+                await assert_continue_linking_session(
                     kbase_session=TOKEN_FOO,
                     return_link="bar",
                     skip_prompt="no",
@@ -750,7 +752,7 @@ def test_continue_linking_session():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_continue_linking_session_errors():
+async def test_continue_linking_session_errors():
     """
     Here we simulate the oauth flow with ORCID - in which
     we redirect the browser to ORCID, which ends up returning
@@ -760,12 +762,12 @@ def test_continue_linking_session_errors():
     with mock_services():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
             client = TestClient(app)
-            clear_storage_model()
+            await clear_storage_model()
 
             #
             # Create linking session.
             #
-            initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -888,7 +890,7 @@ def test_continue_linking_session_errors():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_continue_linking_session_error_already_continued():
+async def test_continue_linking_session_error_already_continued():
     """
     Here we simulate the oauth flow with ORCID - in which
     we redirect the browser to ORCID, which ends up returning
@@ -899,12 +901,12 @@ def test_continue_linking_session_error_already_continued():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
             client = TestClient(app)
 
-            clear_storage_model()
+            await clear_storage_model()
 
             #
             # Create linking session.
             #
-            initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -980,7 +982,7 @@ def test_continue_linking_session_error_already_continued():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_finish_linking_session_error_already_finished():
+async def test_finish_linking_session_error_already_finished():
     """
     Here we simulate the oauth flow with ORCID - in which
     we redirect the browser to ORCID, which ends up returning
@@ -991,12 +993,12 @@ def test_finish_linking_session_error_already_finished():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
             client = TestClient(app)
 
-            clear_storage_model()
+            await clear_storage_model()
 
             #
             # Create linking session.
             #
-            initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -1098,14 +1100,14 @@ def test_finish_linking_session_error_already_finished():
 
 # TODO: revive this.
 # Need to get the linking session all the way to completed.
-# def xest_delete_linking_session(fake_fs):
+# def test_delete_linking_session(fake_fs):
 #     with mock_services():
 #         client = TestClient(app)
 
 #         #
 #         # Create the linking session.
 #         #
-#         initial_session_info = assert_create_linking_session(client, TOKEN_FOO)
+#         initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
 #         initial_session_id = initial_session_info["session_id"]
 
 #         #

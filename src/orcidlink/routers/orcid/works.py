@@ -29,7 +29,7 @@ router = APIRouter(prefix="/orcid/works", responses={404: {"description": "Not f
 
 async def get_link_record(kbase_token: str) -> Optional[model.LinkRecord]:
     username = await get_username(kbase_token)
-    return storage_model().get_link_record(username)
+    return await storage_model().get_link_record(username)
 
 
 #

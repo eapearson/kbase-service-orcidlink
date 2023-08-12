@@ -75,7 +75,7 @@ async def get_linking_session_initial(
 
     model = storage_model()
 
-    session_record = model.get_linking_session_initial(session_id)
+    session_record = await model.get_linking_session_initial(session_id)
 
     if session_record is None:
         raise exceptions.NotFoundError("Linking session not found")
@@ -95,7 +95,7 @@ async def get_linking_session_started(
 
     model = storage_model()
 
-    session_record = model.get_linking_session_started(session_id)
+    session_record = await model.get_linking_session_started(session_id)
 
     if session_record is None:
         raise exceptions.NotFoundError("Linking session not found")
@@ -115,7 +115,7 @@ async def get_linking_session_completed(
 
     model = storage_model()
 
-    session_record = model.get_linking_session_completed(session_id)
+    session_record = await model.get_linking_session_completed(session_id)
 
     if session_record is None:
         raise exceptions.NotFoundError("Linking session not found")
@@ -201,7 +201,7 @@ async def create_linking_session(
 
     # Check if username is already linked.
     model = storage_model()
-    link_record = model.get_link_record(username)
+    link_record = await model.get_link_record(username)
 
     if link_record is not None:
         raise exceptions.AlreadyLinkedError("User already has a link")
@@ -217,7 +217,7 @@ async def create_linking_session(
         expires_at=expires_at,
     )
 
-    model.create_linking_session(linking_record)
+    await model.create_linking_session(linking_record)
     return CreateLinkingSessionResult(session_id=session_id)
 
 
@@ -303,7 +303,7 @@ async def delete_linking_session(
     session_record = await get_linking_session_completed(session_id, authorization)
 
     model = storage_model()
-    model.delete_linking_session(session_record.session_id)
+    await model.delete_linking_session(session_record.session_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -358,9 +358,9 @@ async def finish_linking_session(
         created_at=created_at,
         expires_at=expires_at,
     )
-    model.create_link_record(link_record)
+    await model.create_link_record(link_record)
 
-    model.delete_linking_session(session_id)
+    await model.delete_linking_session(session_id)
     return SimpleSuccess(ok=True)
 
 
@@ -431,7 +431,7 @@ async def start_linking_session(
     # starting a session twice!
 
     model = storage_model()
-    model.update_linking_session_to_started(
+    await model.update_linking_session_to_started(
         session_id, return_link, skip_prompt, ui_options
     )
 
@@ -578,19 +578,19 @@ async def linking_sessions_continue(
     #
     orcid_auth = await orcid_oauth(authorization).exchange_code_for_token(code)
 
-    # 
-    # Note that it isn't until this point that we know the orcid id the user 
+    #
+    # Note that it isn't until this point that we know the orcid id the user
     # wants to link. So here we can detect if the orcid id has already
     # been linked. If so, it is an error.
     #
     model = storage_model()
 
-    existing_orcid_auth = model.get_link_record_for_orcid_id(orcid_auth.orcid)
+    existing_orcid_auth = await model.get_link_record_for_orcid_id(orcid_auth.orcid)
 
     if existing_orcid_auth is not None:
         return ui_error_response(
             errors.ERRORS.linking_session_already_linked_orcid,
-            "The chosen ORCID account is already linked to another KBase account"
+            "The chosen ORCID account is already linked to another KBase account",
         )
 
     #
@@ -601,8 +601,8 @@ async def linking_sessions_continue(
 
     # Note that this is approximate, as it uses our time, not the
     # ORCID server time.
-    
-    model.update_linking_session_to_finished(session_id, orcid_auth)
+
+    await model.update_linking_session_to_finished(session_id, orcid_auth)
 
     #
     # Redirect back to the orcidlink interface, with some

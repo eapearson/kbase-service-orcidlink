@@ -10,9 +10,9 @@ TOKEN_BAR = generate_kbase_token("bar")
 TOKEN_BAZ = generate_kbase_token("baz")
 
 
-def clear_storage_model():
+async def clear_storage_model():
     sm = storage_model()
-    sm.db.linking_sessions_completed.delete_many({})
-    sm.db.linking_sessions_initial.delete_many({})
-    sm.db.linking_sessions_started.delete_many({})
-    sm.db.links.delete_many({})
+    await sm.db.linking_sessions_completed.delete_many({})
+    await sm.db.linking_sessions_initial.delete_many({})
+    await sm.db.linking_sessions_started.delete_many({})
+    await sm.db.links.delete_many({})

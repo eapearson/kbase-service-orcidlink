@@ -71,6 +71,7 @@ async def get_info() -> InfoResponse:
         }
     )
 
+
 # ERROR_CODE_PARAM = Annotated[int, Path(
 #     description="The orcid id", regex="^[\\d]{4}$"
 #     # It is a uuid, whose string representation is 36 characters.
@@ -83,12 +84,12 @@ ERROR_CODE_PARAM = Path(
 )
 
 
-
 class ErrorInfoResponse(ServiceBaseModel):
     error_info: ErrorCode2
 
+
 @router.get("/error-info/{error_code}", response_model=ErrorInfoResponse, tags=["misc"])
-async def get_error_info(error_code: int = ERROR_CODE_PARAM):
+async def get_error_info(error_code: int = ERROR_CODE_PARAM) -> ErrorInfoResponse:
     """
     Returns information about a given error.
 
@@ -99,10 +100,6 @@ async def get_error_info(error_code: int = ERROR_CODE_PARAM):
     error = ERRORS_MAP.get(error_code)
 
     if error is None:
-        raise ServiceErrorY(
-            error=ERRORS.not_found,
-            message="Error info not found"
-        )
-    
-    return ErrorInfoResponse(error_info = error)
+        raise ServiceErrorY(error=ERRORS.not_found, message="Error info not found")
 
+    return ErrorInfoResponse(error_info=error)

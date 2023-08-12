@@ -115,12 +115,12 @@ ERRORS = Errors(
         code=1081, title="ORCID Error Linking", description="", status_code=502
     ),
     linking_session_already_linked_orcid=ErrorCode2(
-        code=1082, 
-        title="ORCID account already linked", 
+        code=1082,
+        title="ORCID account already linked",
         description="""
 The ORCID account requested for linking is already linked to another KBase account. 
-        """, 
-        status_code=400
+        """,
+        status_code=400,
     ),
     impossible_error=ErrorCode2(
         code=1099, title="Impossible Error", description="", status_code=500

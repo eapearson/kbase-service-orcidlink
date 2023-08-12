@@ -56,7 +56,7 @@ async def get_profile(
     #
     # Fetch the user's ORCID Link record from KBase.
     #
-    user_link_record = storage_model().get_link_record(username)
+    user_link_record = await storage_model().get_link_record(username)
     if user_link_record is None:
         raise exceptions.ServiceErrorY(
             error=errors.ERRORS.not_found, message="ORCID Profile Not Found"

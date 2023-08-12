@@ -44,44 +44,44 @@ EXAMPLE_LINK_RECORD_1 = load_data_json("link3.json")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_create_link_record(fake_fs):
+async def test_create_link_record(fake_fs):
     sm = storage_model()
-    sm.reset_database()
-    sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
-    record = sm.get_link_record("foo")
+    await sm.reset_database()
+    await sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
+    record = await sm.get_link_record("foo")
     assert record is not None
     assert record.orcid_auth.access_token == "foo"
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_save_link_record(fake_fs):
+async def test_save_link_record(fake_fs):
     sm = storage_model()
-    sm.reset_database()
-    sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
-    record = sm.get_link_record("foo")
+    await sm.reset_database()
+    await sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
+    record = await sm.get_link_record("foo")
     assert record is not None
     assert record.orcid_auth.access_token == "foo"
 
     updated_record = LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1)
     updated_record.orcid_auth.access_token = "fee"
-    sm.save_link_record(updated_record)
-    record = sm.get_link_record("foo")
+    await sm.save_link_record(updated_record)
+    record = await sm.get_link_record("foo")
     assert record is not None
     assert record.orcid_auth.access_token == "fee"
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_delete_link_record(fake_fs):
+async def test_delete_link_record(fake_fs):
     sm = storage_model()
-    sm.reset_database()
-    sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
-    record = sm.get_link_record("foo")
+    await sm.reset_database()
+    await sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
+    record = await sm.get_link_record("foo")
     assert record is not None
     assert record.orcid_auth.access_token == "foo"
 
-    sm.delete_link_record("foo")
+    await sm.delete_link_record("foo")
 
-    record = sm.get_link_record("foo")
+    record = await sm.get_link_record("foo")
     assert record is None
 
 
@@ -96,13 +96,13 @@ EXAMPLE_LINKING_SESSION_COMPLETED_1 = load_data_json(
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_create_linking_session(fake_fs):
+async def test_create_linking_session(fake_fs):
     sm = storage_model()
-    sm.reset_database()
-    sm.create_linking_session(
+    await sm.reset_database()
+    await sm.create_linking_session(
         LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
     )
-    record = sm.get_linking_session_initial("bar")
+    record = await sm.get_linking_session_initial("bar")
     assert record is not None
     assert record.session_id == "bar"
 
@@ -158,19 +158,21 @@ def test_create_linking_session(fake_fs):
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_save_linking_record():
+async def test_save_linking_record():
     sm = storage_model()
-    sm.reset_database()
-    sm.create_linking_session(
+    await sm.reset_database()
+    await sm.create_linking_session(
         LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
     )
-    record = sm.get_linking_session_initial("bar")
+    record = await sm.get_linking_session_initial("bar")
     assert record is not None
     assert record.session_id == "bar"
 
     # updated_record = copy.deepcopy(EXAMPLE_LINKING_SESSION_RECORD_1)
-    sm.update_linking_session_to_started("bar", "return-link", False, "ui-options")
-    record2 = sm.get_linking_session_started("bar")
+    await sm.update_linking_session_to_started(
+        "bar", "return-link", False, "ui-options"
+    )
+    record2 = await sm.get_linking_session_started("bar")
     assert record2 is not None
     assert record2.return_link == "return-link"
     assert record2.skip_prompt == False
@@ -187,12 +189,12 @@ def test_save_linking_record():
         id_token="g",
     )
 
-    sm.update_linking_session_to_finished("bar", orcid_auth)
-    record3 = sm.get_linking_session_completed("bar")
+    await sm.update_linking_session_to_finished("bar", orcid_auth)
+    record3 = await sm.get_linking_session_completed("bar")
     assert record3 is not None
     assert record3.orcid_auth.access_token == "a"
 
-    sm.delete_linking_session("bar")
+    await sm.delete_linking_session("bar")
 
-    record = sm.get_linking_session_completed("bar")
+    record = await sm.get_linking_session_completed("bar")
     assert record is None

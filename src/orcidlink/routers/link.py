@@ -81,7 +81,7 @@ async def get_link(
     _, token_info = await ensure_authorization(authorization)
 
     model = storage_model()
-    link_record = model.get_link_record(token_info.user)
+    link_record = await model.get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("No link record was found for this user")
@@ -97,6 +97,7 @@ async def get_link(
             orcid=link_record.orcid_auth.orcid,
         ),
     )
+
 
 @router.get(
     "/for_orcid/{orcid_id}",
@@ -123,18 +124,17 @@ async def get_link_for_orcid(
     """
     Get ORCID Link for a given ORCID Id
 
-    Return the link for the given orcid id, as long as the user associated with the KBase auth 
-    token passed in the "Authorization" header is also the 
+    Return the link for the given orcid id, as long as the user associated with the KBase auth
+    token passed in the "Authorization" header is also the
     """
     _, _ = await ensure_authorization(authorization)
 
     model = storage_model()
-    link_record = model.get_link_record_for_orcid_id(orcid_id)
+    link_record = await model.get_link_record_for_orcid_id(orcid_id)
 
     if link_record is None:
         raise exceptions.NotFoundError("No link record was found for this user")
 
-   
     result = LinkRecordPublicNonOwner(
         username=link_record.username,
         orcid_auth=ORCIDAuthPublicNonOwner(
@@ -142,7 +142,7 @@ async def get_link_for_orcid(
             orcid=link_record.orcid_auth.orcid,
         ),
     )
-    print('HERE!', result)
+    print("HERE!", result)
     return result
 
 
@@ -168,7 +168,7 @@ async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> boo
     """
     _, token_info = await ensure_authorization(authorization)
     model = storage_model()
-    link_record = model.get_link_record(token_info.user)
+    link_record = await model.get_link_record(token_info.user)
 
     return link_record is not None
 
@@ -186,7 +186,9 @@ async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> boo
         },
     },
 )
-async def get_is_orcid_linked(orcid_id: str = ORCID_ID_PARAM, authorization: str | None = AUTHORIZATION_HEADER) -> bool:
+async def get_is_orcid_linked(
+    orcid_id: str = ORCID_ID_PARAM, authorization: str | None = AUTHORIZATION_HEADER
+) -> bool:
     """
     Get whether Is Linked
 
@@ -195,7 +197,7 @@ async def get_is_orcid_linked(orcid_id: str = ORCID_ID_PARAM, authorization: str
     """
     _, _ = await ensure_authorization(authorization)
     model = storage_model()
-    link_record = model.get_link_record_for_orcid_id(orcid_id)
+    link_record = await model.get_link_record_for_orcid_id(orcid_id)
 
     return link_record is not None
 
@@ -225,7 +227,7 @@ async def link_share(
     await ensure_authorization(authorization)
 
     model = storage_model()
-    link_record = model.get_link_record(username)
+    link_record = await model.get_link_record(username)
 
     if link_record is None:
         raise exceptions.NotFoundError("Link not found for user")
@@ -264,7 +266,7 @@ async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Respo
     _, token_info = await ensure_authorization(authorization)
 
     model = storage_model()
-    link_record = model.get_link_record(token_info.user)
+    link_record = await model.get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("User does not have an ORCID Link")
@@ -273,6 +275,6 @@ async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Respo
     await orcid_oauth(link_record.orcid_auth.access_token).revoke_token()
 
     # TODO: handle error? or propagate?
-    model.delete_link_record(token_info.user)
+    await model.delete_link_record(token_info.user)
 
     return Response(status_code=204)

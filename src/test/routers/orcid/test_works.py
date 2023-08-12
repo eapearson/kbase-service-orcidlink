@@ -46,10 +46,10 @@ TEST_LINK = {
 }
 
 
-def create_link():
+async def create_link():
     sm = storage_model.storage_model()
-    sm.db.links.drop()
-    sm.create_link_record(LinkRecord.model_validate(TEST_LINK))
+    await sm.db.links.drop()
+    await sm.create_link_record(LinkRecord.model_validate(TEST_LINK))
 
 
 @contextlib.contextmanager
@@ -61,10 +61,10 @@ def mock_services():
                 yield
 
 
-def test_get_work(fake_fs):
+async def test_get_work(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             put_code = 1526002
             client = TestClient(app)
             response = client.get(
@@ -76,10 +76,10 @@ def test_get_work(fake_fs):
             assert work["putCode"] == 1526002
 
 
-def test_get_work2(fake_fs):
+async def test_get_work2(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             put_code = 1487805
             client = TestClient(app)
             response = client.get(
@@ -172,10 +172,10 @@ def test_get_work_errors(fake_fs):
             # assert error == expected
 
 
-def test_get_works(fake_fs):
+async def test_get_works(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             client = TestClient(app)
             response = client.get("/orcid/works", headers={"Authorization": TOKEN_FOO})
             assert response.status_code == 200
@@ -199,10 +199,10 @@ def test_get_works_errors(fake_fs):
 # TODO: left off here, copied from test_get_work - added work_1526002_normalized.json to
 # serve as a basis for input work records - will need to copy that and perhaps modify slightly for
 # put_work.
-def test_create_work(fake_fs):
+async def test_create_work(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
 
             client = TestClient(app)
 
@@ -349,10 +349,10 @@ def test_external_id():
         # })
 
 
-def test_save_work(fake_fs):
+async def test_save_work(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
 
             client = TestClient(app)
 
@@ -448,10 +448,10 @@ def test_save_work_errors(fake_fs):
             assert response.status_code == 404
 
 
-def test_delete_work(fake_fs):
+async def test_delete_work(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             put_code = 1526002
             client = TestClient(app)
             response = client.delete(
@@ -460,10 +460,10 @@ def test_delete_work(fake_fs):
             assert response.status_code == 204
 
 
-def test_delete_work_bad_no_link(fake_fs):
+async def test_delete_work_bad_no_link(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             put_code = 1526002
             client = TestClient(app)
             response = client.delete(
@@ -472,10 +472,10 @@ def test_delete_work_bad_no_link(fake_fs):
             assert response.status_code == 404
 
 
-def test_delete_work_not_source(fake_fs):
+async def test_delete_work_not_source(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             # Use a put code not in the mock service, in this case we
             # transpose the final 2 with 3.
             client = TestClient(app)
@@ -497,10 +497,10 @@ def test_delete_work_not_source(fake_fs):
             # # programmatically
 
 
-def test_delete_work_put_code_not_found(fake_fs):
+async def test_delete_work_put_code_not_found(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            create_link()
+            await create_link()
             # Use a put code not in the mock service, in this case we
             # transpose the final 2 with 3.
             client = TestClient(app)
