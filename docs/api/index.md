@@ -97,6 +97,24 @@ Returns basic information about the service and its runtime configuration.
 
 
 ---
+<a name="header_get-/error-info/{error_code}"></a>
+#### GET /error-info/{error_code}
+Returns information about a given error.
+
+Useful for presenting standardized error information in interfaces.
+
+
+<a name="header_input"></a>
+#### Input
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>error_code</td><td>The orcid id</td><td>integer</td><td>path</td></tr></tbody></table>
+
+
+<a name="header_output"></a>
+#### Output
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Successful Response</td><td><a href="#user-content-header_type_errorinforesponse">ErrorInfoResponse</a></td></tr><tr><td>422</td><td>Validation Error</td><td><a href="#user-content-header_type_httpvalidationerror">HTTPValidationError</a></td></tr></tbody></table>
+
+
+---
 <a name="header_get-/docs"></a>
 #### GET /docs
 Get API Documentation
@@ -157,6 +175,25 @@ Removes the link for the user associated with the KBase auth token passed in the
 
 
 ---
+<a name="header_get-/link/for_orcid/{orcid_id}"></a>
+#### GET /link/for_orcid/{orcid_id}
+Get ORCID Link for a given ORCID Id
+
+Return the link for the given orcid id, as long as the user associated with the KBase auth
+token passed in the "Authorization" header is also the
+
+
+<a name="header_input"></a>
+#### Input
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>orcid_id</td><td>The orcid id</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
+
+
+<a name="header_output"></a>
+#### Output
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets</td><td><a href="#user-content-header_type_linkrecordpublic">LinkRecordPublic</a></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Link not available for this user</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+
+
+---
 <a name="header_get-/link/is_linked"></a>
 #### GET /link/is_linked
 Get whether Is Linked
@@ -173,6 +210,25 @@ link to an ORCID account.
 <a name="header_output"></a>
 #### Output
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns a boolean indicating whether the user account is linked to ORCID</td><td>boolean</td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+
+
+---
+<a name="header_get-/link/is_orcid_linked/{orcid_id}"></a>
+#### GET /link/is_orcid_linked/{orcid_id}
+Get whether Is Linked
+
+Determine if the user associated with the KBase auth token in the "Authorization" header has a
+link to an ORCID account.
+
+
+<a name="header_input"></a>
+#### Input
+<table><thead><tr><th colspan="4"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><th><img width="150px"></th><tr><th>Name</th><th>Description</th><th>Type</th><th>In</th></tr></thead><tbody><tr><td>orcid_id</td><td>The orcid id</td><td>string</td><td>path</td></tr><tr><td>authorization</td><td>KBase auth token</td><td>n/a</td><td>header</td></tr></tbody></table>
+
+
+<a name="header_output"></a>
+#### Output
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>200</td><td>Returns a boolean indicating whether the orcid id linked to a KBase account</td><td>boolean</td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
 
 
 ---
@@ -312,7 +368,7 @@ KBase for future use by the user.
 #### GET /linking-sessions/oauth/continue
 Continue Linking Session
 
-This endpoint implements the handoff from frmo the ORCID authorization sktep in
+This endpoint implements the handoff from from the ORCID authorization step in
 the ORCID OAuth flow. That is, it
 serves as the redirection target after the user has successfully completed
 their interaction with ORCID, at which they may have logged in and provided
@@ -488,6 +544,20 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
+<a name="header_type_errorcode2"></a>
+##### ErrorCode2
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>integer</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>description</td><td>string</td><td>✓</td></tr><tr><td>status_code</td><td>integer</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_errorinforesponse"></a>
+##### ErrorInfoResponse
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>error_info</td><td><a href="#user-content-header_type_errorcode2">ErrorCode2</a></td><td>✓</td></tr></tbody></table>
+
+
+
 <a name="header_type_errorresponse"></a>
 ##### ErrorResponse
 
@@ -522,6 +592,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
+<a name="header_type_httpvalidationerror"></a>
+##### HTTPValidationError
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>detail</td><td>array</td><td></td></tr></tbody></table>
+
+
+
 <a name="header_type_inforesponse"></a>
 ##### InfoResponse
 
@@ -533,6 +610,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 ##### LinkRecordPublic
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>created_at</td><td>integer</td><td>✓</td></tr><tr><td>expires_at</td><td>integer</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublic">ORCIDAuthPublic</a></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_linkrecordpublicnonowner"></a>
+##### LinkRecordPublicNonOwner
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>username</td><td>string</td><td>✓</td></tr><tr><td>orcid_auth</td><td><a href="#user-content-header_type_orcidauthpublicnonowner">ORCIDAuthPublicNonOwner</a></td><td>✓</td></tr></tbody></table>
 
 
 
@@ -570,6 +654,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 ##### ORCIDAuthPublic
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>scope</td><td>string</td><td>✓</td></tr><tr><td>expires_in</td><td>integer</td><td>✓</td></tr><tr><td>orcid</td><td>string</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidauthpublicnonowner"></a>
+##### ORCIDAuthPublicNonOwner
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>✓</td></tr><tr><td>orcid</td><td>string</td><td>✓</td></tr></tbody></table>
 
 
 
@@ -667,6 +758,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 ##### StatusResponse
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>status</td><td>string</td><td>✓</td></tr><tr><td>time</td><td>integer</td><td>✓</td></tr><tr><td>start_time</td><td>integer</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_validationerror"></a>
+##### ValidationError
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>loc</td><td>array</td><td>✓</td></tr><tr><td>msg</td><td>string</td><td>✓</td></tr><tr><td>type</td><td>string</td><td>✓</td></tr></tbody></table>
 
 
 

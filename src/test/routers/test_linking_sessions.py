@@ -252,7 +252,9 @@ async def test_get_linking_session():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(
+                    client, TOKEN_FOO
+                )
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -320,7 +322,9 @@ async def test_delete_linking_session():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(
+                    client, TOKEN_FOO
+                )
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -484,7 +488,9 @@ async def test_start_linking_session():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(
+                    client, TOKEN_FOO
+                )
                 initial_session_id = initial_session_info["session_id"]
 
                 # #
@@ -537,7 +543,9 @@ async def test_start_linking_session_backup_cookie():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+                initial_session_info = await assert_create_linking_session(
+                    client, TOKEN_FOO
+                )
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -563,7 +571,9 @@ async def test_start_linking_session_errors():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(
+                client, TOKEN_FOO
+            )
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -643,7 +653,9 @@ async def test_continue_linking_session():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(
+                client, TOKEN_FOO
+            )
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -767,7 +779,9 @@ async def test_continue_linking_session_errors():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(
+                client, TOKEN_FOO
+            )
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -906,7 +920,9 @@ async def test_continue_linking_session_error_already_continued():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(
+                client, TOKEN_FOO
+            )
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -998,7 +1014,9 @@ async def test_finish_linking_session_error_already_finished():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(client, TOKEN_FOO)
+            initial_session_info = await assert_create_linking_session(
+                client, TOKEN_FOO
+            )
             initial_session_id = initial_session_info["session_id"]
 
             #

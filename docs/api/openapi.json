@@ -60,6 +60,51 @@
                 }
             }
         },
+        "/error-info/{error_code}": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "summary": "Get Error Info",
+                "description": "Returns information about a given error.\n\nUseful for presenting standardized error information in interfaces.",
+                "operationId": "get_error_info_error_info__error_code__get",
+                "parameters": [
+                    {
+                        "name": "error_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "description": "The orcid id",
+                            "title": "Error Code"
+                        },
+                        "description": "The orcid id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorInfoResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/link": {
             "get": {
                 "tags": [
@@ -199,14 +244,99 @@
                 }
             }
         },
+        "/link/for_orcid/{orcid_id}": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Get Link For Orcid",
+                "description": "Get ORCID Link for a given ORCID Id\n\nReturn the link for the given orcid id, as long as the user associated with the KBase auth\ntoken passed in the \"Authorization\" header is also the",
+                "operationId": "get_link_for_orcid_link_for_orcid__orcid_id__get",
+                "parameters": [
+                    {
+                        "name": "orcid_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "The orcid id",
+                            "title": "Orcid Id"
+                        },
+                        "description": "The orcid id"
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "minLength": 32,
+                                    "maxLength": 32
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "KBase auth token",
+                            "title": "Authorization"
+                        },
+                        "description": "KBase auth token"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LinkRecordPublic"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link not available for this user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/link/is_linked": {
             "get": {
                 "tags": [
                     "link"
                 ],
-                "summary": "Is Linked",
+                "summary": "Get Is Linked",
                 "description": "Get whether Is Linked\n\nDetermine if the user associated with the KBase auth token in the \"Authorization\" header has a\nlink to an ORCID account.",
-                "operationId": "is_linked_link_is_linked_get",
+                "operationId": "get_is_linked_link_is_linked_get",
                 "parameters": [
                     {
                         "name": "authorization",
@@ -236,7 +366,83 @@
                             "application/json": {
                                 "schema": {
                                     "type": "boolean",
-                                    "title": "Response 200 Is Linked Link Is Linked Get"
+                                    "title": "Response 200 Get Is Linked Link Is Linked Get"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "KBase auth token absent or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Input or output data does not comply with the API schema",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/link/is_orcid_linked/{orcid_id}": {
+            "get": {
+                "tags": [
+                    "link"
+                ],
+                "summary": "Get Is Orcid Linked",
+                "description": "Get whether Is Linked\n\nDetermine if the user associated with the KBase auth token in the \"Authorization\" header has a\nlink to an ORCID account.",
+                "operationId": "get_is_orcid_linked_link_is_orcid_linked__orcid_id__get",
+                "parameters": [
+                    {
+                        "name": "orcid_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "The orcid id",
+                            "title": "Orcid Id"
+                        },
+                        "description": "The orcid id"
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "minLength": 32,
+                                    "maxLength": 32
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "KBase auth token",
+                            "title": "Authorization"
+                        },
+                        "description": "KBase auth token"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns a boolean indicating whether the orcid id linked to a KBase account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "boolean",
+                                    "title": "Response 200 Get Is Orcid Linked Link Is Orcid Linked  Orcid Id  Get"
                                 }
                             }
                         }
@@ -807,7 +1013,7 @@
                     "linking-sessions"
                 ],
                 "summary": "Linking Sessions Continue",
-                "description": "Continue Linking Session\n\nThis endpoint implements the handoff from frmo the ORCID authorization sktep in\nthe ORCID OAuth flow. That is, it\nserves as the redirection target after the user has successfully completed\ntheir interaction with ORCID, at which they may have logged in and provided\ntheir consent to issuing the linking token to KBase.\n\nNote that since this is an \"interactive\" endpoint, which does not have its own\nuser interface, rather redirects to kbase-ui when finished. This applies to\nerrors as well. Errors are displayed by redirecting the browser to an endpoint\nin kbase-ui which is designed to expect the error values for display to be\nin the url itself.",
+                "description": "Continue Linking Session\n\nThis endpoint implements the handoff from from the ORCID authorization step in\nthe ORCID OAuth flow. That is, it\nserves as the redirection target after the user has successfully completed\ntheir interaction with ORCID, at which they may have logged in and provided\ntheir consent to issuing the linking token to KBase.\n\nNote that since this is an \"interactive\" endpoint, which does not have its own\nuser interface, rather redirects to kbase-ui when finished. This applies to\nerrors as well. Errors are displayed by redirecting the browser to an endpoint\nin kbase-ui which is designed to expect the error values for display to be\nin the url itself.",
                 "operationId": "linking_sessions_continue_linking_sessions_oauth_continue_get",
                 "parameters": [
                     {
@@ -1441,6 +1647,64 @@
                 ],
                 "title": "CreateLinkingSessionResult"
             },
+            "ErrorCode2": {
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "enum": [
+                            1000,
+                            1010,
+                            1011,
+                            1020,
+                            1030,
+                            1040,
+                            1041,
+                            1050,
+                            1051,
+                            1052,
+                            1060,
+                            1070,
+                            1080,
+                            1081,
+                            1082,
+                            1099
+                        ],
+                        "title": "Code"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "status_code": {
+                        "type": "integer",
+                        "title": "Status Code"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "code",
+                    "title",
+                    "description",
+                    "status_code"
+                ],
+                "title": "ErrorCode2"
+            },
+            "ErrorInfoResponse": {
+                "properties": {
+                    "error_info": {
+                        "$ref": "#/components/schemas/ErrorCode2"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "error_info"
+                ],
+                "title": "ErrorInfoResponse"
+            },
             "ErrorResponse": {
                 "properties": {
                     "code": {
@@ -1460,6 +1724,7 @@
                             1070,
                             1080,
                             1081,
+                            1082,
                             1099
                         ],
                         "title": "Code",
@@ -1678,6 +1943,19 @@
                 ],
                 "title": "GitInfo"
             },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
             "InfoResponse": {
                 "properties": {
                     "service-description": {
@@ -1720,6 +1998,23 @@
                     "orcid_auth"
                 ],
                 "title": "LinkRecordPublic"
+            },
+            "LinkRecordPublicNonOwner": {
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "title": "Username"
+                    },
+                    "orcid_auth": {
+                        "$ref": "#/components/schemas/ORCIDAuthPublicNonOwner"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "username",
+                    "orcid_auth"
+                ],
+                "title": "LinkRecordPublicNonOwner"
             },
             "LinkingRecordShared": {
                 "properties": {
@@ -1946,6 +2241,24 @@
                     "orcid"
                 ],
                 "title": "ORCIDAuthPublic"
+            },
+            "ORCIDAuthPublicNonOwner": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "orcid": {
+                        "type": "string",
+                        "title": "Orcid"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "orcid"
+                ],
+                "title": "ORCIDAuthPublicNonOwner"
             },
             "ORCIDCitation": {
                 "properties": {
@@ -2347,6 +2660,39 @@
                     "start_time"
                 ],
                 "title": "StatusResponse"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
             },
             "WorkInput": {
                 "properties": {
