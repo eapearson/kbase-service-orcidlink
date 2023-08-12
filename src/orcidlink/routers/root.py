@@ -1,8 +1,12 @@
+from dataclasses import fields
 import json
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Path
 from pydantic import Field
 from orcidlink.lib.config import GitInfo, get_git_info, get_service_description
+from orcidlink.lib.errors import ERRORS, ERRORS_MAP, ErrorCode2
+from orcidlink.lib.exceptions import ServiceErrorY
 
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
@@ -66,3 +70,39 @@ async def get_info() -> InfoResponse:
             "git-info": git_info,
         }
     )
+
+# ERROR_CODE_PARAM = Annotated[int, Path(
+#     description="The orcid id", regex="^[\\d]{4}$"
+#     # It is a uuid, whose string representation is 36 characters.
+# )]
+
+
+ERROR_CODE_PARAM = Path(
+    description="The orcid id"
+    # It is a uuid, whose string representation is 36 characters.
+)
+
+
+
+class ErrorInfoResponse(ServiceBaseModel):
+    error_info: ErrorCode2
+
+@router.get("/error-info/{error_code}", response_model=ErrorInfoResponse, tags=["misc"])
+async def get_error_info(error_code: int = ERROR_CODE_PARAM):
+    """
+    Returns information about a given error.
+
+    Useful for presenting standardized error information in interfaces.
+    """
+    # Find the error code
+    # error = [error for error in ERRORS]
+    error = ERRORS_MAP.get(error_code)
+
+    if error is None:
+        raise ServiceErrorY(
+            error=ERRORS.not_found,
+            message="Error info not found"
+        )
+    
+    return ErrorInfoResponse(error_info = error)
+

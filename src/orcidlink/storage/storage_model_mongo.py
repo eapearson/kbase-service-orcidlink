@@ -37,9 +37,16 @@ class StorageModelMongo:
         if record is None:
             return None
 
-        parsed = LinkRecord.model_validate(record)
+        return LinkRecord.model_validate(record)
+    
+    def get_link_record_for_orcid_id(self, orcid_id: str) -> Optional[LinkRecord]:
+        record = self.db.links.find_one({"orcid_auth.orcid": orcid_id})
 
-        return parsed
+        if record is None:
+            return None
+
+        return LinkRecord.model_validate(record)
+
 
     def save_link_record(self, record: LinkRecord) -> None:
         self.db.links.update_one(

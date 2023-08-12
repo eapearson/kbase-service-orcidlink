@@ -225,7 +225,10 @@ class ORCIDAuthPublic(ServiceBaseModel):
     scope: str = Field(...)
     expires_in: int = Field(...)
     orcid: str = Field(...)
-
+    
+class ORCIDAuthPublicNonOwner(ServiceBaseModel):
+    name: str = Field(...)
+    orcid: str = Field(...)
 
 # Linking session
 
@@ -312,6 +315,10 @@ class LinkRecordPublic(ServiceBaseModel):
     created_at: int = Field(...)
     expires_at: int = Field(...)
     orcid_auth: ORCIDAuthPublic = Field(...)
+
+class LinkRecordPublicNonOwner(ServiceBaseModel):
+    username: str = Field(...)
+    orcid_auth: ORCIDAuthPublicNonOwner = Field(...)
 
 
 class LinkingRecordShared(ServiceBaseModel):

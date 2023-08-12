@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 # from fastapi import HTTPException
-from typing import Generic, Literal, Optional, TypeVar
+from typing import Dict, Generic, Literal, Optional, TypeVar
 
 from pydantic import Field
 
@@ -31,6 +31,7 @@ ErrorCode = Literal[
     1070,
     1080,
     1081,
+    1082,
     1099,
 ]
 
@@ -59,6 +60,7 @@ class Errors:
     request_validation_error: ErrorCode2
     linking_session_continue_invalid_param: ErrorCode2
     linking_session_error: ErrorCode2
+    linking_session_already_linked_orcid: ErrorCode2
     impossible_error: ErrorCode2
 
 
@@ -112,10 +114,25 @@ ERRORS = Errors(
     linking_session_error=ErrorCode2(
         code=1081, title="ORCID Error Linking", description="", status_code=502
     ),
+    linking_session_already_linked_orcid=ErrorCode2(
+        code=1082, 
+        title="ORCID account already linked", 
+        description="""
+The ORCID account requested for linking is already linked to another KBase account. 
+        """, 
+        status_code=400
+    ),
     impossible_error=ErrorCode2(
         code=1099, title="Impossible Error", description="", status_code=500
     ),
 )
+
+ERRORS_MAP: Dict[int, ErrorCode2] = {}
+
+for field in fields(ERRORS):
+    error = getattr(ERRORS, field.name)
+    ERRORS_MAP[error.code] = error
+
 
 # REQUEST_PARAMETERS_INVALID = ErrorCode(
 #     code="requestParametersInvalid",

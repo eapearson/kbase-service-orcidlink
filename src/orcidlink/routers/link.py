@@ -28,10 +28,12 @@ from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
 from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.model import (
+    LinkRecordPublicNonOwner,
     LinkingRecordShared,
     LinkRecord,
     LinkRecordPublic,
     ORCIDAuthPublic,
+    ORCIDAuthPublicNonOwner,
 )
 from orcidlink.storage.storage_model import storage_model
 
@@ -40,6 +42,11 @@ router = APIRouter(prefix="/link")
 
 USERNAME_PARAM = Path(
     description="The username",
+    # It is a uuid, whose string representation is 36 characters.
+)
+
+ORCID_ID_PARAM = Path(
+    description="The orcid id",
     # It is a uuid, whose string representation is 36 characters.
 )
 
@@ -91,6 +98,53 @@ async def get_link(
         ),
     )
 
+@router.get(
+    "/for_orcid/{orcid_id}",
+    response_model=LinkRecordPublicNonOwner,
+    tags=["link"],
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        404: {
+            "description": "Link not available for this user",
+            "model": errors.ErrorResponse,
+        },
+        200: {
+            "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
+            + "for this user; contains no secrets",
+            "model": LinkRecordPublic,
+        },
+    },
+)
+async def get_link_for_orcid(
+    orcid_id: str = ORCID_ID_PARAM,
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> LinkRecordPublicNonOwner | JSONResponse:
+    """
+    Get ORCID Link for a given ORCID Id
+
+    Return the link for the given orcid id, as long as the user associated with the KBase auth 
+    token passed in the "Authorization" header is also the 
+    """
+    _, _ = await ensure_authorization(authorization)
+
+    model = storage_model()
+    link_record = model.get_link_record_for_orcid_id(orcid_id)
+
+    if link_record is None:
+        raise exceptions.NotFoundError("No link record was found for this user")
+
+   
+    result = LinkRecordPublicNonOwner(
+        username=link_record.username,
+        orcid_auth=ORCIDAuthPublicNonOwner(
+            name=link_record.orcid_auth.name,
+            orcid=link_record.orcid_auth.orcid,
+        ),
+    )
+    print('HERE!', result)
+    return result
+
 
 @router.get(
     "/is_linked",
@@ -105,7 +159,7 @@ async def get_link(
         },
     },
 )
-async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
+async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
     """
     Get whether Is Linked
 
@@ -115,6 +169,33 @@ async def is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> bool:
     _, token_info = await ensure_authorization(authorization)
     model = storage_model()
     link_record = model.get_link_record(token_info.user)
+
+    return link_record is not None
+
+
+@router.get(
+    "/is_orcid_linked/{orcid_id}",
+    response_model=bool,
+    tags=["link"],
+    responses={
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+        200: {
+            "description": "Returns a boolean indicating whether the orcid id linked to a KBase account",
+            "model": bool,
+        },
+    },
+)
+async def get_is_orcid_linked(orcid_id: str = ORCID_ID_PARAM, authorization: str | None = AUTHORIZATION_HEADER) -> bool:
+    """
+    Get whether Is Linked
+
+    Determine if the user associated with the KBase auth token in the "Authorization" header has a
+    link to an ORCID account.
+    """
+    _, _ = await ensure_authorization(authorization)
+    model = storage_model()
+    link_record = model.get_link_record_for_orcid_id(orcid_id)
 
     return link_record is not None
 
@@ -152,9 +233,7 @@ async def link_share(
     # TODO: CRITICAL - check which fields have been shared; for now assume the id is, and perhaps we
     # want to make it always available to kbase users if linked, even though the ui can offer more
     # fine grained control?
-    result = LinkingRecordShared(orcidId=link_record.orcid_auth.orcid)
-
-    return result
+    return LinkingRecordShared(orcidId=link_record.orcid_auth.orcid)
 
 
 #

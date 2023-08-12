@@ -512,7 +512,7 @@ async def linking_sessions_continue(
     """
     Continue Linking Session
 
-    This endpoint implements the handoff from frmo the ORCID authorization sktep in
+    This endpoint implements the handoff from from the ORCID authorization step in
     the ORCID OAuth flow. That is, it
     serves as the redirection target after the user has successfully completed
     their interaction with ORCID, at which they may have logged in and provided
@@ -578,6 +578,21 @@ async def linking_sessions_continue(
     #
     orcid_auth = await orcid_oauth(authorization).exchange_code_for_token(code)
 
+    # 
+    # Note that it isn't until this point that we know the orcid id the user 
+    # wants to link. So here we can detect if the orcid id has already
+    # been linked. If so, it is an error.
+    #
+    model = storage_model()
+
+    existing_orcid_auth = model.get_link_record_for_orcid_id(orcid_auth.orcid)
+
+    if existing_orcid_auth is not None:
+        return ui_error_response(
+            errors.ERRORS.linking_session_already_linked_orcid,
+            "The chosen ORCID account is already linked to another KBase account"
+        )
+
     #
     # Now we store the response from ORCID in our session.
     # We still need the user to finalize the linking, now that it has succeeded
@@ -586,7 +601,7 @@ async def linking_sessions_continue(
 
     # Note that this is approximate, as it uses our time, not the
     # ORCID server time.
-    model = storage_model()
+    
     model.update_linking_session_to_finished(session_id, orcid_auth)
 
     #
