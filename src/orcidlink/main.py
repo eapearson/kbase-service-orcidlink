@@ -12,8 +12,9 @@ than "root", which implements top level endpoints (other than /docs).
 Routers include: link, linking-sessions, works, orcid, and root.
 
 """
+from contextlib import asynccontextmanager
 import logging
-from typing import Any, Generic, List, TypeVar
+from typing import Any, AsyncGenerator, Generic, List, TypeVar
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError, ResponseValidationError
@@ -79,6 +80,20 @@ directly by the browser, rather than being used within Javascript code.\
         "description": "Add, remove, update 'works' records for a user's ORCID Account",
     },
 ]
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
+    #
+    # Load the config here in order to trigger any configuration problems early in the
+    # application startup.
+    #
+    config()
+
+    yield
+
+    pass
+
 
 # TODO: add fancy FastAPI configuration https://fastapi.tiangolo.com/tutorial/metadata/
 app = FastAPI(
