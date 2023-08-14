@@ -1,8 +1,8 @@
 from typing import Tuple
 
 from orcidlink.lib import errors, exceptions
-from orcidlink.lib.config import Config2
 from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
+from orcidlink.runtime import config
 
 """
 A 
@@ -17,12 +17,11 @@ async def get_username(authorization: str) -> str:
     Note that this relies extensively upon the "config" module, which in turn relies upon a
     configuration file being available in the file sysresponsestem.
     """
-    config = Config2()
     auth_client = KBaseAuth(
-        url=config.get_auth_url(),
-        timeout=config.get_request_timeout(),
-        cache_lifetime=config.get_cache_lifetime(),
-        cache_max_items=config.get_cache_lifetime(),
+        url=config().auth_url,
+        timeout=config().request_timeout,
+        cache_lifetime=config().token_cache_lifetime,
+        cache_max_items=config().token_cache_lifetime,
     )
 
     return (await auth_client.get_token_info(authorization)).user
@@ -41,12 +40,11 @@ async def ensure_authorization(
             "Authorization required but missing"
         )
 
-    config = Config2()
     auth = KBaseAuth(
-        url=config.get_auth_url(),
-        timeout=config.get_request_timeout(),
-        cache_lifetime=config.get_cache_lifetime(),
-        cache_max_items=config.get_cache_max_items(),
+        url=config().auth_url,
+        timeout=config().request_timeout,
+        cache_lifetime=config().token_cache_lifetime,
+        cache_max_items=config().token_cache_lifetime,
     )
     token_info = await auth.get_token_info(authorization)
     return authorization, token_info

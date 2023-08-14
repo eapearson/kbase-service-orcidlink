@@ -7,9 +7,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import Field
 
-from orcidlink.lib.config import Config2
 from orcidlink.lib.errors import ErrorCode, ErrorCode2, ErrorResponse
 from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.runtime import config
 
 ##
 # Common http responses, implemented as response-generating functions.
@@ -103,7 +103,7 @@ def ui_error_response(error: ErrorCode2, message: str) -> RedirectResponse:
         {"code": error.code, "title": error.title, "message": message}
     )
     return RedirectResponse(
-        f"{Config2().get_ui_origin()}?{error_params}#orcidlink/error", status_code=302
+        f"{config().ui_origin}?{error_params}#orcidlink/error", status_code=302
     )
 
 

@@ -19,8 +19,8 @@ from pydantic import Field
 
 from orcidlink import model
 from orcidlink.lib import exceptions
-from orcidlink.lib.config import Config2
 from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.runtime import config
 
 
 class ORCIDIdentifier(ServiceBaseModel):
@@ -519,7 +519,7 @@ class AuthorizeParams(ServiceBaseModel):
 
 
 def orcid_api_url(path: str) -> str:
-    return f"{Config2().get_orcid_api_base_url()}/{path}"
+    return f"{config().orcid_api_base_url}/{path}"
 
 
 # This is the usual error response for 4xx
@@ -793,10 +793,9 @@ class ORCIDOAuthClient(ORCIDClientBase):
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        config = Config2()
         data = {
-            "client_id": config.get_orcid_client_id(),
-            "client_secret": config.get_orcid_client_secret(),
+            "client_id": config().orcid_client_id,
+            "client_secret": config().orcid_client_secret,
             "token": self.access_token,
         }
         # TODO: determine all possible ORCID errors here, or the
@@ -827,17 +826,16 @@ class ORCIDOAuthClient(ORCIDClientBase):
         # for redirection in this case.
         # TODO: investigate and point to the docs, because this is weird.
         # TODO: put in orcid client!
-        config = Config2()
         data = {
-            "client_id": config.get_orcid_client_id(),
-            "client_secret": config.get_orcid_client_secret(),
+            "client_id": config().orcid_client_id,
+            "client_secret": config().orcid_client_secret,
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": f"{config.get_orcid_link_url()}/linking-sessions/oauth/continue",
+            "redirect_uri": f"{config().orcidlink_url}/linking-sessions/oauth/continue",
         }
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{config.get_orcid_oauth_base_url()}/token", headers=header, data=data
+                f"{config().orcid_oauth_base_url}/token", headers=header, data=data
             ) as response:
                 content_type_raw = response.headers.get("Content-Type")
                 if content_type_raw is None:
@@ -875,7 +873,7 @@ def orcid_api(token: str) -> ORCIDAPIClient:
     This API provides all interactions we support with ORCID on behalf of a user, other
     than OAuth flow and OAuth/Auth interactions below.
     """
-    return ORCIDAPIClient(url=Config2().get_orcid_api_base_url(), access_token=token)
+    return ORCIDAPIClient(url=config().orcid_api_base_url, access_token=token)
 
 
 def orcid_oauth(token: str) -> ORCIDOAuthClient:
@@ -885,6 +883,4 @@ def orcid_oauth(token: str) -> ORCIDOAuthClient:
     This not for support of OAuth flow, but rather interactions with ORCID OAuth or
     simply Auth services.
     """
-    return ORCIDOAuthClient(
-        url=Config2().get_orcid_oauth_base_url(), access_token=token
-    )
+    return ORCIDOAuthClient(url=config().orcid_oauth_base_url, access_token=token)

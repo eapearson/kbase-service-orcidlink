@@ -87,6 +87,7 @@ class StrConstantDefault(ServiceBaseModel):
 
 
 class StrConstantDefaults(ServiceBaseModel):
+    kbase_endpoint: StrConstantDefault = Field(...)
     orcid_api_base_url: StrConstantDefault = Field(...)
     orcid_oauth_base_url: StrConstantDefault = Field(...)
     orcid_client_id: StrConstantDefault = Field(...)
@@ -98,6 +99,7 @@ class StrConstantDefaults(ServiceBaseModel):
 
 
 STR_CONSTANT_DEFAULTS = StrConstantDefaults(
+    kbase_endpoint=StrConstantDefault(required=True, env_name="KBASE_ENDPOINT"),
     orcid_api_base_url=StrConstantDefault(required=True, env_name="ORCID_API_BASE_URL"),
     orcid_oauth_base_url=StrConstantDefault(
         required=True, env_name="ORCID_OAUTH_BASE_URL"
@@ -113,28 +115,74 @@ STR_CONSTANT_DEFAULTS = StrConstantDefaults(
 )
 
 
+class RuntimeConfig(ServiceBaseModel):
+    kbase_endpoint: str = Field(...)
+    request_timeout: int = Field(...)
+    token_cache_lifetime: int = Field(...)
+    token_cache_max_items: int = Field(...)
+    orcid_api_base_url: str = Field(...)
+    orcid_oauth_base_url: str = Field(...)
+    orcid_client_id: str = Field(...)
+    orcid_client_secret: str = Field(...)
+    mongo_host: str = Field(...)
+    mongo_port: int = Field(...)
+    mongo_database: str = Field(...)
+    mongo_username: str = Field(...)
+    mongo_password: str = Field(...)
+
+    ui_origin: str = Field(...)
+
+    workspace_url: str = Field(...)
+    auth_url: str = Field(...)
+    orcidlink_url: str = Field(...)
+
+
 class Config2:
     kbase_endpoint: str
+    runtime_config: RuntimeConfig
 
     def __init__(self) -> None:
-        kbase_endpoint = os.environ.get("KBASE_ENDPOINT")
-        if kbase_endpoint is None or len(kbase_endpoint) == 0:
-            raise ValueError('The "KBASE_ENDPOINT" environment variable was not found')
-        self.kbase_endpoint = kbase_endpoint
+        self.kbase_endpoint = self.get_str_constant(
+            STR_CONSTANT_DEFAULTS.kbase_endpoint
+        )
+        self.runtime_config = RuntimeConfig(
+            kbase_endpoint=self.get_str_constant(STR_CONSTANT_DEFAULTS.kbase_endpoint),
+            request_timeout=self.get_int_constant(
+                INT_CONSTANT_DEFAULTS.request_timeout
+            ),
+            token_cache_lifetime=self.get_int_constant(
+                INT_CONSTANT_DEFAULTS.token_cache_lifetime
+            ),
+            token_cache_max_items=self.get_int_constant(
+                INT_CONSTANT_DEFAULTS.token_cache_max_items
+            ),
+            orcid_api_base_url=self.get_str_constant(
+                STR_CONSTANT_DEFAULTS.orcid_api_base_url
+            ),
+            orcid_oauth_base_url=self.get_str_constant(
+                STR_CONSTANT_DEFAULTS.orcid_oauth_base_url
+            ),
+            orcid_client_id=self.get_str_constant(
+                STR_CONSTANT_DEFAULTS.orcid_client_id
+            ),
+            orcid_client_secret=self.get_str_constant(
+                STR_CONSTANT_DEFAULTS.orcid_client_secret
+            ),
+            mongo_host=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_host),
+            mongo_port=self.get_int_constant(INT_CONSTANT_DEFAULTS.mongo_port),
+            mongo_database=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_database),
+            mongo_username=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_username),
+            mongo_password=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_password),
+            ui_origin=self.get_ui_origin(),
+            auth_url=self.get_service_url(SERVICE_DEFAULTS.auth2),
+            workspace_url=self.get_service_url(SERVICE_DEFAULTS.workspace),
+            orcidlink_url=self.get_service_url(SERVICE_DEFAULTS.orcid_link),
+        )
 
     def get_service_url(self, service_default: ServiceDefault) -> str:
         env_path = os.environ.get(service_default.env_name)
         path = env_path or service_default.path
         return urljoin(self.kbase_endpoint, path)
-
-    def get_auth_url(self) -> str:
-        return self.get_service_url(SERVICE_DEFAULTS.auth2)
-
-    def get_workspace_url(self) -> str:
-        return self.get_service_url(SERVICE_DEFAULTS.workspace)
-
-    def get_orcid_link_url(self) -> str:
-        return self.get_service_url(SERVICE_DEFAULTS.orcid_link)
 
     # MORE...
 
@@ -143,70 +191,31 @@ class Config2:
     @staticmethod
     def get_int_constant(constant_default: IntConstantDefault) -> int:
         value = os.environ.get(constant_default.env_name)
-        if value is None:
-            if constant_default.value is None:
-                raise ValueError(
-                    f'The required environment variable "{constant_default.env_name}" is missing and there is no default value'
-                )
-            else:
-                return constant_default.value
-        else:
+
+        if value is not None:
             return int(value)
 
-    def get_cache_lifetime(self) -> int:
-        return self.get_int_constant(INT_CONSTANT_DEFAULTS.token_cache_lifetime)
+        if constant_default.value is not None:
+            return constant_default.value
 
-    def get_cache_max_items(self) -> int:
-        return self.get_int_constant(INT_CONSTANT_DEFAULTS.token_cache_max_items)
-
-    def get_request_timeout(self) -> int:
-        return self.get_int_constant(INT_CONSTANT_DEFAULTS.request_timeout)
+        raise ValueError(
+            f'The environment variable "{constant_default.env_name}" is missing and there is no default value'
+        )
 
     # String constants
     @staticmethod
     def get_str_constant(constant_default: StrConstantDefault) -> str:
         value = os.environ.get(constant_default.env_name)
-        if value is None:
-            if constant_default.required:
-                raise ValueError(
-                    f'The required environment variable "{constant_default.env_name}" is missing'
-                )
-            else:
-                if constant_default.value is None:
-                    raise ValueError(
-                        f'The required environment variable "{constant_default.env_name}" is missing and there is no default value'
-                    )
-                else:
-                    return constant_default.value
-        else:
+
+        if value is not None:
             return value
 
-    def get_orcid_api_base_url(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_api_base_url)
+        if constant_default.value is not None:
+            return constant_default.value
 
-    def get_orcid_oauth_base_url(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_oauth_base_url)
-
-    def get_orcid_client_id(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_client_id)
-
-    def get_orcid_client_secret(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_client_secret)
-
-    def get_mongo_host(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_host)
-
-    def get_mongo_port(self) -> int:
-        return self.get_int_constant(INT_CONSTANT_DEFAULTS.mongo_port)
-
-    def get_mongo_database(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_database)
-
-    def get_mongo_username(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_username)
-
-    def get_mongo_password(self) -> str:
-        return self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_password)
+        raise ValueError(
+            f'The environment variable "{constant_default.env_name}" is missing and there is no default value'
+        )
 
     # misc
 

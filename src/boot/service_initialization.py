@@ -8,8 +8,9 @@ from bson import json_util
 from pymongo import MongoClient
 
 from orcidlink.lib.logger import log_level, log_event
-from orcidlink.lib.config import Config2, get_service_description
+from orcidlink.lib.config import get_service_description
 from orcidlink.lib.utils import posix_time_millis
+from orcidlink.runtime import config
 
 
 def test():
@@ -18,13 +19,12 @@ def test():
 
 
 def make_db_client() -> MongoClient[Dict[str, Any]]:
-    config = Config2()
     return MongoClient(
-        host=config.get_mongo_host(),
-        port=config.get_mongo_port(),
-        username=config.get_mongo_username(),
-        password=config.get_mongo_password(),
-        authSource=config.get_mongo_database(),
+        host=config().mongo_host,
+        port=config().mongo_port,
+        username=config().mongo_username,
+        password=config().mongo_password,
+        authSource=config().mongo_database,
         retrywrites=False,
     )
 
@@ -50,8 +50,7 @@ def check_db_database():
         client = make_db_client()
     except pymongo.errors.ConnectionFailure as cf:
         return {"status": "error", "code": "connection-failure", "message": str(cf)}
-    config = Config2()
-    database_name = config.get_mongo_database()
+    database_name = config().mongo_database
     try:
         db = client.get_database(database_name)
     except Exception as dbe:
@@ -287,7 +286,7 @@ def initialize_v030(db):
 def migrate_db():
     try:
         client = make_db_client()
-        database_name = Config2().get_mongo_database()
+        database_name = config().mongo_database
         db = client.get_database(database_name)
         description = db.get_collection("description").find_one()
 

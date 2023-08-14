@@ -17,7 +17,6 @@ from starlette.responses import RedirectResponse, Response
 
 from orcidlink.lib import errors, exceptions
 from orcidlink.lib.auth import ensure_authorization
-from orcidlink.lib.config import Config2
 from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from orcidlink.lib.responses import (
     AUTH_RESPONSES,
@@ -28,6 +27,7 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
+from orcidlink.runtime import config
 from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionCompletePublic,
@@ -39,7 +39,6 @@ from orcidlink.model import (
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/linking-sessions")
-
 
 ##
 # Convenience functions
@@ -446,16 +445,15 @@ async def start_linking_session(
     # problem.
     # I think we just need to assume we are running on the "most released"; I don't think
     # there is a way for a dynamic service to know where it is running...
-    config = Config2()
     params = AuthorizeParams(
-        client_id=config.get_orcid_client_id(),
+        client_id=config().orcid_client_id,
         response_type="code",
         scope=scope,
-        redirect_uri=f"{config.get_orcid_link_url()}/linking-sessions/oauth/continue",
+        redirect_uri=f"{config().orcidlink_url}/linking-sessions/oauth/continue",
         prompt="login",
         state=json.dumps({"session_id": session_id}),
     )
-    url = f"{config.get_orcid_oauth_base_url()}/authorize?{urlencode(params.model_dump())}"
+    url = f"{config().orcid_oauth_base_url}/authorize?{urlencode(params.model_dump())}"
     return responses.RedirectResponse(url, status_code=302)
 
 
@@ -617,6 +615,6 @@ async def linking_sessions_continue(
     params["ui_options"] = session_record.ui_options
 
     return RedirectResponse(
-        f"{Config2().get_ui_origin()}?{urlencode(params)}#orcidlink/continue/{session_id}",
+        f"{config().ui_origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
         status_code=302,
     )

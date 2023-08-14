@@ -16,17 +16,15 @@ import logging
 from typing import Any, Generic, List, TypeVar
 
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import Field
 
-# from pydantic.error_wrappers import ErrorDict
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import HTMLResponse, JSONResponse
 
 from orcidlink.lib import errors, exceptions, logger
-from orcidlink.lib.config import Config2
 from orcidlink.lib.responses import (
     error_response,
     error_response2,
@@ -35,6 +33,8 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
+from orcidlink.runtime import config
+
 
 ###############################################################################
 # FastAPI application setup
@@ -105,6 +105,7 @@ app = FastAPI(
 # All paths are included here as routers. Each router is defined in the "routers" directory.
 ###############################################################################
 app.include_router(root.router)
+# app.include_router(rpc.router)
 app.include_router(link.router)
 app.include_router(linking_sessions.router)
 app.include_router(profile.router)
@@ -180,6 +181,8 @@ async def service_errory_exception_handler(
 async def internal_server_error_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
+    if isinstance(exc, ResponseValidationError):
+        print("VALIDATION ERROR!", exc.errors())
     return exception_error_response(
         errors.ERRORS.internal_server_error,
         exc,
@@ -284,7 +287,7 @@ async def docs(req: Request) -> HTMLResponse:
             status_code=404,
         )
 
-    openapi_url = Config2().get_orcid_link_url() + app.openapi_url
+    openapi_url = config().orcidlink_url + app.openapi_url
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",
