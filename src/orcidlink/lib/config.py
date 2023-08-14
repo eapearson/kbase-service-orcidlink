@@ -61,6 +61,7 @@ class IntConstantDefaults(ServiceBaseModel):
     token_cache_max_items: IntConstantDefault = Field(...)
     request_timeout: IntConstantDefault = Field(...)
     mongo_port: IntConstantDefault = Field(...)
+    linking_session_lifetime: IntConstantDefault = Field(...)
 
 
 INT_CONSTANT_DEFAULTS = IntConstantDefaults(
@@ -74,6 +75,9 @@ INT_CONSTANT_DEFAULTS = IntConstantDefaults(
         value=60, required=True, env_name="REQUEST_TIMEOUT"
     ),
     mongo_port=IntConstantDefault(required=True, env_name="MONGO_PORT"),
+    linking_session_lifetime=IntConstantDefault(
+        required=True, env_name="LINKING_SESSION_LIFETIME", value=600
+    ),
 )
 
 
@@ -96,6 +100,8 @@ class StrConstantDefaults(ServiceBaseModel):
     mongo_database: StrConstantDefault = Field(...)
     mongo_username: StrConstantDefault = Field(...)
     mongo_password: StrConstantDefault = Field(...)
+    orcid_scopes: StrConstantDefault = Field(...)
+    log_level: StrConstantDefault = Field(...)
 
 
 STR_CONSTANT_DEFAULTS = StrConstantDefaults(
@@ -108,10 +114,16 @@ STR_CONSTANT_DEFAULTS = StrConstantDefaults(
     orcid_client_secret=StrConstantDefault(
         required=True, env_name="ORCID_CLIENT_SECRET"
     ),
+    orcid_scopes=StrConstantDefault(
+        required=True,
+        env_name="ORCID_SCOPES",
+        value="/read-limited /activities/update openid",
+    ),
     mongo_host=StrConstantDefault(required=True, env_name="MONGO_HOST"),
     mongo_database=StrConstantDefault(required=True, env_name="MONGO_DATABASE"),
     mongo_username=StrConstantDefault(required=True, env_name="MONGO_USERNAME"),
     mongo_password=StrConstantDefault(required=True, env_name="MONGO_PASSWORD"),
+    log_level=StrConstantDefault(required=True, env_name="LOG_LEVEL", value="INFO"),
 )
 
 
@@ -120,10 +132,16 @@ class RuntimeConfig(ServiceBaseModel):
     request_timeout: int = Field(...)
     token_cache_lifetime: int = Field(...)
     token_cache_max_items: int = Field(...)
+    log_level: str = Field(...)
+
     orcid_api_base_url: str = Field(...)
     orcid_oauth_base_url: str = Field(...)
     orcid_client_id: str = Field(...)
     orcid_client_secret: str = Field(...)
+    orcid_scopes: str = Field(...)
+
+    linking_session_lifetime: int = Field(...)
+
     mongo_host: str = Field(...)
     mongo_port: int = Field(...)
     mongo_database: str = Field(...)
@@ -156,6 +174,7 @@ class Config2:
             token_cache_max_items=self.get_int_constant(
                 INT_CONSTANT_DEFAULTS.token_cache_max_items
             ),
+            log_level=self.get_str_constant(STR_CONSTANT_DEFAULTS.log_level),
             orcid_api_base_url=self.get_str_constant(
                 STR_CONSTANT_DEFAULTS.orcid_api_base_url
             ),
@@ -167,6 +186,10 @@ class Config2:
             ),
             orcid_client_secret=self.get_str_constant(
                 STR_CONSTANT_DEFAULTS.orcid_client_secret
+            ),
+            orcid_scopes=self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_scopes),
+            linking_session_lifetime=self.get_int_constant(
+                INT_CONSTANT_DEFAULTS.linking_session_lifetime
             ),
             mongo_host=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_host),
             mongo_port=self.get_int_constant(INT_CONSTANT_DEFAULTS.mongo_port),

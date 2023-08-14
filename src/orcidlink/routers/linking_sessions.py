@@ -17,7 +17,6 @@ from starlette.responses import RedirectResponse, Response
 
 from orcidlink.lib import errors, exceptions
 from orcidlink.lib.auth import ensure_authorization
-from orcidlink.lib.constants import LINKING_SESSION_TTL, ORCID_SCOPES
 from orcidlink.lib.responses import (
     AUTH_RESPONSES,
     AUTHORIZATION_HEADER,
@@ -206,8 +205,8 @@ async def create_linking_session(
         raise exceptions.AlreadyLinkedError("User already has a link")
 
     created_at = posix_time_millis()
-    # Expiration of the linking session, currently hardwired in the constants file.
-    expires_at = created_at + LINKING_SESSION_TTL * 1000
+
+    expires_at = created_at + config().linking_session_lifetime * 1000
     session_id = str(uuid.uuid4())
     linking_record = LinkingSessionInitial(
         session_id=session_id,
@@ -434,10 +433,6 @@ async def start_linking_session(
         session_id, return_link, skip_prompt, ui_options
     )
 
-    # TODO: get from config; in fact, all constants probably should be!
-
-    scope = ORCID_SCOPES
-
     # The redirect uri is back to ourselves ... this completes the interaction with ORCID, after
     # which we redirect back to whichever url the front end wants to return to.
     # But how to determine the path back here if we are running as a dynamic service?
@@ -448,7 +443,7 @@ async def start_linking_session(
     params = AuthorizeParams(
         client_id=config().orcid_client_id,
         response_type="code",
-        scope=scope,
+        scope=config().orcid_scopes,
         redirect_uri=f"{config().orcidlink_url}/linking-sessions/oauth/continue",
         prompt="login",
         state=json.dumps({"session_id": session_id}),

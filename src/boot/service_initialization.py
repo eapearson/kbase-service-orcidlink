@@ -13,11 +13,6 @@ from orcidlink.lib.utils import posix_time_millis
 from orcidlink.runtime import config
 
 
-def test():
-    log_level(logging.DEBUG)
-    log_event("initialization-test", {"is_a": "test"}, logging.INFO)
-
-
 def make_db_client() -> MongoClient[Dict[str, Any]]:
     return MongoClient(
         host=config().mongo_host,

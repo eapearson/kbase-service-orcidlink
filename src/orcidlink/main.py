@@ -12,6 +12,7 @@ than "root", which implements top level endpoints (other than /docs).
 Routers include: link, linking-sessions, works, orcid, and root.
 
 """
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 from typing import Any, AsyncGenerator, Generic, List, TypeVar
@@ -82,13 +83,26 @@ directly by the browser, rather than being used within Javascript code.\
 ]
 
 
+def config_to_log_level(log_level: str) -> int:
+    if log_level == "DEBUG":
+        return logging.DEBUG
+    elif log_level == "INFO":
+        return logging.INFO
+    elif log_level == "WARNING":
+        return logging.WARNING
+    elif log_level == "ERROR":
+        return logging.ERROR
+    else:
+        raise ValueError(f'Invalid log_level config setting "{log_level}"')
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     #
     # Load the config here in order to trigger any configuration problems early in the
     # application startup.
     #
-    config()
+    logger.log_level(config_to_log_level(config().log_level))
 
     yield
 
@@ -112,6 +126,7 @@ app = FastAPI(
         "url": "https://github.com/kbase/kb_sdk/blob/develop/LICENSE.md",
     },
     openapi_tags=tags_metadata,
+    lifespan=lifespan,
 )
 
 ###############################################################################
