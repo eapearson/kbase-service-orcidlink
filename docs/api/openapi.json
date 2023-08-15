@@ -22,7 +22,7 @@
                     "misc"
                 ],
                 "summary": "Get Status",
-                "description": "Get Service Status\n\nWith no parameters, this endpoint returns the current status of the service. The status code itself\nis always \"ok\". Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency performance (as it makes no\ni/o or other high-latency calls), or for time synchronization (as it returns the current time).",
+                "description": "Get Service Status\n\nThis endpoint returns the current status of the service. The status code itself\nis always \"ok\", by definition. Other information includes the current time, and the start time.\n\nIt can be used as a healthcheck, for basic latency measurement (as it makes no\ni/o or other high-latency calls), or for time synchronization (as it returns the current time).",
                 "operationId": "get_status_status_get",
                 "responses": {
                     "200": {
@@ -44,7 +44,7 @@
                     "misc"
                 ],
                 "summary": "Get Info",
-                "description": "Get Service Information\n\nReturns basic information about the service and its runtime configuration.",
+                "description": "Get Service Information\n\nReturns basic information about the service and its configuration.",
                 "operationId": "get_info_info_get",
                 "responses": {
                     "200": {
@@ -1013,7 +1013,7 @@
                     "linking-sessions"
                 ],
                 "summary": "Linking Sessions Continue",
-                "description": "Continue Linking Session\n\nThis endpoint implements the handoff from from the ORCID authorization step in\nthe ORCID OAuth flow. That is, it\nserves as the redirection target after the user has successfully completed\ntheir interaction with ORCID, at which they may have logged in and provided\ntheir consent to issuing the linking token to KBase.\n\nNote that since this is an \"interactive\" endpoint, which does not have its own\nuser interface, rather redirects to kbase-ui when finished. This applies to\nerrors as well. Errors are displayed by redirecting the browser to an endpoint\nin kbase-ui which is designed to expect the error values for display to be\nin the url itself.",
+                "description": "Continue Linking Session\n\nThis endpoint implements the handoff from from the ORCID authorization step in\nthe ORCID OAuth flow. That is, it\nserves as the redirection target after the user has successfully completed\ntheir interaction with ORCID, at which they may have logged in and provided\ntheir consent to issuing the linking token to KBase.\n\nNote that this is an interstitional endpoint, which does not have its own\nuser interface. Rather, it redirects to kbase-ui when finished. If an error is encountered,\nit redirects to an error viewing endpoint in kbase-ui.",
                 "operationId": "linking_sessions_continue_linking_sessions_oauth_continue_get",
                 "parameters": [
                     {
@@ -2644,9 +2644,9 @@
                         "type": "string",
                         "title": "Status"
                     },
-                    "time": {
+                    "current_time": {
                         "type": "integer",
-                        "title": "Time"
+                        "title": "Current Time"
                     },
                     "start_time": {
                         "type": "integer",
@@ -2656,7 +2656,7 @@
                 "type": "object",
                 "required": [
                     "status",
-                    "time",
+                    "current_time",
                     "start_time"
                 ],
                 "title": "StatusResponse"

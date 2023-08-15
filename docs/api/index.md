@@ -61,10 +61,10 @@ Miscellaneous operations
 #### GET /status
 Get Service Status
 
-With no parameters, this endpoint returns the current status of the service. The status code itself
-is always "ok". Other information includes the current time, and the start time.
+This endpoint returns the current status of the service. The status code itself
+is always "ok", by definition. Other information includes the current time, and the start time.
 
-It can be used as a healthcheck, for basic latency performance (as it makes no
+It can be used as a healthcheck, for basic latency measurement (as it makes no
 i/o or other high-latency calls), or for time synchronization (as it returns the current time).
 
 
@@ -83,7 +83,7 @@ i/o or other high-latency calls), or for time synchronization (as it returns the
 #### GET /info
 Get Service Information
 
-Returns basic information about the service and its runtime configuration.
+Returns basic information about the service and its configuration.
 
 
 <a name="header_input"></a>
@@ -374,11 +374,9 @@ serves as the redirection target after the user has successfully completed
 their interaction with ORCID, at which they may have logged in and provided
 their consent to issuing the linking token to KBase.
 
-Note that since this is an "interactive" endpoint, which does not have its own
-user interface, rather redirects to kbase-ui when finished. This applies to
-errors as well. Errors are displayed by redirecting the browser to an endpoint
-in kbase-ui which is designed to expect the error values for display to be
-in the url itself.
+Note that this is an interstitional endpoint, which does not have its own
+user interface. Rather, it redirects to kbase-ui when finished. If an error is encountered,
+it redirects to an error viewing endpoint in kbase-ui.
 
 
 <a name="header_input"></a>
@@ -757,7 +755,7 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 <a name="header_type_statusresponse"></a>
 ##### StatusResponse
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>status</td><td>string</td><td>✓</td></tr><tr><td>time</td><td>integer</td><td>✓</td></tr><tr><td>start_time</td><td>integer</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>status</td><td>string</td><td>✓</td></tr><tr><td>current_time</td><td>integer</td><td>✓</td></tr><tr><td>start_time</td><td>integer</td><td>✓</td></tr></tbody></table>
 
 
 
