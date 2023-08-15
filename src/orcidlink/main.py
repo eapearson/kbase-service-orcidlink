@@ -12,16 +12,14 @@ than "root", which implements top level endpoints (other than /docs).
 Routers include: link, linking-sessions, works, orcid, and root.
 
 """
-import asyncio
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Generic, List, TypeVar
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import Field
-
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import HTMLResponse, JSONResponse
@@ -36,7 +34,6 @@ from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
 from orcidlink.runtime import config, stats
-
 
 ###############################################################################
 # FastAPI application setup
@@ -111,8 +108,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     logger.log_level(config_to_log_level(config().log_level))
 
     yield
-
-    pass
 
 
 # TODO: add fancy FastAPI configuration https://fastapi.tiangolo.com/tutorial/metadata/
@@ -194,13 +189,6 @@ async def validation_exception_handler(
     )
 
 
-@app.exception_handler(exceptions.ServiceErrorX)
-async def service_errorx_exception_handler(
-    _: Request, exc: exceptions.ServiceErrorX
-) -> JSONResponse:
-    return exc.get_response()
-
-
 @app.exception_handler(exceptions.ServiceErrorY)
 async def service_errory_exception_handler(
     _: Request, exc: exceptions.ServiceErrorY
@@ -224,11 +212,6 @@ async def internal_server_error_handler(
         exc,
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    logger.log_level(logging.DEBUG)
 
 
 class StarletteHTTPDetailData(ServiceBaseModel):
@@ -271,9 +254,6 @@ async def http_exception_handler(
         ),
         status_code=exc.status_code,
     )
-    # return error_response3(
-    #
-    # )
 
 
 ###############################################################################
@@ -281,17 +261,6 @@ async def http_exception_handler(
 # API
 #
 ###############################################################################
-
-
-##
-# /status - The status of the service.
-#
-
-# Also, most services and all KB-SDK apps have a /status endpoint.
-# As a side benefit, it also returns non-private configuration.
-# TODO: perhaps non-private configuration should be accessible via an
-# "/info" endpoint.
-#
 
 
 @app.get(

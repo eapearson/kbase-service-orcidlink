@@ -13,11 +13,12 @@ import os
 from typing import Optional
 from urllib.parse import urljoin, urlparse
 
-from pydantic import Field
-from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.model import ServiceDescription
-from orcidlink.lib.utils import module_dir
 import toml
+from pydantic import Field
+
+from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.utils import module_dir
+from orcidlink.model import ServiceDescription
 
 
 class GitInfo(ServiceBaseModel):

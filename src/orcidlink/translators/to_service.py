@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from orcidlink import model
+from orcidlink.lib.service_clients import orcid_api
 from orcidlink.model import (
     CitationType,
     ContributorRole,
@@ -10,7 +11,6 @@ from orcidlink.model import (
     RelationshipType,
     WorkType,
 )
-from orcidlink.lib.service_clients import orcid_api
 
 
 def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
@@ -316,7 +316,7 @@ def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
     # Organizations / Employment!
 
     affiliation_group = profile_raw.activities_summary.employments.affiliation_group
-    affiliations = transform_affilations(affiliation_group)
+    transform_affilations(affiliation_group)
 
     #
     # Publications

@@ -111,11 +111,6 @@ def test_kbase_auth_exception_handler(fake_fs):
             content = response.json()
             assert content["code"] == errors.ERRORS.authorization_required.code
 
-            # TODO: the new ServiceErrorXX does not emit the title, as it is not part of the
-            # JSON-RPC error structure. We want to be compatible with that, as it makes error
-            # handling easier, generally.
-            # assert content["title"] == "Invalid KBase Token"
-
             # Call with actual empty token; should be caught at the validator boundary
             # as it is invalid according to the rules for tokens.
             response = client.get("/link", headers={"Authorization": ""})

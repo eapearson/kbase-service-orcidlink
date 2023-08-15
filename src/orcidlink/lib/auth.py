@@ -1,11 +1,11 @@
 from typing import Tuple
 
-from orcidlink.lib import errors, exceptions
+from orcidlink.lib import exceptions
 from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
 from orcidlink.runtime import config
 
 """
-A 
+A  
 """
 
 

@@ -7,8 +7,8 @@ import pymongo.errors
 from bson import json_util
 from pymongo import MongoClient
 
-from orcidlink.lib.logger import log_level, log_event
 from orcidlink.lib.config import get_service_description
+from orcidlink.lib.logger import log_event, log_level
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.runtime import config
 

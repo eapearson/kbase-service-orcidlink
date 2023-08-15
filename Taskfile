@@ -39,6 +39,14 @@ function mypy {
   _run runner tools/scripts/run-mypy.sh
 }
 
+function autoflake {
+  _run runner tools/scripts/run-autoflake.sh
+}
+
+function isort {
+  _run runner tools/scripts/run-isort.sh
+}
+
 function black {
   _run runner tools/scripts/run-black.sh "${1}" "${2}"
 }

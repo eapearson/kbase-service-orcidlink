@@ -18,7 +18,6 @@ To that end the following endpoints are provided:
                  and revokes the ORCID token in the link. Returns nothing if successful.
 
 """
-from typing import Optional
 
 from fastapi import APIRouter, Path, Response
 from starlette.responses import JSONResponse
@@ -28,10 +27,9 @@ from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
 from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.model import (
-    LinkRecordPublicNonOwner,
     LinkingRecordShared,
-    LinkRecord,
     LinkRecordPublic,
+    LinkRecordPublicNonOwner,
     ORCIDAuthPublic,
     ORCIDAuthPublicNonOwner,
 )

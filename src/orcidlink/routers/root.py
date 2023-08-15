@@ -1,13 +1,10 @@
-from dataclasses import fields
-import json
-from typing import Annotated
 
 from fastapi import APIRouter, Path
 from pydantic import Field
+
 from orcidlink.lib.config import GitInfo, get_git_info, get_service_description
 from orcidlink.lib.errors import ERRORS, ERRORS_MAP, ErrorCode2
 from orcidlink.lib.exceptions import ServiceErrorY
-
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import ServiceDescription

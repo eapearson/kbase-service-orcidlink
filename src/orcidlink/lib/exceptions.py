@@ -1,12 +1,12 @@
 import json
-from typing import Any, Dict, Generic, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import Field
 
-from orcidlink.lib.errors import ERRORS, DataType, ErrorCode, ErrorCode2, ErrorResponse
+from orcidlink.lib.errors import ERRORS, DataType, ErrorCode2
 from orcidlink.lib.json_file import JSONLikeObject
 from orcidlink.lib.service_clients.jsonrpc import JSONRPCError
 from orcidlink.lib.type import ServiceBaseModel
@@ -35,122 +35,46 @@ class ServiceErrorY(Exception):
         return JSONResponse(status_code=self.error.status_code or 500, content=content)
 
 
-# x = ServiceErrorY("foo",
-#     status_code=100000,
-#     error=ERRORS.impossible_error
-# )
-
-
-class ServiceErrorX(Exception):
-    """
-    An exception wrapper for an ErrorResponse and status_code.
-
-    This is the exception to throw if you want to specify the
-    specific error response.
-    """
-
-    code: int
-    title: str
-    description: str
-    status_code: Optional[int]
-
-    def __init__(
-        self,
-        code: int,
-        title: str,
-        message: str,
-        data: Optional[ServiceBaseModel] = None,
-        status_code: Optional[int] = None,
-    ):
-        super().__init__(message)
-        self.code = code
-        self.title = title
-        self.message = message
-        self.data = data
-        self.status_code = status_code
-
-    def get_response(self) -> JSONResponse:
-        content: JSONLikeObject = {
-            "code": self.code,
-            "title": self.title,
-            "message": self.message,
-        }
-        if self.data is not None:
-            content["data"] = dict(self.data)
-        return JSONResponse(status_code=self.status_code or 500, content=content)
-
-
-# class ClientError(ServiceErrorX):
-#     def __init__(self, status_code: int, message: str, data: Any = None):
-#         super().__init__("clientError", "Client Error", message, data, status_code)
-
-
-class AlreadyLinkedError(ServiceErrorX):
+class AlreadyLinkedError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(
-            ERRORS.already_linked.code,
-            ERRORS.already_linked.title,
-            message,
-            status_code=400,
-        )
+        super().__init__(ERRORS.already_linked, message)
 
 
-class AuthorizationRequiredError(ServiceErrorX):
+class AuthorizationRequiredError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(
-            ERRORS.authorization_required.code,
-            ERRORS.authorization_required.title,
-            message,
-            status_code=401,
-        )
+        super().__init__(ERRORS.authorization_required, message)
 
 
-class UnauthorizedError(ServiceErrorX):
+class UnauthorizedError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(
-            ERRORS.not_authorized.code,
-            ERRORS.not_authorized.title,
-            message,
-            status_code=403,
-        )
+        super().__init__(ERRORS.not_authorized, message)
 
 
-class NotFoundError(ServiceErrorX):
+class NotFoundError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(1020, "Not Found", message, status_code=404)
+        super().__init__(ERRORS.not_found, message)
 
 
-class InternalServerError(ServiceErrorX):
+class InternalServerError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(
-            ERRORS.internal_server_error.code,
-            ERRORS.internal_server_error.title,
-            message,
-            status_code=500,
-        )
+        super().__init__(ERRORS.internal_server_error, message)
 
 
 class JSONDecodeErrorData(ServiceBaseModel):
     decodeErrorMessage: str
 
 
-class JSONDecodeError(ServiceErrorX):
+class JSONDecodeError(ServiceErrorY):
     def __init__(self, message: str, jde: json.JSONDecodeError):
         data = JSONDecodeErrorData(decodeErrorMessage=str(jde))
-        super().__init__(
-            ERRORS.json_decode_error.code,
-            ERRORS.json_decode_error.title,
-            message,
-            data=data,
-            status_code=502,
-        )
+        super().__init__(ERRORS.json_decode_error, message, data=data)
 
 
 class ContentTypeErrorData(ServiceBaseModel):
     originalContentType: Optional[str] = Field(default=None)
 
 
-class ContentTypeError(ServiceErrorX):
+class ContentTypeError(ServiceErrorY):
     data: ContentTypeErrorData
 
     def __init__(self, message: str, cte: aiohttp.ContentTypeError):
@@ -159,13 +83,7 @@ class ContentTypeError(ServiceErrorX):
         if cte.headers is not None:
             data.originalContentType = cte.headers["content-type"]
 
-        super().__init__(
-            ERRORS.content_type_error.code,
-            ERRORS.content_type_error.title,
-            message,
-            data=data,
-            status_code=502,
-        )
+        super().__init__(ERRORS.content_type_error, message, data=data)
 
 
 class UpstreamErrorData(ServiceBaseModel):
@@ -175,65 +93,25 @@ class UpstreamErrorData(ServiceBaseModel):
     message: Optional[str] = Field(default=None)
 
 
-class UpstreamORCIDAPIError(ServiceErrorX):
+class UpstreamORCIDAPIError(ServiceErrorY):
     data: UpstreamErrorData
 
     def __init__(self, message: str, data: UpstreamErrorData):
-        super().__init__(
-            ERRORS.upstream_orcid_error.code,
-            ERRORS.upstream_orcid_error.title,
-            message,
-            data,
-            502,
-        )
+        super().__init__(ERRORS.upstream_orcid_error, message, data)
 
 
-# def upstream_jsonrpc_error(error: JSONRPCError):
-#     data: JSONLikeObject = {d
-#         "error": {
-#             "code": error.code,
-#             "message": error.message,
-#             "data": error.data
-#         }
-#     }
-
-#     return ServiceErrorXX(
-#         UPSTREAM_JSONRPC_ERROR,
-#         f"Error in upstream KBase service",
-#         data=data,
-#     )
-
-# @dataclass
-# class UpstreamJSONRPCErrorData(JSONLikeObject):
-#     status_code: int
-#     code: int
-#     message: str
-#     data: Optional[JSONLike] = None
-
-
-class UpstreamJSONRPCError(ServiceErrorX):
+class UpstreamJSONRPCError(ServiceErrorY):
     def __init__(self, message: str, data: JSONRPCError):
         error_data = jsonable_encoder(data)
-        super().__init__(
-            ERRORS.upstream_jsonrpc_error.code,
-            ERRORS.upstream_jsonrpc_error.title,
-            message,
-            data=error_data,
-            status_code=502,
-        )
+        super().__init__(ERRORS.upstream_jsonrpc_error, message, data=error_data)
 
 
-class UpstreamError(ServiceErrorX):
+class UpstreamError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(
-            ERRORS.upstream_error.code,
-            ERRORS.upstream_error.title,
-            message,
-            status_code=502,
-        )
+        super().__init__(ERRORS.upstream_error, message)
 
 
 # Used when boxed in by the type system.
-class ImpossibleError(ServiceErrorX):
+class ImpossibleError(ServiceErrorY):
     def __init__(self, message: str):
-        super().__init__(1099, "Impossible Error", message, status_code=500)
+        super().__init__(ERRORS.impossible_error, message)

@@ -10,7 +10,6 @@ import json
 import uuid
 from urllib.parse import urlencode
 
-from bson.json_util import dumps
 from fastapi import APIRouter, Cookie, Path, Query, responses, status
 from pydantic import Field
 from starlette.responses import RedirectResponse, Response
@@ -26,7 +25,6 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.service_clients.orcid_api import AuthorizeParams, orcid_oauth
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
-from orcidlink.runtime import config
 from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionCompletePublic,
@@ -35,6 +33,7 @@ from orcidlink.model import (
     LinkRecord,
     SimpleSuccess,
 )
+from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/linking-sessions")

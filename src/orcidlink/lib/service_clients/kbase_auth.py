@@ -83,14 +83,14 @@ class KBaseAuth(object):
             raise exceptions.ContentTypeError("Wrong content type", cte)
         except json.JSONDecodeError as jde:
             raise exceptions.JSONDecodeError("Error decoding JSON", jde)
-        except Exception as ex:
+        except Exception:
             raise exceptions.InternalServerError("Unexpected error")
         # TODO: convert the below to ServerErrorXX
         if not response.ok:
             # The auth service should return a 500 for all errors
             # Make an attempt to handle a specific auth error
             appcode = json_response["error"]["appcode"]
-            message = json_response["error"]["message"]
+            json_response["error"]["message"]
             if appcode == 10020:
                 raise exceptions.ServiceErrorY(
                     errors.ERRORS.authorization_required,

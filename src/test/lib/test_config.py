@@ -1,4 +1,5 @@
 import os
+from test.mocks.data import load_data_file
 from unittest import mock
 
 import pytest
@@ -11,8 +12,6 @@ from orcidlink.lib.config import (
     get_service_description,
 )
 from orcidlink.lib.utils import module_path
-from test.mocks.data import load_data_file
-
 
 service_description_toml = load_data_file("service_description1.toml")
 git_info_toml = load_data_file("git_info1.toml")

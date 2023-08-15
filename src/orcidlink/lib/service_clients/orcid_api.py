@@ -596,7 +596,7 @@ class APIErrorWrapper(ServiceBaseModel, Generic[DetailType]):
 
 def make_upstream_error(
     status: int, json_response: Any, source: str
-) -> exceptions.ServiceErrorX:
+) -> exceptions.ServiceErrorY:
     if isinstance(json_response, dict):
         # Determine which of the 3 types of errors were returned, if we
         # do have a json_response (not all api endpoints have a response).
@@ -714,6 +714,8 @@ class ORCIDAPIClient(ORCIDClientBase):
                     # Remember, actual >= 500 errors will result in an exception
                     # thrown or possibly trigger a json parse error above, as we
                     # expect a valid response.
+                    # TODO: we need to make the new upstram error carry data
+                    # raise exceptions.UpstreamError()
                     raise make_upstream_error(
                         response.status, result, source="get_profile"
                     )

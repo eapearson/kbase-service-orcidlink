@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import Field
 
-from orcidlink.lib.errors import ErrorCode, ErrorCode2, ErrorResponse
+from orcidlink.lib.errors import ErrorCode2, ErrorResponse
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.runtime import config
 

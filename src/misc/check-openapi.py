@@ -2,8 +2,8 @@ import json
 import sys
 
 from fastapi.openapi.utils import get_openapi
-from orcidlink.main import app
 
+from orcidlink.main import app
 
 #
 # In which we generate an openapi.json spec, and then compare it to the

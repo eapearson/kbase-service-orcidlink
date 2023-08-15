@@ -5,6 +5,7 @@ from os import path
 from typing import List
 
 import toml
+
 from orcidlink.lib import utils
 
 

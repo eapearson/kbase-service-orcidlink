@@ -1,8 +1,8 @@
 import json
 import time
+from test.mocks.mock_server import MockSDKJSON11ServiceBase
 
 from orcidlink.lib.errors import INVALID_PARAMS, METHOD_NOT_FOUND
-from test.mocks.mock_server import MockSDKJSON11ServiceBase
 
 
 class MockImaginaryService(MockSDKJSON11ServiceBase):

@@ -12,7 +12,7 @@ documentation.
 
 """
 from enum import Enum
-from typing import Annotated, List, Literal, Optional, Union
+from typing import List, Optional, Union
 
 from pydantic import Field
 
@@ -744,7 +744,6 @@ class NewWork(FullWork):
     Represents a work record that is going to be added to ORCID.
     """
 
-    pass
 
 
 class PersistedWorkBase(ServiceBaseModel):
@@ -808,7 +807,6 @@ class WorkUpdate(FullWork, PersistedWorkBase):
     and can be sent back to update the ORCID work record
     """
 
-    pass
 
 
 # TODO: unify these work types; tricky part is that we require fields for creating

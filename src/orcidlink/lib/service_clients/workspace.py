@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple, cast
 import aiohttp
 from pydantic import Field
 
-from orcidlink.lib import errors, exceptions
+from orcidlink.lib import exceptions
 from orcidlink.lib.json_file import JSONLikeObject
 from orcidlink.lib.service_clients.jsonrpc import JSONRPCError
 from orcidlink.lib.type import ServiceBaseModel
@@ -68,7 +68,7 @@ class JSONRPC11Service:
             raise exceptions.ContentTypeError("Wrong content type", cte)
         except json.JSONDecodeError as jde:
             raise exceptions.JSONDecodeError("Error decoding JSON", jde)
-        except Exception as ex:
+        except Exception:
             raise exceptions.InternalServerError("Unexpected error")
 
 
@@ -248,9 +248,5 @@ class WorkspaceService(JSONRPC11Service):
     # TODO: not sure about this.
     async def can_access_object(self, ref: str) -> bool:
         params = {"objects": [{"ref": ref}]}
-        try:
-            await self.call_func("get_object_info3", params)
-            return True
-        except exceptions.ServiceErrorX as se:
-            print(str(se))
-            return False
+        await self.call_func("get_object_info3", params)
+        return True

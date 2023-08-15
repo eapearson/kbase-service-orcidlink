@@ -1,13 +1,6 @@
 import contextlib
-
-import pytest
-from fastapi.testclient import TestClient
-from orcidlink.lib import utils
-from orcidlink.lib.config import Config2
-from orcidlink.main import app
-from orcidlink.model import LinkRecord
-from orcidlink.storage import storage_model
-from test.mocks.data import load_data_file, load_data_json
+import os
+from test.mocks.data import load_data_json
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_OAUTH_PORT, TEST_ENV
 from test.mocks.mock_contexts import (
     mock_auth_service,
@@ -15,8 +8,13 @@ from test.mocks.mock_contexts import (
     no_stderr,
 )
 from test.mocks.testing_utils import generate_kbase_token
-import os
 from unittest import mock
+
+from fastapi.testclient import TestClient
+
+from orcidlink.main import app
+from orcidlink.model import LinkRecord
+from orcidlink.storage import storage_model
 
 client = TestClient(app)
 

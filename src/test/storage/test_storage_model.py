@@ -1,13 +1,14 @@
-from test.mocks.data import load_data_file, load_data_json
+import os
+from test.mocks.data import load_data_json
+from test.mocks.env import TEST_ENV
+from unittest import mock
 
 import pytest
-import os
-from unittest import mock
+
 from orcidlink.lib import utils
 from orcidlink.model import LinkingSessionInitial, LinkRecord, ORCIDAuth
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.storage.storage_model_mongo import StorageModelMongo
-from test.mocks.env import TEST_ENV
 
 
 @pytest.fixture

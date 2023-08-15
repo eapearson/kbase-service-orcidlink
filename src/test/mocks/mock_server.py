@@ -2,8 +2,8 @@ import http.server
 import json
 import threading
 import time
-from urllib.parse import parse_qs
 from socket import socket
+from urllib.parse import parse_qs
 
 from orcidlink.lib.errors import INVALID_PARAMS, METHOD_NOT_FOUND
 
