@@ -35,7 +35,7 @@ from orcidlink.lib.responses import (
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.routers import link, linking_sessions, root
 from orcidlink.routers.orcid import profile, works
-from orcidlink.runtime import config
+from orcidlink.runtime import config, stats
 
 
 ###############################################################################
@@ -84,6 +84,9 @@ directly by the browser, rather than being used within Javascript code.\
 
 
 def config_to_log_level(log_level: str) -> int:
+    """
+    Translate a log level string to a Python log level value.
+    """
     if log_level == "DEBUG":
         return logging.DEBUG
     elif log_level == "INFO":
@@ -92,6 +95,8 @@ def config_to_log_level(log_level: str) -> int:
         return logging.WARNING
     elif log_level == "ERROR":
         return logging.ERROR
+    elif log_level == "CRITICAL":
+        return logging.CRITICAL
     else:
         raise ValueError(f'Invalid log_level config setting "{log_level}"')
 
@@ -102,6 +107,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     # Load the config here in order to trigger any configuration problems early in the
     # application startup.
     #
+    stats()
     logger.log_level(config_to_log_level(config().log_level))
 
     yield

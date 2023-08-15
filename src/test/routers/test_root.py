@@ -36,9 +36,11 @@ def test_main_status(fake_fs):
     assert response.status_code == 200
     json_response = response.json()
     assert json_response["status"] == "ok"
-    assert isinstance(json_response["time"], int)
+    assert isinstance(json_response["current_time"], int)
     assert isinstance(json_response["start_time"], int)
-    status_time = datetime.fromtimestamp(json_response["time"] / 1000, tz=timezone.utc)
+    status_time = datetime.fromtimestamp(
+        json_response["current_time"] / 1000, tz=timezone.utc
+    )
     current_time = datetime.now(timezone.utc)
     time_diff = current_time - status_time
     assert abs(time_diff.total_seconds()) < 1

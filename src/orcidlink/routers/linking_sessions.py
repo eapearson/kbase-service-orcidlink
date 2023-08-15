@@ -511,11 +511,9 @@ async def linking_sessions_continue(
     their interaction with ORCID, at which they may have logged in and provided
     their consent to issuing the linking token to KBase.
 
-    Note that since this is an "interactive" endpoint, which does not have its own
-    user interface, rather redirects to kbase-ui when finished. This applies to
-    errors as well. Errors are displayed by redirecting the browser to an endpoint
-    in kbase-ui which is designed to expect the error values for display to be
-    in the url itself.
+    Note that this is an interstitional endpoint, which does not have its own
+    user interface. Rather, it redirects to kbase-ui when finished. If an error is encountered,
+    it redirects to an error viewing endpoint in kbase-ui.
     """
     # Note that this is the target for redirection from ORCID,
     # and we don't have an Authorization header. We don't

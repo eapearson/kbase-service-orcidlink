@@ -11,13 +11,14 @@ from orcidlink.lib.exceptions import ServiceErrorY
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import ServiceDescription
+from orcidlink.runtime import stats
 
 router = APIRouter(prefix="")
 
 
 class StatusResponse(ServiceBaseModel):
     status: str = Field(...)
-    time: int = Field(...)
+    current_time: int = Field(...)
     start_time: int = Field(...)
 
 
@@ -36,14 +37,15 @@ async def get_status() -> StatusResponse:
     """
     Get Service Status
 
-    With no parameters, this endpoint returns the current status of the service. The status code itself
-    is always "ok". Other information includes the current time, and the start time.
+    This endpoint returns the current status of the service. The status code itself
+    is always "ok", by definition. Other information includes the current time, and the start time.
 
-    It can be used as a healthcheck, for basic latency performance (as it makes no
+    It can be used as a healthcheck, for basic latency measurement (as it makes no
     i/o or other high-latency calls), or for time synchronization (as it returns the current time).
     """
-    # TODO: start time, deal with it@
-    return StatusResponse(status="ok", start_time=0, time=posix_time_millis())
+    return StatusResponse(
+        status="ok", start_time=stats().start_time, current_time=posix_time_millis()
+    )
 
 
 class InfoResponse(ServiceBaseModel):
@@ -56,7 +58,7 @@ async def get_info() -> InfoResponse:
     """
     Get Service Information
 
-    Returns basic information about the service and its runtime configuration.
+    Returns basic information about the service and its configuration.
     """
     # TODO: version should either be separate call, or derived from the a
     # file stamped during the build.
