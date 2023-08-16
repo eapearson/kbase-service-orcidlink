@@ -10,7 +10,7 @@
 # Runs docker compose with the given docker compose filename suffix with the given command arguments
 #
 function _run-in {
-  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --rm orcidlink "${@:2}"
+  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --remove-orphans --rm orcidlink "${@:2}"
 }
 
 function _dc-up {
@@ -28,7 +28,9 @@ function _dc-up {
 function _run {
   echo "Running: "
   echo "${@:1}"
-  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --rm "${1}" "${@:2}"
+  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --remove-orphans --rm "${1}" "${@:2}"
+  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools down
+
 }
 
 #
