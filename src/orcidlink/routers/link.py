@@ -140,7 +140,6 @@ async def get_link_for_orcid(
             orcid=link_record.orcid_auth.orcid,
         ),
     )
-    print("HERE!", result)
     return result
 
 

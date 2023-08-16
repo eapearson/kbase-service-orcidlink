@@ -1,4 +1,5 @@
 import contextlib
+import copy
 import json
 import os
 from test.mocks.data import load_data_json
@@ -21,6 +22,7 @@ from orcidlink.storage.storage_model import storage_model
 
 TEST_LINK = load_data_json("link2.json")
 TEST_LINK1 = load_data_json("link1.json")
+TEST_LINK_BAR = load_data_json("link-bar.json")
 
 
 async def create_link(link_data):
@@ -37,7 +39,7 @@ async def assert_create_linking_session(client, authorization: str):
     #
     # Create linking session.
     #
-    await clear_storage_model()
+
     response = client.post(
         "/linking-sessions", headers={"Authorization": authorization}
     )
@@ -424,6 +426,7 @@ async def test_get_linking_session_errors():
                 assert response.status_code == 422
 
                 # Should also be 404, because it is not completed yet.
+                await clear_storage_model()
                 session_info = await assert_create_linking_session(client, TOKEN_FOO)
                 response = client.get(
                     f"/linking-sessions/{session_info['session_id']}",
@@ -631,8 +634,7 @@ async def test_start_linking_session_errors():
             # TODO more assertions?
 
 
-# @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_continue_linking_session():
+async def test_linking_session_continue():
     """
     Here we simulate the oauth flow with ORCID - in which
     we redirect the browser to ORCID, which ends up returning
@@ -653,6 +655,7 @@ async def test_continue_linking_session():
             #
             # Create linking session.
             #
+            await clear_storage_model()
             initial_session_info = await assert_create_linking_session(
                 client, TOKEN_FOO
             )
@@ -1149,3 +1152,103 @@ async def test_finish_linking_session_error_already_finished():
 #         with pytest.raises(Exception) as ex:
 #             assert_get_linking_session(client, initial_session_id)
 #         assert ex is not None
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_continue_linking_session_error_link_already_exists():
+    """
+    Here we simulate the case in which, when a user returns to the orcidlink ui's
+    "continue" step, the user has chosen an orcid account which is already linked.
+
+
+    """
+    with mock_services():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+            client = TestClient(app)
+
+            await clear_storage_model()
+
+            #
+            # Create a link for user "bar", but we replace the orcid id with that
+            # for user "foo". This should let us simulate trying to create an orcid link
+            # when the orcid id is already linked.
+            #
+            bar_link = copy.deepcopy(TEST_LINK_BAR)
+            # Note that the orcid id is taken from the mock orcid oauth service.
+            # TODO: we should improve the mock support so that the various mock data
+            # is perfectly consistent.
+            bar_link["orcid_auth"]["orcid"] = "abc123"
+            await create_link(bar_link)
+
+            #
+            # Create linking session; this should fail with errors.AlreadyLinkedError
+            #
+            client = TestClient(app)
+            response = client.post(
+                "/linking-sessions", headers={"Authorization": TOKEN_FOO}
+            )
+
+            #
+            # Inspect the response for sensible answers.
+            #
+            assert response.status_code == 201
+
+            #
+            # Create linking session.
+            #
+            initial_session_info = await assert_create_linking_session(
+                client, TOKEN_FOO
+            )
+            initial_session_id = initial_session_info["session_id"]
+
+            #
+            # Get the session info.
+            #
+            # session_info = assert_get_linking_session(client, initial_session_id)
+            # assert session_info["session_id"] == initial_session_id
+
+            # Note that the call will fail if the result does not comply with either
+            # LinkingSessionComplete or LinkingSessionInitial
+
+            # The call after creating a linking session will return a LinkingSessionInitial
+            # which we only know from the absense of orcid_auth
+            assert "orcid_auth" not in initial_session_info
+
+            #
+            # Start the linking session.
+            #
+
+            # If we start the linking session, the linking session will be updated, but remain
+            # LinkingSessionInitial
+            assert_start_linking_session(
+                client,
+                initial_session_id,
+                kbase_session=TOKEN_FOO,
+                skip_prompt="yes",
+            )
+
+            #
+            # In the actual OAuth flow, the browser would invoke the start link endpoint
+            # above, and naturally follow the redirect to ORCID OAuth.
+            # We can't do that here, but we can simulate it via the mock oauth
+            # service. That service also has a non-interactive endpoint "/authorize"
+            # which exchanges the code for an access_token (amongst other things)
+            #
+            params = {
+                "code": "foo",
+                "state": json.dumps({"session_id": initial_session_id}),
+            }
+
+            headers = {
+                "Cookie": f"kbase_session={TOKEN_FOO}",
+            }
+
+            # We should get an error response. In this case, since it will be a 302, as
+            # for the success case, but the url will be to the error page at the orcid link ui.
+            response = client.get(
+                "/linking-sessions/oauth/continue",
+                headers=headers,
+                params=params,
+                follow_redirects=False,
+            )
+            assert response.status_code == 302

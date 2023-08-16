@@ -126,9 +126,17 @@ class MockORCIDAPIWithErrors(MockService):
             test_data = load_test_data("orcid", "orcid-works-error")
             self.send_json_error(test_data)
 
+        elif self.path == "/0000-0003-4997-3076/works/1526002":
+            test_data = load_test_data("orcid", "orcid-works-error")
+            self.send_json_error(test_data)
+
         elif self.path == "/trigger-401/record":
             test_data = load_test_data("orcid", "get-profile-401-error")
             self.send_json_error(test_data, 401)
+
+        elif self.path == "/trigger-415/record":
+            test_data = load_test_data("orcid", "get-profile-415-error")
+            self.send_json_error(test_data, 415)
 
         else:
             # not found!
@@ -148,9 +156,9 @@ class MockORCIDOAuth(MockService):
         if self.path == "/revoke":
             self.send_empty(status_code=200)
         elif self.path == "/token":
-            # print("HELLO??", self.get_body_string())
             data = parse_qs(self.get_body_string())
             if data["code"] == ["foo"]:
+                # TODO: should this be in a file?
                 test_data = {
                     "access_token": "access_token_for_foo",
                     "token_type": "Bearer",

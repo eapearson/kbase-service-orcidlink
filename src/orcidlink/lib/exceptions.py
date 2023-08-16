@@ -17,7 +17,7 @@ class ServiceErrorY(Exception):
     message: str
 
     def __init__(
-        self, error: ErrorCode2, message: str, data: Optional[DataType] = None
+        self, error: ErrorCode2, message: str, data: Optional[ServiceBaseModel] = None
     ):
         super().__init__(message)
         self.message = message
@@ -61,12 +61,12 @@ class InternalServerError(ServiceErrorY):
 
 
 class JSONDecodeErrorData(ServiceBaseModel):
-    decodeErrorMessage: str
+    message: str
 
 
 class JSONDecodeError(ServiceErrorY):
-    def __init__(self, message: str, jde: json.JSONDecodeError):
-        data = JSONDecodeErrorData(decodeErrorMessage=str(jde))
+    def __init__(self, message: str, data: JSONDecodeErrorData):
+        # data = JSONDecodeErrorData(decodeErrorMessage=str(jde))
         super().__init__(ERRORS.json_decode_error, message, data=data)
 
 
@@ -77,11 +77,11 @@ class ContentTypeErrorData(ServiceBaseModel):
 class ContentTypeError(ServiceErrorY):
     data: ContentTypeErrorData
 
-    def __init__(self, message: str, cte: aiohttp.ContentTypeError):
-        data = ContentTypeErrorData()
+    def __init__(self, message: str, data: ContentTypeErrorData):
+        # data = ContentTypeErrorData()
 
-        if cte.headers is not None:
-            data.originalContentType = cte.headers["content-type"]
+        # if cte.headers is not None:
+        #     data.originalContentType = cte.headers["content-type"]
 
         super().__init__(ERRORS.content_type_error, message, data=data)
 

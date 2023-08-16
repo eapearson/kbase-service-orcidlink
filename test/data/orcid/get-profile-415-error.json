@@ -1,0 +1,7 @@
+{
+  "response-code": 415,
+  "developer-message": "Don't care - we don't do anything with the JSON for such errors...",
+  "user-message": "A user message here",
+  "error-code": 9016,
+  "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+}

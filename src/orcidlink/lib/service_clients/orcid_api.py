@@ -709,7 +709,7 @@ class ORCIDAPIClient(ORCIDClientBase):
                         "Not authorized for ORCID Access"
                     )
                 elif response.status != 200:
-                    # This will capture any < 500 errors, which we just
+                    # This will capture any >=300 errors, which we just
                     # in through as an internal error.
                     # Remember, actual >= 500 errors will result in an exception
                     # thrown or possibly trigger a json parse error above, as we
@@ -849,7 +849,8 @@ class ORCIDOAuthClient(ORCIDClientBase):
                         json_response = await response.json()
                     except JSONDecodeError as jde:
                         raise exceptions.JSONDecodeError(
-                            "Error decoding JSON response", jde
+                            "Error decoding JSON response",
+                            exceptions.JSONDecodeErrorData(message=str(jde)),
                         )
                     if response.status == 200:
                         # TODO: branch on error

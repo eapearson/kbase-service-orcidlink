@@ -80,11 +80,15 @@ class KBaseAuth(object):
                     json_response = await response.json()
         except aiohttp.ContentTypeError as cte:
             # Raised if it is not application/json
-            raise exceptions.ContentTypeError("Wrong content type", cte)
+            data = exceptions.ContentTypeErrorData()
+            if cte.headers is not None:
+                data.originalContentType = cte.headers["content-type"]
+            raise exceptions.ContentTypeError("Wrong content type", data=data)
         except json.JSONDecodeError as jde:
-            raise exceptions.JSONDecodeError("Error decoding JSON", jde)
-        except Exception:
-            raise exceptions.InternalServerError("Unexpected error")
+            raise exceptions.JSONDecodeError(
+                "Error decoding JSON response",
+                exceptions.JSONDecodeErrorData(message=str(jde)),
+            )
         # TODO: convert the below to ServerErrorXX
         if not response.ok:
             # The auth service should return a 500 for all errors
@@ -107,10 +111,6 @@ class KBaseAuth(object):
         token_info: TokenInfo = TokenInfo.model_validate(json_response)
         self.cache[token] = token_info
         return token_info
-
-    async def get_username(self, token: str) -> str:
-        token_info = await self.get_token_info(token)
-        return token_info.user
 
 
 # class InvalidResponse(ServiceError):

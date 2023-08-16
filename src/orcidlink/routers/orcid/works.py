@@ -22,21 +22,6 @@ from orcidlink.translators.to_orcid import (
 router = APIRouter(prefix="/orcid/works", responses={404: {"description": "Not found"}})
 
 
-#
-# Utils
-#
-
-
-async def get_link_record(kbase_token: str) -> Optional[model.LinkRecord]:
-    username = await get_username(kbase_token)
-    return await storage_model().get_link_record(username)
-
-
-#
-# Works
-#
-
-
 ##
 # Get a single work from the user linked to the KBase authentication token,
 # identified by the put_code.
@@ -61,9 +46,9 @@ async def get_work(
     """
     Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
     """
-    authorization, _ = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await get_link_record(authorization)
+    link_record = await storage_model().get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("ORCID link record not found for user")
@@ -76,25 +61,6 @@ async def get_work(
     raw_work = await orcid_api.orcid_api(token).get_work(orcid_id, put_code)
     profile = await orcid_api.orcid_api(token).get_profile(orcid_id)
     return to_service.transform_work(profile, raw_work.bulk[0].work)
-    # except errors.ServiceError as err:
-    #     # we just catch this so we can release it!
-    #     raise err
-    # except Exception as ex:
-    #     raise errors.UpstreamError(
-    #         "Exception calling ORCID API",
-    #         data={
-    #             "exception": str(ex)
-    #         }
-    #     )
-    # raise ServiceError(
-    #     error=ErrorResponse[ServiceBaseModel](
-    #         code="upstreamError",
-    #         title="Error",
-    #         message="Exception calling ORCID endpoint",
-    #         data=UnknownError(exception=str(ex)),
-    #     ),
-    #     status_code=400,
-    # )
 
 
 @router.get(
@@ -114,9 +80,9 @@ async def get_works(
     """
     Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
     """
-    authorization, _ = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await get_link_record(authorization)
+    link_record = await storage_model().get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("ORCID link record not found for user")
@@ -167,9 +133,9 @@ async def save_work(
     """
     Update a work record; the `work_update` contains the `put code`.
     """
-    authorization, _ = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await get_link_record(authorization)
+    link_record = await storage_model().get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("ORCID link record not found for user")
@@ -204,9 +170,9 @@ async def delete_work(
     put_code: int,
     authorization: str | None = AUTHORIZATION_HEADER,
 ) -> Response:
-    authorization, _ = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await get_link_record(authorization)
+    link_record = await storage_model().get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("ORCID link record not found for user")
@@ -257,9 +223,9 @@ async def create_work(
     ),
     authorization: str | None = AUTHORIZATION_HEADER,
 ) -> model.Work:
-    authorization, _ = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await get_link_record(authorization)
+    link_record = await storage_model().get_link_record(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("ORCID link record not found for user")

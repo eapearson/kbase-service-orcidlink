@@ -205,8 +205,6 @@ async def service_errory_exception_handler(
 async def internal_server_error_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
-    if isinstance(exc, ResponseValidationError):
-        print("VALIDATION ERROR!", exc.errors())
     return exception_error_response(
         errors.ERRORS.internal_server_error,
         exc,

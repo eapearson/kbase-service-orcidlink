@@ -41,6 +41,13 @@ def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
 
 
 def transform_external_id(external_id: orcid_api.ExternalId) -> model.ExternalId:
+    """
+    Transforms an ORCID external id to an orcidlink model external id.
+
+    As with many of these transformations, it simplifies the structure. The ORCID
+    structures often have fields we don't need, overly verbose property names, and
+    "value" sub-properties.
+    """
     return model.ExternalId(
         type=ExternalIdType(external_id.external_id_type),
         value=external_id.external_id_value,

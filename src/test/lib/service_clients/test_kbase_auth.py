@@ -109,3 +109,79 @@ async def test_kbase_auth_get_token_info_param_errors():
         assert client is not None
         with pytest.raises(exceptions.AuthorizationRequiredError) as e:
             await client.get_token_info("")
+
+
+async def test_kbase_auth_get_token_info_other_upstream_error():
+    """
+    We can't actually replicate a "no token" error, as we defend around that
+    condition, but we can simulate it with the special token "no_token" set up
+    in the mock auth service.
+    """
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services() as url:
+            client = KBaseAuth(url=url, timeout=1, cache_max_items=3, cache_lifetime=3)
+            assert client is not None
+            client.cache.clear()
+
+            # The call should trigger a JSON decode error, since this mimics
+            # an actual, unexpected, unhandled error response with a text
+            # body.
+            with pytest.raises(
+                exceptions.ServiceErrorY, match="Error authenticating with auth service"
+            ) as kae:
+                await client.get_token_info("other_error")
+
+            # error = kae.value.to_obj()
+            assert kae.value.error.code == errors.ERRORS.upstream_error.code
+            assert kae.value.error.title == errors.ERRORS.upstream_error.title
+            assert kae.value.message == "Error authenticating with auth service"
+
+
+async def test_kbase_auth_get_token_info_bad_json():
+    """
+    In rare cases, e.g. a "real" 500, the response is text/plain due to the way web
+    app servers work!
+    """
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services() as url:
+            client = KBaseAuth(url=url, timeout=1, cache_max_items=3, cache_lifetime=3)
+            assert client is not None
+            client.cache.clear()
+
+            # The call should trigger a JSON decode error, since this mimics
+            # an actual, unexpected, unhandled error response with a text
+            # body.
+            with pytest.raises(
+                exceptions.ServiceErrorY, match="Error decoding JSON response"
+            ) as kae:
+                await client.get_token_info("text_json")
+
+            # error = kae.value.to_obj()
+            assert kae.value.error.code == errors.ERRORS.json_decode_error.code
+            assert kae.value.error.title == errors.ERRORS.json_decode_error.title
+            assert kae.value.message == "Error decoding JSON response"
+
+
+async def test_kbase_auth_get_token_info_bad_content_type():
+    """
+    In rare cases, e.g. a "real" 500, the response is text/plain due to the way web
+    app servers work!
+    """
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services() as url:
+            client = KBaseAuth(url=url, timeout=1, cache_max_items=3, cache_lifetime=3)
+            assert client is not None
+            client.cache.clear()
+
+            # The call should trigger a JSON decode error, since this mimics
+            # an actual, unexpected, unhandled error response with a text
+            # body.
+            with pytest.raises(
+                exceptions.ServiceErrorY, match="Wrong content type"
+            ) as kae:
+                await client.get_token_info("bad_content_type")
+
+            # error = kae.value.to_obj()
+            assert kae.value.error.code == errors.ERRORS.content_type_error.code
+            assert kae.value.error.title == errors.ERRORS.content_type_error.title
+            assert kae.value.message == "Wrong content type"

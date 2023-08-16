@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, TEST_ENV
@@ -11,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from orcidlink.lib import errors, utils
 from orcidlink.lib.logger import log_event
-from orcidlink.main import app
+from orcidlink.main import app, config_to_log_level
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -202,3 +203,16 @@ def test_kbase_auth_exception_handler(fake_fs):
             assert content["title"] == errors.ERRORS.fastapi_error.title
             assert content["message"] == "Internal FastAPI Exception"
             assert content["data"]["detail"] == "Method Not Allowed"
+
+
+def test_config_to_log_level():
+    assert config_to_log_level("DEBUG") == logging.DEBUG
+    assert config_to_log_level("INFO") == logging.INFO
+    assert config_to_log_level("WARNING") == logging.WARNING
+    assert config_to_log_level("ERROR") == logging.ERROR
+    assert config_to_log_level("CRITICAL") == logging.CRITICAL
+
+
+def test_config_to_log_level_error():
+    with pytest.raises(ValueError, match='Invalid log_level config setting "FOO"'):
+        config_to_log_level("FOO")

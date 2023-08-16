@@ -745,7 +745,6 @@ class NewWork(FullWork):
     """
 
 
-
 class PersistedWorkBase(ServiceBaseModel):
     putCode: int = Field(
         title="Put Code",
@@ -806,7 +805,6 @@ class WorkUpdate(FullWork, PersistedWorkBase):
     Represents a work record which has been fetched from ORCID, modified,
     and can be sent back to update the ORCID work record
     """
-
 
 
 # TODO: unify these work types; tricky part is that we require fields for creating

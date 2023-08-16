@@ -68,8 +68,14 @@ async def test_create_link_record():
 async def test_save_link_record():
     sm = storage_model()
     await sm.reset_database()
-    await sm.create_link_record(LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1))
+    link_record = LinkRecord.model_validate(EXAMPLE_LINK_RECORD_1)
+    await sm.create_link_record(link_record)
+
     record = await sm.get_link_record("foo")
+    assert record is not None
+    assert record.orcid_auth.access_token == "foo"
+
+    record = await sm.get_link_record_for_orcid_id(link_record.orcid_auth.orcid)
     assert record is not None
     assert record.orcid_auth.access_token == "foo"
 

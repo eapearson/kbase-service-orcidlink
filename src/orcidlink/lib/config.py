@@ -40,13 +40,11 @@ class ServiceDefault(ServiceBaseModel):
 
 class ServiceDefaults(ServiceBaseModel):
     auth2: ServiceDefault = Field(...)
-    workspace: ServiceDefault = Field(...)
     orcid_link: ServiceDefault = Field(...)
 
 
 SERVICE_DEFAULTS = ServiceDefaults(
     auth2=ServiceDefault(path="auth", env_name="KBASE_SERVICE_AUTH"),
-    workspace=ServiceDefault(path="ws", env_name="KBASE_SERVICE_WORKSPACE"),
     orcid_link=ServiceDefault(path="orcidlink", env_name="KBASE_SERVICE_ORCID_LINK"),
 )
 
@@ -151,7 +149,6 @@ class RuntimeConfig(ServiceBaseModel):
 
     ui_origin: str = Field(...)
 
-    workspace_url: str = Field(...)
     auth_url: str = Field(...)
     orcidlink_url: str = Field(...)
 
@@ -199,7 +196,6 @@ class Config2:
             mongo_password=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_password),
             ui_origin=self.get_ui_origin(),
             auth_url=self.get_service_url(SERVICE_DEFAULTS.auth2),
-            workspace_url=self.get_service_url(SERVICE_DEFAULTS.workspace),
             orcidlink_url=self.get_service_url(SERVICE_DEFAULTS.orcid_link),
         )
 

@@ -41,6 +41,21 @@ class MockAuthServiceBase(MockService):
             }
         }
 
+    @staticmethod
+    def error_other():
+        return {
+            "error": {
+                # don't know about the status
+                "httpcode": 401,
+                "httpstatus": "Unauthorized",
+                "appcode": 10050,
+                "apperror": "Password / username mismatch",
+                "message": "10050 Password / username mismatch",
+                "callid": "123",
+                "time": 123,
+            }
+        }
+
 
 GET_TOKEN_FOO = load_test_data("get-token-foo")
 GET_TOKEN_BAR = load_test_data("get-token-bar")
@@ -62,8 +77,12 @@ class MockAuthService(MockAuthServiceBase):
                     self.send_json_error(self.error_no_token())
                 elif authorization.startswith("invalid_token"):
                     self.send_json_error(self.error_invalid_token())
-                elif authorization.startswith("bad_json"):
+                elif authorization.startswith("other_error"):
+                    self.send_json_error(self.error_other())
+                elif authorization.startswith("bad_content_type"):
                     self.send_text("Bad JSON!")
+                # elif authorization.startswith("bad_json"):
+                #     self.send_json("Bad JSON!")
                 elif authorization.startswith("text_json"):
                     self.send_json_text("Bad JSON!")
                 elif authorization.startswith("something_bad"):

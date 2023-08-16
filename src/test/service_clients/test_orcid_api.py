@@ -345,6 +345,23 @@ async def test_ORCIDAPI_get_profile_not_authorized():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_ORCIDAPI_get_profile_other_error():
+    with no_stderr():
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
+            # Just alter the final 6 to 7 so that it doesn't match any testing orcid
+            # profiles.
+            orcid_id = "trigger-415"
+            with pytest.raises(exceptions.ServiceErrorY):
+                client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
+                await client.get_profile(orcid_id)
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_ORCIDAPI_get_works():
     with no_stderr():
         with mock_orcid_api_service(MOCK_ORCID_API_PORT) as [_, _, url, port]:
@@ -368,6 +385,34 @@ async def test_ORCIDAPI_get_works_error():
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
             with pytest.raises(exceptions.ServiceErrorY):
                 await client.get_works(orcid_id)
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_get_work():
+    with no_stderr():
+        with mock_orcid_api_service(MOCK_ORCID_API_PORT) as [_, _, url, port]:
+            orcid_id = "0000-0003-4997-3076"
+            put_code = 1526002
+            client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
+            work = await client.get_work(orcid_id, put_code)
+            assert isinstance(work, orcid_api.GetWorkResult)
+            assert work.bulk[0].work.put_code == put_code
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_get_work_error():
+    with no_stderr():
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
+            orcid_id = "0000-0003-4997-3076"
+            put_code = 1526002
+            client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
+            with pytest.raises(exceptions.ServiceErrorY):
+                await client.get_work(orcid_id, put_code)
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)

@@ -51,7 +51,7 @@ def test_transform_contributor_self():
 
 
 def test_transform_contributor():
-    model_contributor = model.ORCIDContributorSelf(
+    model_contributor = model.ORCIDContributor(
         orcidId="1111-2222-3333-4444",
         name="bar",
         roles=[
@@ -63,7 +63,7 @@ def test_transform_contributor():
     assert len(orcid_contributor_record) == 2
 
 
-def test_transform_contributors():
+def test_transform_contributors_self():
     model_contributors = [
         model.ORCIDContributorSelf(
             orcidId="1111-2222-3333-4444",
@@ -88,4 +88,32 @@ def test_transform_contributors():
     ]
 
     orcid_contributors = to_orcid.transform_contributors_self(model_contributors)
+    assert len(orcid_contributors) == 4
+
+
+def test_transform_contributors():
+    model_contributors = [
+        model.ORCIDContributor(
+            orcidId="1111-2222-3333-4444",
+            name="bar",
+            roles=[
+                model.ContributorRole(
+                    role=model.ContributorRoleValue.conceptualization
+                ),
+                model.ContributorRole(role=model.ContributorRoleValue.validation),
+            ],
+        ),
+        model.ORCIDContributor(
+            orcidId="1111-2222-3333-4444",
+            name="mouse",
+            roles=[
+                model.ContributorRole(role=model.ContributorRoleValue.formal_analysis),
+                model.ContributorRole(
+                    role=model.ContributorRoleValue.writing_review_editing
+                ),
+            ],
+        ),
+    ]
+
+    orcid_contributors = to_orcid.transform_contributors(model_contributors)
     assert len(orcid_contributors) == 4

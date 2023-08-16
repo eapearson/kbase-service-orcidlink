@@ -20,7 +20,7 @@ from orcidlink.translators import to_service
 # Test transform_work when we have the API running and can generate some test data.
 
 
-def test_transform_work_summary():
+def test_transform_work_summary_errors():
     test_work_summary_no_doi = load_test_data("orcid", "work_summary_no_doi")
     with pytest.raises(
         ValueError,
@@ -38,6 +38,13 @@ def test_transform_work_summary():
         to_service.transform_work_summary(orcid_data)
 
 
+def test_transform_work_summary():
+    test_work_summary_data = load_test_data("orcid", "work_summary_with_doi")
+    test_work_summary = orcid_api.WorkSummary.model_validate(test_work_summary_data)
+    transformed = to_service.transform_work_summary(test_work_summary)
+    # TODO: test assertions of the transformed object.
+
+
 def test_transform_work():
     test_work = orcid_api.Work.model_validate(
         load_test_data("orcid", "work_1526002")["bulk"][0]["work"]
@@ -48,6 +55,15 @@ def test_transform_work():
     test_work_transformed = model.Work.model_validate(
         load_test_data("orcid", "work_1526002_model")
     )
+    value = to_service.transform_work(test_profile, test_work)
+    assert value.model_dump() == test_work_transformed.model_dump()
+
+    # Now repeat, but with the updated_at field removed, or set to None, as it is not always present.
+    test_work.last_modified_date = None
+    test_work_transformed.updatedAt = None
+    value = to_service.transform_work(test_profile, test_work)
+    assert value.model_dump() == test_work_transformed.model_dump()
+
     value = to_service.transform_work(test_profile, test_work)
     assert value.model_dump() == test_work_transformed.model_dump()
 

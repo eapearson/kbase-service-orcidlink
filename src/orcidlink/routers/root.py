@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Path
 from pydantic import Field
 

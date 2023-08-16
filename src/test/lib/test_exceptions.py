@@ -4,6 +4,7 @@ import pytest
 from pydantic import Field
 
 from orcidlink.lib import errors, exceptions
+from orcidlink.lib.service_clients.jsonrpc import JSONRPCError
 from orcidlink.lib.type import ServiceBaseModel
 
 # def test_ServiceError():
@@ -103,3 +104,105 @@ def test_service_error_with_data():
     assert "data" in response_json
     data = response_json["data"]
     assert "foo" in data
+
+
+def test_upstream_jsonrpc_error_error():
+    error = JSONRPCError(
+        code=123, message="This is a JSONRPC Error", data={"foo": "bar"}
+    )
+    with pytest.raises(exceptions.UpstreamJSONRPCError) as ie:
+        raise exceptions.UpstreamJSONRPCError(
+            "Hello, I'm an upstream error", data=error
+        )
+    exception = ie.value
+    # assert exception.status_code == errors.ERRORS.internal_server_error.status_code
+    assert exception.error.code == errors.ERRORS.upstream_jsonrpc_error.code
+    assert exception.message == "Hello, I'm an upstream error"
+
+
+def test_upstream_error():
+    with pytest.raises(exceptions.UpstreamError) as ie:
+        raise exceptions.UpstreamError("Hello, I'm an upstream error")
+    exception = ie.value
+    # assert exception.status_code == errors.ERRORS.internal_server_error.status_code
+    assert exception.error.code == errors.ERRORS.upstream_error.code
+    assert exception.message == "Hello, I'm an upstream error"
+
+
+def test_upstream_orcid_api_error():
+    error = exceptions.UpstreamErrorData(
+        status_code=123, message="my message", source="testing"
+    )
+    with pytest.raises(exceptions.UpstreamORCIDAPIError) as ie:
+        raise exceptions.UpstreamORCIDAPIError(
+            "Hello, I'm an orcid api error", data=error
+        )
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.upstream_orcid_error.code
+    assert exception.message == "Hello, I'm an orcid api error"
+
+
+def test_impossible_error():
+    with pytest.raises(exceptions.ImpossibleError) as ie:
+        raise exceptions.ImpossibleError("Hello, I'm an impossible error")
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.impossible_error.code
+    assert exception.message == "Hello, I'm an impossible error"
+
+
+def test_alreadly_linked_error():
+    with pytest.raises(exceptions.AlreadyLinkedError) as ie:
+        raise exceptions.AlreadyLinkedError("Hello, I'm an already linked error")
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.already_linked.code
+    assert exception.message == "Hello, I'm an already linked error"
+
+
+def test_authorization_required_error():
+    with pytest.raises(exceptions.AuthorizationRequiredError) as ie:
+        raise exceptions.AuthorizationRequiredError(
+            "Hello, I'm an authorization required error"
+        )
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.authorization_required.code
+    assert exception.message == "Hello, I'm an authorization required error"
+
+
+def test_unauthorized_error():
+    with pytest.raises(exceptions.UnauthorizedError) as ie:
+        raise exceptions.UnauthorizedError("Hello, I'm an UnauthorizedError error")
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.not_authorized.code
+    assert exception.message == "Hello, I'm an UnauthorizedError error"
+
+
+def test_not_found_error():
+    with pytest.raises(exceptions.NotFoundError) as ie:
+        raise exceptions.NotFoundError("Hello, I'm an NotFoundError error")
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.not_found.code
+    assert exception.message == "Hello, I'm an NotFoundError error"
+
+
+def test_json_decode_error():
+    data = exceptions.JSONDecodeErrorData(message="Foo and bar")
+    with pytest.raises(exceptions.JSONDecodeError) as ie:
+        raise exceptions.JSONDecodeError(
+            "Hello, I'm an JSONDecodeError error", data=data
+        )
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.json_decode_error.code
+    assert exception.message == "Hello, I'm an JSONDecodeError error"
+
+
+def test_content_type_error():
+    with pytest.raises(exceptions.ContentTypeError) as ie:
+        data = exceptions.ContentTypeErrorData(
+            originalContentType="some bad content type"
+        )
+        raise exceptions.ContentTypeError(
+            "Hello, I'm an ContentTypeError error", data=data
+        )
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.content_type_error.code
+    assert exception.message == "Hello, I'm an ContentTypeError error"
