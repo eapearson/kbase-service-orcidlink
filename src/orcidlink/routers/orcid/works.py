@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import List
 
 # import httpx
 import aiohttp
@@ -8,7 +8,7 @@ from starlette.responses import Response
 
 from orcidlink import model
 from orcidlink.lib import exceptions
-from orcidlink.lib.auth import ensure_authorization, get_username
+from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.runtime import config

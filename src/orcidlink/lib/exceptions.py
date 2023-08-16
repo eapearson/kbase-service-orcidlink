@@ -1,12 +1,10 @@
-import json
 from typing import Any, Dict, Optional
 
-import aiohttp
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import Field
 
-from orcidlink.lib.errors import ERRORS, DataType, ErrorCode2
+from orcidlink.lib.errors import ERRORS, ErrorCode2
 from orcidlink.lib.json_file import JSONLikeObject
 from orcidlink.lib.service_clients.jsonrpc import JSONRPCError
 from orcidlink.lib.type import ServiceBaseModel

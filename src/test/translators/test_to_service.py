@@ -41,7 +41,7 @@ def test_transform_work_summary_errors():
 def test_transform_work_summary():
     test_work_summary_data = load_test_data("orcid", "work_summary_with_doi")
     test_work_summary = orcid_api.WorkSummary.model_validate(test_work_summary_data)
-    transformed = to_service.transform_work_summary(test_work_summary)
+    to_service.transform_work_summary(test_work_summary)
     # TODO: test assertions of the transformed object.
 
 
