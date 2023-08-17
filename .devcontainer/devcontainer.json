@@ -16,7 +16,9 @@
 			"extensions": [
 				"ms-python.python",
 				"tamasfe.even-better-toml",
-				"mhutchie.git-graph"
+				"mhutchie.git-graph",
+				"ms-python.black-formatter",
+				"ms-python.flake8"
 			]
 		}
 	}
