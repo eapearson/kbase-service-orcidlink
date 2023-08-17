@@ -109,6 +109,12 @@ class UpstreamError(ServiceErrorY):
         super().__init__(ERRORS.upstream_error, message)
 
 
+# ORCID Errors
+class ORCIDProfileNamePrivate(ServiceErrorY):
+    def __init__(self, message: str):
+        super().__init__(ERRORS.orcid_profile_name_private, message)
+
+
 # Used when boxed in by the type system.
 class ImpossibleError(ServiceErrorY):
     def __init__(self, message: str):

@@ -123,22 +123,38 @@ As described in a section below, several of the GHA workflows will push an image
 - `GCHR_USERNAME`
 - `GHCR_TOKEN`
 
+These secrets are provided by KBase and will be applied across repos in the `kbase` organization. However, if you are experimenting with GHA workflows and the like, you can fork the repo and supply these yourself, using a developer token for the `GHCR_TOKEN`, and your username for the `GHCR_USERNAME`.
+
 ### Deployment
 
 Service deployment requires that the following environment variables be provided (they are documented in a section below):
 
 - `KBASE_ENDPOINT`
-- `ORCID_API_BASE_URL`
-- `ORCID_OAUTH_BASE_URL`
-- `ORCID_CLIENT_ID`
-- `ORCID_CLIENT_SECRET`
-- `MONGO_HOST`
-- `MONGO_PORT`
-- `MONGO_DATABASE`
-- `MONGO_USERNAME`
-- `MONGO_PASSWORD`
+- `UI_ORIGIN`
+- `REQUEST_TIMEOUT`
+- `TOKEN_CACHE_LIFETIME`
+- `TOKEN_CACHE_MAX_ITEMS`
+- `LINKING_SESSION_LIFETIME`
 
-Of these, the only ones which will unknown to KBase devops are the ORCID variables. The URLs are documented below, and instructions for obtaining the client id and secret in the next section.
+- services
+    - `KBASE_SERVICE_AUTH`
+    - `KBASE_SERVICE_ORCID_LINK`
+
+- orcid related
+    - `ORCID_API_BASE_URL`
+    - `ORCID_OAUTH_BASE_URL`
+    - `ORCID_CLIENT_ID`
+    - `ORCID_CLIENT_SECRET`
+
+- mongo db related
+    - `MONGO_HOST`
+    - `MONGO_PORT`
+    - `MONGO_DATABASE`
+    - `MONGO_USERNAME`
+    - `MONGO_PASSWORD`
+
+
+Some of these must are required - they must be supplied as environment variables or the service will fail to start. Others have sensible defaults and need only be supplied if the defaults need to be overriden.
 
 ### Additional ORCID Requirements
 

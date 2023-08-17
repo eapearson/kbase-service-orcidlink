@@ -206,3 +206,14 @@ def test_content_type_error():
     exception = ie.value
     assert exception.error.code == errors.ERRORS.content_type_error.code
     assert exception.message == "Hello, I'm an ContentTypeError error"
+
+
+def test_orcid_profile_name_private_error():
+    with pytest.raises(exceptions.ORCIDProfileNamePrivate) as ie:
+       
+        raise exceptions.ORCIDProfileNamePrivate(
+            "Name is private"
+        )
+    exception = ie.value
+    assert exception.error.code == errors.ERRORS.orcid_profile_name_private.code
+    assert exception.message == "Name is private"

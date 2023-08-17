@@ -17,6 +17,7 @@ ErrorCode = Literal[
     1051,
     1052,
     1060,
+    1061,
     1070,
     1080,
     1081,
@@ -47,6 +48,7 @@ class Errors:
     upstream_orcid_error: ErrorCode2
     fastapi_error: ErrorCode2
     request_validation_error: ErrorCode2
+    orcid_profile_name_private: ErrorCode2
     linking_session_continue_invalid_param: ErrorCode2
     linking_session_error: ErrorCode2
     linking_session_already_linked_orcid: ErrorCode2
@@ -92,7 +94,13 @@ ERRORS = Errors(
         code=1060, title="FastAPI Error", description="", status_code=400
     ),
     request_validation_error=ErrorCode2(
-        code=1070, title="Request Validation Error", description="", status_code=400
+        code=1061, title="Request Validation Error", description="", status_code=400
+    ),
+    orcid_profile_name_private=ErrorCode2(
+        code=1070,
+        title="ORCID Profile Name is Private",
+        description="",
+        status_code=400,
     ),
     linking_session_continue_invalid_param=ErrorCode2(
         code=1080,

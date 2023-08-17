@@ -107,7 +107,8 @@ async def get_works(
                     for work_summary in group.work_summary
                     # TODO: replace with source_client_id and compare to the client id
                     # in the config.
-                    if work_summary.source.source_name.value == "KBase CI"
+                    if work_summary.source.source_name is not None
+                    and work_summary.source.source_name.value == "KBase CI"
                 ],
             )
         )

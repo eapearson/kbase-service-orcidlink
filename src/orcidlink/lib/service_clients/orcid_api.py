@@ -53,8 +53,8 @@ class ORCIDPersonName(ServiceBaseModel):
     given_names: StringValue = Field(
         validation_alias="given-names", serialization_alias="given-names"
     )
-    family_name: StringValue = Field(
-        validation_alias="family-name", serialization_alias="family-name"
+    family_name: Optional[StringValue] = Field(
+        default=None, validation_alias="family-name", serialization_alias="family-name"
     )
     credit_name: Optional[StringValue] = Field(
         default=None, validation_alias="credit-name", serialization_alias="credit-name"
@@ -111,8 +111,23 @@ class ORCIDSource(ServiceBaseModel):
         validation_alias="source-client-id",
         serialization_alias="source-client-id",
     )
-    source_name: StringValue = Field(
-        validation_alias="source-name", serialization_alias="source-name"
+    source_name: Optional[StringValue] = Field(
+        default=None, validation_alias="source-name", serialization_alias="source-name"
+    )
+    assertion_origin_orcid: Optional[StringValue] = Field(
+        default=None,
+        validation_alias="assertion-origin-orcid",
+        serialization_alias="assertion-origin-orcid",
+    )
+    assertion_origin_client_id: Optional[StringValue] = Field(
+        default=None,
+        validation_alias="assertion-origin-client-id",
+        serialization_alias="assertion-origin-client-id",
+    )
+    assertion_origin_name: Optional[StringValue] = Field(
+        default=None,
+        validation_alias="assertion-origin-name",
+        serialization_alias="assertion-origin-name",
     )
     # just null in my record
     # assertion_origin_orcid
@@ -150,7 +165,7 @@ class ORCIDEmails(ServiceBaseModel):
 
 
 class ORCIDPerson(ServiceBaseModel):
-    name: ORCIDPersonName = Field(...)
+    name: ORCIDPersonName | None = Field(default=None)
     other_names: ORCIDOtherNames = Field(
         validation_alias="other-names", serialization_alias="other-names"
     )
@@ -324,7 +339,8 @@ class PersistedWork(ServiceBaseModel):
     # TODO: either defaults to str, and overridden in the standalone to optional,
     # or defaults to optional, and becomes required for summary.
     path: Optional[str] = Field(default=None)
-    # publication_date: Date = Field(validation_alias="publication-date", serialization_alias="publication-date")
+    # publication_date: Date = Field(validation_alias="publication-date", 
+    # serialization_alias="publication-date")
     source: ORCIDSource = Field(...)
     visibility: Visibility = Field(...)
     journal_title: Optional[StringValue] = Field(
@@ -398,7 +414,8 @@ class ORCIDDisambiguatedOrganization(ServiceBaseModel):
 class ORCIDOrganization(ServiceBaseModel):
     name: str = Field(...)
     address: ORCIDOrganizationAddress = Field(...)
-    disambiguated_organization: ORCIDDisambiguatedOrganization = Field(
+    disambiguated_organization: Optional[ORCIDDisambiguatedOrganization] = Field(
+        default=None,
         validation_alias="disambiguated-organization",
         serialization_alias="disambiguated-organization",
     )
@@ -470,16 +487,17 @@ class Affiliations(ServiceBaseModel):
 
 
 class ORCIDActivitiesSummary(ServiceBaseModel):
-    distinctions: Affiliations = Field(...)
-    educations: Affiliations = Field(...)
     employments: Affiliations = Field(...)
+    # We need to do these activites one by one, as they are somewhat complex
+    # distinctions: Affiliations = Field(...)
+    # educations: Affiliations = Field(...)
     # fundings
     # invited_positions
     # memberships
     # peer_reviews
     # research_sources
     # services
-    works: Works
+    # works: Works
     path: str = Field(...)
     last_modified_date: ORCIDIntValue | None = Field(
         default=None,
