@@ -339,7 +339,7 @@ class PersistedWork(ServiceBaseModel):
     # TODO: either defaults to str, and overridden in the standalone to optional,
     # or defaults to optional, and becomes required for summary.
     path: Optional[str] = Field(default=None)
-    # publication_date: Date = Field(validation_alias="publication-date", 
+    # publication_date: Date = Field(validation_alias="publication-date",
     # serialization_alias="publication-date")
     source: ORCIDSource = Field(...)
     visibility: Visibility = Field(...)

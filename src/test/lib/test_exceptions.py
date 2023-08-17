@@ -210,10 +210,7 @@ def test_content_type_error():
 
 def test_orcid_profile_name_private_error():
     with pytest.raises(exceptions.ORCIDProfileNamePrivate) as ie:
-       
-        raise exceptions.ORCIDProfileNamePrivate(
-            "Name is private"
-        )
+        raise exceptions.ORCIDProfileNamePrivate("Name is private")
     exception = ie.value
     assert exception.error.code == errors.ERRORS.orcid_profile_name_private.code
     assert exception.message == "Name is private"

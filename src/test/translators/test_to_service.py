@@ -7,7 +7,7 @@ from orcidlink.lib.service_clients import orcid_api
 from orcidlink.lib.service_clients.orcid_api import ExternalId, ExternalIds, StringValue
 from orcidlink.translators import to_service
 
-# TODO: should rename file to test_orcid.py, but need a test config tweak, because it 
+# TODO: should rename file to test_orcid.py, but need a test config tweak, because it
 # gets confused since there is already a test_orcid.py elsewhere...
 
 
@@ -58,7 +58,7 @@ def test_transform_work():
     value = to_service.transform_work(test_profile, test_work)
     assert value.model_dump() == test_work_transformed.model_dump()
 
-    # Now repeat, but with the updated_at field removed, or set to None, as it is not 
+    # Now repeat, but with the updated_at field removed, or set to None, as it is not
     # always present.
     test_work.last_modified_date = None
     test_work_transformed.updatedAt = None
@@ -216,12 +216,16 @@ def test_transform_orcid_profile_no_credit_name():
     raw_test_profile["person"]["name"]["credit-name"] = None
     assert raw_test_profile["person"]["name"]["credit-name"] is None
     orcid_profile = orcid_api.ORCIDProfile.model_validate(raw_test_profile)
-    assert orcid_profile.person.name is not None and \
-        orcid_profile.person.name.credit_name is None
+    assert (
+        orcid_profile.person.name is not None
+        and orcid_profile.person.name.credit_name is None
+    )
     model_profile = to_service.orcid_profile(orcid_profile)
     assert model_profile.orcidId == "0000-0003-4997-3076"
-    assert model_profile.nameGroup.fields is not None and \
-        model_profile.nameGroup.fields.creditName is None
+    assert (
+        model_profile.nameGroup.fields is not None
+        and model_profile.nameGroup.fields.creditName is None
+    )
 
 
 def test_transform_orcid_profile_affiliation_group_not_list():
