@@ -662,6 +662,13 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
+<a name="header_type_orcidbiographyfields"></a>
+##### ORCIDBiographyFields
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>bio</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
+
+
+
 <a name="header_type_orcidcitation"></a>
 ##### ORCIDCitation
 
@@ -703,10 +710,45 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 
 
 
+<a name="header_type_orcidemailfields"></a>
+##### ORCIDEmailFields
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>emailAddresses</td><td>array</td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidfieldgroup_orcidbiographyfields_"></a>
+##### ORCIDFieldGroup_ORCIDBiographyFields_
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>private</td><td>boolean</td><td>✓</td></tr><tr><td>fields</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_orcidbiographyfields">ORCIDBiographyFields</a></div><div>null</div></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidfieldgroup_orcidemailfields_"></a>
+##### ORCIDFieldGroup_ORCIDEmailFields_
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>private</td><td>boolean</td><td>✓</td></tr><tr><td>fields</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_orcidemailfields">ORCIDEmailFields</a></div><div>null</div></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidfieldgroup_orcidnamefields_"></a>
+##### ORCIDFieldGroup_ORCIDNameFields_
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>private</td><td>boolean</td><td>✓</td></tr><tr><td>fields</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_orcidnamefields">ORCIDNameFields</a></div><div>null</div></td><td>✓</td></tr></tbody></table>
+
+
+
+<a name="header_type_orcidnamefields"></a>
+##### ORCIDNameFields
+
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>firstName</td><td>string</td><td>✓</td></tr><tr><td>lastName</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>creditName</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
+
+
+
 <a name="header_type_orcidprofile"></a>
 ##### ORCIDProfile
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td>string</td><td>✓</td></tr><tr><td>firstName</td><td>string</td><td>✓</td></tr><tr><td>lastName</td><td>string</td><td>✓</td></tr><tr><td>creditName</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>bio</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>distinctions</td><td>array</td><td>✓</td></tr><tr><td>education</td><td>array</td><td>✓</td></tr><tr><td>employment</td><td>array</td><td>✓</td></tr><tr><td>emailAddresses</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>orcidId</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>nameGroup</td><td><a href="#user-content-header_type_orcidfieldgroup_orcidnamefields_">ORCIDFieldGroup_ORCIDNameFields_</a></td><td>✓</td></tr><tr><td>biographyGroup</td><td><a href="#user-content-header_type_orcidfieldgroup_orcidbiographyfields_">ORCIDFieldGroup_ORCIDBiographyFields_</a></td><td>✓</td></tr><tr><td>emailGroup</td><td><a href="#user-content-header_type_orcidfieldgroup_orcidemailfields_">ORCIDFieldGroup_ORCIDEmailFields_</a></td><td>✓</td></tr><tr><td>employment</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
@@ -769,28 +811,28 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 <a name="header_type_workinput"></a>
 ##### WorkInput
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfinput">ORCIDContributorSelfInput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfinput">ORCIDContributorSelfInput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
 <a name="header_type_workoutput"></a>
 ##### WorkOutput
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfoutput">ORCIDContributorSelfOutput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td>✓</td></tr><tr><td>source</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td>string</td><td>✓</td></tr><tr><td>shortDescription</td><td>string</td><td>✓</td></tr><tr><td>citation</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcitation">ORCIDCitation</a></div></td><td>✓</td></tr><tr><td>selfContributor</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_orcidcontributorselfoutput">ORCIDContributorSelfOutput</a></div></td><td>✓</td></tr><tr><td>otherContributors</td><td>array</td><td>✓</td></tr></tbody></table>
 
 
 
 <a name="header_type_worksummaryinput"></a>
 ##### WorkSummaryInput
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td></td></tr><tr><td>source</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td></td></tr></tbody></table>
 
 
 
 <a name="header_type_worksummaryoutput"></a>
 ##### WorkSummaryOutput
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td>✓</td></tr><tr><td>source</td><td>string</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>putCode</td><td>integer</td><td>✓</td></tr><tr><td>createdAt</td><td>integer</td><td>✓</td></tr><tr><td>updatedAt</td><td><div><i>Any Of</i></div><div>integer</div><div>null</div></td><td>✓</td></tr><tr><td>source</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>date</td><td>string</td><td>✓</td></tr><tr><td>workType</td><td><div><i>All Of</i></div><div><a href="#user-content-header_type_worktype">WorkType</a></div></td><td>✓</td></tr><tr><td>url</td><td>string</td><td>✓</td></tr><tr><td>doi</td><td>string</td><td>✓</td></tr><tr><td>externalIds</td><td>array</td><td>✓</td></tr><tr><td>journal</td><td><div><i>Any Of</i></div><div>string</div><div>null</div></td><td>✓</td></tr></tbody></table>
 
 
 

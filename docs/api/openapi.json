@@ -1663,6 +1663,7 @@
                             1051,
                             1052,
                             1060,
+                            1061,
                             1070,
                             1080,
                             1081,
@@ -1721,6 +1722,7 @@
                             1051,
                             1052,
                             1060,
+                            1061,
                             1070,
                             1080,
                             1081,
@@ -2260,6 +2262,26 @@
                 ],
                 "title": "ORCIDAuthPublicNonOwner"
             },
+            "ORCIDBiographyFields": {
+                "properties": {
+                    "bio": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Bio"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "bio"
+                ],
+                "title": "ORCIDBiographyFields"
+            },
             "ORCIDCitation": {
                 "properties": {
                     "type": {
@@ -2423,18 +2445,109 @@
                 ],
                 "title": "ORCIDContributorSelf"
             },
-            "ORCIDProfile": {
+            "ORCIDEmailFields": {
                 "properties": {
-                    "orcidId": {
-                        "type": "string",
-                        "title": "Orcidid"
+                    "emailAddresses": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Emailaddresses"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "emailAddresses"
+                ],
+                "title": "ORCIDEmailFields"
+            },
+            "ORCIDFieldGroup_ORCIDBiographyFields_": {
+                "properties": {
+                    "private": {
+                        "type": "boolean",
+                        "title": "Private"
                     },
+                    "fields": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ORCIDBiographyFields"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "private",
+                    "fields"
+                ],
+                "title": "ORCIDFieldGroup[ORCIDBiographyFields]"
+            },
+            "ORCIDFieldGroup_ORCIDEmailFields_": {
+                "properties": {
+                    "private": {
+                        "type": "boolean",
+                        "title": "Private"
+                    },
+                    "fields": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ORCIDEmailFields"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "private",
+                    "fields"
+                ],
+                "title": "ORCIDFieldGroup[ORCIDEmailFields]"
+            },
+            "ORCIDFieldGroup_ORCIDNameFields_": {
+                "properties": {
+                    "private": {
+                        "type": "boolean",
+                        "title": "Private"
+                    },
+                    "fields": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ORCIDNameFields"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "private",
+                    "fields"
+                ],
+                "title": "ORCIDFieldGroup[ORCIDNameFields]"
+            },
+            "ORCIDNameFields": {
+                "properties": {
                     "firstName": {
                         "type": "string",
                         "title": "Firstname"
                     },
                     "lastName": {
-                        "type": "string",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Lastname"
                     },
                     "creditName": {
@@ -2447,8 +2560,19 @@
                             }
                         ],
                         "title": "Creditname"
-                    },
-                    "bio": {
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "firstName",
+                    "lastName",
+                    "creditName"
+                ],
+                "title": "ORCIDNameFields"
+            },
+            "ORCIDProfile": {
+                "properties": {
+                    "orcidId": {
                         "anyOf": [
                             {
                                 "type": "string"
@@ -2457,21 +2581,16 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Bio"
+                        "title": "Orcidid"
                     },
-                    "distinctions": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDAffiliation"
-                        },
-                        "type": "array",
-                        "title": "Distinctions"
+                    "nameGroup": {
+                        "$ref": "#/components/schemas/ORCIDFieldGroup_ORCIDNameFields_"
                     },
-                    "education": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDAffiliation"
-                        },
-                        "type": "array",
-                        "title": "Education"
+                    "biographyGroup": {
+                        "$ref": "#/components/schemas/ORCIDFieldGroup_ORCIDBiographyFields_"
+                    },
+                    "emailGroup": {
+                        "$ref": "#/components/schemas/ORCIDFieldGroup_ORCIDEmailFields_"
                     },
                     "employment": {
                         "items": {
@@ -2479,26 +2598,15 @@
                         },
                         "type": "array",
                         "title": "Employment"
-                    },
-                    "emailAddresses": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "title": "Emailaddresses"
                     }
                 },
                 "type": "object",
                 "required": [
                     "orcidId",
-                    "firstName",
-                    "lastName",
-                    "creditName",
-                    "bio",
-                    "distinctions",
-                    "education",
-                    "employment",
-                    "emailAddresses"
+                    "nameGroup",
+                    "biographyGroup",
+                    "emailGroup",
+                    "employment"
                 ],
                 "title": "ORCIDProfile"
             },
@@ -2719,7 +2827,14 @@
                         "description": "Moment in time at which the work record was updated; in epoch milliseconds."
                     },
                     "source": {
-                        "type": "string",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Source",
                         "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
                     },
@@ -2804,7 +2919,6 @@
                 "required": [
                     "putCode",
                     "createdAt",
-                    "source",
                     "title",
                     "date",
                     "workType",
@@ -2844,7 +2958,14 @@
                         "description": "Moment in time at which the work record was updated; in epoch milliseconds."
                     },
                     "source": {
-                        "type": "string",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Source",
                         "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
                     },
@@ -2970,7 +3091,14 @@
                         "description": "Moment in time at which the work record was updated; in epoch milliseconds."
                     },
                     "source": {
-                        "type": "string",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Source",
                         "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
                     },
@@ -3028,7 +3156,6 @@
                 "required": [
                     "putCode",
                     "createdAt",
-                    "source",
                     "title",
                     "date",
                     "workType",
@@ -3063,7 +3190,14 @@
                         "description": "Moment in time at which the work record was updated; in epoch milliseconds."
                     },
                     "source": {
-                        "type": "string",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Source",
                         "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
                     },
