@@ -1,4 +1,4 @@
-FROM python:3.11.5-slim-bullseye
+FROM python:3.11.5-slim-bookworm
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -33,9 +33,6 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
 # TODO: can it be removed now?
 RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
 
-# Don't need curl any more.
-RUN apt-get purge -y curl && apt-get autoremove -y
-
 # Annoyingly it puts it here.
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
@@ -63,6 +60,9 @@ WORKDIR /kb/module
 RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install --no-dev
 
 RUN poetry run python src/misc/git-info.py
+
+# Don't need curl or git any more.
+RUN apt-get purge -y curl git && apt-get autoremove -y
 
 RUN rm -rf /kb/module/.git && rm -rf /kb/module/src/misc
 

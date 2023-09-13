@@ -1,4 +1,4 @@
-FROM python:3.11.5-alpine
+FROM python:3.11.5-slim-bookworm
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -15,8 +15,7 @@ LABEL org.opencontainers.image.licenses=MIT
 # -----------------------------------------
 
 # We need curl to install poetry; git for the git-info tool.
-#RUN apt-get update && apt-get install -y curl git
-RUN apk add curl git bash
+RUN apt-get update && apt-get install -y curl git openssh-client
 
 SHELL ["/bin/bash", "-c"]
 
