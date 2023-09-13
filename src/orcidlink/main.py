@@ -31,7 +31,7 @@ from orcidlink.lib.responses import (
     exception_error_response,
 )
 from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.routers import link, linking_sessions, root
+from orcidlink.routers import link, linking_sessions, manage, root
 from orcidlink.routers.orcid import profile, works
 from orcidlink.runtime import config, stats
 
@@ -141,6 +141,7 @@ app.include_router(link.router)
 app.include_router(linking_sessions.router)
 app.include_router(profile.router)
 app.include_router(works.router)
+app.include_router(manage.router)
 
 ###############################################################################
 #

@@ -1,4 +1,5 @@
 import json
+import os
 from test.mocks.data import load_test_data
 from test.mocks.mock_server import MockService
 from time import sleep
@@ -6,27 +7,29 @@ from urllib.parse import parse_qs
 
 from orcidlink.lib import utils
 
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
+
 
 class MockORCIDAPI(MockService):
     def do_GET(self):
         if self.path == "/0000-0003-4997-3076/record":
-            test_data = load_test_data("orcid", "profile")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "profile")
             self.send_json(test_data)
 
         elif self.path == "/0000-0003-4997-3076/email":
-            test_data = load_test_data("orcid", "email")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "email")
             self.send_json(test_data)
 
         elif self.path == "/0000-0003-4997-3076/works":
-            test_data = load_test_data("orcid", "works_x")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "works_x")
             self.send_json(test_data)
 
         elif self.path == "/0000-0003-4997-3076/works/1526002":
-            work_record = load_test_data("orcid", "work_1526002")
+            work_record = load_test_data(TEST_DATA_DIR, "orcid", "work_1526002")
             self.send_json(work_record)
 
         elif self.path == "/0000-0003-4997-3076/works/1487805":
-            work_record = load_test_data("orcid", "work_1487805")
+            work_record = load_test_data(TEST_DATA_DIR, "orcid", "work_1487805")
             self.send_json(work_record)
 
         elif self.path == "/0000-0003-4997-3076/works/123":
@@ -56,7 +59,7 @@ class MockORCIDAPI(MockService):
 
     def do_DELETE(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
-            # work_record = load_test_data("orcid", "work_1526002")
+            # work_record = load_test_data(TEST_DATA_DIR, "orcid", "work_1526002")
             # test_data = {"bulk": [{"work": work_record}]}
             self.send_empty()
         elif self.path == "/0000-0003-4997-3076/work/123":
@@ -80,7 +83,9 @@ class MockORCIDAPI(MockService):
 
     def do_PUT(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
-            test_data = load_test_data("orcid", "work_1526002")["bulk"][0]["work"]
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "work_1526002")["bulk"][
+                0
+            ]["work"]
 
             # simulates an updated last modified date.
             test_data["last-modified-date"]["value"] = utils.posix_time_millis()
@@ -108,44 +113,46 @@ class MockORCIDAPI(MockService):
                 # don't bother with sending data, as the connection
                 # will probably be dead by the time this is reached.
             else:
-                test_work = load_test_data("orcid", "work_1526002")
+                test_work = load_test_data(TEST_DATA_DIR, "orcid", "work_1526002")
                 self.send_json(test_work)
 
 
 class MockORCIDAPIWithErrors(MockService):
     def do_GET(self):
         if self.path == "/0000-0003-4997-3076/record":
-            test_data = load_test_data("orcid", "profile")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "profile")
             self.send_json(test_data)
 
         elif self.path == "/0000-0003-4997-3076/email":
-            test_data = load_test_data("orcid", "email")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "email")
             self.send_json(test_data)
 
         elif self.path == "/0000-0003-4997-3076/works":
-            test_data = load_test_data("orcid", "orcid-works-error")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "orcid-works-error")
             self.send_json_error(test_data)
 
         elif self.path == "/0000-0003-4997-3076/works/1526002":
-            test_data = load_test_data("orcid", "orcid-works-error")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "orcid-works-error")
             self.send_json_error(test_data)
 
         elif self.path == "/trigger-401/record":
-            test_data = load_test_data("orcid", "get-profile-401-error")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "get-profile-401-error")
             self.send_json_error(test_data, 401)
 
         elif self.path == "/trigger-415/record":
-            test_data = load_test_data("orcid", "get-profile-415-error")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "get-profile-415-error")
             self.send_json_error(test_data, 415)
 
         else:
             # not found!
-            test_data = load_test_data("orcid", "get-profile-not-found-error")
+            test_data = load_test_data(
+                TEST_DATA_DIR, "orcid", "get-profile-not-found-error"
+            )
             self.send_json_error(test_data, 404)
 
     def do_PUT(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
-            test_data = load_test_data("orcid", "put_work_error")
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "put_work_error")
             self.send_json_error(test_data)
 
 

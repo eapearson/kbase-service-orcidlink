@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from orcidlink.lib import exceptions
-from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
+from orcidlink.lib.service_clients.kbase_auth import AccountInfo, KBaseAuth, TokenInfo
 from orcidlink.runtime import config
 
 """
@@ -11,17 +11,17 @@ A
 
 async def get_username(authorization: str) -> str:
     """
-    Given a KBase browser auth token (aka "kbase_session"), return the username associated with the
-    user account.
+    Given a KBase browser auth token (aka "kbase_session"), return the username
+    associated with the user account.
 
-    Note that this relies extensively upon the "config" module, which in turn relies upon a
-    configuration file being available in the file sysresponsestem.
+    Note that this relies extensively upon the "config" module, which in turn relies
+    upon a configuration file being available in the file sysresponsestem.
     """
     auth_client = KBaseAuth(
         url=config().auth_url,
         timeout=config().request_timeout,
-        cache_lifetime=config().token_cache_lifetime,
-        cache_max_items=config().token_cache_lifetime,
+        # cache_lifetime=config().token_cache_lifetime,
+        # cache_max_items=config().token_cache_lifetime,
     )
 
     return (await auth_client.get_token_info(authorization)).user
@@ -33,7 +33,8 @@ async def ensure_authorization(
     """
     Ensures that the "authorization" value, the KBase auth token, is
     not none. This is a convenience function for endpoints, and provides consistent
-    error handling. Its sole purpose is to ensure that the provided token is good and valid.
+    error handling. Its sole purpose is to ensure that the provided token is good and
+    valid.
     """
     if authorization is None or authorization == "":
         raise exceptions.AuthorizationRequiredError(
@@ -43,11 +44,35 @@ async def ensure_authorization(
     auth = KBaseAuth(
         url=config().auth_url,
         timeout=config().request_timeout,
-        cache_lifetime=config().token_cache_lifetime,
-        cache_max_items=config().token_cache_lifetime,
+        # cache_lifetime=config().token_cache_lifetime,
+        # cache_max_items=config().token_cache_lifetime,
     )
     token_info = await auth.get_token_info(authorization)
     return authorization, token_info
+
+
+async def ensure_account(
+    authorization: str | None,
+) -> Tuple[str, AccountInfo]:
+    """
+    Ensures that the "authorization" value, the KBase auth token, is
+    not none. This is a convenience function for endpoints, and provides consistent
+    error handling. Its sole purpose is to ensure that the provided token is good and
+    valid.
+    """
+    if authorization is None or authorization == "":
+        raise exceptions.AuthorizationRequiredError(
+            "Authorization required but missing"
+        )
+
+    auth = KBaseAuth(
+        url=config().auth_url,
+        timeout=config().request_timeout,
+        # cache_lifetime=config().token_cache_lifetime,
+        # cache_max_items=config().token_cache_lifetime,
+    )
+    account_info = await auth.get_me(authorization)
+    return authorization, account_info
 
 
 # def ensure_authorization_cookie(

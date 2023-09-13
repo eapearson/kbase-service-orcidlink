@@ -4,9 +4,9 @@ import sys
 from os import path
 from typing import List
 
-import toml
+import tomli_w
 
-from orcidlink.lib import utils
+from orcidlink.runtime import service_path
 
 
 def print_lines(prefix: str, lines: List[str]):
@@ -86,15 +86,15 @@ def git_config():
 
 def save_info(info, dest):
     pathlib.Path(dest).mkdir(exist_ok=True)
-    with open(path.join(dest, "git-info.toml"), "w") as fout:
-        toml.dump(
+    with open(path.join(dest, "git-info.toml"), "wb") as fout:
+        tomli_w.dump(
             info,
             fout,
         )
 
 
 def main():
-    dest = utils.module_path("build")
+    dest = service_path("build")
     git_config()
     info = git_info()
     url = git_url()

@@ -6,7 +6,7 @@ MOCK_ORCID_OAUTH_PORT = 9998
 
 TEST_ENV = {
     "KBASE_ENDPOINT": f"http://127.0.0.1:{MOCK_KBASE_SERVICES_PORT}/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "SERVICE_DIRECTORY": os.environ.get("SERVICE_DIRECTORY"),
     "MONGO_HOST": "mongo",
     "MONGO_PORT": "27017",
     "MONGO_DATABASE": "orcidlink",

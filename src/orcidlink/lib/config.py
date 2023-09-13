@@ -1,23 +1,23 @@
 """
 Configuration support for this service
 
-A KBase service requires at least a minimal, and often substantial, configuration in order to operate.
-Some configuration, like the base url for services, differs between each KBase environment.
-Other configuration represents information that may change over time, such as urls.
-Sill other configuration data contains private information like credentials, which must be well controlled.
+A KBase service requires at least a minimal, and often substantial, configuration in
+order to operate. Some configuration, like the base url for services, differs between
+each KBase environment. Other configuration represents information that may change over
+time, such as urls. Sill other configuration data contains private information like
+credentials, which must be well controlled.
 
-Because configuration is needed throughout the service's code, it is provided by means of a module variable
-which is populated when the module is first loaded.
+Because configuration is needed throughout the service's code, it is provided by means
+of a module variable which is populated when the module is first loaded.
 """
 import os
+import tomllib
 from typing import Optional
 from urllib.parse import urljoin, urlparse
 
-import toml
 from pydantic import Field
 
 from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.lib.utils import module_dir
 from orcidlink.model import ServiceDescription
 
 
@@ -90,11 +90,13 @@ class StrConstantDefault(ServiceBaseModel):
 
 
 class StrConstantDefaults(ServiceBaseModel):
+    service_directory: StrConstantDefault = Field(...)
     kbase_endpoint: StrConstantDefault = Field(...)
     orcid_api_base_url: StrConstantDefault = Field(...)
     orcid_oauth_base_url: StrConstantDefault = Field(...)
     orcid_client_id: StrConstantDefault = Field(...)
     orcid_client_secret: StrConstantDefault = Field(...)
+    orcid_link_manager_role: StrConstantDefault = Field(...)
     mongo_host: StrConstantDefault = Field(...)
     mongo_database: StrConstantDefault = Field(...)
     mongo_username: StrConstantDefault = Field(...)
@@ -104,6 +106,7 @@ class StrConstantDefaults(ServiceBaseModel):
 
 
 STR_CONSTANT_DEFAULTS = StrConstantDefaults(
+    service_directory=StrConstantDefault(required=True, env_name="SERVICE_DIRECTORY"),
     kbase_endpoint=StrConstantDefault(required=True, env_name="KBASE_ENDPOINT"),
     orcid_api_base_url=StrConstantDefault(required=True, env_name="ORCID_API_BASE_URL"),
     orcid_oauth_base_url=StrConstantDefault(
@@ -118,6 +121,9 @@ STR_CONSTANT_DEFAULTS = StrConstantDefaults(
         env_name="ORCID_SCOPES",
         value="/read-limited /activities/update openid",
     ),
+    orcid_link_manager_role=StrConstantDefault(
+        required=True, env_name="ORCID_LINK_MANAGER_ROLE", value="orcidlink_admin"
+    ),
     mongo_host=StrConstantDefault(required=True, env_name="MONGO_HOST"),
     mongo_database=StrConstantDefault(required=True, env_name="MONGO_DATABASE"),
     mongo_username=StrConstantDefault(required=True, env_name="MONGO_USERNAME"),
@@ -127,6 +133,7 @@ STR_CONSTANT_DEFAULTS = StrConstantDefaults(
 
 
 class RuntimeConfig(ServiceBaseModel):
+    service_directory: str = Field(...)
     kbase_endpoint: str = Field(...)
     request_timeout: int = Field(...)
     token_cache_lifetime: int = Field(...)
@@ -162,6 +169,9 @@ class Config2:
             STR_CONSTANT_DEFAULTS.kbase_endpoint
         )
         self.runtime_config = RuntimeConfig(
+            service_directory=self.get_str_constant(
+                STR_CONSTANT_DEFAULTS.service_directory
+            ),
             kbase_endpoint=self.get_str_constant(STR_CONSTANT_DEFAULTS.kbase_endpoint),
             request_timeout=self.get_int_constant(
                 INT_CONSTANT_DEFAULTS.request_timeout
@@ -219,7 +229,8 @@ class Config2:
             return constant_default.value
 
         raise ValueError(
-            f'The environment variable "{constant_default.env_name}" is missing and there is no default value'
+            f'The environment variable "{constant_default.env_name}" is missing '
+            "and there is no default value"
         )
 
     # String constants
@@ -234,29 +245,38 @@ class Config2:
             return constant_default.value
 
         raise ValueError(
-            f'The environment variable "{constant_default.env_name}" is missing and there is no default value'
+            f'The environment variable "{constant_default.env_name}" is missing'
+            " and there is no default value"
         )
 
     # misc
 
     def get_ui_origin(self) -> str:
         endpoint_url = urlparse(self.kbase_endpoint)
-        # [protocol, _, endpoint_host] = self.kbase_endpoint.split('/')[2]
+
+        # We need to handle the ui endpoint for prod specially, as it operates
+        # with the service host kbase.us and ui host narrative.kbase.us
+        # The kbase-wide "KBASE_ENDPOINT" is for services, but from it we can
+        # determine the ui endpoint.
         host = (
             "narrative.kbase.us"
             if endpoint_url.hostname == "kbase.us"
             else endpoint_url.netloc
         )
-        return f"{endpoint_url.scheme}://{endpoint_url.hostname}"
+        return f"{endpoint_url.scheme}://{host}"
 
 
 def get_service_description() -> ServiceDescription:
-    file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
-    with open(file_path, "r", encoding="utf-8") as file:
-        return ServiceDescription.model_validate(toml.load(file))
+    file_path = os.path.join(
+        Config2().runtime_config.service_directory, "SERVICE_DESCRIPTION.toml"
+    )
+    with open(file_path, "rb") as file:
+        return ServiceDescription.model_validate(tomllib.load(file))
 
 
 def get_git_info() -> GitInfo:
-    path = os.path.join(module_dir(), "build/git-info.toml")
-    with open(path, "r", encoding="utf-8") as fin:
-        return GitInfo.model_validate(toml.load(fin))
+    path = os.path.join(
+        Config2().runtime_config.service_directory, "build/git-info.toml"
+    )
+    with open(path, "rb") as fin:
+        return GitInfo.model_validate(tomllib.load(fin))

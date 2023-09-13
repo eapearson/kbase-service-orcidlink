@@ -14,7 +14,8 @@ services:
     depends_on:
       - mongo
     environment:
-      - MODULE_DIR
+      - TEST_DATA_DIR
+      - SERVICE_DIRECTORY
   mongo:
     image: mongo:3.6.13
     restart: always

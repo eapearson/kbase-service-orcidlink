@@ -5,15 +5,17 @@ from unittest import mock
 
 import pytest
 
-from orcidlink.lib import utils
 from orcidlink.model import LinkingSessionInitial, LinkRecord, ORCIDAuth
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.storage.storage_model_mongo import StorageModelMongo
 
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
+
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.add_real_directory(utils.module_path("test/data"))
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
@@ -41,7 +43,7 @@ def test_constructor():
 # User records
 #
 
-EXAMPLE_LINK_RECORD_1 = load_data_json("link3.json")
+EXAMPLE_LINK_RECORD_1 = load_data_json(TEST_DATA_DIR, "link3.json")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -90,9 +92,11 @@ async def test_delete_link_record(fake_fs):
 # LInking session records
 #
 
-EXAMPLE_LINKING_SESSION_RECORD_1 = load_data_json("linking_session_record_initial.json")
+EXAMPLE_LINKING_SESSION_RECORD_1 = load_data_json(
+    TEST_DATA_DIR, "linking_session_record_initial.json"
+)
 EXAMPLE_LINKING_SESSION_COMPLETED_1 = load_data_json(
-    "linking_session_record_completed.json"
+    TEST_DATA_DIR, "linking_session_record_completed.json"
 )
 
 
@@ -176,7 +180,7 @@ async def test_save_linking_record():
     record2 = await sm.get_linking_session_started("bar")
     assert record2 is not None
     assert record2.return_link == "return-link"
-    assert record2.skip_prompt == False
+    assert record2.skip_prompt is False
     assert record2.ui_options == "ui-options"
 
     orcid_auth = ORCIDAuth(
@@ -195,7 +199,7 @@ async def test_save_linking_record():
     assert record3 is not None
     assert record3.orcid_auth.access_token == "a"
 
-    await sm.delete_linking_session("bar")
+    await sm.delete_linking_session_completed("bar")
 
     record = await sm.get_linking_session_completed("bar")
     assert record is None

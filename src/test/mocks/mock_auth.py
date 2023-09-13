@@ -1,31 +1,35 @@
 import json
+import os
 from test.mocks.mock_server import MockService
 
-from orcidlink.lib import utils
 
 
 def load_test_data(filename: str):
-    test_data_path = (
-        f"{utils.module_dir()}/src/test/service_clients/test_KBaseAuth/{filename}.json"
-    )
+    data_dir = os.environ["TEST_DATA_DIR"]
+    test_data_path = f"{data_dir}/test_KBaseAuth/{filename}.json"
+    # fs.add_real_directory(data_dir)
+    # test_data_path = (
+    #     f"{config().service_directory}/src/test/service_clients"
+    #     "/test_KBaseAuth/{filename}.json"
+    # )
     with open(test_data_path) as fin:
         return json.load(fin)
 
 
 class MockAuthServiceBase(MockService):
-    @staticmethod
-    def error_no_token():
-        return {
-            "error": {
-                "httpcode": 400,
-                "httpstatus": "Bad Request",
-                "appcode": 10010,
-                "apperror": "No authentication token",
-                "message": "10010 No authentication token: No user token provided",
-                "callid": "abc",
-                "time": 123,
-            }
-        }
+    # @staticmethod
+    # def error_no_token():
+    #     return {
+    #         "error": {
+    #             "httpcode": 400,
+    #             "httpstatus": "Bad Request",
+    #             "appcode": 10010,
+    #             "apperror": "No authentication token",
+    #             "message": "10010 No authentication token: No user token provided",
+    #             "callid": "abc",
+    #             "time": 123,
+    #         }
+    #     }
 
     @staticmethod
     def error_invalid_token():
@@ -59,6 +63,11 @@ class MockAuthServiceBase(MockService):
 
 GET_TOKEN_FOO = load_test_data("get-token-foo")
 GET_TOKEN_BAR = load_test_data("get-token-bar")
+GET_TOKEN_AMANAGER = load_test_data("get-token-bar")
+
+GET_ME_FOO = load_test_data("get-me-foo")
+GET_ME_BAR = load_test_data("get-me-bar")
+GET_ME_AMANAGER = load_test_data("get-me-amanager")
 
 
 class MockAuthService(MockAuthServiceBase):
@@ -67,14 +76,53 @@ class MockAuthService(MockAuthServiceBase):
         if self.path == "/services/auth/api/V2/token":
             authorization = self.headers.get("authorization")
             if authorization is None:
-                self.send_json_error(self.error_no_token())
+                # self.send_json_error(self.error_no_token())
+                raise ValueError(
+                    "Impossible - we never fail to set the authorization header for auth"
+                )
             else:
                 if authorization.startswith("foo"):
                     self.send_json(GET_TOKEN_FOO)
                 elif authorization.startswith("bar"):
                     self.send_json(GET_TOKEN_BAR)
-                elif authorization.startswith("no_token"):
-                    self.send_json_error(self.error_no_token())
+                elif authorization.startswith("amamanger"):
+                    self.send_json(GET_TOKEN_AMANAGER)
+                # elif authorization.startswith("no_token"):
+                #     self.send_json_error(self.error_no_token())
+                elif authorization.startswith("invalid_token"):
+                    self.send_json_error(self.error_invalid_token())
+                elif authorization.startswith("other_error"):
+                    self.send_json_error(self.error_other())
+                elif authorization.startswith("bad_content_type"):
+                    self.send_text("Bad JSON!")
+                # elif authorization.startswith("bad_json"):
+                #     self.send_json("Bad JSON!")
+                elif authorization.startswith("text_json"):
+                    self.send_json_text("Bad JSON!")
+                elif authorization.startswith("something_bad"):
+                    # just do something bad:
+                    x = 1 / 0
+                    print(x)
+                elif authorization == "internal_server_error":
+                    self.send_text_error("Internal Server Error")
+                else:
+                    self.send_json_error(self.error_invalid_token())
+
+        if self.path == "/services/auth/api/V2/me":
+            authorization = self.headers.get("authorization")
+            if authorization is None:
+                raise ValueError(
+                    "Impossible - we never fail to set the authorization header for auth"
+                )
+            else:
+                if authorization.startswith("foo"):
+                    self.send_json(GET_ME_FOO)
+                elif authorization.startswith("bar"):
+                    self.send_json(GET_ME_BAR)
+                elif authorization.startswith("amanager"):
+                    self.send_json(GET_ME_AMANAGER)
+                # elif authorization.startswith("no_token"):
+                #     self.send_json_error(self.error_no_token())
                 elif authorization.startswith("invalid_token"):
                     self.send_json_error(self.error_invalid_token())
                 elif authorization.startswith("other_error"):

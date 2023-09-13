@@ -1,4 +1,6 @@
 import os
+
+# from orcidlink.runtime import service_path
 from test.mocks.data import load_data_file
 from unittest import mock
 
@@ -11,25 +13,30 @@ from orcidlink.lib.config import (
     get_git_info,
     get_service_description,
 )
-from orcidlink.lib.utils import module_path
 
-service_description_toml = load_data_file("service_description1.toml")
-git_info_toml = load_data_file("git_info1.toml")
+# from test.mocks.env import TEST_ENV
+
+
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
+
+
+service_description_toml = load_data_file(TEST_DATA_DIR, "service_description1.toml")
+git_info_toml = load_data_file(TEST_DATA_DIR, "git_info1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.create_file(
-        module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
-    )
-    fs.create_file(module_path("build/git-info.toml"), contents=git_info_toml)
-    fs.add_real_directory(module_path("test/data"))
+    # print("OH HMMMM", service_path("SERVICE_DESCRIPTION.toml"))
+    fs.create_file("/app/SERVICE_DESCRIPTION.toml", contents=service_description_toml)
+    fs.create_file("/app/build/git-info.toml", contents=git_info_toml)
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
 TEST_ENV = {
     "KBASE_ENDPOINT": "http://foo/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "SERVICE_DIRECTORY": os.environ.get("SERVICE_DIRECTORY"),
     "ORCID_API_BASE_URL": "http://orcidapi",
     "ORCID_OAUTH_BASE_URL": "http://orcidoauth",
     "ORCID_CLIENT_ID": "CLIENT-ID",
@@ -71,8 +78,8 @@ def test_get_config():
 
 
 TEST_ENV_BAD = {
-    "NO_KBASE_ENDPOINT": f"http://foo/services/",
-    "MODULE_DIR": os.environ.get("MODULE_DIR"),
+    "NO_KBASE_ENDPOINT": "http://foo/services/",
+    "SERVICE_DIRECTORY": os.environ.get("SERVICE_DIRECTORY"),
     "FOO": "123",
 }
 
@@ -158,6 +165,7 @@ def test_get_str_constant_missing_no_default():
             Config2.get_str_constant(StrConstantDefault(required=True, env_name="BAR"))
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_get_service_description(fake_fs):
     service_description = get_service_description()
     assert service_description is not None
@@ -165,6 +173,7 @@ def test_get_service_description(fake_fs):
     assert service_description.name == "ORCIDLink"
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_git_info(fake_fs):
     git_info = get_git_info()
     assert git_info.commit_hash_abbreviated == "678c42c"

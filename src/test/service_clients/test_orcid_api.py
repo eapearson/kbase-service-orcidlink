@@ -12,14 +12,20 @@ from unittest import mock
 
 import pytest
 
-from orcidlink.lib import exceptions, utils
+from orcidlink.lib import exceptions
 from orcidlink.lib.errors import ERRORS
 from orcidlink.lib.service_clients import orcid_api
+
+# Set up test data here; otherwise the ENV mocking interferes with the
+# TEST_DATA_DIR env var which points to the location of test data!
+
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.add_real_directory(utils.module_path("test/data"))
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
@@ -93,7 +99,8 @@ class FakeResponse:
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAuthClient_make_upstream_errorxx():
     #
-    # Error response in expected form, with a JSON response including "error_description"
+    # Error response in expected form, with a JSON response including
+    # "error_description"
     #
 
     with pytest.raises(exceptions.ServiceErrorY) as exx:
@@ -106,7 +113,8 @@ def test_ORCIDAuthClient_make_upstream_errorxx():
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAuthClient_make_upstream_error():
     #
-    # Error response in expected form, with a JSON response including "error_description"
+    # Error response in expected form, with a JSON response including
+    # "error_description"
     #
     error_result = {"error_description": "bar"}
     status_code = 123
@@ -217,7 +225,7 @@ async def test_exchange_code_for_token_not_json_content():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "not-json-content"
             client = orcid_api.ORCIDOAuthClient(url=url, access_token="access_token")
-            with pytest.raises(exceptions.JSONDecodeError) as ie:
+            with pytest.raises(exceptions.JSONDecodeError):
                 await client.exchange_code_for_token(code)
             # assert ie.value.message == "Error decoding JSON response"
 
@@ -431,9 +439,9 @@ async def test_ORCIDAPI_save_work():
             # )
             # TODO: external ids too!
             put_code = 1526002
-            work_update = load_test_data("orcid", f"work_{str(put_code)}")["bulk"][0][
-                "work"
-            ]
+            work_update = load_test_data(
+                TEST_DATA_DIR, "orcid", f"work_{str(put_code)}"
+            )["bulk"][0]["work"]
             # don't change anything for now
             result = await client.save_work(
                 orcid_id, put_code, orcid_api.WorkUpdate.model_validate(work_update)
@@ -443,7 +451,7 @@ async def test_ORCIDAPI_save_work():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_ORCIDAPI_save_work_error():
+async def test_ORCIDAPI_save_work_error(fake_fs):
     #
     # We use the mock ORCID server which returns errors
     #
@@ -457,14 +465,16 @@ async def test_ORCIDAPI_save_work_error():
             orcid_id = "0000-0003-4997-3076"
             #
             # The client we are testing will access the mock server above since we are
-            # using the base_url it calculates, which uses IP 127.0.0.1 as specified in the
-            # constructor, and a randomly generated port.
+            # using the base_url it calculates, which uses IP 127.0.0.1 as specified in
+            # the constructor, and a randomly generated port.
             #
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
             with pytest.raises(exceptions.UpstreamORCIDAPIError) as ex:
                 put_code = 1526002
                 work_update = orcid_api.WorkUpdate.model_validate(
-                    load_test_data("orcid", f"work_{str(put_code)}")["bulk"][0]["work"]
+                    load_test_data(TEST_DATA_DIR, "orcid", f"work_{str(put_code)}")[
+                        "bulk"
+                    ][0]["work"]
                 )
                 # don't change anything for now
                 await client.save_work(orcid_id, put_code, work_update)
@@ -479,7 +489,7 @@ async def test_ORCIDAPI_save_work_error():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_make_upstream_error_401():
+def test_make_upstream_error_401(fake_fs):
     # A 401 from ORCID
     error_content = {"error": "My Error", "error_description": "Should not see me"}
     status_code = 401
@@ -500,49 +510,50 @@ def test_make_upstream_error_401():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_make_upstream_error_non_401():
-    error_content = {
-        "response-code": 123,
-        "developer-message": "My Developer Message",
-        "user-message": "My User Message",
-        "error-code": 456,
-        "more-info": "My More Info",
-    }
-    status_code = 400
+def test_make_upstream_error_non_401(fake_fs):
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        error_content = {
+            "response-code": 123,
+            "developer-message": "My Developer Message",
+            "user-message": "My User Message",
+            "error-code": 456,
+            "more-info": "My More Info",
+        }
+        status_code = 400
 
-    result = orcid_api.make_upstream_error(status_code, error_content, "foo")
-    assert isinstance(result, exceptions.ServiceErrorY)
-    # assert result.status_code == 502
-    assert result.error.code == exceptions.ERRORS.upstream_orcid_error.code
-    assert result.error.title == "Upstream ORCID Error"
-    assert (
-        isinstance(result.data, exceptions.UpstreamErrorData)
-        and result.data.source == "foo"
-    )
-    # assert isinstance(result.data['detail'], dict) and result.data["detail"]["response-code"] == 123
-    # assert result.error.data.detail.error_description is None
-    # assert "error_description" not in result.error.data.detail
+        result = orcid_api.make_upstream_error(status_code, error_content, "foo")
+        assert isinstance(result, exceptions.ServiceErrorY)
+        # assert result.status_code == 502
+        assert result.error.code == exceptions.ERRORS.upstream_orcid_error.code
+        assert result.error.title == "Upstream ORCID Error"
+        assert (
+            isinstance(result.data, exceptions.UpstreamErrorData)
+            and result.data.source == "foo"
+        )
+        # assert isinstance(result.data['detail'], dict) and result.data["detail"]["response-code"] == 123
+        # assert result.error.data.detail.error_description is None
+        # assert "error_description" not in result.error.data.detail
 
 
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_make_upstream_error_internal_server():
-    error_content = {
-        "message-version": "123",
-        "orcid-profile": None,
-        "orcid-search-results": None,
-        "error-desc": {"value": "My error desc"},
-    }
-    status_code = 500
+def test_make_upstream_error_internal_server(fake_fs):
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        error_content = {
+            "message-version": "123",
+            "orcid-profile": None,
+            "orcid-search-results": None,
+            "error-desc": {"value": "My error desc"},
+        }
+        status_code = 500
 
-    result = orcid_api.make_upstream_error(status_code, error_content, "foo")
-    assert isinstance(result, exceptions.ServiceErrorY)
-    # assert result.status_code == 502
-    assert result.error.code == exceptions.ERRORS.upstream_orcid_error.code
-    assert result.error.title == "Upstream ORCID Error"
-    assert (
-        isinstance(result.data, exceptions.UpstreamErrorData)
-        and result.data.source == "foo"
-    )
-    # assert isinstance(result.data['detail'], dict) and result.data["detail"]["message-version"] == "123"
-    # assert result.error.data.detail.error_description is None
-    # assert "error_description" not in result.error.data.detail
+        result = orcid_api.make_upstream_error(status_code, error_content, "foo")
+        assert isinstance(result, exceptions.ServiceErrorY)
+        # assert result.status_code == 502
+        assert result.error.code == exceptions.ERRORS.upstream_orcid_error.code
+        assert result.error.title == "Upstream ORCID Error"
+        assert (
+            isinstance(result.data, exceptions.UpstreamErrorData)
+            and result.data.source == "foo"
+        )
+        # assert isinstance(result.data['detail'], dict) and result.data["detail"]["message-version"] == "123"
+        # assert result.error.data.detail.error_description is None
+        # assert "error_description" not in result.error.data.detail

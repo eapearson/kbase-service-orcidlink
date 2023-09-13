@@ -14,7 +14,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from orcidlink import model
-from orcidlink.lib import utils
 from orcidlink.main import app
 from orcidlink.storage import storage_model
 
@@ -23,11 +22,13 @@ client = TestClient(app)
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.add_real_directory(utils.module_path("test/data"))
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
-TEST_LINK = load_data_json("link2.json")
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
+TEST_LINK = load_data_json(TEST_DATA_DIR, "link2.json")
 
 
 @contextlib.contextmanager

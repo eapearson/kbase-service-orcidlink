@@ -6,9 +6,8 @@ from unittest import mock
 
 import pytest
 
-from orcidlink.lib.auth import ensure_authorization, get_username
-from orcidlink.lib.service_clients.kbase_auth import TokenInfo
-from orcidlink.lib.utils import module_path
+from orcidlink.lib.auth import ensure_account, ensure_authorization, get_username
+from orcidlink.lib.service_clients.kbase_auth import AccountInfo, TokenInfo
 
 
 @contextlib.contextmanager
@@ -20,7 +19,8 @@ def mock_services():
 
 @pytest.fixture(name="fake_fs")
 def fake_fs_fixture(fs):
-    fs.add_real_directory(module_path("test/data"))
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
@@ -41,3 +41,21 @@ async def test_ensure_authorization():
 
         with pytest.raises(Exception, match="Authorization required"):
             await ensure_authorization(None)
+
+        with pytest.raises(Exception, match="Authorization required"):
+            await ensure_authorization("")
+
+
+async def test_ensure_account():
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            authorization, account_info = await ensure_account("foo")
+            assert isinstance(authorization, str)
+            assert authorization == "foo"
+            assert isinstance(account_info, AccountInfo)
+
+        with pytest.raises(Exception, match="Authorization required but missing"):
+            await ensure_account(None)
+
+        with pytest.raises(Exception, match="Authorization required but missing"):
+            await ensure_account("")

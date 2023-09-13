@@ -9,6 +9,7 @@ from test.mocks.mock_orcid import (
     MockORCIDOAuth2,
 )
 from test.mocks.mock_server import MockSDKJSON11Service, MockServer
+from unittest import mock
 
 
 @contextlib.contextmanager
@@ -94,3 +95,25 @@ def mock_jsonrpc11_service(port: int):
         yield [server, MockSDKJSON11Service, url, port]
     finally:
         server.stop_service()
+
+
+TEST_ENV = {
+    "KBASE_ENDPOINT": "http://foo/services/",
+    "SERVICE_DIRECTORY": os.environ.get("SERVICE_DIRECTORY"),
+    "ORCID_API_BASE_URL": "http://orcidapi",
+    "ORCID_OAUTH_BASE_URL": "http://orcidoauth",
+    "ORCID_CLIENT_ID": "CLIENT-ID",
+    "ORCID_CLIENT_SECRET": "CLIENT-SECRET",
+    "MONGO_HOST": "MONGO-HOST",
+    "MONGO_PORT": "1234",
+    "MONGO_DATABASE": "MONGO-DATABASE",
+    "MONGO_USERNAME": "MONGO-USERNAME",
+    "MONGO_PASSWORD": "MONGO-PASSWORD",
+    "FOO": "123",
+}
+
+
+@contextlib.contextmanager
+def mock_config():
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        yield

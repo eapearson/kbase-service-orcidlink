@@ -2,6 +2,8 @@
 # Runtime support
 #
 
+import os
+
 from orcidlink.lib.config import Config2, RuntimeConfig
 from orcidlink.lib.utils import posix_time_millis
 
@@ -30,3 +32,7 @@ def stats() -> RuntimeStats:
     if STATS is None:
         STATS = RuntimeStats()
     return STATS
+
+
+def service_path(path: str) -> str:
+    return os.path.join(config().service_directory, path)

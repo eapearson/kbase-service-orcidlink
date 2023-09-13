@@ -9,20 +9,27 @@ from test.mocks.mock_contexts import (
     mock_orcid_oauth_service,
     no_stderr,
 )
-from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO, clear_storage_model
+from test.mocks.testing_utils import (
+    TOKEN_BAR,
+    TOKEN_FOO,
+    clear_storage_model,
+    repeat_str,
+)
 from unittest import mock
 from urllib.parse import parse_qs, urlparse
 
 from fastapi.testclient import TestClient
+from httpx import Response
 
 from orcidlink.lib import errors
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage.storage_model import storage_model
 
-TEST_LINK = load_data_json("link2.json")
-TEST_LINK1 = load_data_json("link1.json")
-TEST_LINK_BAR = load_data_json("link-bar.json")
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
+TEST_LINK = load_data_json(TEST_DATA_DIR, "link2.json")
+TEST_LINK1 = load_data_json(TEST_DATA_DIR, "link1.json")
+TEST_LINK_BAR = load_data_json(TEST_DATA_DIR, "link-bar.json")
 
 
 async def create_link(link_data):
@@ -179,13 +186,16 @@ def assert_finish_linking_session(
     # return session_info
 
 
-def assert_location_params(response, params):
+def assert_location_params(response: Response, params: dict[str, str]):
     location = response.headers["location"]
     location_url = urlparse(location)
     location_params = parse_qs(location_url.query)
     for key, value in params.items():
         assert key in location_params
-        assert location_params[key][0] == value
+        param = location_params[key]
+        assert len(param) == 1
+        param_value = param[0]
+        assert param_value == value
 
 
 @contextlib.contextmanager
@@ -304,9 +314,9 @@ async def test_get_linking_session():
                 # Note that the call will fail if the result does not comply with either
                 # LinkingSessionComplete or LinkingSessionInitial
 
-                # The call after creating a linking session will return a LinkingSessionInitial
-                # which we only know from the absense of orcid_auth
-                # assert "orcid_auth" not in initial_session_info
+                # The call after creating a linking session will return a
+                # LinkingSessionInitial which we only know from the absense of
+                # orcid_auth assert "orcid_auth" not in initial_session_info
 
 
 async def test_delete_linking_session():
@@ -386,9 +396,28 @@ async def test_delete_linking_session():
                 # Note that the call will fail if the result does not comply with either
                 # LinkingSessionComplete or LinkingSessionInitial
 
-                # The call after creating a linking session will return a LinkingSessionInitial
-                # which we only know from the absense of orcid_auth
-                # assert "orcid_auth" not in initial_session_info
+                # The call after creating a linking session will return a
+                # LinkingSessionInitial which we only know from the absense of
+                # orcid_auth assert "orcid_auth" not in initial_session_info
+
+
+async def test_delete_linking_session_not_found():
+    """
+    Now we create a session, and get it back, in order
+    to test the "get linking session" call.
+    """
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+                client = TestClient(app)
+
+                await clear_storage_model()
+
+                response = client.delete(
+                    f"/linking-sessions/{repeat_str('x', 36)}",
+                    headers={"Authorization": TOKEN_FOO},
+                )
+                assert response.status_code == 404
 
 
 async def test_get_linking_session_errors():
@@ -405,7 +434,7 @@ async def test_get_linking_session_errors():
 
                 # Get a non-existent linking session id
                 response = client.get(
-                    f"/linking-sessions/{'x' * 36}",
+                    f"/linking-sessions/{repeat_str('x', 36)}",
                     headers={"Authorization": TOKEN_FOO},
                 )
                 assert response.status_code == 404
@@ -418,10 +447,11 @@ async def test_get_linking_session_errors():
 
                 # Omit the auth token, expect 422, not 401, since the
                 # authorization header is a required input to the endpoint.
-                response = client.get(f"/linking-sessions/{'x' * 36}")
+                response = client.get(f"/linking-sessions/{repeat_str('x', 36)}")
                 assert response.status_code == 422
                 response = client.get(
-                    f"/linking-sessions/{'x' * 36}", headers={"Authorization": "baz"}
+                    f"/linking-sessions/{repeat_str('x', 36)}",
+                    headers={"Authorization": "baz"},
                 )
                 assert response.status_code == 422
 
@@ -465,14 +495,6 @@ async def test_get_linking_session_errors():
                     TOKEN_BAR,
                     expected_response_code=403,
                 )
-
-                # # session_info = await assert_create_linking_session(client, TOKEN_FOO)
-                # # Provide a bad auth token, also a 401; i.e., same as no auth
-                # response = client.get(
-                #     f"/linking-sessions/{session_info['session_id']}",
-                #     headers={"Authorization": TOKEN_BAR},
-                # )
-                # assert response.status_code == 403
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -588,17 +610,17 @@ async def test_start_linking_session_errors():
             # Note that the call will fail if the result does not comply with either
             # LinkingSessionComplete or LinkingSessionInitial
 
-            # The call after creating a linking session will return a LinkingSessionInitial
-            # which we only know from the absense of orcid_auth
+            # The call after creating a linking session will return a
+            # LinkingSessionInitial which we only know from the absense of orcid_auth
             assert "orcid_auth" not in initial_session_info
 
             #
             # Start the linking session.
             #
 
-            # If we start the linking session, the linking session will be updated, but remain
-            #  LinkingSessionInitial
-            # assert_start_linking_session(client, initial_session_id)
+            # If we start the linking session, the linking session will be updated, but
+            # remain LinkingSessionInitial assert_start_linking_session(client,
+            # initial_session_id)
 
             # No auth cookie
             response = client.get(
@@ -625,7 +647,7 @@ async def test_start_linking_session_errors():
 
             # linking session not found
             response = client.get(
-                f"/linking-sessions/{'x' * 36}/oauth/start",
+                f"/linking-sessions/{repeat_str('x', 36)}/oauth/start",
                 headers={"Cookie": "kbase_session=bar; Path=/"},
                 follow_redirects=False,
             )
@@ -670,16 +692,16 @@ async def test_linking_session_continue():
             # Note that the call will fail if the result does not comply with either
             # LinkingSessionComplete or LinkingSessionInitial
 
-            # The call after creating a linking session will return a LinkingSessionInitial
-            # which we only know from the absence of orcid_auth
+            # The call after creating a linking session will return a
+            # LinkingSessionInitial which we only know from the absence of orcid_auth
             assert "orcid_auth" not in initial_session_info
 
             #
             # Start the linking session.
             #
 
-            # If we start the linking session, the linking session will be updated, but remain
-            #  LinkingSessionInitial
+            # If we start the linking session, the linking session will be updated, but
+            #  remain LinkingSessionInitial
             assert_start_linking_session(
                 client,
                 initial_session_id,
@@ -796,16 +818,16 @@ async def test_continue_linking_session_errors():
             # Note that the call will fail if the result does not comply with either
             # LinkingSessionComplete or LinkingSessionInitial
 
-            # The call after creating a linking session will return a LinkingSessionInitial
-            # which we only know from the absense of orcid_auth
+            # The call after creating a linking session will return a
+            # LinkingSessionInitial which we only know from the absense of orcid_auth
             assert "orcid_auth" not in initial_session_info
 
             #
             # Start the linking session.
             #
 
-            # If we start the linking session, the linking session will be updated, but remain
-            # LinkingSessionInitial
+            # If we start the linking session, the linking session will be updated, but
+            # remain LinkingSessionInitial
             assert_start_linking_session(
                 client,
                 initial_session_id,
@@ -834,7 +856,8 @@ async def test_continue_linking_session_errors():
             assert response.status_code == 401
 
             # Error returned from orcid
-            # TODO: double check the ORCID error structure; here we assume it is a string.
+            # TODO: double check the ORCID error structure; here we assume it is a
+            # string.
             params = {"error": "foo"}
             response = client.get(
                 "/linking-sessions/oauth/continue",
@@ -901,7 +924,9 @@ async def test_continue_linking_session_errors():
                         errors.ERRORS.linking_session_continue_invalid_param.code
                     ),
                     "title": errors.ERRORS.linking_session_continue_invalid_param.title,
-                    "message": "The 'session_id' was not provided in the 'state' query param",
+                    "message": (
+                        "The 'session_id' was not provided in the 'state' query param"
+                    ),
                 },
             )
 
@@ -937,16 +962,16 @@ async def test_continue_linking_session_error_already_continued():
             # Note that the call will fail if the result does not comply with either
             # LinkingSessionComplete or LinkingSessionInitial
 
-            # The call after creating a linking session will return a LinkingSessionInitial
-            # which we only know from the absense of orcid_auth
+            # The call after creating a linking session will return a
+            # LinkingSessionInitial which we only know from the absense of orcid_auth
             assert "orcid_auth" not in initial_session_info
 
             #
             # Start the linking session.
             #
 
-            # If we start the linking session, the linking session will be updated, but remain
-            # LinkingSessionInitial
+            # If we start the linking session, the linking session will be updated, but
+            # remain LinkingSessionInitial
             assert_start_linking_session(
                 client,
                 initial_session_id,
@@ -1031,8 +1056,8 @@ async def test_finish_linking_session_error_already_finished():
             # Note that the call will fail if the result does not comply with either
             # LinkingSessionComplete or LinkingSessionInitial
 
-            # The call after creating a linking session will return a LinkingSessionInitial
-            # which we only know from the absense of orcid_auth
+            # The call after creating a linking session will return a
+            # LinkingSessionInitial which we only know from the absense of orcid_auth
             assert "orcid_auth" not in initial_session_info
 
             #
@@ -1210,16 +1235,16 @@ async def test_continue_linking_session_error_link_already_exists():
             # Note that the call will fail if the result does not comply with either
             # LinkingSessionComplete or LinkingSessionInitial
 
-            # The call after creating a linking session will return a LinkingSessionInitial
-            # which we only know from the absense of orcid_auth
+            # The call after creating a linking session will return a
+            # LinkingSessionInitial which we only know from the absense of orcid_auth
             assert "orcid_auth" not in initial_session_info
 
             #
             # Start the linking session.
             #
 
-            # If we start the linking session, the linking session will be updated, but remain
-            # LinkingSessionInitial
+            # If we start the linking session, the linking session will be updated, but
+            # remain LinkingSessionInitial
             assert_start_linking_session(
                 client,
                 initial_session_id,
@@ -1244,7 +1269,8 @@ async def test_continue_linking_session_error_link_already_exists():
             }
 
             # We should get an error response. In this case, since it will be a 302, as
-            # for the success case, but the url will be to the error page at the orcid link ui.
+            # for the success case, but the url will be to the error page at the orcid
+            # link ui.
             response = client.get(
                 "/linking-sessions/oauth/continue",
                 headers=headers,

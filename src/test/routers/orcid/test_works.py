@@ -14,7 +14,7 @@ import aiohttp
 import pytest
 from fastapi.testclient import TestClient
 
-from orcidlink.lib import errors, utils
+from orcidlink.lib import errors
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.main import app
 from orcidlink.model import LinkRecord
@@ -23,7 +23,8 @@ from orcidlink.storage import storage_model
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.add_real_directory(utils.module_path("test/data"))
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 

@@ -11,11 +11,13 @@ header containing either a KBase login token, and all endpoints return JSON or n
 
 To that end the following endpoints are provided:
 
-* GET /link - returns link information (model.LinkRecordPublic) if a link is found associated
-          with the user account associated with the given KBase token
-* GET /link/is_linked - similar to /link, but just returns a boolean indicating whether a link exists or not
-# DELETE /link - removes the link associated with the user account associated with the given KBase token,
-                 and revokes the ORCID token in the link. Returns nothing if successful.
+* GET /link - returns link information (model.LinkRecordPublic) if a link is found
+          associated with the user account associated with the given KBase token
+* GET /link/is_linked - similar to /link, but just returns a boolean indicating whether
+        a link exists or not
+# DELETE /link - removes the link associated with the user account associated with the
+        given KBase token, and revokes the ORCID token in the link. Returns nothing if
+        successful.
 
 """
 
@@ -25,7 +27,6 @@ from starlette.responses import JSONResponse
 from orcidlink.lib import errors, exceptions
 from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
-from orcidlink.lib.service_clients.orcid_api import orcid_oauth
 from orcidlink.model import (
     LinkingRecordShared,
     LinkRecordPublic,
@@ -33,6 +34,7 @@ from orcidlink.model import (
     ORCIDAuthPublic,
     ORCIDAuthPublicNonOwner,
 )
+from orcidlink.process import delete_link
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/link")
@@ -109,8 +111,11 @@ async def get_link(
             "model": errors.ErrorResponse,
         },
         200: {
-            "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
-            + "for this user; contains no secrets",
+            "description": (
+                "Returns the "
+                "<a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
+                "for this user; contains no secrets"
+            ),
             "model": LinkRecordPublic,
         },
     },
@@ -122,8 +127,8 @@ async def get_link_for_orcid(
     """
     Get ORCID Link for a given ORCID Id
 
-    Return the link for the given orcid id, as long as the user associated with the KBase auth
-    token passed in the "Authorization" header is also the
+    Return the link for the given orcid id, as long as the user associated with the
+    KBase auth token passed in the "Authorization" header is also the
     """
     _, _ = await ensure_authorization(authorization)
 
@@ -151,7 +156,10 @@ async def get_link_for_orcid(
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         200: {
-            "description": "Returns a boolean indicating whether the user account is linked to ORCID",
+            "description": (
+                "Returns a boolean indicating whether the user account is "
+                "linked to ORCID"
+            ),
             "model": bool,
         },
     },
@@ -160,8 +168,8 @@ async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> boo
     """
     Get whether Is Linked
 
-    Determine if the user associated with the KBase auth token in the "Authorization" header has a
-    link to an ORCID account.
+    Determine if the user associated with the KBase auth token in the "Authorization"
+    header has a link to an ORCID account.
     """
     _, token_info = await ensure_authorization(authorization)
     model = storage_model()
@@ -178,7 +186,10 @@ async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> boo
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         200: {
-            "description": "Returns a boolean indicating whether the orcid id linked to a KBase account",
+            "description": (
+                "Returns a boolean indicating whether the orcid id linked "
+                "to a KBase account"
+            ),
             "model": bool,
         },
     },
@@ -189,8 +200,8 @@ async def get_is_orcid_linked(
     """
     Get whether Is Linked
 
-    Determine if the user associated with the KBase auth token in the "Authorization" header has a
-    link to an ORCID account.
+    Determine if the user associated with the KBase auth token in the "Authorization"
+    header has a link to an ORCID account.
     """
     _, _ = await ensure_authorization(authorization)
     model = storage_model()
@@ -218,8 +229,8 @@ async def link_share(
     """
     Get whether Is Linked
 
-    Determine if the user associated with the KBase auth token in the "Authorization" header has a
-    link to an ORCID account.
+    Determine if the user associated with the KBase auth token in the "Authorization"
+    header has a link to an ORCID account.
     """
     await ensure_authorization(authorization)
 
@@ -229,9 +240,9 @@ async def link_share(
     if link_record is None:
         raise exceptions.NotFoundError("Link not found for user")
 
-    # TODO: CRITICAL - check which fields have been shared; for now assume the id is, and perhaps we
-    # want to make it always available to kbase users if linked, even though the ui can offer more
-    # fine grained control?
+    # TODO: CRITICAL - check which fields have been shared; for now assume the id is,
+    # and perhaps we want to make it always available to kbase users if linked,
+    # even though the ui can offer more fine grained control?
     return LinkingRecordShared(orcidId=link_record.orcid_auth.orcid)
 
 
@@ -253,25 +264,18 @@ async def link_share(
         },
     },
 )
-async def delete_link(authorization: str | None = AUTHORIZATION_HEADER) -> Response:
+async def delete_link_impl(
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> Response:
     """
     Delete ORCID Link
 
-    Removes the link for the user associated with the KBase auth token passed in the "Authorization" header
+    Removes the link for the user associated with the KBase auth token passed in
+    the "Authorization" header
     """
 
     _, token_info = await ensure_authorization(authorization)
 
-    model = storage_model()
-    link_record = await model.get_link_record(token_info.user)
-
-    if link_record is None:
-        raise exceptions.NotFoundError("User does not have an ORCID Link")
-
-    # TODO: handle error? or propagate? or in a transaction?
-    await orcid_oauth(link_record.orcid_auth.access_token).revoke_token()
-
-    # TODO: handle error? or propagate?
-    await model.delete_link_record(token_info.user)
+    await delete_link(token_info.user)
 
     return Response(status_code=204)

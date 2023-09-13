@@ -86,7 +86,7 @@ def check_db_database():
             return {
                 "status": "error",
                 "code": "description-not-found",
-                "message": f'The "description" collection must have a document',
+                "message": 'The "description" collection must have a document',
             }
 
         del description_doc["_id"]

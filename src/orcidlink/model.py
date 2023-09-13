@@ -462,7 +462,10 @@ class ORCIDContributor(ServiceBaseModel):
 class ORCIDContributorSelf(ORCIDContributor):
     orcidId: str = Field(
         title="ORCID Id",
-        description="ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor",
+        description=(
+            "ORCID iD for the contributor - only add if you have collected an "
+            "authenticated iD for the contributor"
+        ),
         pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
         # custom
         # kbComment="",
@@ -672,7 +675,9 @@ class WorkBase(ServiceBaseModel):
 class FullWork(WorkBase):
     journal: str = Field(
         title="Journal",
-        description="The title of the publication or group under which the work was published.",
+        description=(
+            "The title of the publication or group under which the work was published."
+        ),
         max_length=1000,
         # custom
         # kbComment="This is an ORCID 'non-empty-string' with a cap of 1000 characters applied",

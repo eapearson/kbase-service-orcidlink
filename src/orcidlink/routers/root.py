@@ -34,10 +34,12 @@ async def get_status() -> StatusResponse:
     Get Service Status
 
     This endpoint returns the current status of the service. The status code itself
-    is always "ok", by definition. Other information includes the current time, and the start time.
+    is always "ok", by definition. Other information includes the current time, and the
+    start time.
 
     It can be used as a healthcheck, for basic latency measurement (as it makes no
-    i/o or other high-latency calls), or for time synchronization (as it returns the current time).
+    i/o or other high-latency calls), or for time synchronization (as it returns the
+    current time).
     """
     return StatusResponse(
         status="ok", start_time=stats().start_time, current_time=posix_time_millis()

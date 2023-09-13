@@ -173,7 +173,7 @@ class ORCIDPerson(ServiceBaseModel):
     researcher_urls: ResearcherURLs = Field(
         validation_alias="researcher-urls", serialization_alias="researcher-urls"
     )
-    emails: ORCIDEmails
+    emails: ORCIDEmails | None = Field(default=None)
     # addresses: ORCIDAddresses
     # keywords
     # external_identifiers

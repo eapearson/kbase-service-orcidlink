@@ -7,26 +7,30 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
-from orcidlink.lib import utils
 from orcidlink.main import app
+from orcidlink.runtime import service_path
+
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
+
 
 client = TestClient(app, raise_server_exceptions=False)
 
-service_description_toml = load_data_file("service_description1.toml")
-git_info_toml = load_data_file("git_info1.toml")
+service_description_toml = load_data_file(TEST_DATA_DIR, "service_description1.toml")
+git_info_toml = load_data_file(TEST_DATA_DIR, "git_info1.toml")
 
 
 @pytest.fixture
 def fake_fs(fs):
     fs.create_file(
-        utils.module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
+        service_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
     )
-    fs.create_file(utils.module_path("build/git-info.toml"), contents=git_info_toml)
-    fs.add_real_directory(utils.module_path("test/data"))
+    fs.create_file(service_path("build/git-info.toml"), contents=git_info_toml)
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
-TEST_LINK = load_data_json("link1.json")
+TEST_LINK = load_data_json(TEST_DATA_DIR, "link1.json")
 
 
 # Happy paths

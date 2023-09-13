@@ -1,9 +1,11 @@
 tests="${1}"
 test_file_path="src/test/${tests}"
-export MODULE_DIR="${PWD}"
+export TEST_DATA_DIR="${PWD}/test/data"
+export SERVICE_DIRECTORY="${PWD}"
 export MINIMAL_COVERAGE="${MINIMAL_COVERAGE:-90}"
+echo "Test Data Dir is ${TEST_DATA_DIR}"
 echo "Running tests in path '${test_file_path}"
-echo "  with MODULE_DIR of '${MODULE_DIR}'"
+echo "  with SERVICE_DIRECTORY of '${SERVICE_DIRECTORY}'"
 pytest -s \
   --cov src/orcidlink \
   --cov-report=html \

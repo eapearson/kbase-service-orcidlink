@@ -31,7 +31,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
 # venv has a more recent version than 65.5.1 (which fixes the CVE). When the upstream issue is fixed,
 # this line can be removed.
 # TODO: can it be removed now?
-RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
+# RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
 
 # Don't need curl any more.
 RUN apt-get purge -y curl && apt-get autoremove -y
@@ -40,34 +40,36 @@ RUN apt-get purge -y curl && apt-get autoremove -y
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/kb/module/src"
 
-RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && mkdir -p /kb/module/build  && chmod -R a+rw /kb/module
+# RUN mkdir -p /kb/module/work && mkdir /kb/module/deploy && mkdir -p /kb/module/build  && chmod -R a+rw /kb/module
 
 # Copying only files needed for service runtime.
 # Other usages of this image, e.g. testing, mount the project root at /kb/module
 # and have access to everything.
-COPY ./scripts /kb/module/scripts
-COPY ./src/orcidlink /kb/module/src/orcidlink
-COPY ./src/boot /kb/module/src/boot
-COPY ./src/misc /kb/module/src/misc
-COPY ./schema /kb/module/schema
-COPY ./etc /kb/module/etc
-COPY ./poetry.lock /kb/module
-COPY ./pyproject.toml /kb/module
-COPY ./SERVICE_DESCRIPTION.toml /kb/module
-COPY .git /kb/module
+# COPY ./scripts /kb/module/scripts
+# COPY ./src/orcidlink /kb/module/src/orcidlink
+# COPY ./src/boot /kb/module/src/boot
+# COPY ./src/misc /kb/module/src/misc
+# COPY ./etc /kb/module/etc
+# COPY ../poetry.lock /kb/module
+# COPY ../pyproject.toml /kb/module
+# COPY ./SERVICE_DESCRIPTION.toml /kb/module
+# COPY .git /kb/module
 # NB: build should be populated at build time
 #COPY ./build /kb/module
 
 WORKDIR /kb/module
 
-RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install --no-dev
+RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true 
+# && poetry install --no-dev
 
-RUN poetry run python src/misc/git-info.py
+# RUN poetry run python src/misc/git-info.py
 
-RUN rm -rf /kb/module/.git && rm -rf /kb/module/src/misc
+# RUN rm -rf /kb/module/.git && rm -rf /kb/module/src/misc
 
-RUN apt-get remove -y git
+# RUN apt-get remove -y git
 
-ENTRYPOINT [ "scripts/entrypoint.sh" ]
 
-CMD [ "scripts/start-server.sh" ]
+
+# ENTRYPOINT [ "scripts/entrypoint.sh" ]
+
+# CMD [ "scripts/start-server.sh" ]

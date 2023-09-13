@@ -18,9 +18,10 @@ from orcidlink.storage import storage_model
 
 client = TestClient(app)
 
+TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
 
-TEST_LINK = load_data_json("link1.json")
-TEST_LINK_BAR = load_data_json("link-bar.json")
+TEST_LINK = load_data_json(TEST_DATA_DIR, "link1.json")
+TEST_LINK_BAR = load_data_json(TEST_DATA_DIR, "link-bar.json")
 
 
 @contextlib.contextmanager
@@ -87,7 +88,7 @@ async def test_get_link_for_orcid():
             assert response.status_code == 401
 
             response = client.get(
-                f"/link/for_orcid/not_a_linked_orcid_id",
+                "/link/for_orcid/not_a_linked_orcid_id",
                 headers={"Authorization": generate_kbase_token("foo")},
             )
             assert response.status_code == 404
@@ -172,7 +173,7 @@ async def test_is_orcid_linked():
             assert result is True
 
             response = client.get(
-                f"/link/is_orcid_linked/not_a_linked_orcid_id",
+                "/link/is_orcid_linked/not_a_linked_orcid_id",
                 headers={"Authorization": generate_kbase_token("foo")},
             )
             result = response.json()

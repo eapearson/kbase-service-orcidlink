@@ -11,6 +11,14 @@ def test_posix_time_millis():
     assert now - 1000 * time.time() < 1
 
 
+def test_posix_time_seconds():
+    now = utils.posix_time_seconds()
+    assert isinstance(now, int)
+    # a reasonable assumption is that the time returned is around
+    # the same time as ... now.
+    assert now - time.time() < 1
+
+
 def test_make_date():
     # just year
     assert utils.make_date(1234) == "1234"

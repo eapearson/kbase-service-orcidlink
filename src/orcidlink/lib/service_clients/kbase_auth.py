@@ -1,13 +1,13 @@
 """
 A basic KBase auth client for the Python server.
+
 The SDK version has been modified to integrate with this codebase, such as
 using httpx, pydantic models.
 """
 import json
-from typing import Dict
+from typing import Any, Dict, List
 
 import aiohttp
-from cachetools import TTLCache
 from pydantic import Field
 
 from orcidlink.lib import errors, exceptions
@@ -25,59 +25,60 @@ class TokenInfo(ServiceBaseModel):
     cachefor: int = Field(...)
 
 
+class Identity(ServiceBaseModel):
+    id: str = Field(...)
+    provider: str = Field(...)
+    provusername: str = Field(...)
+
+
+class Role(ServiceBaseModel):
+    id: str = Field(...)
+    desc: str = Field(...)
+
+
+class PolicyAgreement(ServiceBaseModel):
+    id: str = Field(...)
+    agreedon: int = Field(...)
+
+
+class AccountInfo(ServiceBaseModel):
+    user: str = Field(...)
+    display: str = Field(...)
+    email: str = Field(...)
+    created: int = Field(...)
+    lastlogin: int = Field(...)
+    local: bool = Field(...)
+    roles: List[Role] = Field(...)
+    customroles: List[str] = Field(...)
+    idents: List[Identity] = Field(...)
+    policyids: List[PolicyAgreement]
+
+
 class KBaseAuth(object):
     """
     A very basic KBase auth client for the Python server.
     """
 
-    cache: TTLCache[str, TokenInfo]
-
     def __init__(
         self,
         url: str,
         timeout: int,
-        cache_max_items: int,
-        cache_lifetime: int,
     ):
         """
         Constructor
         """
         self.url = url
         self.timeout = timeout
-        self.cache_max_items = cache_max_items
-        self.cache_lifetime = cache_lifetime
 
-        self.cache: TTLCache[str, TokenInfo] = TTLCache(
-            maxsize=self.cache_max_items, ttl=self.cache_lifetime
-        )
-
-        # global global_cache
-        #
-        # if global_cache is None:
-        #     global_cache = SafeCache(
-        #         max_size=self.cache_max_size, timeout=self.cache_lifetime
-        #     )
-        #
-        # self.cache = global_cache
-
-    # @cachedmethod(lambda self: self.cache, key=partial(hashkey, 'token_info'))
-    async def get_token_info(self, token: str) -> TokenInfo:
-        if token == "":
-            # raise TypeError("Token may not be empty")
-            raise exceptions.AuthorizationRequiredError("Token may not be empty")
-
-        cache_value = self.cache.get(token)
-        if cache_value is not None:
-            return cache_value
-
-        # TODO: timeout needs to be configurable
+    async def _get(self, path: str, authorization: str) -> Any:
         try:
             async with aiohttp.ClientSession() as session:
-                url = f"{self.url}/api/V2/token"
+                url = f"{self.url}/api/V2/{path}"
                 async with session.get(
-                    url, headers={"authorization": token}, timeout=10000
+                    url, headers={"authorization": authorization}, timeout=self.timeout
                 ) as response:
-                    json_response = await response.json()
+                    json_result = await response.json()
+
         except aiohttp.ContentTypeError as cte:
             # Raised if it is not application/json
             data = exceptions.ContentTypeErrorData()
@@ -89,64 +90,34 @@ class KBaseAuth(object):
                 "Error decoding JSON response",
                 exceptions.JSONDecodeErrorData(message=str(jde)),
             )
-        # TODO: convert the below to ServerErrorXX
+
         if not response.ok:
-            # The auth service should return a 500 for all errors
-            # Make an attempt to handle a specific auth error
-            appcode = json_response["error"]["appcode"]
-            json_response["error"]["message"]
+            # We don't care about the HTTP response code, just the appcode in the
+            # response data.
+            appcode = json_result["error"]["appcode"]
+            json_result["error"]["message"]
             if appcode == 10020:
                 raise exceptions.ServiceErrorY(
                     errors.ERRORS.authorization_required,
                     "Invalid token, authorization required",
                 )
-            elif appcode == 10010:
-                raise exceptions.ServiceErrorY(
-                    errors.ERRORS.authorization_required,
-                    "Token missing, authorization required",
-                )
             else:
                 raise exceptions.UpstreamError("Error authenticating with auth service")
 
-        token_info: TokenInfo = TokenInfo.model_validate(json_response)
-        self.cache[token] = token_info
-        return token_info
+        return json_result
 
+    async def get_token_info(self, token: str) -> TokenInfo:
+        if token == "":
+            raise exceptions.AuthorizationRequiredError("Token may not be empty")
 
-# class InvalidResponse(ServiceError):
-#     """
-#     Raised when a remote service returns an invalid response. E.g. a 500 error with a text response, when the
-#     service is only defined to return JSON.
-#     """
-#
-#     pass
+        json_result = await self._get("token", token)
 
+        return TokenInfo.model_validate(json_result)
 
-# class KBaseAuthErrorInfo(ServiceBaseModel):
-#     code: int = Field(...)
-#     message: str = Field(...)
-#     original_message: str = Field(
-#         validation_alias="original-message", serialization_alias="original-message"
-#     )
+    async def get_me(self, token: str) -> AccountInfo:
+        if token == "":
+            raise exceptions.AuthorizationRequiredError("Token may not be empty")
 
+        json_result = await self._get("me", token)
 
-# class KBaseAuthError(Exception):
-#     message: str
-#     code: int
-#     original_message: str
-
-#     def __init__(self, message: str, code: int, original_message: str):
-#         super().__init__(message)
-#         self.code = code
-#         self.message = message
-#         self.original_message = original_message
-
-#     def to_obj(self) -> KBaseAuthErrorInfo:
-#         return KBaseAuthErrorInfo(
-#             code=self.code, message=self.message, original_message=self.original_message
-#         )
-
-
-# class KBaseAuthInvalidToken(KBaseAuthError):
-#     def __init__(self, original_message: str):
-#         super().__init__("Invalid token", 1020, original_message)
+        return AccountInfo.model_validate(json_result)

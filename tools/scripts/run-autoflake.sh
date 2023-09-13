@@ -3,7 +3,7 @@
 echo "* Running autoflake."
 # Ge sure mypy is on the last line, in order to return the result code, so that tooling can
 # honor failure. Alternatively, one can capture the result code in $? and return it later.
-autoflake -r  -i --remove-all-unused-imports --remove-unused-variables src
+autoflake -r -i --remove-all-unused-imports --remove-unused-variables src
 result_code=$?
 if [[ $result_code -gt 0 ]]; then
   echo

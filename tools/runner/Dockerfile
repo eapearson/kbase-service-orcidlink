@@ -1,4 +1,4 @@
-FROM python:3.11.4-alpine
+FROM python:3.11.5-alpine
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -21,7 +21,7 @@ RUN apk add curl git bash
 SHELL ["/bin/bash", "-c"]
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
 
 # Temporary fix for broken Python venv.
 # setuptools is not used by poetry (see the install command below), but it is present

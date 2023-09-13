@@ -14,12 +14,12 @@ from orcidlink.lib.responses import (
     ui_error_response,
 )
 from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.lib.utils import module_path
 
 
 @pytest.fixture
 def fake_fs(fs):
-    fs.add_real_directory(module_path("test/data"))
+    data_dir = os.environ["TEST_DATA_DIR"]
+    fs.add_real_directory(data_dir)
     yield fs
 
 
