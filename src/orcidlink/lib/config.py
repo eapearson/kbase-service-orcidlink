@@ -10,6 +10,7 @@ credentials, which must be well controlled.
 Because configuration is needed throughout the service's code, it is provided by means
 of a module variable which is populated when the module is first loaded.
 """
+import json
 import os
 import tomllib
 from typing import Optional
@@ -276,7 +277,8 @@ def get_service_description() -> ServiceDescription:
 
 def get_git_info() -> GitInfo:
     path = os.path.join(
-        Config2().runtime_config.service_directory, "build/git-info.toml"
+        Config2().runtime_config.service_directory, "build/git-info.json"
     )
     with open(path, "rb") as fin:
-        return GitInfo.model_validate(tomllib.load(fin))
+        return GitInfo.model_validate(json.load(fin))
+        return GitInfo.model_validate(json.load(fin))

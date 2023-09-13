@@ -1,12 +1,9 @@
+import json
+import os
 import pathlib
 import subprocess
 import sys
-from os import path
 from typing import List
-
-import tomli_w
-
-from orcidlink.runtime import service_path
 
 
 def print_lines(prefix: str, lines: List[str]):
@@ -86,15 +83,17 @@ def git_config():
 
 def save_info(info, dest):
     pathlib.Path(dest).mkdir(exist_ok=True)
-    with open(path.join(dest, "git-info.toml"), "wb") as fout:
-        tomli_w.dump(
-            info,
-            fout,
-        )
+    with open(os.path.join(dest, "git-info.json"), "w", encoding="utf-8") as fout:
+        json.dump(info, fout, indent=4)
+
+
+def service_path(path: str) -> str:
+    return os.path.join(os.path.dirname(__file__), "../..", path)
 
 
 def main():
     dest = service_path("build")
+
     git_config()
     info = git_info()
     url = git_url()

@@ -1,0 +1,11 @@
+{
+  "author_date": 1674616882000,
+  "author_name": "Foo Bar",
+  "branch": "main",
+  "commit_hash": "678c42c69e41948d7b88ca5b38fe10d8a22138e0",
+  "commit_hash_abbreviated": "678c42c",
+  "committer_date": 1674616882000,
+  "committer_name": "Baz Buzz",
+  "tag": "v1.2.3",
+  "url": "https://github.com/kbase/kbase-service-orcidlink"
+}

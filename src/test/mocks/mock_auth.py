@@ -3,7 +3,6 @@ import os
 from test.mocks.mock_server import MockService
 
 
-
 def load_test_data(filename: str):
     data_dir = os.environ["TEST_DATA_DIR"]
     test_data_path = f"{data_dir}/test_KBaseAuth/{filename}.json"

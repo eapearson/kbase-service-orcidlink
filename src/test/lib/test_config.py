@@ -21,14 +21,14 @@ TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
 
 
 service_description_toml = load_data_file(TEST_DATA_DIR, "service_description1.toml")
-git_info_toml = load_data_file(TEST_DATA_DIR, "git_info1.toml")
+git_info_json = load_data_file(TEST_DATA_DIR, "git_info1.json")
 
 
 @pytest.fixture
 def fake_fs(fs):
     # print("OH HMMMM", service_path("SERVICE_DESCRIPTION.toml"))
     fs.create_file("/app/SERVICE_DESCRIPTION.toml", contents=service_description_toml)
-    fs.create_file("/app/build/git-info.toml", contents=git_info_toml)
+    fs.create_file("/app/build/git-info.json", contents=git_info_json)
     data_dir = os.environ["TEST_DATA_DIR"]
     fs.add_real_directory(data_dir)
     yield fs
