@@ -161,7 +161,11 @@ def augment_with_time_filter(
 )
 async def get_links(
     authorization: str | None = AUTHORIZATION_HEADER,
-    query: Optional[SearchQuery] = SEARCH_QUERY,
+    query: Optional[SearchQuery] = Body(
+        Default=None,
+        description="""A search expression by which to filter link records.
+        """,
+    ),
 ) -> GetLinksResponse:
     """
     TEST

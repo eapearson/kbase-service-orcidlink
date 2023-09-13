@@ -1,9 +1,9 @@
-from dataclasses import dataclass
 from typing import Any, List, Optional
 
 import motor.motor_asyncio
 
 from orcidlink.lib import errors, exceptions
+from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
     LinkingSessionComplete,
@@ -14,22 +14,19 @@ from orcidlink.model import (
 )
 
 
-@dataclass
-class LinkStats:
+class LinkStats(ServiceBaseModel):
     last_24_hours: int
     last_7_days: int
     last_30_days: int
     all_time: int
 
 
-@dataclass
-class LinkSessionStats:
+class LinkSessionStats(ServiceBaseModel):
     active: int
     expired: int
 
 
-@dataclass
-class StatsRecord:
+class StatsRecord(ServiceBaseModel):
     links: LinkStats
     linking_sessions_initial: LinkSessionStats
     linking_sessions_started: LinkSessionStats

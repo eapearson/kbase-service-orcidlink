@@ -1,15 +1,17 @@
 """
 The main service entrypoint
 
-The main module provides the sole entrypoint for the FastAPI application. It defines the top level "app",
-and most interaction with the FastAPI app itself, such as exception handling overrides, application
-metadata for documentation, incorporation of all routers supporting all endpoints, and a
-sole endpoint implementing the online api documentation at "/docs".
+The main module provides the sole entrypoint for the FastAPI application. It defines the
+top level "app", and most interaction with the FastAPI app itself, such as exception
+handling overrides, application metadata for documentation, incorporation of all routers
+supporting all endpoints, and a sole endpoint implementing the online api documentation
+at "/docs".
 
-All endpoints other than the /docs are implement as "routers". All routers are implemented in individual
-modules within the "routers" directory. Each router should be associated with a top level path element, other
-than "root", which implements top level endpoints (other than /docs).
-Routers include: link, linking-sessions, works, orcid, and root.
+All endpoints other than the /docs are implement as "routers". All routers are
+implemented in individual modules within the "routers" directory. Each router should be
+associated with a top level path element, other than "root", which implements top level
+endpoints (other than /docs). Routers include: link, linking-sessions, works, orcid, and
+root.
 
 """
 import logging
@@ -44,10 +46,11 @@ from orcidlink.runtime import config, stats
 
 description = """\
 The *ORCID Link Service* provides an API to enable the linking of a KBase
- user account to an ORCID account. This "link" consists of a [Link Record](#user-content-header_type_linkrecord) which 
- contains a KBase username, ORCID id, ORCID access token, and a few other fields. This link record allows
- KBase to create tools and services which utilize the ORCID api to view or modify
- certain aspects of a users ORCID profile.
+ user account to an ORCID account. This "link" consists of a [Link
+ Record](#user-content-header_type_linkrecord) which contains a KBase username, ORCID
+ id, ORCID access token, and a few other fields. This link record allows KBase to create
+ tools and services which utilize the ORCID api to view or modify certain aspects of a
+ users ORCID profile.
 
 Once connected, *ORCID Link* enables certain integrations, including:
 
@@ -68,7 +71,7 @@ OAuth integration and internal support for creating ORCID Links.
 
 The common path element is `/linking-sessions`.
 
-Some of the endpoints are "browser interactive", meaning that the links are followed 
+Some of the endpoints are "browser interactive", meaning that the links are followed
 directly by the browser, rather than being used within Javascript code.\
 """,
     },
@@ -133,7 +136,8 @@ app = FastAPI(
 ###############################################################################
 # Routers
 #
-# All paths are included here as routers. Each router is defined in the "routers" directory.
+# All paths are included here as routers. Each router is defined in the "routers"
+# directory.
 ###############################################################################
 app.include_router(root.router)
 # app.include_router(rpc.router)
@@ -171,10 +175,10 @@ class ValidationError(ServiceBaseModel):
 #
 
 
-# Have this return JSON in our "standard", or at least uniform, format. We don't
-# want users of this api to need to accept FastAPI/Starlette error format.
-# These errors are returned when the API is misused; they should not occur in production.
-# Note that response validation errors are caught by FastAPI and converted to Internal Server
+# Have this return JSON in our "standard", or at least uniform, format. We don't want
+# users of this api to need to accept FastAPI/Starlette error format. These errors are
+# returned when the API is misused; they should not occur in production. Note that
+# response validation errors are caught by FastAPI and converted to Internal Server
 # errors. https://fastapi.tiangolo.com/tutorial/handling-errors/
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
@@ -198,9 +202,9 @@ async def service_errory_exception_handler(
 
 
 #
-# This catches good ol' internal server errors. These are primarily due to internal programming
-# logic errors. The reason to catch them here is to override the default FastAPI
-# error structure.
+# This catches good ol' internal server errors. These are primarily due to internal
+# programming logic errors. The reason to catch them here is to override the default
+# FastAPI error structure.
 #
 @app.exception_handler(500)
 async def internal_server_error_handler(
@@ -222,10 +226,9 @@ class StarletteHTTPNotFoundData(StarletteHTTPDetailData):
 
 
 #
-# Finally there are some other errors thrown by FastAPI / Starlette which need overriding to return
-# a normalized JSON form.
-# This should be all of them.
-# See: https://fastapi.tiangolo.com/tutorial/handling-errors/
+# Finally there are some other errors thrown by FastAPI / Starlette which need
+# overriding to return a normalized JSON form. This should be all of them. See:
+# https://fastapi.tiangolo.com/tutorial/handling-errors/
 #
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(

@@ -1,4 +1,3 @@
-from dataclasses import dataclass, fields
 from typing import Dict, Generic, Literal, Optional, TypeVar
 
 from pydantic import Field
@@ -26,40 +25,41 @@ ErrorCode = Literal[
 ]
 
 
-@dataclass
-class ErrorCode2:
-    code: ErrorCode
-    title: str
-    description: str
-    status_code: int
+class ErrorCode2(ServiceBaseModel):
+    code: ErrorCode = Field(...)
+    title: str = Field(...)
+    description: str = Field(...)
+    status_code: int = Field(...)
 
 
-@dataclass
-class Errors:
-    already_linked: ErrorCode2
-    authorization_required: ErrorCode2
-    not_authorized: ErrorCode2
-    not_found: ErrorCode2
-    internal_server_error: ErrorCode2
-    json_decode_error: ErrorCode2
-    content_type_error: ErrorCode2
-    upstream_error: ErrorCode2
-    upstream_jsonrpc_error: ErrorCode2
-    upstream_orcid_error: ErrorCode2
-    fastapi_error: ErrorCode2
-    request_validation_error: ErrorCode2
-    orcid_profile_name_private: ErrorCode2
-    linking_session_continue_invalid_param: ErrorCode2
-    linking_session_error: ErrorCode2
-    linking_session_already_linked_orcid: ErrorCode2
-    impossible_error: ErrorCode2
+class Errors(ServiceBaseModel):
+    already_linked: ErrorCode2 = Field(...)
+    authorization_required: ErrorCode2 = Field(...)
+    not_authorized: ErrorCode2 = Field(...)
+    not_found: ErrorCode2 = Field(...)
+    internal_server_error: ErrorCode2 = Field(...)
+    json_decode_error: ErrorCode2 = Field(...)
+    content_type_error: ErrorCode2 = Field(...)
+    upstream_error: ErrorCode2 = Field(...)
+    upstream_jsonrpc_error: ErrorCode2 = Field(...)
+    upstream_orcid_error: ErrorCode2 = Field(...)
+    fastapi_error: ErrorCode2 = Field(...)
+    request_validation_error: ErrorCode2 = Field(...)
+    orcid_profile_name_private: ErrorCode2 = Field(...)
+    linking_session_continue_invalid_param: ErrorCode2 = Field(...)
+    linking_session_error: ErrorCode2 = Field(...)
+    linking_session_already_linked_orcid: ErrorCode2 = Field(...)
+    impossible_error: ErrorCode2 = Field(...)
 
 
 ERRORS = Errors(
     already_linked=ErrorCode2(
         code=1000,
         title="FastAPI Error",
-        description="Some other error raised by FastAPI. We let the raised error determine the status code.",
+        description=(
+            "Some other error raised by FastAPI. We let the raised error "
+            "determine the status code."
+        ),
         status_code=400,
     ),
     authorization_required=ErrorCode2(
@@ -126,8 +126,8 @@ The ORCID account requested for linking is already linked to another KBase accou
 
 ERRORS_MAP: Dict[int, ErrorCode2] = {}
 
-for field in fields(ERRORS):
-    error = getattr(ERRORS, field.name)
+for field in Errors.model_fields.keys():
+    error = getattr(ERRORS, field)
     ERRORS_MAP[error.code] = error
 
 # Standard JSON-RPC 2.0 errors
@@ -166,9 +166,15 @@ class ErrorResponse(ServiceBaseModel, Generic[DataType]):
     title: str = Field(
         min_length=5,
         max_length=50,
-        description="A human-readable title for this error; displayable as an error dialog title",
+        description=(
+            "A human-readable title for this error; displayable as an error "
+            "dialog title"
+        ),
     )
     message: str = Field(
-        description="A human-readable error message, meant to be displayed to an end user or developer",
+        description=(
+            "A human-readable error message, meant to be displayed to an end "
+            "user or developer"
+        ),
     )
     data: Optional[DataType] = Field(default=None)
