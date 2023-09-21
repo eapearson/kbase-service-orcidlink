@@ -135,7 +135,7 @@ def test_get_work_errors(fake_fs):
                     "/orcid/works/123", headers={"Authorization": TOKEN_FOO}
                 )
             except aiohttp.ContentTypeError as cte:
-                # assert response.status_code == 502
+                # assert response.status_code == 500
                 # error = response.json()
                 # assert error["code"] == "upstreamError"
                 assert (
@@ -149,7 +149,7 @@ def test_get_work_errors(fake_fs):
             response = client.get(
                 "/orcid/works/456", headers={"Authorization": TOKEN_FOO}
             )
-            assert response.status_code == 502
+            assert response.status_code == 500
             error = response.json()
             assert error["code"] == errors.ERRORS.upstream_orcid_error.code
             assert error["message"] == "Error fetching data from ORCID"
@@ -307,7 +307,7 @@ def test_create_work_errors(fake_fs):
                 headers={"Authorization": TOKEN_FOO},
                 content=json.dumps(new_work_data),
             )
-            assert response.status_code == 502
+            assert response.status_code == 500
 
             # Error: 500 returned from orcid
             # Invoke this with a special put code
@@ -317,7 +317,7 @@ def test_create_work_errors(fake_fs):
                 headers={"Authorization": TOKEN_FOO},
                 content=json.dumps(new_work_data),
             )
-            assert response.status_code == 502
+            assert response.status_code == 500
             # assert response.text == "AN ERROR"
 
             # Error: Any other non-200 returned from orcid
@@ -327,7 +327,7 @@ def test_create_work_errors(fake_fs):
                 headers={"Authorization": TOKEN_FOO},
                 content=json.dumps(new_work_data),
             )
-            assert response.status_code == 502
+            assert response.status_code == 500
 
 
 def test_external_id():
@@ -484,7 +484,7 @@ async def test_delete_work_not_source(fake_fs):
             response = client.delete(
                 f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
             )
-            assert response.status_code == 502
+            assert response.status_code == 500
             result = response.json()
             assert result["code"] == errors.ERRORS.upstream_error.code
             assert result["title"] == "Upstream Error"
@@ -509,7 +509,7 @@ async def test_delete_work_put_code_not_found(fake_fs):
             response = client.delete(
                 f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
             )
-            assert response.status_code == 502
+            assert response.status_code == 500
             result = response.json()
             assert result["code"] == errors.ERRORS.upstream_error.code
             assert result["title"] == "Upstream Error"

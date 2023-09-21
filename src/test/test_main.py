@@ -169,7 +169,7 @@ def test_kbase_auth_exception_handler(fake_fs):
             # rather than JSON - in other words, a deep and actual server error,
             # not the usuall, silly 500 response we emit for all JSON-RPC!!
             response = client.get("/link", headers={"Authorization": TEXT_JSON})
-            assert response.status_code == 502
+            assert response.status_code == 500
             assert response.headers["content-type"] == "application/json"
             content = response.json()
             assert content["code"] == errors.ERRORS.json_decode_error.code

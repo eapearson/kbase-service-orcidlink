@@ -61,15 +61,10 @@ async def link_record_for_user(username: str) -> Optional[LinkRecord]:
     if user_link_record is None:
         return None
 
-    logging.info("link_record_for_user: got link")
-
     # Make sure the orcid auth is not retired.
     now = posix_time_millis()
     if user_link_record.retires_at < now:
-        logging.info("about to refresh")
         user_link_record = await refresh_token_for_link(user_link_record)
-
-    logging.info("link_record_for_user: returning")
 
     return user_link_record
 

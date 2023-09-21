@@ -73,22 +73,22 @@ ERRORS = Errors(
         code=1030, title="Internal Server Error", description="", status_code=500
     ),
     json_decode_error=ErrorCode2(
-        code=1040, title="Error Decoding Response", description="", status_code=502
+        code=1040, title="Error Decoding Response", description="", status_code=500
     ),
     content_type_error=ErrorCode2(
         code=1041,
         title="Received Incorrect Content Type",
         description="",
-        status_code=502,
+        status_code=500,
     ),
     upstream_error=ErrorCode2(
-        code=1050, title="Upstream Error", description="", status_code=502
+        code=1050, title="Upstream Error", description="", status_code=500
     ),
     upstream_jsonrpc_error=ErrorCode2(
-        code=1051, title="Upstream JSON-RPC Error", description="", status_code=502
+        code=1051, title="Upstream JSON-RPC Error", description="", status_code=500
     ),
     upstream_orcid_error=ErrorCode2(
-        code=1052, title="Upstream ORCID Error", description="", status_code=502
+        code=1052, title="Upstream ORCID Error", description="", status_code=500
     ),
     fastapi_error=ErrorCode2(
         code=1060, title="FastAPI Error", description="", status_code=400
@@ -106,16 +106,16 @@ ERRORS = Errors(
         code=1080,
         title="Linking Session Continue Redirect Missing Parameter",
         description="",
-        status_code=502,
+        status_code=500,
     ),
     linking_session_error=ErrorCode2(
-        code=1081, title="ORCID Error Linking", description="", status_code=502
+        code=1081, title="ORCID Error Linking", description="", status_code=500
     ),
     linking_session_already_linked_orcid=ErrorCode2(
         code=1082,
         title="ORCID account already linked",
         description="""
-The ORCID account requested for linking is already linked to another KBase account. 
+The ORCID account requested for linking is already linked to another KBase account.
         """,
         status_code=400,
     ),

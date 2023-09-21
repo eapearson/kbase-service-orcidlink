@@ -153,3 +153,30 @@ Or it could mark the link record as invalid so that the orcid id display will be
 
 - [ORCID Documentation on Refresh TOkens](https://github.com/ORCID/ORCID-Source/blob/main/orcid-api-web/tutorial/refresh_tokens.md)
 
+
+## TODO:
+
+orcid api error codes:
+
+
+https://github.com/ORCID/ORCID-Source/blob/a642e6f9552dafea85d7c980293d0689493b0f7d/orcid-core/src/main/resources/i18n/api_en.properties#L56
+
+https://github.com/ORCID/ORCID-Source/blob/a642e6f9552dafea85d7c980293d0689493b0f7d/orcid-core/src/main/java/org/orcid/core/exception/OrcidCoreExceptionMapper.java#L84
+
+find a better resource
+
+
+
+        ORCID does not specifically document this, but refers to the OAuth spec:
+        https://datatracker.ietf.org/doc/html/rfc8693.
+
+        Error structure defined here:
+        https://www.rfc-editor.org/rfc/rfc6749#section-5.2
+
+
+orcid uses spring for oauth:
+
+https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/oauth2/core/OAuth2ErrorCodes.html
+
+This contains the invalid_token error code, which is not inthe main spec. Weird.
+https://datatracker.ietf.org/doc/html/rfc6750.html#section-3.1

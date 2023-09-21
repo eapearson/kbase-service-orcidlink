@@ -73,8 +73,7 @@ class ORCIDOAuthClient:
             return json_response
         else:
             if "error" in json_response:
-                error = ORCIDOAuthError.model_validate(json_response)
-                raise exceptions.UpstreamError(error.error_description)
+                return ORCIDOAuthError.model_validate(json_response)
             else:
                 raise exceptions.UpstreamError("Unexpected Error Response from ORCID")
 
@@ -137,13 +136,18 @@ class ORCIDOAuthClient:
                 self.url_path("token"), headers=header, data=data
             ) as response:
                 json_response = await self.handle_json_response(response)
-                if response.status != 200:
-                    print("refresh_token: error", json_response)
-                    raise exceptions.make_upstream_error(
-                        response.status, json_response, source="refresh_token"
-                    )
 
-                return model.ORCIDAuth.model_validate(json_response)
+                if isinstance(json_response, ORCIDOAuthError):
+                    # This is returned when the main token set (access token, etc.) is
+                    # no longer valid,
+                    if json_response.error == "unauthorized_client":
+                        raise exceptions.AuthorizationRequiredError(
+                            json_response.error_description
+                        )
+                    else:
+                        raise exceptions.UpstreamError(json_response.error_description)
+                else:
+                    return model.ORCIDAuth.model_validate(json_response)
 
     async def exchange_code_for_token(self, code: str) -> model.ORCIDAuth:
         """
@@ -174,7 +178,12 @@ class ORCIDOAuthClient:
                 f"{config().orcid_oauth_base_url}/token", headers=header, data=data
             ) as response:
                 json_response = await self.handle_json_response(response)
-                return model.ORCIDAuth.model_validate(json_response)
+                if isinstance(json_response, ORCIDOAuthError):
+                    # TODO: also provide the OAUTH error code; in fact, this should be
+                    # an OAUTHError type, not Upstream error...
+                    raise exceptions.UpstreamError(json_response.error_description)
+                else:
+                    return model.ORCIDAuth.model_validate(json_response)
 
 
 def orcid_oauth() -> ORCIDOAuthClient:
