@@ -3,6 +3,7 @@
   "username": "foo",
   "created_at": 1,
   "expires_at": 2,
+  "retires_at": 123,
   "orcid_auth": {
     "access_token": "foo",
     "token_type": "bar",
@@ -10,7 +11,6 @@
     "expires_in": 3,
     "scope": "boo",
     "name": "abc",
-    "orcid": "def",
-    "id_token": "xyz"
+    "orcid": "def"
   }
 }

@@ -1,15 +1,15 @@
 {
   "orcid_auth": {
-    "access_token": "access-token",
+    "access_token": "access-token-foo",
     "token_type": "bearer",
-    "refresh_token": "refresh-token",
+    "refresh_token": "refresh-token-foo",
     "expires_in": 631138518,
     "scope": "/read-limited openid /activities/update",
     "name": "Foo bar",
-    "orcid": "orcid-id-foo",
-    "id_token": "id-token"
+    "orcid": "orcid-id-foo"
   },
   "created_at": 1669943616532,
   "expires_at": 2301082134532,
+  "retires_at": 2301082134532,
   "username": "foo"
 }

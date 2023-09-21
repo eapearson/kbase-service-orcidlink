@@ -175,9 +175,9 @@ class ExternalId(ServiceBaseModel):
             "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string",
         },
     )
-    # Note that we skip ext external-id-normalized and external-id-normalized-error as there is nothing we can
-    # clearly do with them. Actually, it is the type "transient-non-empty-string" meaning that it is populated
-    # by ORCID as noted here:
+    # Note that we skip ext external-id-normalized and external-id-normalized-error as
+    # there is nothing we can clearly do with them. Actually, it is the type
+    # "transient-non-empty-string" meaning that it is populated by ORCID as noted here:
     # https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L301
     url: str = Field(
         title="External Id URL",
@@ -217,7 +217,6 @@ class ORCIDAuth(ServiceBaseModel):
     scope: str = Field(...)
     name: str = Field(...)
     orcid: str = Field(...)
-    id_token: str = Field(...)
 
 
 class ORCIDAuthPublic(ServiceBaseModel):
@@ -287,7 +286,8 @@ class LinkingSessionCompletePublic(LinkingSessionBase):
 
 
 # class LinkingSessionPublic(ServiceBaseModel):
-#     __root__: Union[LinkingSessionInitial, LinkingSessionStarted, LinkingSessionCompletePublic]
+#     __root__: Union[LinkingSessionInitial, LinkingSessionStarted,
+#               LinkingSessionCompletePublic]
 
 
 # LinkingSessionPublic = Annotated[
@@ -307,6 +307,7 @@ class LinkRecord(ServiceBaseModel):
     username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
+    retires_at: int = Field(...)
     orcid_auth: ORCIDAuth = Field(...)
 
 
@@ -316,6 +317,7 @@ class LinkRecordPublic(ServiceBaseModel):
     username: str = Field(...)
     created_at: int = Field(...)
     expires_at: int = Field(...)
+    retires_at: int = Field(...)
     orcid_auth: ORCIDAuthPublic = Field(...)
 
 
@@ -363,7 +365,8 @@ class ORCIDCitation(ServiceBaseModel):
         # kbComment="",
         # kbNotes=[
         #     "A simple string with no constraints",
-        #     "You would think it would be constrained to something large just for sanity ",
+        #     "You would think it would be constrained to something large just ",
+        #     "for sanity ",
         # ],
         # kbSourceName="",
         # kbSourceType="work:citation -> citation-value",

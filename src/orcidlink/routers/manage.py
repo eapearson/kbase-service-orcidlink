@@ -8,13 +8,16 @@ from pydantic import Field
 from orcidlink.lib import exceptions
 from orcidlink.lib.auth import ensure_account
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
+from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
 from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
     LinkingSessionComplete,
     LinkingSessionInitial,
     LinkingSessionStarted,
     LinkRecord,
 )
+from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.storage.storage_model_mongo import StatsRecord
 
@@ -230,7 +233,9 @@ async def get_links(
         #     "model": errors.ErrorResponse,
         # },
         # 200: {
-        #     "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
+        #     "description": "Returns the "
+        #     + "<a href='#user-content-glossary_term_public-link-record'>
+        #     + "Public link record</a> "
         #     + "for this user; contains no secrets",
         #     "model": LinkRecordPublic,
         # },
@@ -288,7 +293,6 @@ async def get_linking_sessions(
     if "orcidlink_admin" not in account_info.customroles:
         raise exceptions.UnauthorizedError("Not authorized for management operations")
 
-    # print(account_info)
     model = storage_model()
     initial_linking_sessions = await model.get_linking_sessions_initial()
     started_linking_sessions = await model.get_linking_sessions_started()
@@ -366,3 +370,54 @@ async def get_stats(
     stats = await model.get_stats()
 
     return GetStatsResponse(stats=stats)
+
+
+class RefreshTokensResponse(ServiceBaseModel):
+    link: LinkRecord
+
+
+@router.patch(
+    "/refresh-tokens/{username}",
+    response_model=RefreshTokensResponse,
+    tags=["manage"],
+    responses={
+        200: {
+            "description": "Successfully refreshed the tokens",
+            "model": RefreshTokensResponse,
+        }
+    },
+)
+async def patch_refresh_tokens(
+    username: str = USERNAME_PARAM,
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> RefreshTokensResponse:
+    _, account_info = await ensure_account(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise exceptions.UnauthorizedError("Not authorized for management operations")
+
+    model = storage_model()
+
+    orcid_oauth_api = orcid_oauth()
+
+    link_record = await model.get_link_record(username=username)
+    if link_record is None:
+        raise exceptions.NotFoundError("Link record not found for this user")
+
+    # refresh the tokens
+    orcid_auth = await orcid_oauth_api.refresh_token(
+        link_record.orcid_auth.refresh_token
+    )
+
+    link_record.orcid_auth = orcid_auth
+    link_record.created_at = posix_time_millis()
+    link_record.expires_at = (
+        link_record.created_at + config().linking_session_lifetime * 1000
+    )
+
+    # update the link with the new orcid_auth
+    await model.save_link_record(link_record)
+
+    return RefreshTokensResponse(link=link_record)
+
+    # return the new link

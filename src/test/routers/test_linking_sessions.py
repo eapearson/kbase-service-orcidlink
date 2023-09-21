@@ -380,6 +380,19 @@ async def test_delete_linking_session():
                 )
                 assert response.status_code == 404
 
+                # If we repeat it, should get a 404
+                response = client.delete(
+                    f"/linking-sessions/{initial_session_id}",
+                    headers={"Authorization": TOKEN_FOO},
+                )
+                assert response.status_code == 404
+
+                response = client.get(
+                    f"/linking-sessions/{initial_session_id}",
+                    headers={"Authorization": TOKEN_FOO},
+                )
+                assert response.status_code == 404
+
                 # TODO: assert more stuff about the response?
 
                 # linking_session = client.get_linking_session(initial_session_id)

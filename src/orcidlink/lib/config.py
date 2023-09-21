@@ -52,8 +52,10 @@ SERVICE_DEFAULTS = ServiceDefaults(
 
 class IntConstantDefault(ServiceBaseModel):
     value: Optional[int] = Field(default=None)
+    unit: str = Field(...)
     required: bool = Field(...)
     env_name: str = Field(...)
+    description: str = Field(...)
 
 
 class IntConstantDefaults(ServiceBaseModel):
@@ -62,21 +64,53 @@ class IntConstantDefaults(ServiceBaseModel):
     request_timeout: IntConstantDefault = Field(...)
     mongo_port: IntConstantDefault = Field(...)
     linking_session_lifetime: IntConstantDefault = Field(...)
+    orcid_authorization_retirement_age: IntConstantDefault = Field(...)
 
 
 INT_CONSTANT_DEFAULTS = IntConstantDefaults(
     token_cache_lifetime=IntConstantDefault(
-        value=300, required=True, env_name="TOKEN_CACHE_LIFETIME"
+        value=300,
+        unit="second",
+        required=True,
+        env_name="TOKEN_CACHE_LIFETIME",
+        description=(
+            "The duration, in seconds, for which KBase Auth Service tokens "
+            "may be cached."
+        ),
     ),
     token_cache_max_items=IntConstantDefault(
-        value=20000, required=True, env_name="TOKEN_CACHE_MAX_ITEMS"
+        value=20000,
+        unit="items",
+        required=True,
+        env_name="TOKEN_CACHE_MAX_ITEMS",
+        description=(
+            "The number of KBase Auth tokens which may be cached at one time. "
+            "The caching strategy determines behavior when the cache is full."
+        ),
     ),
     request_timeout=IntConstantDefault(
-        value=60, required=True, env_name="REQUEST_TIMEOUT"
+        value=60,
+        unit="second",
+        required=True,
+        env_name="REQUEST_TIMEOUT",
+        description=(""),
     ),
-    mongo_port=IntConstantDefault(required=True, env_name="MONGO_PORT"),
+    mongo_port=IntConstantDefault(
+        required=True, unit="port", env_name="MONGO_PORT", description=("")
+    ),
     linking_session_lifetime=IntConstantDefault(
-        required=True, env_name="LINKING_SESSION_LIFETIME", value=600
+        required=True,
+        env_name="LINKING_SESSION_LIFETIME",
+        value=600,
+        unit="second",
+        description=(""),
+    ),
+    orcid_authorization_retirement_age=IntConstantDefault(
+        required=True,
+        env_name="ORCID_AUTHORIZATION_RETIREMENT_AGE",
+        value=1_209_600,
+        unit="second",
+        description=(""),
     ),
 )
 
@@ -88,6 +122,7 @@ class StrConstantDefault(ServiceBaseModel):
     value: Optional[str] = Field(default=None)
     required: bool = Field(...)
     env_name: str = Field(...)
+    description: str = Field(...)
 
 
 class StrConstantDefaults(ServiceBaseModel):
@@ -107,29 +142,51 @@ class StrConstantDefaults(ServiceBaseModel):
 
 
 STR_CONSTANT_DEFAULTS = StrConstantDefaults(
-    service_directory=StrConstantDefault(required=True, env_name="SERVICE_DIRECTORY"),
-    kbase_endpoint=StrConstantDefault(required=True, env_name="KBASE_ENDPOINT"),
-    orcid_api_base_url=StrConstantDefault(required=True, env_name="ORCID_API_BASE_URL"),
-    orcid_oauth_base_url=StrConstantDefault(
-        required=True, env_name="ORCID_OAUTH_BASE_URL"
+    service_directory=StrConstantDefault(
+        required=True, env_name="SERVICE_DIRECTORY", description=("")
     ),
-    orcid_client_id=StrConstantDefault(required=True, env_name="ORCID_CLIENT_ID"),
+    kbase_endpoint=StrConstantDefault(
+        required=True, env_name="KBASE_ENDPOINT", description=("")
+    ),
+    orcid_api_base_url=StrConstantDefault(
+        required=True, env_name="ORCID_API_BASE_URL", description=("")
+    ),
+    orcid_oauth_base_url=StrConstantDefault(
+        required=True, env_name="ORCID_OAUTH_BASE_URL", description=("")
+    ),
+    orcid_client_id=StrConstantDefault(
+        required=True, env_name="ORCID_CLIENT_ID", description=("")
+    ),
     orcid_client_secret=StrConstantDefault(
-        required=True, env_name="ORCID_CLIENT_SECRET"
+        required=True, env_name="ORCID_CLIENT_SECRET", description=("")
     ),
     orcid_scopes=StrConstantDefault(
         required=True,
         env_name="ORCID_SCOPES",
         value="/read-limited /activities/update openid",
+        description=(""),
     ),
     orcid_link_manager_role=StrConstantDefault(
-        required=True, env_name="ORCID_LINK_MANAGER_ROLE", value="orcidlink_admin"
+        required=True,
+        env_name="ORCID_LINK_MANAGER_ROLE",
+        value="orcidlink_admin",
+        description=(""),
     ),
-    mongo_host=StrConstantDefault(required=True, env_name="MONGO_HOST"),
-    mongo_database=StrConstantDefault(required=True, env_name="MONGO_DATABASE"),
-    mongo_username=StrConstantDefault(required=True, env_name="MONGO_USERNAME"),
-    mongo_password=StrConstantDefault(required=True, env_name="MONGO_PASSWORD"),
-    log_level=StrConstantDefault(required=True, env_name="LOG_LEVEL", value="INFO"),
+    mongo_host=StrConstantDefault(
+        required=True, env_name="MONGO_HOST", description=("")
+    ),
+    mongo_database=StrConstantDefault(
+        required=True, env_name="MONGO_DATABASE", description=("")
+    ),
+    mongo_username=StrConstantDefault(
+        required=True, env_name="MONGO_USERNAME", description=("")
+    ),
+    mongo_password=StrConstantDefault(
+        required=True, env_name="MONGO_PASSWORD", description=("")
+    ),
+    log_level=StrConstantDefault(
+        required=True, env_name="LOG_LEVEL", value="INFO", description=("")
+    ),
 )
 
 
@@ -146,6 +203,7 @@ class RuntimeConfig(ServiceBaseModel):
     orcid_client_id: str = Field(...)
     orcid_client_secret: str = Field(...)
     orcid_scopes: str = Field(...)
+    orcid_authorization_retirement_age: int = Field(...)
 
     linking_session_lifetime: int = Field(...)
 
@@ -182,6 +240,9 @@ class Config2:
             ),
             token_cache_max_items=self.get_int_constant(
                 INT_CONSTANT_DEFAULTS.token_cache_max_items
+            ),
+            orcid_authorization_retirement_age=self.get_int_constant(
+                INT_CONSTANT_DEFAULTS.orcid_authorization_retirement_age
             ),
             log_level=self.get_str_constant(STR_CONSTANT_DEFAULTS.log_level),
             orcid_api_base_url=self.get_str_constant(

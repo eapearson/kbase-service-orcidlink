@@ -13,7 +13,6 @@
     "expires_in": 3,
     "scope": "boo",
     "name": "abc",
-    "orcid": "def",
-    "id_token": "xyz"
+    "orcid": "def"
   }
 }

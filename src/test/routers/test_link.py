@@ -7,7 +7,7 @@ from test.mocks.mock_contexts import (
     mock_orcid_oauth_service,
     no_stderr,
 )
-from test.mocks.testing_utils import generate_kbase_token
+from test.mocks.testing_utils import create_link, generate_kbase_token
 from unittest import mock
 
 from fastapi.testclient import TestClient
@@ -29,12 +29,6 @@ def mock_services():
     with no_stderr():
         with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
             yield
-
-
-async def create_link(link_record):
-    sm = storage_model.storage_model()
-    await sm.db.links.drop()
-    await sm.create_link_record(LinkRecord.model_validate(link_record))
 
 
 #

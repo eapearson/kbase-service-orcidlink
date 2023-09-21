@@ -6,10 +6,10 @@
     "expires_in": 631138518,
     "scope": "/read-limited openid /activities/update",
     "name": "Bar bar",
-    "orcid": "orcid-id",
-    "id_token": "id-token"
+    "orcid": "orcid-id"
   },
   "created_at": 1669943616532,
   "expires_at": 2301082134532,
+  "retires_at": 2301082134532,
   "username": "bar"
 }

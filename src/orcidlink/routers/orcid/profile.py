@@ -1,12 +1,12 @@
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
-from orcidlink.lib import errors, exceptions
+from orcidlink import process
+from orcidlink.lib import exceptions
 from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.model import ORCIDProfile
-from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_service
 
 ################################
@@ -53,18 +53,9 @@ async def get_profile(
     _, token_info = await ensure_authorization(authorization)
     username = token_info.user
 
-    #
-    # Fetch the user's ORCID Link record from KBase.
-    #
-    user_link_record = await storage_model().get_link_record(username)
+    user_link_record = await process.link_record_for_user(username)
     if user_link_record is None:
-        raise exceptions.ServiceErrorY(
-            error=errors.ERRORS.not_found, message="ORCID Profile Not Found"
-        )
-        # raise NotFoundError(message="User link record not found")
-        # return error_response(
-        #     "notfound", "Not Found", "User link record not found", status_code=404
-        # )
+        raise exceptions.NotFoundError(message="ORCID Profile Not Found")
 
     # Extract our simplified, flattened form of the profile.
     access_token = user_link_record.orcid_auth.access_token

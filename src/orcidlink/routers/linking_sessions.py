@@ -22,7 +22,8 @@ from orcidlink.lib.responses import (
     STD_RESPONSES,
     ui_error_response,
 )
-from orcidlink.lib.service_clients.orcid_api import AuthorizeParams, orcid_oauth
+from orcidlink.lib.service_clients.orcid_api import AuthorizeParams
+from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
@@ -311,6 +312,7 @@ async def finish_linking_session(
         orcid_auth=session_record.orcid_auth,
         created_at=created_at,
         expires_at=expires_at,
+        retires_at=created_at + config().orcid_authorization_retirement_age * 1000,
     )
     await storage.create_link_record(link_record)
 
@@ -527,7 +529,7 @@ async def linking_sessions_continue(
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
-    orcid_auth = await orcid_oauth(authorization).exchange_code_for_token(code)
+    orcid_auth = await orcid_oauth().exchange_code_for_token(code)
 
     #
     # Note that it isn't until this point that we know the orcid id the user

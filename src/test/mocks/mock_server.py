@@ -50,18 +50,21 @@ class MockService(http.server.BaseHTTPRequestHandler):
         if data is not None:
             self.wfile.write(bytes(data, encoding="utf-8"))
 
-    def send_json(self, output_data):
+    def send_json(self, output_data, content_type: str | None):
         output = json.dumps(output_data).encode()
         self.send_response(200)
-        self.send_header("Content-Type", "application/json")
+        if content_type is not None:
+            self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(output)))
         self.end_headers()
         self.wfile.write(output)
 
-    def send_json_error(self, error_info, status_code: int = 500):
+    def send_json_error(
+        self, error_info, status_code: int = 500, content_type: str = "application/json"
+    ):
         output = json.dumps(error_info).encode()
         self.send_response(status_code)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(output)))
         self.end_headers()
         self.wfile.write(output)
@@ -83,10 +86,10 @@ class MockService(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(text.encode())
 
-    def send_json_text(self, text: str):
+    def send_json_text(self, text: str, content_type: str):
         # This would be done erroneously by the service, so we use application/json
         self.send_response(200)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(text)))
         self.end_headers()
         self.wfile.write(text.encode())
@@ -294,7 +297,9 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
                     result = self.error_response(INVALID_PARAMS, "Invalid params")
                 else:
                     self.increment_method_call_count(method, "success")
-                    self.send_json_text("This should fail")
+                    self.send_json_text(
+                        "This should fail", content_type="application/json"
+                    )
                     return
             elif method == "MyServiceModule.error_text":
                 positional_params = request.get("params")
@@ -355,4 +360,4 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
                 self.increment_method_call_count(method, "error")
                 result = self.error_response(METHOD_NOT_FOUND, "Method not found")
 
-            self.send_json(result)
+            self.send_json(result, content_type="application/json")

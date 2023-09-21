@@ -4,8 +4,8 @@ import os
 from typing import Any, Dict, List, OrderedDict, TypedDict
 
 import pymongo.errors
-from bson import json_util
-from pymongo import MongoClient
+from bson import ObjectId, json_util
+from pymongo import MongoClient, database
 
 from orcidlink.lib.config import get_service_description
 from orcidlink.lib.logger import log_event, log_level
@@ -52,34 +52,15 @@ def check_db_database():
         return {
             "status": "error",
             "code": "database-not-found",
-            "message": f'The orcidlink database "{database_name}" does not exist: {str(dbe)}',
+            "message": (
+                f'The orcidlink database "{database_name}" does not exist: {str(dbe)}'
+            ),
         }
 
     if "description" not in db.list_collection_names():
         description_json = None
     else:
-        # return {
-        #     'status': 'error',
-        #     'code': 'description-not-found',
-        #     'message': f'The "description" collection must exist in the "{database_name}" database'
-        # }
-
         description = db.get_collection("description")
-
-        # count = description.estimated_document_count()
-        #
-        # if count == 0:
-        #     return {
-        #         'status': 'error',
-        #         'code': 'description-not-found',
-        #         'message': f'The "description" collection must have a document'
-        #     }
-        # if count > 1:
-        #     return {
-        #         'status': 'error',
-        #         'code': 'description-invalid',
-        #         'message': f'The "description" collection has too many documents ({description.count_documents()})'
-        #     }
 
         description_doc = description.find_one()
         if description_doc is None:
@@ -193,6 +174,84 @@ def migrate_v021_to_v030(db):
     }
 
 
+def migrate_v030_to_v040(db: database.Database):
+    service_version = "0.4.0"
+
+    # The first migration, which will be the case in this branch, adds index and
+    # then updates the description to show that it has been migrated.
+
+    actions = []
+
+    # Add schema for links
+    db.command("collMod", "links", validator=get_schema(service_version, "links"))
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "added schema for 'links'",
+        }
+    )
+
+    # Then we patch any records to prepapre them for the new validation
+    links = db.get_collection("links")
+    for link in links.find({}):
+        # Default to the initial retirement age; this may case the next
+        # for this link by the owner to regenerate the tokens
+        link["retires_at"] = (
+            link["created_at"] + config().orcid_authorization_retirement_age * 1000
+        )
+        links.replace_one({"_id": ObjectId(link["_id"])}, link)
+
+    # Add schemas for linking sessions
+    db.command(
+        "collMod",
+        "linking_sessions_initial",
+        validator=get_schema(service_version, "linking_sessions_initial"),
+    )
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "updated schema for 'linking_session_initial' collection",
+        }
+    )
+
+    db.command(
+        "collMod",
+        "linking_sessions_started",
+        validator=get_schema(service_version, "linking_sessions_started"),
+    )
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "updated schema for 'linking_sessions_started' collection",
+        }
+    )
+
+    db.command(
+        "collMod",
+        "linking_sessions_completed",
+        validator=get_schema(service_version, "linking_sessions_completed"),
+    )
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "updated schema for 'linking_sessions_completed' collection",
+        }
+    )
+
+    # Update the database description
+    description = db.get_collection("description").find_one()
+    db.get_collection("description").update_one(
+        {"_id": description["_id"]},
+        {"$set": {"version": service_version, "migrated": True}},
+    )
+
+    return {
+        "status": "ok",
+        "message": "Migration successfully completed",
+        "actions": actions,
+    }
+
+
 def initialize_v021(db):
     actions = []
     service_version = "0.2.1"
@@ -253,7 +312,71 @@ def initialize_v030(db):
     actions.append(
         {
             "at": posix_time_millis(),
-            "message": "created username index for linking_session_completed collection",
+            "message": (
+                "created username index for linking_session_completed collection"
+            ),
+        }
+    )
+
+    description_collection = create_collection(db, "description", service_version)
+    actions.append(
+        {"at": posix_time_millis(), "message": "created description collection"}
+    )
+
+    description_collection.insert_one(
+        {
+            "version": service_version,
+            "at": posix_time_millis(),
+            "migrated": True,
+            "messages": actions,
+        }
+    )
+
+    return {
+        "status": "ok",
+        "message": "Migration successfully completed",
+        "actions": actions,
+    }
+
+
+def initialize_v040(db):
+    actions = []
+    service_version = "0.4.0"
+
+    create_collection(db, "linking_sessions_initial", service_version)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "created linking_session_initial collection",
+        }
+    )
+
+    create_collection(db, "linking_sessions_started", service_version)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "created linking_session_started collection",
+        }
+    )
+
+    create_collection(db, "linking_sessions_completed", service_version)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": "created linking_session_completed collection",
+        }
+    )
+
+    links_collection = create_collection(db, "links", service_version)
+    actions.append({"at": posix_time_millis(), "message": "created links collection"})
+
+    links_collection.create_index("username", unique=True)
+    actions.append(
+        {
+            "at": posix_time_millis(),
+            "message": (
+                "created username index for linking_session_completed collection"
+            ),
         }
     )
 
@@ -294,7 +417,10 @@ def migrate_db():
                 return {
                     "status": "error",
                     "code": "migration-error",
-                    "message": f"No migration available for version {service_description.version}",
+                    "message": (
+                        "No migration available for version "
+                        f"{service_description.version}"
+                    ),
                 }
 
         elif service_description.version == "0.3.0":
@@ -314,17 +440,47 @@ def migrate_db():
                     return {
                         "status": "error",
                         "code": "migration-error",
-                        "message": f"No migration available from db version {description['version']} to service version {service_description.version}",
+                        "message": (
+                            "No migration available from db "
+                            f"version {description['version']}"
+                            f" to service version {service_description.version}"
+                        ),
+                    }
+
+        elif service_description.version == "0.4.0":
+            if description is None:
+                return initialize_v040(db)
+            else:
+                database_version = description["version"]
+                if database_version == service_description.version:
+                    return {
+                        "status": "ok",
+                        "code": "migration-not-required",
+                        "message": "Database already migrated for this version",
+                    }
+                elif database_version == "0.3.0":
+                    return migrate_v030_to_v040(db)
+                else:
+                    return {
+                        "status": "error",
+                        "code": "migration-error",
+                        "message": (
+                            "No migration available from db version "
+                            f"{description['version']} to service version "
+                            f"{service_description.version}"
+                        ),
                     }
 
         else:
             return {
                 "status": "error",
                 "code": "migration-error",
-                "message": f"No migration available for version {service_description.version}",
+                "message": (
+                    "No migration available for version "
+                    f"{service_description.version}"
+                ),
             }
     except Exception as dbe:
-        print("DEBUGgin error", str(dbe))
         return {
             "status": "error",
             "code": "migration-error",

@@ -1,18 +1,17 @@
 import json
 from typing import List
 
-# import httpx
 import aiohttp
 from fastapi import APIRouter, Body, Path, status
 from starlette.responses import Response
 
-from orcidlink import model
+from orcidlink import model, process
 from orcidlink.lib import exceptions
 from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
 from orcidlink.lib.service_clients import orcid_api
+from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
 from orcidlink.runtime import config
-from orcidlink.storage.storage_model import storage_model
 from orcidlink.translators import to_orcid, to_service
 from orcidlink.translators.to_orcid import (
     transform_contributor_self,
@@ -34,7 +33,8 @@ router = APIRouter(prefix="/orcid/works", responses={404: {"description": "Not f
         **AUTH_RESPONSES,
         **STD_RESPONSES,
         404: {"description": "Link not available for this user"},
-        # TODO: the model for error results should be typed more precisely - i.e. for each type of error response.
+        # TODO: the model for error results should be typed more precisely
+        # - i.e. for each type of error response.
     },
 )
 async def get_work(
@@ -44,14 +44,14 @@ async def get_work(
     authorization: str | None = AUTHORIZATION_HEADER,
 ) -> model.Work:
     """
-    Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header
+    Fetch the work record, identified by `put_code`, for the user associated with the
+    KBase auth token provided in the `Authorization` header
     """
     authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await storage_model().get_link_record(token_info.user)
-
+    link_record = await process.link_record_for_user(token_info.user)
     if link_record is None:
-        raise exceptions.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError(message="ORCID Profile Not Found")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -78,14 +78,14 @@ async def get_works(
     authorization: str | None = AUTHORIZATION_HEADER,
 ) -> List[model.ORCIDWorkGroup]:
     """
-    Fetch all of the "work" records from a user's ORCID account if their KBase account is linked.
+    Fetch all of the "work" records from a user's ORCID account if their KBase account
+    is linked.
     """
     authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await storage_model().get_link_record(token_info.user)
-
+    link_record = await process.link_record_for_user(token_info.user)
     if link_record is None:
-        raise exceptions.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError(message="ORCID Profile Not Found")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -102,8 +102,9 @@ async def get_works(
                 ],
                 works=[
                     to_service.transform_work_summary(work_summary)
-                    # TODO: Need to make the KBase source configurable, as it will be different,
-                    # between, say, CI and prod, or at least development and prod.
+                    # TODO: Need to make the KBase source configurable, as it will be
+                    # different, between, say, CI and prod, or at least development and
+                    # prod.
                     for work_summary in group.work_summary
                     # TODO: replace with source_client_id and compare to the client id
                     # in the config.
@@ -136,10 +137,9 @@ async def save_work(
     """
     authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await storage_model().get_link_record(token_info.user)
-
+    link_record = await process.link_record_for_user(token_info.user)
     if link_record is None:
-        raise exceptions.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError(message="ORCID Profile Not Found")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -173,10 +173,9 @@ async def delete_work(
 ) -> Response:
     authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await storage_model().get_link_record(token_info.user)
-
+    link_record = await process.link_record_for_user(token_info.user)
     if link_record is None:
-        raise exceptions.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError(message="ORCID Profile Not Found")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -226,10 +225,9 @@ async def create_work(
 ) -> model.Work:
     authorization, token_info = await ensure_authorization(authorization)
 
-    link_record = await storage_model().get_link_record(token_info.user)
-
+    link_record = await process.link_record_for_user(token_info.user)
     if link_record is None:
-        raise exceptions.NotFoundError("ORCID link record not found for user")
+        raise exceptions.NotFoundError(message="ORCID Profile Not Found")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -244,9 +242,7 @@ async def create_work(
             external_id_value=new_work.doi,
             external_id_normalized=None,
             # TODO: doi url should be configurable
-            external_id_url=orcid_api.StringValue(
-                value=f"https://doi.org/{new_work.doi}"
-            ),
+            external_id_url=ORCIDStringValue(value=f"https://doi.org/{new_work.doi}"),
             external_id_relationship="self",
         )
     ]
@@ -258,7 +254,7 @@ async def create_work(
                 orcid_api.ExternalId(
                     external_id_type=externalId.type,
                     external_id_value=externalId.value,
-                    external_id_url=orcid_api.StringValue(value=externalId.url),
+                    external_id_url=ORCIDStringValue(value=externalId.url),
                     external_id_relationship=externalId.relationship,
                 )
             )
@@ -280,9 +276,9 @@ async def create_work(
 
     work_record = orcid_api.NewWork(
         type=new_work.workType,
-        title=orcid_api.Title(title=orcid_api.StringValue(value=new_work.title)),
-        journal_title=orcid_api.StringValue(value=new_work.journal),
-        url=orcid_api.StringValue(value=new_work.url),
+        title=orcid_api.Title(title=ORCIDStringValue(value=new_work.title)),
+        journal_title=ORCIDStringValue(value=new_work.journal),
+        url=ORCIDStringValue(value=new_work.url),
         external_ids=orcid_api.ExternalIds(external_id=external_ids),
         publication_date=to_orcid.parse_date(new_work.date),
         short_description=new_work.shortDescription,
@@ -297,11 +293,13 @@ async def create_work(
         "Authorization": f"Bearer {token}",
     }
 
-    # Note that we use the "bulk" endpoint because it nicely returns the newly created work record.
-    # This both saves a trip and is more explicit than the singular endpoint POST /work, which
-    # returns 201 and a location for the new work record, which we would need to parse to
-    # extract the put code.
-    # TODO: also this endpoint and probably many others return a 200 response with error data.
+    # Note that we use the "bulk" endpoint because it nicely returns the newly created
+    # work record. This both saves a trip and is more explicit than the singular
+    # endpoint POST /work, which returns 201 and a location for the new work record,
+    # which we would need to parse to extract the put code.
+    #
+    # TODO: also this endpoint and probably many others return a 200 response with error
+    # data.
     content = orcid_api.CreateWorkInput(
         bulk=(orcid_api.NewWorkWrapper(work=work_record),)
     )
@@ -325,7 +323,7 @@ async def create_work(
                     profile, work_record2.bulk[0].work
                 )
                 return new_work_record
-    except aiohttp.ClientError as ex:
+    except aiohttp.ClientError:
         # TODO: richer error here.
         raise exceptions.UpstreamError(
             "An error was encountered saving the work record",

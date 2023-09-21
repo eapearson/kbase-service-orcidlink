@@ -26,7 +26,6 @@ git_info_json = load_data_file(TEST_DATA_DIR, "git_info1.json")
 
 @pytest.fixture
 def fake_fs(fs):
-    # print("OH HMMMM", service_path("SERVICE_DESCRIPTION.toml"))
     fs.create_file("/app/SERVICE_DESCRIPTION.toml", contents=service_description_toml)
     fs.create_file("/app/build/git-info.json", contents=git_info_json)
     data_dir = os.environ["TEST_DATA_DIR"]
@@ -88,7 +87,10 @@ def test_get_config_bad_env():
     with mock.patch.dict(os.environ, TEST_ENV_BAD, clear=True):
         with pytest.raises(
             ValueError,
-            match='The environment variable "KBASE_ENDPOINT" is missing and there is no default value',
+            match=(
+                'The environment variable "KBASE_ENDPOINT" is '
+                "missing and there is no default value"
+            ),
         ):
             Config2()
 
@@ -99,7 +101,9 @@ def test_get_config_bad_env():
 def test_get_int_constant_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         value = Config2.get_int_constant(
-            IntConstantDefault(required=True, env_name="FOO")
+            IntConstantDefault(
+                required=True, env_name="FOO", unit="foo", description="my foo"
+            )
         )
         assert value == 123
 
@@ -107,7 +111,13 @@ def test_get_int_constant_no_default():
 def test_get_int_constant_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         value = Config2.get_int_constant(
-            IntConstantDefault(required=True, env_name="FOO", value=456)
+            IntConstantDefault(
+                required=True,
+                env_name="FOO",
+                value=456,
+                unit="foo",
+                description="my foo",
+            )
         )
         assert value == 123
 
@@ -115,7 +125,13 @@ def test_get_int_constant_with_default():
 def test_get_int_constant_missing_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         value = Config2.get_int_constant(
-            IntConstantDefault(required=True, env_name="BAR", value=100)
+            IntConstantDefault(
+                required=True,
+                env_name="BAR",
+                value=100,
+                unit="foo",
+                description="my foo",
+            )
         )
         assert value == 100
 
@@ -124,9 +140,16 @@ def test_get_int_constant_missing_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with pytest.raises(
             ValueError,
-            match='The environment variable "BAR" is missing and there is no default value',
+            match=(
+                'The environment variable "BAR" is missing and there is no '
+                "default value"
+            ),
         ):
-            Config2.get_int_constant(IntConstantDefault(required=True, env_name="BAR"))
+            Config2.get_int_constant(
+                IntConstantDefault(
+                    required=True, env_name="BAR", unit="foo", description="my foo"
+                )
+            )
 
 
 # get_str_constant
@@ -135,7 +158,7 @@ def test_get_int_constant_missing_no_default():
 def test_get_str_constant_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         value = Config2.get_str_constant(
-            StrConstantDefault(required=True, env_name="FOO")
+            StrConstantDefault(required=True, env_name="FOO", description="my foo")
         )
         assert value == "123"
 
@@ -143,7 +166,9 @@ def test_get_str_constant_no_default():
 def test_get_str_constant_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         value = Config2.get_str_constant(
-            StrConstantDefault(required=True, env_name="FOO", value="456")
+            StrConstantDefault(
+                required=True, env_name="FOO", value="456", description="my foo"
+            )
         )
         assert value == "123"
 
@@ -151,7 +176,9 @@ def test_get_str_constant_with_default():
 def test_get_str_constant_missing_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         value = Config2.get_str_constant(
-            StrConstantDefault(required=True, env_name="BAR", value="baz")
+            StrConstantDefault(
+                required=True, env_name="BAR", value="baz", description="my bar"
+            )
         )
         assert value == "baz"
 
@@ -160,9 +187,14 @@ def test_get_str_constant_missing_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with pytest.raises(
             ValueError,
-            match='The environment variable "BAR" is missing and there is no default value',
+            match=(
+                'The environment variable "BAR" is missing and there '
+                "is no default value"
+            ),
         ):
-            Config2.get_str_constant(StrConstantDefault(required=True, env_name="BAR"))
+            Config2.get_str_constant(
+                StrConstantDefault(required=True, env_name="BAR", description="my bar")
+            )
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)

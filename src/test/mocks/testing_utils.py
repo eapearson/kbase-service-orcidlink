@@ -1,8 +1,10 @@
 import itertools
 import json
+from typing import Any
 
 from fastapi.testclient import TestClient
 
+from orcidlink.model import LinkRecord
 from orcidlink.storage.storage_model import storage_model
 
 
@@ -39,7 +41,6 @@ async def assert_create_linking_session(client: TestClient, authorization: str):
     #
     # Inspect the response for sensible answers.
     #
-    print("RESPONSE", response.text)
     assert response.status_code == 201
     session_info = response.json()
     assert isinstance(session_info["session_id"], str)
@@ -120,3 +121,20 @@ def assert_finish_linking_session(
         headers["authorization"] = kbase_session
     response = client.put(f"/linking-sessions/{session_id}/finish", headers=headers)
     assert response.status_code == expected_response_code
+
+
+async def create_link(link_record: Any) -> None:
+    sm = storage_model()
+    await sm.db.links.drop()
+    await sm.create_link_record(LinkRecord.model_validate(link_record))
+
+
+async def update_link(link_record: Any) -> None:
+    sm = storage_model()
+    await sm.save_link_record(link_record)
+
+
+async def get_link(username: str) -> LinkRecord | None:
+    sm = storage_model()
+    link_record = await sm.get_link_record(username)
+    return link_record

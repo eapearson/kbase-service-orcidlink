@@ -70,8 +70,8 @@ def test_service_error_no_data():
 
     response = exception.get_response()
 
-    # We can't inspect the response object much, but we can convert to JSON and make sure
-    # we are happy with it.
+    # We can't inspect the response object much, but we can convert to JSON and make
+    # sure we are happy with it.
     response_json = json.loads(response.body)
     assert "code" in response_json
     assert "title" in response_json
@@ -95,8 +95,8 @@ def test_service_error_with_data():
 
     response = exception.get_response()
 
-    # We can't inspect the response object much, but we can convert to JSON and make sure
-    # we are happy with it.
+    # We can't inspect the response object much, but we can convert to JSON and make
+    # sure we are happy with it.
     response_json = json.loads(response.body)
     assert "code" in response_json
     assert "title" in response_json

@@ -119,3 +119,50 @@ class ORCIDProfileNamePrivate(ServiceErrorY):
 class ImpossibleError(ServiceErrorY):
     def __init__(self, message: str):
         super().__init__(ERRORS.impossible_error, message)
+
+
+def make_upstream_error(status: int, json_response: Any, source: str) -> ServiceErrorY:
+    if isinstance(json_response, dict):
+        # Determine which of the 3 types of errors were returned, if we
+        # do have a json_response (not all api endpoints have a response).
+        if "error" in json_response:
+            # Remove potentially revealing information
+            # TODO: send note to the ORCID folks asking them to omit the
+            # token from the error response.
+            if status == 401 or status == 403:
+                json_response.pop("error_description")
+
+            return UpstreamORCIDAPIError(
+                "Error fetching data from ORCID",
+                data=UpstreamErrorData(
+                    source=source,
+                    status_code=status,
+                    detail=json_response,
+                ),
+            )
+        elif "message-version" in json_response:
+            return UpstreamORCIDAPIError(
+                "Error fetching data from ORCID",
+                data=UpstreamErrorData(
+                    source=source,
+                    status_code=status,
+                    detail=json_response,
+                ),
+            )
+        elif "response-code" in json_response:
+            return UpstreamORCIDAPIError(
+                "Error fetching data from ORCID",
+                data=UpstreamErrorData(
+                    source=source,
+                    status_code=status,
+                    detail=json_response,
+                ),
+            )
+    return UpstreamORCIDAPIError(
+        "Error fetching data from ORCID",
+        data=UpstreamErrorData(
+            source=source,
+            status_code=status,
+            detail=json_response,
+        ),
+    )

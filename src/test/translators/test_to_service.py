@@ -6,7 +6,11 @@ import pytest
 from orcidlink import model
 from orcidlink.lib import exceptions
 from orcidlink.lib.service_clients import orcid_api
-from orcidlink.lib.service_clients.orcid_api import ExternalId, ExternalIds, StringValue
+from orcidlink.lib.service_clients.orcid_api import (
+    ExternalId,
+    ExternalIds,
+    ORCIDStringValue,
+)
 from orcidlink.translators import to_service
 
 # TODO: should rename file to test_orcid.py, but need a test config tweak, because it
@@ -203,13 +207,13 @@ def test_transform_work_errors_too_many_dois():
                 external_id_type="doi",
                 external_id_value="foo",
                 external_id_relationship="self",
-                external_id_url=StringValue(value="bar"),
+                external_id_url=ORCIDStringValue(value="bar"),
             ),
             ExternalId(
                 external_id_type="doi",
                 external_id_value="foo",
                 external_id_relationship="self",
-                external_id_url=StringValue(value="bar"),
+                external_id_url=ORCIDStringValue(value="bar"),
             ),
         ]
     )
@@ -237,15 +241,15 @@ def test_transform_external_id():
 
 def test_orcid_date_to_string_date():
     result = to_service.orcid_date_to_string_date(
-        orcid_api.Date(year=orcid_api.StringValue(value="2000"))
+        orcid_api.Date(year=orcid_api.ORCIDStringValue(value="2000"))
     )
 
     assert result == "2000"
 
     result = to_service.orcid_date_to_string_date(
         orcid_api.Date(
-            year=orcid_api.StringValue(value="2000"),
-            month=orcid_api.StringValue(value="01"),
+            year=orcid_api.ORCIDStringValue(value="2000"),
+            month=orcid_api.ORCIDStringValue(value="01"),
         )
     )
 
@@ -253,9 +257,9 @@ def test_orcid_date_to_string_date():
 
     result = to_service.orcid_date_to_string_date(
         orcid_api.Date(
-            year=orcid_api.StringValue(value="2000"),
-            month=orcid_api.StringValue(value="01"),
-            day=orcid_api.StringValue(value="02"),
+            year=orcid_api.ORCIDStringValue(value="2000"),
+            month=orcid_api.ORCIDStringValue(value="01"),
+            day=orcid_api.ORCIDStringValue(value="02"),
         )
     )
 

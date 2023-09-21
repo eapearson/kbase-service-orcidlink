@@ -39,10 +39,10 @@ TEST_LINK = {
         "scope": "/read-limited openid /activities/update",
         "name": "Foo bar",
         "orcid": "0000-0003-4997-3076",
-        "id_token": "id-token",
     },
     "created_at": 1669943616532,
     "expires_at": 2301082134532,
+    "retires_at": 2301082134532,
     "username": "foo",
 }
 
@@ -198,8 +198,8 @@ def test_get_works_errors(fake_fs):
 
 
 # TODO: left off here, copied from test_get_work - added work_1526002_normalized.json to
-# serve as a basis for input work records - will need to copy that and perhaps modify slightly for
-# put_work.
+# serve as a basis for input work records - will need to copy that and perhaps modify
+# slightly for put_work.
 async def test_create_work(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
@@ -336,7 +336,7 @@ def test_external_id():
             external_id_type="foo",
             external_id_value="value",
             external_id_normalized=None,
-            external_id_url=orcid_api.StringValue(value="url"),
+            external_id_url=orcid_api.ORCIDStringValue(value="url"),
             external_id_relationship="rel",
         )
         # orcid_api.ORCIDExternalId.model_validate({

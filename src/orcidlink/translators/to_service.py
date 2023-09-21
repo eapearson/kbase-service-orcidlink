@@ -3,6 +3,7 @@ from typing import Dict, List
 from orcidlink import model
 from orcidlink.lib import exceptions
 from orcidlink.lib.service_clients import orcid_api
+from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
 from orcidlink.model import (
     CitationType,
     ContributorRole,
@@ -206,10 +207,13 @@ def transform_work(
     elif profile.person.name.credit_name is not None:
         name = profile.person.name.credit_name
     elif profile.person.name.family_name is None:
-        name = orcid_api.StringValue(value=f"{profile.person.name.given_names.value}")
+        name = ORCIDStringValue(value=f"{profile.person.name.given_names.value}")
     else:
-        name = orcid_api.StringValue(
-            value=f"{profile.person.name.given_names.value} {profile.person.name.family_name.value}"
+        name = ORCIDStringValue(
+            value=(
+                f"{profile.person.name.given_names.value} "
+                f"{profile.person.name.family_name.value}"
+            )
         )
 
     self_contributor = ORCIDContributorSelf(

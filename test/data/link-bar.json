@@ -1,15 +1,15 @@
 {
   "orcid_auth": {
-    "access_token": "access-token",
+    "access_token": "access-token-bar",
     "token_type": "bearer",
-    "refresh_token": "refresh-token",
+    "refresh_token": "refresh-token-bar",
     "expires_in": 631138518,
     "scope": "/read-limited openid /activities/update",
     "name": "Bar Bear",
-    "orcid": " 0000-1111-2222-3333",
-    "id_token": "id-token"
+    "orcid": " 0000-1111-2222-3333"
   },
   "created_at": 1669943616532,
   "expires_at": 2301082134532,
+  "retires_at": 2301082134532,
   "username": "bar"
 }

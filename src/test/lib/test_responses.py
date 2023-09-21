@@ -35,8 +35,8 @@ def test_error_response():
     )
     assert isinstance(value, JSONResponse)
     assert value.status_code == 123
-    # The JSONResponse structure is not in scope for this project; it is simply provided to
-    # fastapi which utilizes it for the response
+    # The JSONResponse structure is not in scope for this project; it is simply provided
+    # to fastapi which utilizes it for the response
     assert value.body is not None
 
 
@@ -47,10 +47,11 @@ def test_exception_error_response():
         value = exception_error_response(ERRORS.impossible_error, ex, status_code=123)
         assert isinstance(value, JSONResponse)
         assert value.status_code == 123
-        # The JSONResponse structure is not in scope for this project; it is simply provided to
-        # fastapi which utilizes it for the response.
-        # Still, the whole point of testing this is to assure ourselves that the response is as we expect,
-        # so ... here we go.
+        # The JSONResponse structure is not in scope for this project; it is simply
+        # provided to fastapi which utilizes it for the response.
+        #
+        # Still, the whole point of testing this is to assure ourselves that the
+        # response is as we expect, so ... here we go.
         assert value.body is not None
         data = json.loads(value.body)
         assert data["code"] == ERRORS.impossible_error.code
@@ -66,10 +67,11 @@ def test_exception_error_response_no_data():
         value = exception_error_response(ERRORS.impossible_error, ex, status_code=123)
         assert isinstance(value, JSONResponse)
         assert value.status_code == 123
-        # The JSONResponse structure is not in scope for this project; it is simply provided to
-        # fastapi which utilizes it for the response.
-        # Still, the whole point of testing this is to assure ourselves that the response is as we expect,
-        # so ... here we go.
+        # The JSONResponse structure is not in scope for this project; it is simply
+        # provided to fastapi which utilizes it for the response.
+        #
+        # Still, the whole point of testing this is to assure ourselves that the
+        # response is as we expect, so ... here we go.
         assert value.body is not None
         data = json.loads(value.body)
         assert data["code"] == ERRORS.impossible_error.code

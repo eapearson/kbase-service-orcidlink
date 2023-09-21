@@ -37,6 +37,7 @@ EXAMPLE_LINK_RECORD_1 = {
     "username": "foo",
     "created_at": 1,
     "expires_at": 2,
+    "retires_at": 3,
     "orcid_auth": {
         "access_token": "foo",
         "token_type": "bar",
@@ -45,7 +46,6 @@ EXAMPLE_LINK_RECORD_1 = {
         "scope": "boo",
         "name": "abc",
         "orcid": "def",
-        "id_token": "xyz",
     },
 }
 
@@ -57,6 +57,7 @@ EXAMPLE_LINK_RECORD_3 = {
     "username": "bar",
     "created_at": 1,
     "expires_at": 2,
+    "retires_at": 3,
     "orcid_auth": {
         "access_token": "bar",
         "token_type": "bar",
@@ -65,7 +66,6 @@ EXAMPLE_LINK_RECORD_3 = {
         "scope": "boo",
         "name": "abc",
         "orcid": "def",
-        "id_token": "xyz",
     },
 }
 
@@ -348,7 +348,6 @@ async def test_get_linking_sessions_completed():
         scope="d",
         name="e",
         orcid="f",
-        id_token="g",
     )
     await sm.update_linking_session_to_finished("foo-session", orcid_auth)
 
@@ -361,7 +360,6 @@ async def test_get_linking_sessions_completed():
         scope="d",
         name="e",
         orcid="f",
-        id_token="g",
     )
     await sm.update_linking_session_to_finished("bar-session", orcid_auth)
     result = await sm.get_linking_sessions_initial()
@@ -419,7 +417,6 @@ async def test_save_linking_record():
         scope="d",
         name="e",
         orcid="f",
-        id_token="g",
     )
 
     await sm.update_linking_session_to_finished("foo-session", orcid_auth)
@@ -474,7 +471,6 @@ async def test_update_linking_session_to_finished_bad_session_id():
         scope="d",
         name="e",
         orcid="f",
-        id_token="g",
     )
 
     with pytest.raises(exceptions.ServiceErrorY) as error:
@@ -516,8 +512,7 @@ async def test_delete_linking_session_started():
     #     expires_in=123,
     #     scope="d",
     #     name="e",
-    #     orcid="f",
-    #     id_token="g",
+    #     orcid="f"
     # )
 
     # await sm.update_linking_session_to_finished("bar", orcid_auth)
@@ -573,7 +568,6 @@ async def test_delete_expired_sessions():
         scope="d",
         name="e",
         orcid="f",
-        id_token="g",
     )
     await sm.update_linking_session_to_finished("baz-session", orcid_auth)
 

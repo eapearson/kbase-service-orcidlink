@@ -3,8 +3,12 @@ import copy
 import json
 import os
 from test.mocks.data import load_data_json
-from test.mocks.env import MOCK_KBASE_SERVICES_PORT, TEST_ENV
-from test.mocks.mock_contexts import mock_auth_service, no_stderr
+from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_OAUTH_PORT, TEST_ENV
+from test.mocks.mock_contexts import (
+    mock_auth_service,
+    mock_orcid_oauth_service,
+    no_stderr,
+)
 from test.mocks.testing_utils import clear_storage_model, generate_kbase_token
 from typing import Any, Optional
 from unittest import mock
@@ -168,9 +172,6 @@ async def test_get_links_with_find():
             baz_link = copy.deepcopy(TEST_LINK)
             baz_link["orcid_auth"]["orcid"] = "orcid-id-baz"
             baz_link["username"] = "baz"
-
-            # print("BAR", bar_link)
-            # print("BAZ", baz_link)
 
             sm = storage_model()
             await sm.db.links.drop()
@@ -601,3 +602,42 @@ async def test_get_link_error_not_admin():
                 headers={"Authorization": generate_kbase_token("foo")},
             )
             assert response2.status_code == 403
+
+
+async def test_patch_refresh_tokens():
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+                await create_link(TEST_LINK_BAR)
+
+                client = TestClient(app)
+
+                response = client.patch(
+                    "/manage/refresh-tokens/bar",
+                    headers={"Authorization": generate_kbase_token("foo")},
+                )
+                assert response.status_code == 403
+
+                response2 = client.patch(
+                    "/manage/refresh-tokens/bar",
+                    headers={"Authorization": generate_kbase_token("amanager")},
+                )
+                assert response2.status_code == 200
+
+                response_value = response2.json()
+                assert response_value["link"]["username"] == TEST_LINK_BAR["username"]
+
+
+async def test_patch_refresh_tokens_error_not_found():
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+                await create_link(TEST_LINK_BAR)
+
+                client = TestClient(app)
+
+                response2 = client.patch(
+                    "/manage/refresh-tokens/baz",
+                    headers={"Authorization": generate_kbase_token("amanager")},
+                )
+                assert response2.status_code == 404

@@ -14,6 +14,10 @@ from unittest import mock
 
 @contextlib.contextmanager
 def no_stderr():
+    """
+    Traps and disposes of stderr to clea up test output (like a poor programmer's
+    "quiet")
+    """
     with contextlib.redirect_stderr(open(os.devnull, "w", encoding="utf-8")):
         yield
 

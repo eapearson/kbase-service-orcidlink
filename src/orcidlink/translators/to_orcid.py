@@ -2,22 +2,23 @@ from typing import List
 
 from orcidlink import model
 from orcidlink.lib.service_clients import orcid_api
+from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
 
 
 def parse_date(date_string: str) -> orcid_api.Date:
     date_parts = date_string.split("/")
     if len(date_parts) == 1:
-        return orcid_api.Date(year=orcid_api.StringValue(value=date_parts[0]))
+        return orcid_api.Date(year=ORCIDStringValue(value=date_parts[0]))
     elif len(date_parts) == 2:
         return orcid_api.Date(
-            year=orcid_api.StringValue(value=date_parts[0]),
-            month=orcid_api.StringValue(value=date_parts[1].rjust(2, "0")),
+            year=ORCIDStringValue(value=date_parts[0]),
+            month=ORCIDStringValue(value=date_parts[1].rjust(2, "0")),
         )
     elif len(date_parts) == 3:
         return orcid_api.Date(
-            year=orcid_api.StringValue(value=date_parts[0]),
-            month=orcid_api.StringValue(value=date_parts[1].rjust(2, "0")),
-            day=orcid_api.StringValue(value=date_parts[2].rjust(2, "0")),
+            year=ORCIDStringValue(value=date_parts[0]),
+            month=ORCIDStringValue(value=date_parts[1].rjust(2, "0")),
+            day=ORCIDStringValue(value=date_parts[2].rjust(2, "0")),
         )
     else:
         raise ValueError(
@@ -44,7 +45,7 @@ def transform_contributor_self(
                 contributor_orcid=orcid_api.ContributorORCID(
                     path=contributor_update.orcidId, uri=None, host=None
                 ),
-                credit_name=orcid_api.StringValue(value=contributor_update.name),
+                credit_name=ORCIDStringValue(value=contributor_update.name),
                 # seems unused - no way to access it in the ORCID ui
                 contributor_email=None,
                 contributor_attributes=orcid_api.ContributorAttributes(
@@ -72,8 +73,9 @@ def transform_contributor(
     contributor_records: List[orcid_api.Contributor] = []
     for role in contributor_update.roles:
         contributor = orcid_api.Contributor(
-            credit_name=orcid_api.StringValue(value=contributor_update.name),
-            # seems unused - no way to access it in the ORCID ui, and we don't need to collect it afaik.
+            credit_name=ORCIDStringValue(value=contributor_update.name),
+            # seems unused - no way to access it in the ORCID ui, and we don't need to
+            # collect it afaik.
             contributor_email=None,
             contributor_attributes=orcid_api.ContributorAttributes(
                 contributor_sequence=None, contributor_role=role.role
@@ -120,7 +122,7 @@ def translate_work_update(work_update: model.WorkUpdate) -> orcid_api.WorkUpdate
             external_id_value=work_update.doi,
             external_id_normalized=None,
             # TODO: doi url should be configurable
-            external_id_url=orcid_api.StringValue(
+            external_id_url=ORCIDStringValue(
                 value=f"https://doi.org/{work_update.doi}"
             ),
             external_id_relationship="self",
@@ -132,7 +134,7 @@ def translate_work_update(work_update: model.WorkUpdate) -> orcid_api.WorkUpdate
                 external_id_type=externalId.type,
                 external_id_value=externalId.value,
                 external_id_normalized=None,
-                external_id_url=orcid_api.StringValue(value=externalId.url),
+                external_id_url=ORCIDStringValue(value=externalId.url),
                 external_id_relationship=externalId.relationship,
             )
         )
@@ -153,9 +155,9 @@ def translate_work_update(work_update: model.WorkUpdate) -> orcid_api.WorkUpdate
     return orcid_api.WorkUpdate(
         put_code=work_update.putCode,
         type=work_update.workType,
-        title=orcid_api.Title(title=orcid_api.StringValue(value=work_update.title)),
-        journal_title=orcid_api.StringValue(value=work_update.journal),
-        url=orcid_api.StringValue(value=work_update.url),
+        title=orcid_api.Title(title=ORCIDStringValue(value=work_update.title)),
+        journal_title=ORCIDStringValue(value=work_update.journal),
+        url=ORCIDStringValue(value=work_update.url),
         publication_date=orcid_api.Date.model_validate(parse_date(work_update.date)),
         external_ids=orcid_api.ExternalIds(external_id=external_ids),
         short_description=work_update.shortDescription,

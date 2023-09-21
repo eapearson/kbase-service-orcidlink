@@ -191,7 +191,6 @@ async def test_save_linking_record():
         scope="d",
         name="e",
         orcid="f",
-        id_token="g",
     )
 
     await sm.update_linking_session_to_finished("bar", orcid_auth)

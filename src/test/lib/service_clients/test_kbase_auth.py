@@ -99,13 +99,14 @@ async def test_kbase_auth_get_token_info_internal_error():
 
 
 async def test_kbase_auth_get_token_info_param_errors():
+    """ """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         client = KBaseAuth(
             url="http://foo/services/auth",
             timeout=1,
         )
         assert client is not None
-        with pytest.raises(exceptions.AuthorizationRequiredError) as e:
+        with pytest.raises(exceptions.UpstreamError):
             await client.get_token_info("")
 
 

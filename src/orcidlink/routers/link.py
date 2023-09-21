@@ -24,6 +24,7 @@ To that end the following endpoints are provided:
 from fastapi import APIRouter, Path, Response
 from starlette.responses import JSONResponse
 
+from orcidlink import process
 from orcidlink.lib import errors, exceptions
 from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, AUTHORIZATION_HEADER, STD_RESPONSES
@@ -35,7 +36,6 @@ from orcidlink.model import (
     ORCIDAuthPublicNonOwner,
 )
 from orcidlink.process import delete_link
-from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/link")
 
@@ -63,8 +63,11 @@ ORCID_ID_PARAM = Path(
             "model": errors.ErrorResponse,
         },
         200: {
-            "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
-            + "for this user; contains no secrets",
+            "description": (
+                "Returns the <a href='#user-content-glossary_term_public-link-record'>"
+                "Public link record</a> "
+                "for this user; contains no secrets"
+            ),
             "model": LinkRecordPublic,
         },
     },
@@ -80,8 +83,7 @@ async def get_link(
     """
     _, token_info = await ensure_authorization(authorization)
 
-    model = storage_model()
-    link_record = await model.get_link_record(token_info.user)
+    link_record = await process.link_record_for_user(token_info.user)
 
     if link_record is None:
         raise exceptions.NotFoundError("No link record was found for this user")
@@ -90,6 +92,7 @@ async def get_link(
         username=link_record.username,
         created_at=link_record.created_at,
         expires_at=link_record.expires_at,
+        retires_at=link_record.retires_at,
         orcid_auth=ORCIDAuthPublic(
             name=link_record.orcid_auth.name,
             scope=link_record.orcid_auth.scope,
@@ -113,7 +116,8 @@ async def get_link(
         200: {
             "description": (
                 "Returns the "
-                "<a href='#user-content-glossary_term_public-link-record'>Public link record</a> "
+                "<a href='#user-content-glossary_term_public-link-record'>"
+                "Public link record</a> "
                 "for this user; contains no secrets"
             ),
             "model": LinkRecordPublic,
@@ -132,8 +136,7 @@ async def get_link_for_orcid(
     """
     _, _ = await ensure_authorization(authorization)
 
-    model = storage_model()
-    link_record = await model.get_link_record_for_orcid_id(orcid_id)
+    link_record = await process.link_record_for_orcid_id(orcid_id)
 
     if link_record is None:
         raise exceptions.NotFoundError("No link record was found for this user")
@@ -172,8 +175,7 @@ async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> boo
     header has a link to an ORCID account.
     """
     _, token_info = await ensure_authorization(authorization)
-    model = storage_model()
-    link_record = await model.get_link_record(token_info.user)
+    link_record = await process.link_record_for_user(token_info.user)
 
     return link_record is not None
 
@@ -204,8 +206,7 @@ async def get_is_orcid_linked(
     header has a link to an ORCID account.
     """
     _, _ = await ensure_authorization(authorization)
-    model = storage_model()
-    link_record = await model.get_link_record_for_orcid_id(orcid_id)
+    link_record = await process.link_record_for_orcid_id(orcid_id)
 
     return link_record is not None
 
@@ -234,8 +235,7 @@ async def link_share(
     """
     await ensure_authorization(authorization)
 
-    model = storage_model()
-    link_record = await model.get_link_record(username)
+    link_record = await process.link_record_for_user(username)
 
     if link_record is None:
         raise exceptions.NotFoundError("Link not found for user")

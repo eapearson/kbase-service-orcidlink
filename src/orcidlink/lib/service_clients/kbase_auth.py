@@ -71,6 +71,22 @@ class KBaseAuth(object):
         self.timeout = timeout
 
     async def _get(self, path: str, authorization: str) -> Any:
+        """
+        General purpose "GET request" request and response implementation for the auth
+        service V2 api.
+
+        It can handle any endpoint which uses the GET request method, as it is
+        agnostic about the structure of the response.
+
+        It raises several errors, under the following conditions:
+        exceptions.ContentTypeError - if the wrong content type (not application/json)
+          is returned (raised by aiohttp)
+        exceptions.JSONDecodeError - if the response does not parse correctly as
+          JSON (raised by aiohttp)
+        exceptions.ServiceErrorY (401 - auth required) - if the error returned by the auth service is
+          10020 (invalid token
+        exceptions.UpstreamError - for any other error reported by the auth service
+        """
         try:
             async with aiohttp.ClientSession() as session:
                 url = f"{self.url}/api/V2/{path}"
@@ -85,11 +101,16 @@ class KBaseAuth(object):
             if cte.headers is not None:
                 data.originalContentType = cte.headers["content-type"]
             raise exceptions.ContentTypeError("Wrong content type", data=data)
+
         except json.JSONDecodeError as jde:
             raise exceptions.JSONDecodeError(
                 "Error decoding JSON response",
                 exceptions.JSONDecodeErrorData(message=str(jde)),
             )
+
+        except aiohttp.ClientConnectionError as cce:
+            # TODO: should be own bespoke error?
+            raise exceptions.UpstreamError("Error connecting to auth service")
 
         if not response.ok:
             # We don't care about the HTTP response code, just the appcode in the
@@ -107,14 +128,19 @@ class KBaseAuth(object):
         return json_result
 
     async def get_token_info(self, token: str) -> TokenInfo:
-        if token == "":
-            raise exceptions.AuthorizationRequiredError("Token may not be empty")
-
+        """
+        Fetches token information from the auth service and returns it in a
+        Pydantic class matching the original structure.
+        """
         json_result = await self._get("token", token)
 
         return TokenInfo.model_validate(json_result)
 
     async def get_me(self, token: str) -> AccountInfo:
+        """
+        Fetches user account information from the auth service and returns it in a
+        Pydantic class matching the original structure.
+        """
         if token == "":
             raise exceptions.AuthorizationRequiredError("Token may not be empty")
 
