@@ -52,9 +52,7 @@ COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
 COPY ./SERVICE_DESCRIPTION.toml /kb/module
 COPY .git /kb/module
-COPY log_config.yaml /kb/module
-# NB: build should be populated at build time
-#COPY ./build /kb/module
+COPY ./log_config.yaml /kb/module
 
 WORKDIR /kb/module
 
