@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from orcidlink.lib import exceptions
@@ -59,14 +60,16 @@ async def link_record_for_user(username: str) -> Optional[LinkRecord]:
     user_link_record = await storage_model().get_link_record(username)
     if user_link_record is None:
         return None
-        # raise exceptions.ServiceErrorY(
-        #     error=errors.ERRORS.not_found, message="ORCID Profile Not Found"
-        # )
+
+    logging.info("link_record_for_user: got link")
 
     # Make sure the orcid auth is not retired.
     now = posix_time_millis()
     if user_link_record.retires_at < now:
+        logging.info("about to refresh")
         user_link_record = await refresh_token_for_link(user_link_record)
+
+    logging.info("link_record_for_user: returning")
 
     return user_link_record
 

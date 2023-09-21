@@ -184,6 +184,7 @@ class ValidationError(ServiceBaseModel):
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
+    logging.error(f"RequestValidationError: {str(exc)}")
     detail = list(exc.errors())
     data: ValidationError = ValidationError(detail=detail, body=exc.body)
     return error_response(
@@ -198,6 +199,7 @@ async def validation_exception_handler(
 async def service_errory_exception_handler(
     _: Request, exc: exceptions.ServiceErrorY
 ) -> JSONResponse:
+    logging.error(f"ServiceErrorY: {str(exc)}")
     return exc.get_response()
 
 
@@ -210,6 +212,7 @@ async def service_errory_exception_handler(
 async def internal_server_error_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
+    logging.error(f"INTERNAL SERVER ERROR: {str(exc)}")
     return exception_error_response(
         errors.ERRORS.internal_server_error,
         exc,
@@ -234,6 +237,7 @@ class StarletteHTTPNotFoundData(StarletteHTTPDetailData):
 async def http_exception_handler(
     request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:
+    logging.error(f"StarletteHTTPException: {str(exc)}")
     if exc.status_code == 404:
         return error_response2(
             errors.ErrorResponse[StarletteHTTPNotFoundData](
