@@ -137,6 +137,12 @@ class ORCIDOAuthClient:
                 self.url_path("token"), headers=header, data=data
             ) as response:
                 json_response = await self.handle_json_response(response)
+                if response.status != 200:
+                    print("refresh_token: error", json_response)
+                    raise exceptions.make_upstream_error(
+                        response.status, json_response, source="refresh_token"
+                    )
+
                 return model.ORCIDAuth.model_validate(json_response)
 
     async def exchange_code_for_token(self, code: str) -> model.ORCIDAuth:

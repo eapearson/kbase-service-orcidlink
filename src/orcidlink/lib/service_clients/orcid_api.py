@@ -734,7 +734,7 @@ class ORCIDAPIClient:
                 # Remember, actual >= 500 errors will result in an exception
                 # thrown or possibly trigger a json parse error above, as we
                 # expect a valid response.
-                # TODO: we need to make the new upstram error carry data
+                # TODO: we need to make the new upsteram error carry data
                 # raise exceptions.UpstreamError()
                 raise exceptions.make_upstream_error(
                     response.status, result, source="get_profile"
