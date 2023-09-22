@@ -163,7 +163,7 @@ STR_CONSTANT_DEFAULTS = StrConstantDefaults(
     orcid_scopes=StrConstantDefault(
         required=True,
         env_name="ORCID_SCOPES",
-        value="/read-limited /activities/update openid",
+        value="/read-limited /activities/update",
         description=(""),
     ),
     orcid_link_manager_role=StrConstantDefault(
