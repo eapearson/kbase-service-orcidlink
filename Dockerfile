@@ -47,7 +47,6 @@ COPY ./src/orcidlink /kb/module/src/orcidlink
 COPY ./src/boot /kb/module/src/boot
 COPY ./src/misc /kb/module/src/misc
 COPY ./schema /kb/module/schema
-COPY ./etc /kb/module/etc
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
 COPY ./SERVICE_DESCRIPTION.toml /kb/module
