@@ -13,8 +13,6 @@ from unittest import mock
 from fastapi.testclient import TestClient
 
 from orcidlink.main import app
-from orcidlink.model import LinkRecord
-from orcidlink.storage import storage_model
 
 client = TestClient(app)
 

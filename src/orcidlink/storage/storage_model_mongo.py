@@ -33,6 +33,12 @@ class StatsRecord(ServiceBaseModel):
     linking_sessions_completed: LinkSessionStats
 
 
+class ExpiredSessions(ServiceBaseModel):
+    initial_sessions: List[LinkingSessionInitial]
+    started_sessions: List[LinkingSessionStarted]
+    completed_sessions: List[LinkingSessionComplete]
+
+
 class StorageModelMongo:
     def __init__(
         self, host: str, port: int, database: str, username: str, password: str
@@ -176,6 +182,57 @@ class StorageModelMongo:
 
         await self.db.linking_sessions_completed.delete_many(
             {"expires_at": {"$lte": now}}
+        )
+
+    async def get_expired_initial_sessions(
+        self, now: int
+    ) -> List[LinkingSessionInitial]:
+        initial_sessions_cursor = self.db.linking_sessions_initial.find(
+            {"expires_at": {"$lte": now}}
+        )
+        linking_sessions_initial: List[LinkingSessionInitial] = []
+        for doc in await initial_sessions_cursor.to_list(length=100):
+            link = LinkingSessionInitial.model_validate(doc)
+            linking_sessions_initial.append(link)
+
+        return linking_sessions_initial
+
+    async def get_expired_started_sessions(
+        self, now: int
+    ) -> List[LinkingSessionStarted]:
+        started_sessions_cursor = self.db.linking_sessions_started.find(
+            {"expires_at": {"$lte": now}}
+        )
+        linking_sessions_started: List[LinkingSessionStarted] = []
+        for doc in await started_sessions_cursor.to_list(length=100):
+            link = LinkingSessionStarted.model_validate(doc)
+            linking_sessions_started.append(link)
+
+        return linking_sessions_started
+
+    async def get_expired_completed_sessions(
+        self, now: int
+    ) -> List[LinkingSessionComplete]:
+        completed_sessions_cursor = self.db.linking_sessions_completed.find(
+            {"expires_at": {"$lte": now}}
+        )
+        linking_sessions_completed: List[LinkingSessionComplete] = []
+        for doc in await completed_sessions_cursor.to_list(length=100):
+            link = LinkingSessionComplete.model_validate(doc)
+            linking_sessions_completed.append(link)
+        return linking_sessions_completed
+
+    async def get_expired_sesssions(self) -> ExpiredSessions:
+        now = posix_time_millis()
+
+        linking_sessions_initial = await self.get_expired_initial_sessions(now)
+        linking_sessions_started = await self.get_expired_started_sessions(now)
+        linking_sessions_completed = await self.get_expired_completed_sessions(now)
+
+        return ExpiredSessions(
+            initial_sessions=linking_sessions_initial,
+            started_sessions=linking_sessions_started,
+            completed_sessions=linking_sessions_completed,
         )
 
     async def get_linking_session_initial(

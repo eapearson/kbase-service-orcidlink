@@ -33,6 +33,11 @@ USERNAME_PARAM = Path(
     # It is a uuid, whose string representation is 36 characters.
 )
 
+SESSION_ID_PARAM = Path(
+    description="The session id",
+    # It is a uuid, whose string representation is 36 characters.
+)
+
 
 @router.get(
     "/is_manager",
@@ -336,7 +341,79 @@ async def delete_expired_linking_sessions(
     # session_record = await get_linking_session_completed(session_id, authorization)
 
     model = storage_model()
+
+    expired_sessions = await model.get_expired_sesssions()
+
+    for expired_completed_session in expired_sessions.completed_sessions:
+        await orcid_oauth().revoke_access_token(
+            expired_completed_session.orcid_auth.access_token
+        )
+
+    # TODO: rectify with the above.
     await model.delete_expired_sesssions()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/linking_session_started/{session_id}",
+    status_code=204,
+    responses={
+        204: {"description": "Successfully deleted session"},
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+    },
+    tags=["linking-sessions"],
+)
+async def delete_linking_session_started(
+    session_id: str = SESSION_ID_PARAM,
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> Response:
+    """
+    Delete a started linking session
+    """
+    _, account_info = await ensure_account(authorization)
+    if "orcidlink_admin" not in account_info.customroles:
+        raise exceptions.UnauthorizedError("Not authorized for management operations")
+
+    # session_record = await get_linking_session_completed(session_id, authorization)
+
+    model = storage_model()
+    await model.delete_linking_session_started(session_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/linking_session_completed/{session_id}",
+    status_code=204,
+    responses={
+        204: {"description": "Successfully deleted session"},
+        **AUTH_RESPONSES,
+        **STD_RESPONSES,
+    },
+    tags=["linking-sessions"],
+)
+async def delete_linking_session_completed(
+    session_id: str = SESSION_ID_PARAM,
+    authorization: str | None = AUTHORIZATION_HEADER,
+) -> Response:
+    """
+    Delete Expired Linking Sessions
+    """
+    _, account_info = await ensure_account(authorization)
+    if "orcidlink_admin" not in account_info.customroles:
+        raise exceptions.UnauthorizedError("Not authorized for management operations")
+
+    model = storage_model()
+
+    session_record = await model.get_linking_session_completed(session_id)
+
+    if session_record is None:
+        raise exceptions.NotFoundError("Linking session does not exist")
+
+    await orcid_oauth().revoke_access_token(session_record.orcid_auth.access_token)
+
+    await model.delete_linking_session_completed(session_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
