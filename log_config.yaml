@@ -1,34 +1,88 @@
+---
 version: 1
 disable_existing_loggers: False
+filters:
+  correlation_id:
+    '()': 'asgi_correlation_id.CorrelationIdFilter'
+    uuid_length: 32
+    default_value: '-'
 formatters:
   default:
-    # "()": uvicorn.logging.DefaultFormatter
-    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-  access:
-    # "()": uvicorn.logging.AccessFormatter
-    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%dT%H:%M:%S%z'
+    format: "%(asctime)s %(name)s %(process)d %(lineno)d %(levelname)s %(message)s"
+  simple:
+    datefmt: '%Y-%m-%dT%H:%M:%S%z'
+    format: "%(message)s"
+  json:
+    datefmt: '%Y-%m-%dT%H:%M:%S%z'
+    "()": pythonjsonlogger.jsonlogger.JsonFormatter
+    format: |
+      created_at: %(asctime)s
+      correlation_id: %(correlation_id)s
+      filename: %(filename)s
+      funcName: %(funcName)s
+      levelname: %(levelname)s
+      levelno: %(levelno)s
+      lineno: %(lineno)d
+      message: %(message)s
+      module: %(module)s
+      name: %(name)s
+      pathname: %(pathname)s
+      process: %(process)d
+      processName: %(processName)s
+      relativeCreated: %(relativeCreated)d
+      thread: %(thread)d
+      threadName: %(threadName)s
+      exc_info: %(exc_info)s
 handlers:
-  default:
+  logfile:
     formatter: default
+    level: ERROR
+    class: logging.handlers.RotatingFileHandler
+    filename: orcidlink-errors.log
+    backupCount: 5
+  verbose_output:
+    formatter: simple
+    level: DEBUG
     class: logging.StreamHandler
-    stream: ext://sys.stderr
-  access:
-    formatter: access
+    stream: ext://sys.stdout
+  json:
+    formatter: json
     class: logging.StreamHandler
     stream: ext://sys.stdout
 loggers:
+  api:
+    level: DEBUG
+    filters: [correlation_id]
+    handlers:
+      - json
+    propagate: no
+  orcidlinkapi:
+    level: DEBUG
+    filters: [correlation_id]
+    handlers:
+      - json
+    propagate: no
+  orcidlinkoauth:
+    level: DEBUG
+    filters: [correlation_id]
+    handlers:
+      - json
+    propagate: no
   uvicorn.error:
     level: INFO
+    filters: [correlation_id]
     handlers:
-      - default
+      - json
     propagate: no
   uvicorn.access:
     level: INFO
+    filters: [correlation_id]
     handlers:
-      - access
+      - json
     propagate: no
 root:
-  level: DEBUG
+  level: INFO
+  filters: [correlation_id]
   handlers:
-    - default
-  propagate: no
+    - json

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Path
 from pydantic import Field
 
@@ -41,6 +43,13 @@ async def get_status() -> StatusResponse:
     i/o or other high-latency calls), or for time synchronization (as it returns the
     current time).
     """
+
+    logger = logging.getLogger("api")
+    logger.info(
+        "Successfully called /info method",
+        extra={"type": "api", "params": None, "path": "/status"},
+    )
+
     return StatusResponse(
         status="ok", start_time=stats().start_time, current_time=posix_time_millis()
     )
@@ -63,7 +72,12 @@ async def get_info() -> InfoResponse:
     service_description = get_service_description()
     git_info = get_git_info()
 
-    # NB we can mix dict and model here.
+    logger = logging.getLogger("api")
+    logger.info(
+        "Successfully called /info method",
+        extra={"type": "api", "params": None, "path": "/info"},
+    )
+
     return InfoResponse.model_validate(
         {
             "service-description": service_description,

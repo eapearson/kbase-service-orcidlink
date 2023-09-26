@@ -32,6 +32,9 @@ class ServiceErrorY(Exception):
             content["data"] = dict(self.data)
         return JSONResponse(status_code=self.error.status_code or 500, content=content)
 
+    def asdict(self) -> dict[str, Any]:
+        return {"message": self.message, "error": dict(self.error), "data": self.data}
+
 
 class AlreadyLinkedError(ServiceErrorY):
     def __init__(self, message: str):

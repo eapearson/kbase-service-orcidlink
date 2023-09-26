@@ -18,6 +18,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Generic, List, TypeVar
 
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -83,6 +84,21 @@ directly by the browser, rather than being used within Javascript code.\
 ]
 
 
+# logging.config.dictConfig(LOGGING_CONFIG)
+
+# orcid_logger.info(ORCIDLogging("just a test", ORCIDRequestLogEntry(
+#     request_id="foo",
+#     request_at=123,
+#     api='api here',
+#     url='url here',
+#     method='method here',
+#     query_string='query_tring here',
+#     data={"foo": "bar"}
+# )))
+
+logging.getLogger().info("Initializing main app")
+
+
 def config_to_log_level(log_level: str) -> int:
     """
     Translate a log level string to a Python log level value.
@@ -132,6 +148,8 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
+
+app.add_middleware(CorrelationIdMiddleware)
 
 ###############################################################################
 # Routers
@@ -184,7 +202,10 @@ class ValidationError(ServiceBaseModel):
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    logging.error(f"RequestValidationError: {str(exc)}")
+    logging.error(
+        "RequestValidationError: see validation_error_info for details",
+        extra={"type": "validation-error", "validation_error_info": exc.errors()},
+    )
     detail = list(exc.errors())
     data: ValidationError = ValidationError(detail=detail, body=exc.body)
     return error_response(
@@ -199,7 +220,10 @@ async def validation_exception_handler(
 async def service_errory_exception_handler(
     _: Request, exc: exceptions.ServiceErrorY
 ) -> JSONResponse:
-    logging.error(f"ServiceErrorY: {str(exc)}")
+    logging.error(
+        f"ServiceErrorY: {str(exc)}",
+        extra={"type": "service-error", "details": exc.asdict()},
+    )
     return exc.get_response()
 
 
@@ -212,7 +236,11 @@ async def service_errory_exception_handler(
 async def internal_server_error_handler(
     request: Request, exc: Exception
 ) -> JSONResponse:
-    logging.error(f"INTERNAL SERVER ERROR: {str(exc)}")
+    logging.error(
+        f"INTERNAL SERVER ERROR: {str(exc)}",
+        extra={"type": "internal-server-error", "exception": str(exc)},
+        exc_info=exc,
+    )
     return exception_error_response(
         errors.ERRORS.internal_server_error,
         exc,
