@@ -179,8 +179,6 @@ async def get_is_linked(authorization: str | None = AUTHORIZATION_HEADER) -> boo
     _, token_info = await ensure_authorization(authorization)
     link_record = await process.link_record_for_user(token_info.user)
 
-    x = 1 / 0
-
     logger = logging.getLogger("api")
     logger.info(
         "Successfully called /is_linked method",
