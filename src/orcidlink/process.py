@@ -3,7 +3,12 @@ from typing import Optional
 from orcidlink.lib import exceptions
 from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
 from orcidlink.lib.utils import posix_time_millis
-from orcidlink.model import LinkingSessionComplete, LinkRecord
+from orcidlink.model import (
+    LinkingSessionComplete,
+    LinkingSessionInitial,
+    LinkingSessionStarted,
+    LinkRecord,
+)
 from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 
@@ -107,3 +112,35 @@ async def refresh_token_for_link(link_record: LinkRecord) -> LinkRecord:
     await storage_model().save_link_record(link_record)
 
     return link_record
+
+
+async def get_linking_session_initial(
+    session_id: str, username: str
+) -> LinkingSessionInitial:
+    model = storage_model()
+
+    session_record = await model.get_linking_session_initial(session_id)
+
+    if session_record is None:
+        raise exceptions.NotFoundError("Linking session not found")
+
+    if not session_record.username == username:
+        raise exceptions.UnauthorizedError("Username does not match linking session")
+
+    return session_record
+
+
+async def get_linking_session_started(
+    session_id: str, username: str
+) -> LinkingSessionStarted:
+    model = storage_model()
+
+    session_record = await model.get_linking_session_started(session_id)
+
+    if session_record is None:
+        raise exceptions.NotFoundError("Linking session not found")
+
+    if not session_record.username == username:
+        raise exceptions.UnauthorizedError("Username does not match linking session")
+
+    return session_record

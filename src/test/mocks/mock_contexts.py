@@ -1,7 +1,8 @@
 import contextlib
 import os
 from test.mocks.mock_auth import MockAuthService
-from test.mocks.mock_imaginary_service import MockImaginaryService
+
+# from test.mocks.mock_imaginary_service import MockImaginaryService
 from test.mocks.mock_orcid import (
     MockORCIDAPI,
     MockORCIDAPIWithErrors,
@@ -77,16 +78,16 @@ def mock_orcid_api_service_with_errors(port: int):
         service.stop_service()
 
 
-@contextlib.contextmanager
-def mock_imaginary_service(port: int):
-    server = MockServer("127.0.0.1", port, MockImaginaryService)
-    MockImaginaryService.reset_call_counts()
-    try:
-        server.start_service()
-        url = f"{server.base_url()}/services/imaginary_service"
-        yield [server, MockImaginaryService, url, port]
-    finally:
-        server.stop_service()
+# @contextlib.contextmanager
+# def mock_imaginary_service(port: int):
+#     server = MockServer("127.0.0.1", port, MockImaginaryService)
+#     MockImaginaryService.reset_call_counts()
+#     try:
+#         server.start_service()
+#         url = f"{server.base_url()}/services/imaginary_service"
+#         yield [server, MockImaginaryService, url, port]
+#     finally:
+#         server.stop_service()
 
 
 @contextlib.contextmanager

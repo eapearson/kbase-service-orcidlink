@@ -127,6 +127,12 @@ class StorageModelMongo:
     ) -> None:
         await self.db.linking_sessions_initial.insert_one(linking_record.model_dump())
 
+    async def delete_linking_session_initial(self, session_id: str) -> None:
+        # The UI api only supports deleting completed sessions.
+        # We'll need an admin API to delete danging initial and started linking
+        # sessions.
+        await self.db.linking_sessions_initial.delete_one({"session_id": session_id})
+
     async def delete_linking_session_started(self, session_id: str) -> None:
         # The UI api only supports deleting completed sessions.
         # We'll need an admin API to delete danging initial and started linking

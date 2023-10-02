@@ -59,9 +59,7 @@ class MockService(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(output)
 
-    def send_json_error(
-        self, error_info, status_code: int = 500, content_type: str = "application/json"
-    ):
+    def send_json_error(self, error_info, status_code: int, content_type: str):
         output = json.dumps(error_info).encode()
         self.send_response(status_code)
         self.send_header("Content-Type", content_type)
@@ -69,7 +67,7 @@ class MockService(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(output)
 
-    def send_text_error(self, text: str, status_code: int = 500):
+    def send_text_error(self, text: str, status_code: int):
         # This is done intentionally by the backing http server,
         # which would correctly set the content type.
         self.send_response(status_code)
@@ -308,7 +306,7 @@ class MockSDKJSON11Service(MockSDKJSON11ServiceBase):
                     result = self.error_response(INVALID_PARAMS, "Invalid params")
                 else:
                     self.increment_method_call_count(method, "success")
-                    self.send_text_error("This should fail")
+                    self.send_text_error("This should fail", 500)
                     return
             elif method == "MyServiceModule.error_json_text":
                 positional_params = request.get("params")

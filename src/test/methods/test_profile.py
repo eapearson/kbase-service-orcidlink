@@ -7,7 +7,13 @@ from test.mocks.mock_contexts import (
     mock_orcid_api_service,
     no_stderr,
 )
-from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
+from test.mocks.testing_utils import (
+    TOKEN_BAR,
+    TOKEN_FOO,
+    assert_json_rpc_error,
+    assert_json_rpc_result_ignore_result,
+    rpc_call,
+)
 from unittest import mock
 
 import pytest
@@ -97,16 +103,14 @@ async def test_get_profile(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await create_link()
-            response = TestClient(app).get(
-                "/orcid/profile", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 200
+            response = rpc_call("get-orcid-profile", {"username": "foo"}, TOKEN_FOO)
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["orcidId"] == "0000-0003-4997-3076"
+            # TODO: test something else about the result.
 
 
 def test_get_profile_not_found(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            response = TestClient(app).get(
-                "/orcid/profile", headers={"Authorization": TOKEN_BAR}
-            )
-            assert response.status_code == 404
+            response = rpc_call("get-orcid-profile", {"username": "bar"}, TOKEN_BAR)
+            assert_json_rpc_error(response, 1020, "Not Found")

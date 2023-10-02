@@ -4,7 +4,7 @@ import os
 from test.mocks.data import load_data_file, load_data_json
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, TEST_ENV
 from test.mocks.mock_contexts import mock_auth_service, no_stderr
-from test.mocks.testing_utils import generate_kbase_token
+from test.mocks.testing_utils import assert_json_rpc_error, generate_kbase_token
 from unittest import mock
 
 import pytest
@@ -79,18 +79,44 @@ def test_main_404(fake_fs):
     assert response.status_code == 404
 
 
+# @mock.patch.dict(os.environ, TEST_ENV, clear=True)
+# def test_validation_exception_handler(fake_fs):
+#     response = client.get("/doc", json={"foo": "bar"})
+#     assert response.status_code == 422
+#     assert response.headers["content-type"] == "application/json"
+#     content = response.json()
+#     assert content["code"] == errors.ERRORS.request_validation_error.code
+#     assert content["title"] == errors.ERRORS.request_validation_error.title
+#     assert (
+#         content["message"]
+#         == "This request does not comply with the schema for this endpoint"
+#     )
+
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_validation_exception_handler(fake_fs):
-    response = client.post("/orcid/works", json={"foo": "bar"})
-    assert response.status_code == 422
-    assert response.headers["content-type"] == "application/json"
-    content = response.json()
-    assert content["code"] == errors.ERRORS.request_validation_error.code
-    assert content["title"] == errors.ERRORS.request_validation_error.title
-    assert (
-        content["message"]
-        == "This request does not comply with the schema for this endpoint"
-    )
+def test_bad_method_call(fake_fs):
+    """
+    A poorly formed JSON-RPC call should result in a specific error response
+    as tested below.
+    """
+    response = client.post("/api/v1", json={"foo": "bar"})
+    assert_json_rpc_error(response, -32600, "Invalid Request")
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+def test_bad_params(fake_fs):
+    """
+    A poorly formed JSON-RPC call should result in a specific error response
+    as tested below.
+    """
+    rpc = {
+        "jsonrpc": "2.0",
+        "id": "123",
+        "method": "get-link",
+        "params": {"bar": "foo"},
+    }
+    response = client.post("/api/v1", json=rpc)
+    assert_json_rpc_error(response, -32602, "Invalid params")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -98,104 +124,45 @@ def test_kbase_auth_exception_handler(fake_fs):
     with no_stderr():
         with mock_auth_service(MOCK_KBASE_SERVICES_PORT) as [_, _, url, port]:
             # call with missing token
-            response = client.get("/link", headers={})
-            assert response.status_code == 422
-            assert response.headers["content-type"] == "application/json"
-            content = response.json()
-            assert content["code"] == errors.ERRORS.request_validation_error.code
-            assert content["title"] == errors.ERRORS.request_validation_error.title
-            assert (
-                content["message"]
-                == "This request does not comply with the schema for this endpoint"
-            )
+            rpc = {
+                "jsonrpc": "2.0",
+                "id": "123",
+                "method": "get-link",
+                "params": {"username": "foo"},
+            }
+            response = client.post("/api/v1", json=rpc, headers={})
+            assert_json_rpc_error(response, 1010, "Authorization Required")
 
             # call with invalid token
-            response = client.get("/link", headers={"Authorization": INVALID_TOKEN})
-            assert response.status_code == 401
-            assert response.headers["content-type"] == "application/json"
-            content = response.json()
-            assert content["code"] == errors.ERRORS.authorization_required.code
+            response = client.post(
+                "/api/v1", json=rpc, headers={"Authorization": INVALID_TOKEN}
+            )
+            assert_json_rpc_error(response, 1010, "Authorization Required")
 
             # Call with actual empty token; should be caught at the validator boundary
             # as it is invalid according to the rules for tokens.
-            response = client.get("/link", headers={"Authorization": ""})
-            assert response.status_code == 422
-            assert response.headers["content-type"] == "application/json"
-            content = response.json()
-            assert content["code"] == errors.ERRORS.request_validation_error.code
-            assert content["title"] == errors.ERRORS.request_validation_error.title
-
-            # Call with actual empty token; should be caught at the validator boundary
-            # as it is invalid according to the rules for tokens.
-            response = client.get("/link", headers={})
-            assert response.status_code == 422
-            assert response.headers["content-type"] == "application/json"
-            content = response.json()
-            assert content["code"] == errors.ERRORS.request_validation_error.code
-            assert content["title"] == errors.ERRORS.request_validation_error.title
-
-            # # This one pretends that the /link implementation does not check for
-            # # missing token first, but rather sends the no token. For testing
-            # # this is implemented by sending a special testing token that triggers
-            # # the appropriate response from the mock auth service.
-            # # However, as this cannot be triggered in real usage, we should redo
-            # # this test in a test of the client itself.
-            # response = client.get("/link", headers={"Authorization": NO_TOKEN})
-            # assert response.status_code == 401
-            # assert response.headers["content-type"] == "application/json"
-            # content = response.json()
-            # assert content["code"] == "authorizationRequired"
-            # assert content["title"] == "Authorization Required"
-
-            # # call with empty token
-            # # SAME HERE
-            # response = client.get("/link", headers={"Authorization": EMPTY_TOKEN})
-            # assert response.status_code == 422
-            # assert response.headers["content-type"] == "application/json"
-            # content = response.json()
-            # assert content["code"] == "requestParametersInvalid"
-            # assert content["title"] == "Request Parameters Invalid"
-
-            # make a call which triggers a bug to trigger a JSON parse error
-            # response = client.get("/link", headers={"Authorization": BAD_JSON})
-            # assert response.status_code == 502
-            # assert response.headers["content-type"] == "application/json"
-            # content = response.json()
-            # assert content["code"] == "badContentType"
-            # assert content["title"] == "Received Incorrect Content Type"
+            response = client.post("/api/v1", json=rpc, headers={"Authorization": ""})
+            assert_json_rpc_error(response, -32602, "Invalid params")
 
             # make a call which triggers a bug to trigger a JSON parse error
             # this simulates a 500 error in the auth service which emits text
             # rather than JSON - in other words, a deep and actual server error,
             # not the usuall, silly 500 response we emit for all JSON-RPC!!
-            response = client.get("/link", headers={"Authorization": TEXT_JSON})
-            assert response.status_code == 500
-            assert response.headers["content-type"] == "application/json"
-            content = response.json()
-            assert content["code"] == errors.ERRORS.json_decode_error.code
-            # assert content["title"] == "Error Decoding Response"
-
-            # make a call which triggers an internal error ... what happens?
-            # This test commented out, probably remove. It relied up on the
-            # mock server encountering an error -- (divide by 0), but we shouldn't need
-            # to ACTUALLY cause an internal error in the mock server , we just need to
-            # return a 500!
-            #
-            # response = client.get(
-            #     "/link", headers={"Authorization": CAUSES_INTERNAL_ERROR}
-            # )
-            # assert response.status_code == 500
-            # assert response.headers["content-type"] == "application/json"
-            # content = response.json()
-            # assert content["code"] == errors.ERRORS.internal_server_error.code
-            # assert content["title"] == "Internal Server Error"
+            response = client.post(
+                "/api/v1", json=rpc, headers={"Authorization": TEXT_JSON}
+            )
+            assert_json_rpc_error(response, 1040, "Error Decoding Response")
 
             # make some call which triggers a non-404 error caught by FastAPI/Starlette,
             # in this case an endpoint not found.
-            response = client.post("/linx", headers={"Authorization": "x" * 32})
+            response = client.get("/linx", headers={"Authorization": "x" * 32})
+
             assert response.status_code == 404
             assert response.headers["content-type"] == "application/json"
             content = response.json()
+            #
+            # TODO: We should make these JSON-RPC!
+            #
             assert content["code"] == errors.ERRORS.not_found.code
             assert content["title"] == errors.ERRORS.not_found.title
             assert content["message"] == "The requested resource was not found"
@@ -204,7 +171,7 @@ def test_kbase_auth_exception_handler(fake_fs):
 
             # make some call which triggers a non-404 error caught by FastAPI/Starlette,
             # in this case a method not supported.
-            response = client.post("/link", headers={"Authorization": "x" * 32})
+            response = client.get("/api/v1", headers={"Authorization": "x" * 32})
             assert response.status_code == 405
             assert response.headers["content-type"] == "application/json"
             content = response.json()

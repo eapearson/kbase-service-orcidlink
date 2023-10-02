@@ -14,25 +14,26 @@ class MockORCIDAPI(MockService):
     def do_GET(self):
         if self.path == "/0000-0003-4997-3076/record":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "profile")
-            self.send_json(test_data, content_type="application/vnd.orcid+json")
+            self.send_json(test_data, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/email":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "email")
-            self.send_json(test_data, content_type="application/vnd.orcid+json")
+            self.send_json(test_data, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "works_x")
-            self.send_json(test_data, content_type="application/vnd.orcid+json")
+            self.send_json(test_data, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works/1526002":
             work_record = load_test_data(TEST_DATA_DIR, "orcid", "work_1526002")
-            self.send_json(work_record, content_type="application/vnd.orcid+json")
+            self.send_json(work_record, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works/1487805":
             work_record = load_test_data(TEST_DATA_DIR, "orcid", "work_1487805")
-            self.send_json(work_record, content_type="application/vnd.orcid+json")
+            self.send_json(work_record, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works/123":
+            print("GETting", self.path)
             self.send_text("foobar")
 
         elif self.path == "/0000-0003-4997-3076/works/456":
@@ -46,7 +47,7 @@ class MockORCIDAPI(MockService):
                 "error-code": 9006,
                 "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
-            self.send_json_error(error, status_code=400)
+            self.send_json_error(error, 400, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works/notsource":
             error = {
@@ -62,7 +63,7 @@ class MockORCIDAPI(MockService):
                 "error-code": 9010,
                 "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
-            self.send_json_error(error, status_code=403)
+            self.send_json_error(error, 403, "application/vnd.orcid+json")
         else:
             raise Exception("Not a supported mock case")
 
@@ -85,7 +86,7 @@ class MockORCIDAPI(MockService):
                 "error-code": 9010,
                 "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
-            self.send_json_error(error, status_code=403)
+            self.send_json_error(error, 403, "application/vnd.orcid+json")
         elif self.path == "/0000-0003-4997-3076/work/456":
             error = {
                 "response-code": 404,
@@ -97,7 +98,7 @@ class MockORCIDAPI(MockService):
                 "error-code": 9016,
                 "more-info": "https://members.orcid.org/api/resources/troubleshooting",
             }
-            self.send_json_error(error, status_code=404)
+            self.send_json_error(error, 404, "application/vnd.orcid+json")
 
     def do_PUT(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
@@ -107,7 +108,7 @@ class MockORCIDAPI(MockService):
 
             # simulates an updated last modified date.
             test_data["last-modified-date"]["value"] = utils.posix_time_millis()
-            self.send_json(test_data, content_type="application/json")
+            self.send_json(test_data, "application/vnd.orcid+json")
 
     def do_POST(self):
         if self.path == "/0000-0003-4997-3076/works":
@@ -120,7 +121,7 @@ class MockORCIDAPI(MockService):
                 new_work["bulk"][0]["work"]["title"]["title"]["value"] == "trigger-400"
             ):
                 error_data = {"user-message": "This is another error"}
-                self.send_json_error(error_data, status_code=400)
+                self.send_json_error(error_data, 400, "application/vnd.orcid+json")
             elif (
                 new_work["bulk"][0]["work"]["title"]["title"]["value"]
                 == "trigger-http-exception"
@@ -132,90 +133,78 @@ class MockORCIDAPI(MockService):
                 # will probably be dead by the time this is reached.
             else:
                 test_work = load_test_data(TEST_DATA_DIR, "orcid", "work_1526002")
-                self.send_json(test_work, content_type="application/vnd.orcid+json")
+                self.send_json(test_work, "application/vnd.orcid+json")
 
 
 class MockORCIDAPIWithErrors(MockService):
     def do_GET(self):
         if self.path == "/0000-0003-4997-3076/record":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "profile")
-            self.send_json(test_data, content_type="application/vnd.orcid+json")
+            self.send_json(test_data, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/email":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "email")
-            self.send_json(test_data, content_type="application/vnd.orcid+json")
+            self.send_json(test_data, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "orcid-works-error")
-            self.send_json_error(test_data)
+            self.send_json_error(test_data, 500, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works/1526002":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "orcid-works-error")
-            self.send_json_error(test_data, content_type="application/vnd.orcid+json")
+            self.send_json_error(test_data, 500, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-401/record":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "get-profile-401-error")
-            self.send_json_error(
-                test_data, 401, content_type="application/vnd.orcid+json"
-            )
+            self.send_json_error(test_data, 401, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-415/record":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "get-profile-415-error")
-            self.send_json_error(
-                test_data, 415, content_type="application/vnd.orcid+json"
-            )
+            self.send_json_error(test_data, 415, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-no-content-type/record":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "profile")
-            self.send_json(test_data, content_type=None)
+            self.send_json(test_data, None)
 
         elif self.path == "/trigger-not-json/record":
             test_data = "this is not json!"
-            self.send_json_text(test_data, content_type="application/vnd.orcid+json")
+            self.send_json_text(test_data, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-invalid-token/record":
             test_data = load_test_data(
                 TEST_DATA_DIR, "orcid", "get-profile-401-error-invalid-token"
             )
-            self.send_json_error(
-                test_data, 401, content_type="application/vnd.orcid+json"
-            )
+            self.send_json_error(test_data, 401, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-unauthorized/record":
             test_data = load_test_data(
                 TEST_DATA_DIR, "orcid", "get-profile-401-error-unauthorized"
             )
-            self.send_json_error(
-                test_data, 401, content_type="application/vnd.orcid+json"
-            )
+            self.send_json_error(test_data, 401, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-error-some-other/record":
             test_data = load_test_data(
                 TEST_DATA_DIR, "orcid", "get-profile-401-error-some-other"
             )
-            self.send_json_error(
-                test_data, 401, content_type="application/vnd.orcid+json"
-            )
+            self.send_json_error(test_data, 401, "application/vnd.orcid+json")
 
         elif self.path == "/trigger-wrong-content-type/record":
             test_data = load_test_data(
                 TEST_DATA_DIR, "orcid", "get-profile-401-error-some-other"
             )
-            self.send_json_error(test_data, 401, content_type="application/json")
+            self.send_json_error(test_data, 401, "application/vnd.orcid+json")
 
         else:
             # not found!
             test_data = load_test_data(
                 TEST_DATA_DIR, "orcid", "get-profile-not-found-error"
             )
-            self.send_json_error(
-                test_data, 404, content_type="application/vnd.orcid+json"
-            )
+            self.send_json_error(test_data, 404, "application/vnd.orcid+json")
 
     def do_PUT(self):
         if self.path == "/0000-0003-4997-3076/work/1526002":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "put_work_error")
-            self.send_json_error(test_data)
+            self.send_json_error(test_data, 500, "application/vnd.orcid+json")
 
 
 class MockORCIDOAuth(MockService):
@@ -251,7 +240,7 @@ class MockORCIDOAuth(MockService):
                     }
                 else:
                     raise Exception("Sorry, this case not handled")
-                self.send_json(test_data, content_type="application/json")
+                self.send_json(test_data, "application/json")
             else:
                 if data["code"] == ["foo"]:
                     # TODO: should this be in a file?
@@ -264,21 +253,21 @@ class MockORCIDOAuth(MockService):
                         "name": "Foo Bear",
                         "orcid": "abc123",
                     }
-                    self.send_json(test_data, content_type="application/json")
+                    self.send_json(test_data, "application/json")
                 elif data["code"] == ["no-content-type"]:
                     self.send(200, {}, None)
                 elif data["code"] == ["not-json-content-type"]:
                     self.send(200, {"Content-Type": "foo-son"}, None)
                 elif data["code"] == ["error-incorrect-error-format"]:
-                    self.send_json_error({"foo": "bar"}, status_code=400)
+                    self.send_json_error({"foo": "bar"}, 400, "application/json")
                 elif data["code"] == ["error-correct-error-format"]:
                     error = {
                         "error": "some error",
                         "error_description": "a description of some error",
                     }
-                    self.send_json_error(error, status_code=400)
+                    self.send_json_error(error, 400, "application/json")
                 elif data["code"] == ["not-json-content"]:
-                    self.send_json_text("foo", content_type="application/json")
+                    self.send_json_text("foo", "application/json")
                 else:
                     test_data = {
                         "access_token": "access_token",
@@ -289,7 +278,7 @@ class MockORCIDOAuth(MockService):
                         "name": "Foo Bear",
                         "orcid": "abc123",
                     }
-                    self.send_json(test_data, content_type="application/json")
+                    self.send_json(test_data, "application/json")
 
     def do_GET(self):
         if self.path == "/authorize":

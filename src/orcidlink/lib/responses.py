@@ -2,7 +2,7 @@ from traceback import extract_tb
 from typing import Any, Dict, List, Mapping, Optional, Union
 from urllib.parse import urlencode
 
-from fastapi import Header
+from fastapi import Body, Header
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import Field
@@ -113,11 +113,17 @@ def ui_error_response(error: ErrorCode2, message: str) -> RedirectResponse:
 
 
 AUTHORIZATION_HEADER = Header(
-    # default=None,
+    default=None,
     description="KBase auth token",
     min_length=32,
     max_length=32,
 )
+
+USERNAME_PARAM = Body(..., description="KBase username")
+
+SESSION_ID_PARAM = Body(..., description="KBase linking session identifier")
+
+PUT_CODE_PARAM = Body(..., description="ORCID Work activity record put code")
 
 ResponseMapping = Mapping[Union[int, str], Dict[str, Any]]
 

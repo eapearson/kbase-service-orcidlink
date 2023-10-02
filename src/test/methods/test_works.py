@@ -1,5 +1,4 @@
 import contextlib
-import json
 import os
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_API_PORT, TEST_ENV
 from test.mocks.mock_contexts import (
@@ -7,16 +6,17 @@ from test.mocks.mock_contexts import (
     mock_orcid_api_service,
     no_stderr,
 )
-from test.mocks.testing_utils import TOKEN_BAR, TOKEN_FOO
+from test.mocks.testing_utils import (
+    TOKEN_BAR,
+    TOKEN_FOO,
+    assert_json_rpc_error,
+    assert_json_rpc_result_ignore_result,
+    rpc_call,
+)
 from unittest import mock
 
-import aiohttp
 import pytest
-from fastapi.testclient import TestClient
 
-from orcidlink.lib import errors
-from orcidlink.lib.service_clients import orcid_api
-from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage import storage_model
 
@@ -55,7 +55,6 @@ async def create_link():
 
 @contextlib.contextmanager
 def mock_services():
-    # config(True)
     with no_stderr():
         with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
             with mock_orcid_api_service(MOCK_ORCID_API_PORT):
@@ -67,14 +66,10 @@ async def test_get_work(fake_fs):
         with mock_services():
             await create_link()
             put_code = 1526002
-            client = TestClient(app)
-            response = client.get(
-                f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 200
-            work = response.json()
-            assert isinstance(work, dict)
-            assert work["putCode"] == 1526002
+            params = {"username": "foo", "put_code": put_code}
+            response = rpc_call("get-work", params, TOKEN_FOO)
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["work"]["putCode"] == put_code
 
 
 async def test_get_work2(fake_fs):
@@ -82,38 +77,32 @@ async def test_get_work2(fake_fs):
         with mock_services():
             await create_link()
             put_code = 1487805
-            client = TestClient(app)
-            response = client.get(
-                f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 200
-            work = response.json()
-            assert isinstance(work, dict)
-            assert work["putCode"] == 1487805
+            params = {"username": "foo", "put_code": put_code}
+            response = rpc_call("get-work", params, TOKEN_FOO)
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["work"]["putCode"] == put_code
 
 
-def test_get_work_errors(fake_fs):
+async def test_get_work_errors(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
+            #
+            # Omitting a param
+            # TODO: do we really need to test this?
+            #
+            params = {
+                "username": "bar",
+            }
+            response = rpc_call("get-work", params, TOKEN_BAR)
+            assert_json_rpc_error(response, -32602, "Invalid params")
 
             #
             # An unlinked user gets a 422, since fastapi validates the url param
             # and it should be int.
             #
-            response = client.get(
-                "/orcid/works/bar", headers={"Authorization": TOKEN_BAR}
-            )
-            assert response.status_code == 422
-
-            #
-            # An unlinked user gets a 422, since fastapi validates the url param
-            # and it should be int.
-            #
-            response = client.get(
-                "/orcid/works/1526002", headers={"Authorization": TOKEN_BAR}
-            )
-            assert response.status_code == 404
+            params = {"username": "bar", "put_code": 1526002}
+            response = rpc_call("get-work", params, TOKEN_BAR)
+            assert_json_rpc_error(response, 1020, "Not Found")
 
             #
             # An api misuse which penetrates the call; ideally
@@ -130,71 +119,39 @@ def test_get_work_errors(fake_fs):
             #
             # Or perhaps we should just catch all exceptions w/in the endpoint
             # handlers and always return a response.
-            try:
-                response = client.get(
-                    "/orcid/works/123", headers={"Authorization": TOKEN_FOO}
-                )
-            except aiohttp.ContentTypeError as cte:
-                # assert response.status_code == 500
-                # error = response.json()
-                # assert error["code"] == "upstreamError"
-                assert (
-                    cte.message
-                    == "Attempt to decode JSON with unexpected mimetype: text/plain"
-                )
-
+            await create_link()
+            params = {"username": "foo", "put_code": 123}
+            response = rpc_call("get-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1041, "Received Incorrect Content Type")
             #
             # A bad put code results in a 400 from ORCID
             #
-            response = client.get(
-                "/orcid/works/456", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 500
-            error = response.json()
-            assert error["code"] == errors.ERRORS.upstream_orcid_error.code
-            assert error["message"] == "Error fetching data from ORCID"
-
-            # expected = {
-            #     "code": "upstreamError",
-            #     "title": "Error",
-            #     "message": "Error fetching data from ORCID Auth api",
-            #     "data": {
-            #         "source": "get_work",
-            #         "status_code": 400,
-            #         "detail": {
-            #             "response-code": 400,
-            #             "developer-message": 'The client application sent a bad request to ORCID. Full validation error: For input string: "1526002x"',
-            #             "user-message": "The client application sent a bad request to ORCID.",
-            #             "error-code": 9006,
-            #             "more-info": "https://members.orcid.org/api/resources/troubleshooting",
-            #         },
-            #     },
-            # }
-            # assert error == expected
+            params = {"username": "foo", "put_code": 456}
+            response = rpc_call("get-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1050, "Upstream Error")
 
 
 async def test_get_works(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await create_link()
-            client = TestClient(app)
-            response = client.get("/orcid/works", headers={"Authorization": TOKEN_FOO})
-            assert response.status_code == 200
-            work = response.json()
-            assert isinstance(work, list)
+            params = {
+                "username": "foo",
+            }
+            response = rpc_call("get-works", params, TOKEN_FOO)
+            result = assert_json_rpc_result_ignore_result(response)
+            assert isinstance(result, list)
             # assert work['putCode'] == '1526002'
 
 
 def test_get_works_errors(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            #
-            # An unlinked user gets a 404 from us.
-            #
-            response = client.get("/orcid/works", headers={"Authorization": TOKEN_BAR})
-            assert response.status_code == 404
+            params = {
+                "username": "bar",
+            }
+            response = rpc_call("get-works", params, TOKEN_BAR)
+            assert_json_rpc_error(response, 1020, "Not Found")
 
 
 # TODO: left off here, copied from test_get_work - added work_1526002_normalized.json to
@@ -205,8 +162,6 @@ async def test_create_work(fake_fs):
         with mock_services():
             await create_link()
 
-            client = TestClient(app)
-
             # TODO: get from file.
             new_work_data = {
                 "putCode": 1526002,
@@ -239,24 +194,20 @@ async def test_create_work(fake_fs):
                 },
                 "otherContributors": [],
             }
-            response = client.post(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_FOO},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 200
-            work = response.json()
-            assert isinstance(work, dict)
-            assert work["putCode"] == 1526002
+
+            params = {"username": "foo", "new_work": new_work_data}
+            response = rpc_call("create-work", params, TOKEN_FOO)
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["work"]["putCode"] == 1526002
 
 
-def test_create_work_errors(fake_fs):
+async def test_create_work_errors(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             # Note that we do not need to launch a mock server here,
             # though we might want to later as that really tests the API
             # front to back.
-            client = TestClient(app)
+            await create_link()
 
             # TODO: get from file.
             new_work_data = {
@@ -291,71 +242,55 @@ def test_create_work_errors(fake_fs):
                 "otherContributors": [],
             }
 
-            # Error: link_record not found
-            response = client.post(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_BAR},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 404
+            params = {"username": "bar", "new_work": new_work_data}
+            response = rpc_call("create-work", params, TOKEN_BAR)
+            assert_json_rpc_error(response, 1020, "Not Found")
 
             # Error: exception saving work record to orcid; i.e.
             # thrown by the http call.
             new_work_data["title"] = "trigger-http-exception"
-            response = client.post(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_FOO},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 500
+            params = {"username": "foo", "new_work": new_work_data}
+            response = rpc_call("create-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1050, "Upstream Error")
 
             # Error: 500 returned from orcid
             # Invoke this with a special put code
             new_work_data["title"] = "trigger-500"
-            response = client.post(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_FOO},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 500
-            # assert response.text == "AN ERROR"
+            params = {"username": "foo", "new_work": new_work_data}
+            response = rpc_call("create-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1050, "Upstream Error")
 
             # Error: Any other non-200 returned from orcid
             new_work_data["title"] = "trigger-400"
-            response = client.post(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_FOO},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 500
+            params = {"username": "foo", "new_work": new_work_data}
+            response = rpc_call("create-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1050, "Upstream Error")
 
 
-def test_external_id():
-    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        external_id = orcid_api.ExternalId(
-            external_id_type="foo",
-            external_id_value="value",
-            external_id_normalized=None,
-            external_id_url=orcid_api.ORCIDStringValue(value="url"),
-            external_id_relationship="rel",
-        )
-        # orcid_api.ORCIDExternalId.model_validate({
-        #     "external-id-type": "foo",
-        #     "external-id-value": "value",
-        #     "external-id-normalized": None,
-        #     "external-id-url": {
-        #         "value": "url"
-        #     },
-        #     "external-id-relationship": "rel"
-        # })
+# def test_external_id():
+#     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+#         external_id = orcid_api.ExternalId(
+#             external_id_type="foo",
+#             external_id_value="value",
+#             external_id_normalized=None,
+#             external_id_url=orcid_api.ORCIDStringValue(value="url"),
+#             external_id_relationship="rel",
+#         )
+# orcid_api.ORCIDExternalId.model_validate({
+#     "external-id-type": "foo",
+#     "external-id-value": "value",
+#     "external-id-normalized": None,
+#     "external-id-url": {
+#         "value": "url"
+#     },
+#     "external-id-relationship": "rel"
+# })
 
 
 async def test_save_work(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await create_link()
-
-            client = TestClient(app)
 
             # TODO: get from file.
             new_work_data = {
@@ -396,22 +331,24 @@ async def test_save_work(fake_fs):
                 },
                 "otherContributors": [],
             }
-            response = client.put(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_FOO},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 200
-            work = response.json()
-            assert isinstance(work, dict)
-            assert work["putCode"] == 1526002
+            params = {"username": "foo", "work_update": new_work_data}
+            response = rpc_call("update-work", params, TOKEN_FOO)
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["work"]["putCode"] == 1526002
+            # response = client.put(
+            #     "/orcid/works",
+            #     headers={"Authorization": TOKEN_FOO},
+            #     content=json.dumps(new_work_data),
+            # )
+            # assert response.status_code == 200
+            # work = response.json()
+            # assert isinstance(work, dict)
+            # assert work["putCode"] == 1526002
 
 
 def test_save_work_errors(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
             # TODO: get from file.
             new_work_data = {
                 "putCode": 1526002,
@@ -441,12 +378,16 @@ def test_save_work_errors(fake_fs):
                 },
                 "otherContributors": [],
             }
-            response = client.put(
-                "/orcid/works",
-                headers={"Authorization": TOKEN_BAR},
-                content=json.dumps(new_work_data),
-            )
-            assert response.status_code == 404
+            params = {"username": "bar", "work_update": new_work_data}
+            response = rpc_call("update-work", params, TOKEN_BAR)
+            assert_json_rpc_error(response, 1020, "Not Found")
+
+            # response = client.put(
+            #     "/orcid/works",
+            #     headers={"Authorization": TOKEN_BAR},
+            #     content=json.dumps(new_work_data),
+            # )
+            # assert response.status_code == 404
 
 
 async def test_delete_work(fake_fs):
@@ -454,11 +395,11 @@ async def test_delete_work(fake_fs):
         with mock_services():
             await create_link()
             put_code = 1526002
-            client = TestClient(app)
-            response = client.delete(
-                f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 204
+            params = {"username": "foo", "put_code": put_code}
+            response = rpc_call("delete-work", params, TOKEN_FOO)
+
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result is None
 
 
 async def test_delete_work_bad_no_link(fake_fs):
@@ -466,11 +407,9 @@ async def test_delete_work_bad_no_link(fake_fs):
         with mock_services():
             await create_link()
             put_code = 1526002
-            client = TestClient(app)
-            response = client.delete(
-                f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_BAR}
-            )
-            assert response.status_code == 404
+            params = {"username": "bar", "put_code": put_code}
+            response = rpc_call("delete-work", params, TOKEN_BAR)
+            assert_json_rpc_error(response, 1020, "Not Found")
 
 
 async def test_delete_work_not_source(fake_fs):
@@ -479,23 +418,11 @@ async def test_delete_work_not_source(fake_fs):
             await create_link()
             # Use a put code not in the mock service, in this case we
             # transpose the final 2 with 3.
-            client = TestClient(app)
             put_code = 123
-            response = client.delete(
-                f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 500
-            result = response.json()
-            assert result["code"] == errors.ERRORS.upstream_error.code
-            assert result["title"] == "Upstream Error"
-            # assert (
-            #         result["message"]
-            #         == "The ORCID API reported an error fo this request, see 'data' for cause"
-            # )
-            # assert result["data"]["response-code"] == 403
-            # assert result["data"]["error-code"] == 9010
-            # # Tha actual messages may change over time, and are not used
-            # # programmatically
+
+            params = {"username": "foo", "put_code": put_code}
+            response = rpc_call("delete-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1050, "Upstream Error")
 
 
 async def test_delete_work_put_code_not_found(fake_fs):
@@ -504,20 +431,8 @@ async def test_delete_work_put_code_not_found(fake_fs):
             await create_link()
             # Use a put code not in the mock service, in this case we
             # transpose the final 2 with 3.
-            client = TestClient(app)
             put_code = 456
-            response = client.delete(
-                f"/orcid/works/{put_code}", headers={"Authorization": TOKEN_FOO}
-            )
-            assert response.status_code == 500
-            result = response.json()
-            assert result["code"] == errors.ERRORS.upstream_error.code
-            assert result["title"] == "Upstream Error"
-            # assert (
-            #         result["message"]
-            #         == "The ORCID API reported an error fo this request, see 'data' for cause"
-            # )
-            # assert result["data"]["response-code"] == 404
-            # assert result["data"]["error-code"] == 9016
-            # # Tha actual messages may change over time, and are not used
-            # # programmatically
+
+            params = {"username": "foo", "put_code": put_code}
+            response = rpc_call("delete-work", params, TOKEN_FOO)
+            assert_json_rpc_error(response, 1050, "Upstream Error")

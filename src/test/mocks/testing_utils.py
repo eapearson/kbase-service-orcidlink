@@ -3,7 +3,9 @@ import json
 from typing import Any
 
 from fastapi.testclient import TestClient
+from httpx import Response
 
+from orcidlink.main import app
 from orcidlink.model import LinkRecord
 from orcidlink.storage.storage_model import storage_model
 
@@ -138,3 +140,43 @@ async def get_link(username: str) -> LinkRecord | None:
     sm = storage_model()
     link_record = await sm.get_link_record(username)
     return link_record
+
+
+# JSON-RPC
+
+
+def rpc_call(method: str, params: Any, authorization: str) -> Response:
+    client = TestClient(app)
+    rpc = {"jsonrpc": "2.0", "id": "123", "method": method, "params": params}
+
+    response = client.post(
+        "/api/v1", json=rpc, headers={"Authorization": authorization}
+    )
+
+    return response
+
+
+def assert_json_rpc_error(response: Response, code: int, message: str):
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    content = response.json()
+    assert "error" in content
+    error = content["error"]
+    assert error["code"] == code
+    assert error["message"] == message
+
+
+def assert_json_rpc_result(response: Response, result: Any):
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    content = response.json()
+    assert "result" in content
+    assert content["result"] == result
+
+
+def assert_json_rpc_result_ignore_result(response: Response) -> Any:
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    content = response.json()
+    assert "result" in content
+    return content["result"]

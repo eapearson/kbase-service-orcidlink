@@ -7,80 +7,23 @@ ORCID Link and to fit into various front end usage scenarios.
 
 """
 import json
-import uuid
+import logging
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Cookie, Path, Query, responses, status
+from fastapi import APIRouter, Cookie, Path, Query, responses
 from pydantic import Field
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import RedirectResponse
 
 from orcidlink.lib import errors, exceptions
 from orcidlink.lib.auth import ensure_authorization
-from orcidlink.lib.responses import (
-    AUTH_RESPONSES,
-    AUTHORIZATION_HEADER,
-    STD_RESPONSES,
-    ui_error_response,
-)
+from orcidlink.lib.responses import AUTH_RESPONSES, STD_RESPONSES, ui_error_response
 from orcidlink.lib.service_clients.orcid_api import AuthorizeParams
 from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
-from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.lib.utils import posix_time_millis
-from orcidlink.model import (
-    LinkingSessionCompletePublic,
-    LinkingSessionInitial,
-    LinkingSessionStarted,
-    LinkRecord,
-    SimpleSuccess,
-)
-from orcidlink.process import (
-    delete_completed_linking_session,
-    get_linking_session_completed,
-)
+from orcidlink.process import get_linking_session_initial, get_linking_session_started
 from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 
 router = APIRouter(prefix="/linking-sessions")
-
-
-async def get_linking_session_initial(
-    session_id: str, authorization: str
-) -> LinkingSessionInitial:
-    _, token_info = await ensure_authorization(authorization)
-
-    username = token_info.user
-
-    model = storage_model()
-
-    session_record = await model.get_linking_session_initial(session_id)
-
-    if session_record is None:
-        raise exceptions.NotFoundError("Linking session not found")
-
-    if not session_record.username == username:
-        raise exceptions.UnauthorizedError("Username does not match linking session")
-
-    return session_record
-
-
-async def get_linking_session_started(
-    session_id: str, authorization: str
-) -> LinkingSessionStarted:
-    _, token_info = await ensure_authorization(authorization)
-
-    username = token_info.user
-
-    model = storage_model()
-
-    session_record = await model.get_linking_session_started(session_id)
-
-    if session_record is None:
-        raise exceptions.NotFoundError("Linking session not found")
-
-    if not session_record.username == username:
-        raise exceptions.UnauthorizedError("Username does not match linking session")
-
-    return session_record
 
 
 #
@@ -123,207 +66,8 @@ KBASE_SESSION_BACKUP_COOKIE = Cookie(
 )
 
 #
-# The initial call to create a linking session.
-#
-
-
-class CreateLinkingSessionResult(ServiceBaseModel):
-    session_id: str = SESSION_ID_FIELD
-
-
-# TODO: error if link already exists for this user.
-@router.post(
-    "",
-    response_model=CreateLinkingSessionResult,
-    status_code=201,
-    responses={
-        201: {"description": "The linking session has been successfully created"},
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-    },
-    tags=["linking-sessions"],
-)
-async def create_linking_session(
-    authorization: str | None = AUTHORIZATION_HEADER,
-) -> CreateLinkingSessionResult:
-    """
-    Create Linking Session
-
-    Creates a new "linking session"; resulting in a linking session created in the
-    database, and the id for it returned for usage in an interactive linking session.
-    """
-    _, token_info = await ensure_authorization(authorization)
-
-    username = token_info.user
-
-    # Check if username is already linked.
-    model = storage_model()
-    link_record = await model.get_link_record(username)
-
-    if link_record is not None:
-        raise exceptions.AlreadyLinkedError("User already has a link")
-
-    created_at = posix_time_millis()
-
-    expires_at = created_at + config().linking_session_lifetime * 1000
-    session_id = str(uuid.uuid4())
-    linking_record = LinkingSessionInitial(
-        session_id=session_id,
-        username=username,
-        created_at=created_at,
-        expires_at=expires_at,
-    )
-
-    await model.create_linking_session(linking_record)
-    return CreateLinkingSessionResult(session_id=session_id)
-
-
-@router.get(
-    "/{session_id}",
-    responses={
-        200: {
-            "description": "Returns the linking session",
-            "model": LinkingSessionCompletePublic,
-        },
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-        404: {
-            "description": "Linking session not found",
-            "model": errors.ErrorResponse,
-        },
-        403: {
-            "description": "User does not own linking session",
-            "model": errors.ErrorResponse,
-        },
-    },
-    tags=["linking-sessions"],
-)
-async def get_linking_session(
-    session_id: str = SESSION_ID_PATH_ELEMENT, authorization: str = AUTHORIZATION_HEADER
-) -> LinkingSessionCompletePublic:
-    """
-    Get Linking Session
-
-    Returns the linking session record identified by the given linking session id,
-    as long as it is owned by the user associated with the given KBase auth token.
-
-    Note that the
-    """
-    _, token_info = await ensure_authorization(authorization)
-
-    # The only direct access to a linking session is when completed.
-    linking_session = await get_linking_session_completed(session_id, token_info.user)
-
-    #
-    # Convert to public linking session to remove private info.
-    #
-    # NB 'kind' is configured as the discriminator for the types that compose
-    # the LinkingSession union type. We could do this more simply, but
-    # we need the conditional to satisfy mypy.
-    # if linking_session.kind == "complete":
-    return LinkingSessionCompletePublic.model_validate(linking_session.model_dump())
-
-    # return linking_session
-
-
-@router.delete(
-    "/{session_id}",
-    status_code=204,
-    responses={
-        204: {"description": "Successfully deleted the session"},
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-        403: {
-            "description": "Username does not match linking session",
-            "model": errors.ErrorResponse,
-        },
-        404: {
-            "description": "Linking session not found",
-            "model": errors.ErrorResponse,
-        },
-    },
-    tags=["linking-sessions"],
-)
-async def delete_linking_session(
-    session_id: str = SESSION_ID_PATH_ELEMENT,
-    authorization: str | None = AUTHORIZATION_HEADER,
-) -> Response:
-    """
-    Delete Linking Session
-
-    Deletes the linking session record associated with the session id provided
-    in the url, as long as it is owned by the user associated with the provided
-    KBase auth token.
-    """
-    _, token_info = await ensure_authorization(authorization)
-
-    await delete_completed_linking_session(session_id, token_info.user)
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-#
-# Called when the linking session should be finalized, and saved to the database.
-# The interactive design calls for an optional confirmation of the creation of the link
-# after the oauth flow.
-#
-@router.put(
-    "/{session_id}/finish",
-    response_model=SimpleSuccess,
-    responses={
-        200: {
-            "description": "The linking session has been finished successfully",
-            "model": SimpleSuccess,
-        },
-        **AUTH_RESPONSES,
-        **STD_RESPONSES,
-        403: {
-            "description": "Username does not match linking session",
-            "model": errors.ErrorResponse,
-        },
-        404: {
-            "description": "Linking session not found",
-            "model": errors.ErrorResponse,
-        },
-    },
-    tags=["linking-sessions"],
-)
-async def finish_linking_session(
-    session_id: str = SESSION_ID_PATH_ELEMENT,
-    authorization: str | None = AUTHORIZATION_HEADER,
-) -> SimpleSuccess:
-    """
-    Finish Linking Session
-
-    The final stage of the interactive linking session; called when the user confirms
-    the creation of the link, after OAuth flow has finished.
-    """
-    authorization, token_info = await ensure_authorization(authorization)
-    username = token_info.user
-
-    session_record = await get_linking_session_completed(session_id, username)
-
-    created_at = posix_time_millis()
-    expires_at = created_at + session_record.orcid_auth.expires_in * 1000
-
-    storage = storage_model()
-    link_record = LinkRecord(
-        username=username,
-        orcid_auth=session_record.orcid_auth,
-        created_at=created_at,
-        expires_at=expires_at,
-        retires_at=created_at + config().orcid_authorization_retirement_age * 1000,
-    )
-    await storage.create_link_record(link_record)
-
-    await storage.delete_linking_session_completed(session_id)
-    return SimpleSuccess(ok=True)
-
-
-#
 # OAuth Interactive Endpoints
 #
-
 
 #
 # The initial url for linking to an ORCID Account
@@ -331,6 +75,8 @@ async def finish_linking_session(
 # endpoint.
 # TODO: Errors should be redirects to the generic error handler in the ORCIDLink UI.
 #
+
+
 @router.get(
     "/{session_id}/oauth/start",
     response_class=RedirectResponse,
@@ -380,11 +126,11 @@ async def start_linking_session(
     else:
         authorization = kbase_session
 
-    await ensure_authorization(authorization)
+    _, token_info = await ensure_authorization(authorization)
 
     # We don't need the record, but we want to ensure it exists
     # and is owned by this user.
-    await get_linking_session_initial(session_id, authorization)
+    await get_linking_session_initial(session_id, token_info.user)
 
     # TODO: enhance session record to record the status - so that we can prevent
     # starting a session twice!
@@ -411,6 +157,17 @@ async def start_linking_session(
         state=json.dumps({"session_id": session_id}),
     )
     url = f"{config().orcid_oauth_base_url}/authorize?{urlencode(params.model_dump())}"
+
+    logger = logging.getLogger("api")
+    logger.info(
+        "Successfully called GET /linking-sessions/{session_id}/oauth/start method",
+        extra={
+            "type": "api",
+            "params": {"authorization": "REDACTED", "session_id": session_id},
+            "path": "/linking-sessions/{session_id}/oauth/start",
+        },
+    )
+
     return responses.RedirectResponse(url, status_code=302)
 
 
@@ -494,7 +251,7 @@ async def linking_sessions_continue(
     else:
         authorization = kbase_session
 
-    authorization, _ = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization(authorization)
 
     #
     # TODO: MAJOR: ensure ui error responses are working; refactor
@@ -524,7 +281,7 @@ async def linking_sessions_continue(
         )
 
     session_id = unpacked_state.get("session_id")
-    session_record = await get_linking_session_started(session_id, authorization)
+    session_record = await get_linking_session_started(session_id, token_info.user)
 
     #
     # Exchange the temporary token from ORCID for the authorized token.
@@ -572,6 +329,22 @@ async def linking_sessions_continue(
 
     params["skip_prompt"] = "true" if session_record.skip_prompt else "false"
     params["ui_options"] = session_record.ui_options
+
+    logger = logging.getLogger("api")
+    logger.info(
+        "Successfully called GET /linking-sessions/oauth/continue method",
+        extra={
+            "type": "api",
+            "params": {
+                "kbase_session": "REDACTED",
+                "kbase_session_backup": "REDACTED",
+                "code": code,
+                "state": state,
+                "error": error,
+            },
+            "path": "/linking-sessions//oauth/continue",
+        },
+    )
 
     return RedirectResponse(
         f"{config().ui_origin}?{urlencode(params)}#orcidlink/continue/{session_id}",

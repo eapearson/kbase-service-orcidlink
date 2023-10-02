@@ -1,6 +1,5 @@
 import contextlib
 import copy
-import json
 import os
 from test.mocks.data import load_data_json
 from test.mocks.env import MOCK_KBASE_SERVICES_PORT, MOCK_ORCID_OAUTH_PORT, TEST_ENV
@@ -9,16 +8,20 @@ from test.mocks.mock_contexts import (
     mock_orcid_oauth_service,
     no_stderr,
 )
-from test.mocks.testing_utils import clear_storage_model, generate_kbase_token
+from test.mocks.testing_utils import (
+    assert_json_rpc_error,
+    assert_json_rpc_result,
+    assert_json_rpc_result_ignore_result,
+    clear_storage_model,
+    generate_kbase_token,
+    rpc_call,
+)
 from typing import Any, Optional
 from unittest import mock
 
 from fastapi.testclient import TestClient
 
-from orcidlink.lib.utils import posix_time_millis
-from orcidlink.main import app
-from orcidlink.model import LinkingSessionInitial, LinkRecord
-from orcidlink.routers.manage import (
+from orcidlink.jsonrpc.methods.manage import (
     FilterByEpochTime,
     FilterByORCIDId,
     FilterByUsername,
@@ -28,6 +31,9 @@ from orcidlink.routers.manage import (
     SearchQuery,
     augment_with_time_filter,
 )
+from orcidlink.lib.utils import posix_time_millis
+from orcidlink.main import app
+from orcidlink.model import LinkingSessionInitial, LinkRecord
 from orcidlink.storage.storage_model import storage_model
 
 client = TestClient(app)
@@ -60,15 +66,9 @@ async def test_is_manager_yup():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await create_link(TEST_LINK)
-
-            client = TestClient(app)
-            response = client.get(
-                "/manage/is_manager",
-                headers={"Authorization": generate_kbase_token("amanager")},
-            )
-            assert response.status_code == 200
-            result = response.json()
-            assert result["is_manager"] is True
+            params = {"username": "amanager"}
+            response = rpc_call("is-manager", params, generate_kbase_token("amanager"))
+            assert_json_rpc_result(response, {"is_manager": True})
 
 
 async def test_is_manager_nope():
@@ -76,14 +76,10 @@ async def test_is_manager_nope():
         with mock_services():
             await create_link(TEST_LINK)
 
-            client = TestClient(app)
-            response = client.get(
-                "/manage/is_manager",
-                headers={"Authorization": generate_kbase_token("foo")},
-            )
-            assert response.status_code == 200
-            result = response.json()
-            assert result["is_manager"] is False
+            await create_link(TEST_LINK)
+            params = {"username": "foo"}
+            response = rpc_call("is-manager", params, generate_kbase_token("foo"))
+            assert_json_rpc_result(response, {"is_manager": False})
 
 
 async def test_augment_with_time_filter_none():
@@ -141,23 +137,17 @@ async def test_get_links_no_query():
         with mock_services():
             await create_link(TEST_LINK)
 
-            client = TestClient(app)
-            response = client.get(
-                "/link", headers={"Authorization": generate_kbase_token("foo")}
-            )
-            assert response.status_code == 200
+            params = {"username": "foo"}
+            response = rpc_call("owner-link", params, generate_kbase_token("foo"))
+            assert_json_rpc_result_ignore_result(response)
 
             # Now, a manager should be able to see the link.
 
-            response2 = client.post(
-                "/manage/links",
-                headers={"Authorization": generate_kbase_token("amanager")},
-                content=json.dumps({}),
-            )
-            assert response2.status_code == 200
-            result = response2.json()
-            assert "links" in result
-            assert len(result["links"]) == 1
+            params = {"username": "foo"}
+            response = rpc_call("get-link", params, generate_kbase_token("amanager"))
+            result = assert_json_rpc_result_ignore_result(response)
+            assert "link" in result
+            assert result["link"]["username"] == "foo"
 
 
 async def test_get_links_with_find():
@@ -179,31 +169,22 @@ async def test_get_links_with_find():
             await sm.create_link_record(LinkRecord.model_validate(bar_link))
             await sm.create_link_record(LinkRecord.model_validate(baz_link))
 
-            client = TestClient(app)
+            params = {"username": "amanager", "query": {}}
+            response = rpc_call("find-links", params, generate_kbase_token("amanager"))
+            result = assert_json_rpc_result_ignore_result(response)
 
-            response2 = client.post(
-                "/manage/links",
-                headers={"Authorization": generate_kbase_token("amanager")},
-                content=json.dumps({}),
-            )
-            assert response2.status_code == 200
-            result = response2.json()
             assert "links" in result
             assert len(result["links"]) == 3
 
             def assert_find(find: QueryFind, expected_links: int) -> None:
-                # Simple query of the username
                 username_query = SearchQuery(
                     find=find, sort=None, offset=None, limit=None
                 )
-
-                response2 = client.post(
-                    "/manage/links",
-                    headers={"Authorization": generate_kbase_token("amanager")},
-                    content=json.dumps(username_query.model_dump()),
+                params = {"username": "amanager", "query": username_query.model_dump()}
+                response = rpc_call(
+                    "find-links", params, generate_kbase_token("amanager")
                 )
-                assert response2.status_code == 200
-                result = response2.json()
+                result = assert_json_rpc_result_ignore_result(response)
                 assert len(result["links"]) == expected_links
 
             query_by_user = QueryFind(username=FilterByUsername(eq="foo"))
@@ -231,15 +212,10 @@ async def test_get_links_with_sort():
             await sm.create_link_record(LinkRecord.model_validate(bar_link))
             await sm.create_link_record(LinkRecord.model_validate(baz_link))
 
-            client = TestClient(app)
+            params = {"username": "amanager", "query": {}}
+            response = rpc_call("find-links", params, generate_kbase_token("amanager"))
+            result = assert_json_rpc_result_ignore_result(response)
 
-            response2 = client.post(
-                "/manage/links",
-                headers={"Authorization": generate_kbase_token("amanager")},
-                content=json.dumps({}),
-            )
-            assert response2.status_code == 200
-            result = response2.json()
             assert "links" in result
             assert len(result["links"]) == 3
 
@@ -249,13 +225,11 @@ async def test_get_links_with_sort():
                     find=None, sort=sort_spec, offset=None, limit=None
                 )
 
-                response2 = client.post(
-                    "/manage/links",
-                    headers={"Authorization": generate_kbase_token("amanager")},
-                    content=json.dumps(username_query.model_dump()),
+                params = {"username": "amanager", "query": username_query.model_dump()}
+                response = rpc_call(
+                    "find-links", params, generate_kbase_token("amanager")
                 )
-                assert response2.status_code == 200
-                return response2.json()
+                return assert_json_rpc_result_ignore_result(response)
 
             query_sort_by_username: QuerySort = QuerySort(
                 specs=[QuerySortSpec(field_name="username", descending=True)]
@@ -289,15 +263,10 @@ async def test_get_links_with_range():
             await sm.create_link_record(LinkRecord.model_validate(bar_link))
             await sm.create_link_record(LinkRecord.model_validate(baz_link))
 
-            client = TestClient(app)
+            params = {"username": "amanager", "query": {}}
+            response = rpc_call("find-links", params, generate_kbase_token("amanager"))
+            result = assert_json_rpc_result_ignore_result(response)
 
-            response2 = client.post(
-                "/manage/links",
-                headers={"Authorization": generate_kbase_token("amanager")},
-                content=json.dumps({}),
-            )
-            assert response2.status_code == 200
-            result = response2.json()
             assert "links" in result
             assert len(result["links"]) == 3
 
@@ -309,13 +278,11 @@ async def test_get_links_with_range():
                     find=None, sort=None, offset=offset, limit=limit
                 )
 
-                response2 = client.post(
-                    "/manage/links",
-                    headers={"Authorization": generate_kbase_token("amanager")},
-                    content=json.dumps(username_query.model_dump()),
+                params = {"username": "amanager", "query": username_query.model_dump()}
+                response = rpc_call(
+                    "find-links", params, generate_kbase_token("amanager")
                 )
-                assert response2.status_code == 200
-                return response2.json()
+                return assert_json_rpc_result_ignore_result(response)
 
             result = assert_range(offset=1, limit=2)
             assert len(result["links"]) == 2
@@ -337,19 +304,17 @@ async def test_get_links_error_not_admin():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            response2 = client.post(
-                "/manage/links",
-                headers={"Authorization": generate_kbase_token("foo")},
-                content=json.dumps({}),
-            )
-            assert response2.status_code == 403
+            params = {"username": "foo", "query": {}}
+            response = rpc_call("find-links", params, generate_kbase_token("foo"))
+            assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_get_stats():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
+            sm = storage_model()
+            await sm.db.links.drop()
+
             foo_link = TEST_LINK
 
             bar_link = copy.deepcopy(TEST_LINK)
@@ -360,41 +325,30 @@ async def test_get_stats():
             baz_link["orcid_auth"]["orcid"] = "orcid-id-baz"
             baz_link["username"] = "baz"
 
-            client = TestClient(app)
+            params = {"username": "amanager"}
+            response = rpc_call("get-stats", params, generate_kbase_token("amanager"))
+            result = assert_json_rpc_result_ignore_result(response)
 
-            response2 = client.get(
-                "/manage/stats",
-                headers={"Authorization": generate_kbase_token("amanager")},
-            )
+            assert result["stats"]["links"]["all_time"] == 0
 
-            stats = response2.json()
-            assert stats["stats"]["links"]["all_time"] == 3
-
-            sm = storage_model()
-            await sm.db.links.drop()
             await sm.create_link_record(LinkRecord.model_validate(foo_link))
             await sm.create_link_record(LinkRecord.model_validate(bar_link))
             await sm.create_link_record(LinkRecord.model_validate(baz_link))
 
-            response3 = client.get(
-                "/manage/stats",
-                headers={"Authorization": generate_kbase_token("amanager")},
-            )
-            stats = response3.json()
+            params = {"username": "amanager"}
+            response = rpc_call("get-stats", params, generate_kbase_token("amanager"))
+            result = assert_json_rpc_result_ignore_result(response)
 
             # TODO: setup and test all status conditions.
-            assert stats["stats"]["links"]["all_time"] == 3
+            assert result["stats"]["links"]["all_time"] == 3
 
 
 async def test_get_stats_error_not_admin():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            response2 = client.get(
-                "/manage/stats", headers={"Authorization": generate_kbase_token("foo")}
-            )
-            assert response2.status_code == 403
+            params = {"username": "foo"}
+            response = rpc_call("get-stats", params, generate_kbase_token("foo"))
+            assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_delete_expired_linking_sessions_none():
@@ -405,13 +359,14 @@ async def test_delete_expired_linking_sessions_none():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            response2 = client.delete(
-                "/manage/expired_linking_sessions",
-                headers={"Authorization": generate_kbase_token("amanager")},
+            params = {"username": "amanager"}
+            response = rpc_call(
+                "delete-expired-linking-sessions",
+                params,
+                generate_kbase_token("amanager"),
             )
-            assert response2.status_code == 204
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result is None
 
 
 async def test_delete_expired_linking_sessions_some():
@@ -423,8 +378,6 @@ async def test_delete_expired_linking_sessions_some():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
             model = storage_model()
             await clear_storage_model()
             await model.create_linking_session(
@@ -439,29 +392,14 @@ async def test_delete_expired_linking_sessions_some():
             stats = await model.get_stats()
             assert stats.linking_sessions_initial.expired == 1
 
-            # response3 = client.get(
-            #     "/manage/stats",
-            #     headers={"Authorization": generate_kbase_token("amanager")}
-            # )
-            # stats = response3.json()
-
             # TODO: setup and test all status conditions.
-            # assert stats["stats"]["links"]['all_time'] == 3
-
-            response2 = client.delete(
-                "/manage/expired_linking_sessions",
-                headers={"Authorization": generate_kbase_token("amanager")},
+            params = {"username": "amanager"}
+            response = rpc_call(
+                "delete-expired-linking-sessions",
+                params,
+                generate_kbase_token("amanager"),
             )
-            assert response2.status_code == 204
-
-            # response3 = client.get(
-            #     "/manage/stats",
-            #     headers={"Authorization": generate_kbase_token("amanager")}
-            # )
-            # stats = response3.json()
-
-            # TODO: setup and test all status conditions.
-            # assert stats["stats"]["links"]['all_time'] == 3
+            assert_json_rpc_result_ignore_result(response)
 
             stats = await model.get_stats()
             assert stats.linking_sessions_initial.expired == 0
@@ -474,13 +412,11 @@ async def test_delete_expired_linking_sessions_error_not_admin():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            response2 = client.delete(
-                "/manage/expired_linking_sessions",
-                headers={"Authorization": generate_kbase_token("foo")},
+            params = {"username": "foo"}
+            response = rpc_call(
+                "delete-expired-linking-sessions", params, generate_kbase_token("foo")
             )
-            assert response2.status_code == 403
+            assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_get_linking_sessions_some():
@@ -492,8 +428,6 @@ async def test_get_linking_sessions_some():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
             model = storage_model()
             await clear_storage_model()
             await model.create_linking_session(
@@ -508,26 +442,16 @@ async def test_get_linking_sessions_some():
             stats = await model.get_stats()
             assert stats.linking_sessions_initial.expired == 1
 
-            # response3 = client.get(
-            #     "/manage/stats",
-            #     headers={"Authorization": generate_kbase_token("amanager")}
-            # )
-            # stats = response3.json()
-
-            # TODO: setup and test all status conditions.
-            # assert stats["stats"]["links"]['all_time'] == 3
-
-            response2 = client.get(
-                "/manage/linking_sessions",
-                headers={"Authorization": generate_kbase_token("amanager")},
+            params = {}
+            response = rpc_call(
+                "get-linking-sessions", params, generate_kbase_token("amanager")
             )
-            assert response2.status_code == 200
 
-            sessions = response2.json()
-            assert "initial_linking_sessions" in sessions
-            assert len(sessions["initial_linking_sessions"]) == 1
-            assert len(sessions["started_linking_sessions"]) == 0
-            assert len(sessions["completed_linking_sessions"]) == 0
+            result = assert_json_rpc_result_ignore_result(response)
+
+            assert len(result["initial_linking_sessions"]) == 1
+            assert len(result["started_linking_sessions"]) == 0
+            assert len(result["completed_linking_sessions"]) == 0
 
 
 async def test_get_linking_sessions_error_not_admin():
@@ -537,13 +461,11 @@ async def test_get_linking_sessions_error_not_admin():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            response2 = client.get(
-                "/manage/linking_sessions",
-                headers={"Authorization": generate_kbase_token("foo")},
+            params = {"username": "foo"}
+            response = rpc_call(
+                "get-linking-sessions", params, generate_kbase_token("foo")
             )
-            assert response2.status_code == 403
+            assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_get_link():
@@ -551,21 +473,19 @@ async def test_get_link():
         with mock_services():
             await create_link(TEST_LINK)
 
-            client = TestClient(app)
-            response = client.get(
-                "/link", headers={"Authorization": generate_kbase_token("foo")}
-            )
-            assert response.status_code == 200
+            params = {"username": "foo"}
+            response = rpc_call("owner-link", params, generate_kbase_token("foo"))
+
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["username"] == "foo"
 
             # Now, a manager should be able to see the link.
 
-            response2 = client.get(
-                "/manage/link/foo",
-                headers={"Authorization": generate_kbase_token("amanager")},
-            )
-            assert response2.status_code == 200
-            result = response2.json()
-            assert result is not None
+            params = {"username": "foo"}
+            response = rpc_call("get-link", params, generate_kbase_token("amanager"))
+
+            result = assert_json_rpc_result_ignore_result(response)
+            assert result["link"]["username"] == "foo"
 
 
 async def test_get_link_error_not_found():
@@ -573,19 +493,17 @@ async def test_get_link_error_not_found():
         with mock_services():
             await create_link(TEST_LINK)
 
-            client = TestClient(app)
-            response = client.get(
-                "/link", headers={"Authorization": generate_kbase_token("foo")}
-            )
-            assert response.status_code == 200
+            params = {"username": "foo"}
+            response = rpc_call("get-link", params, generate_kbase_token("amanager"))
+
+            assert_json_rpc_result_ignore_result(response)
 
             # Now, a manager should be able to see the link.
 
-            response2 = client.get(
-                "/manage/link/bar",
-                headers={"Authorization": generate_kbase_token("amanager")},
-            )
-            assert response2.status_code == 404
+            params = {"username": "bar"}
+            response = rpc_call("get-link", params, generate_kbase_token("amanager"))
+
+            assert_json_rpc_error(response, 1020, "Not Found")
 
 
 async def test_get_link_error_not_admin():
@@ -595,13 +513,9 @@ async def test_get_link_error_not_admin():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
-
-            response2 = client.get(
-                "/manage/link/foo",
-                headers={"Authorization": generate_kbase_token("foo")},
-            )
-            assert response2.status_code == 403
+            params = {"username": "foo"}
+            response = rpc_call("get-link", params, generate_kbase_token("foo"))
+            assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_patch_refresh_tokens():
@@ -610,22 +524,35 @@ async def test_patch_refresh_tokens():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 await create_link(TEST_LINK_BAR)
 
-                client = TestClient(app)
-
-                response = client.patch(
-                    "/manage/refresh-tokens/bar",
-                    headers={"Authorization": generate_kbase_token("foo")},
+                params = {"username": "bar"}
+                response = rpc_call(
+                    "refresh-tokens", params, generate_kbase_token("amanager")
                 )
-                assert response.status_code == 403
 
-                response2 = client.patch(
-                    "/manage/refresh-tokens/bar",
-                    headers={"Authorization": generate_kbase_token("amanager")},
+                result = assert_json_rpc_result_ignore_result(response)
+
+                # response2 = client.patch(
+                #     "/manage/refresh-tokens/bar",
+                #     headers={"Authorization": generate_kbase_token("amanager")},
+                # )
+                # assert response2.status_code == 200
+
+                # response_value = response2.json()
+                assert result["link"]["username"] == TEST_LINK_BAR["username"]
+
+
+async def test_patch_refresh_tokens_not_authorized():
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+                await create_link(TEST_LINK_BAR)
+
+                params = {"username": "bar"}
+                response = rpc_call(
+                    "refresh-tokens", params, generate_kbase_token("foo")
                 )
-                assert response2.status_code == 200
 
-                response_value = response2.json()
-                assert response_value["link"]["username"] == TEST_LINK_BAR["username"]
+                assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_patch_refresh_tokens_error_not_found():
@@ -634,10 +561,8 @@ async def test_patch_refresh_tokens_error_not_found():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 await create_link(TEST_LINK_BAR)
 
-                client = TestClient(app)
-
-                response2 = client.patch(
-                    "/manage/refresh-tokens/baz",
-                    headers={"Authorization": generate_kbase_token("amanager")},
+                params = {"username": "baz"}
+                response = rpc_call(
+                    "refresh-tokens", params, generate_kbase_token("amanager")
                 )
-                assert response2.status_code == 404
+                assert_json_rpc_error(response, 1020, "Not Found")

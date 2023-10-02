@@ -90,9 +90,11 @@ class MockAuthService(MockAuthServiceBase):
                 # elif authorization.startswith("no_token"):
                 #     self.send_json_error(self.error_no_token())
                 elif authorization.startswith("invalid_token"):
-                    self.send_json_error(self.error_invalid_token())
+                    self.send_json_error(
+                        self.error_invalid_token(), 500, "application/json"
+                    )
                 elif authorization.startswith("other_error"):
-                    self.send_json_error(self.error_other())
+                    self.send_json_error(self.error_other(), 500, "application/json")
                 elif authorization.startswith("bad_content_type"):
                     self.send_text("Bad JSON!")
                 # elif authorization.startswith("bad_json"):
@@ -104,15 +106,18 @@ class MockAuthService(MockAuthServiceBase):
                 #     x = 1 / 0
                 #     print(x)
                 elif authorization == "internal_server_error":
-                    self.send_text_error("Internal Server Error")
+                    self.send_text_error("Internal Server Error", 500)
                 else:
-                    self.send_json_error(self.error_invalid_token())
+                    self.send_json_error(
+                        self.error_invalid_token(), 500, "application/json"
+                    )
 
         if self.path == "/services/auth/api/V2/me":
             authorization = self.headers.get("authorization")
             if authorization is None:
                 raise ValueError(
-                    "Impossible - we never fail to set the authorization header for auth"
+                    "Impossible - we never fail to set the authorization header "
+                    "for auth"
                 )
             else:
                 if authorization.startswith("foo"):
@@ -124,9 +129,11 @@ class MockAuthService(MockAuthServiceBase):
                 # elif authorization.startswith("no_token"):
                 #     self.send_json_error(self.error_no_token())
                 elif authorization.startswith("invalid_token"):
-                    self.send_json_error(self.error_invalid_token())
+                    self.send_json_error(
+                        self.error_invalid_token(), 500, "application/json"
+                    )
                 elif authorization.startswith("other_error"):
-                    self.send_json_error(self.error_other())
+                    self.send_json_error(self.error_other(), 500, "application/json")
                 elif authorization.startswith("bad_content_type"):
                     self.send_text("Bad JSON!")
                 # elif authorization.startswith("bad_json"):
@@ -138,6 +145,8 @@ class MockAuthService(MockAuthServiceBase):
                     x = 1 / 0
                     print(x)
                 elif authorization == "internal_server_error":
-                    self.send_text_error("Internal Server Error")
+                    self.send_text_error("Internal Server Error", 500)
                 else:
-                    self.send_json_error(self.error_invalid_token())
+                    self.send_json_error(
+                        self.error_invalid_token(), 500, "application/json"
+                    )

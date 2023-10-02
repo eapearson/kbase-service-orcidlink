@@ -10,7 +10,14 @@ from typing import Any, Dict, List
 import aiohttp
 from pydantic import Field
 
-from orcidlink.lib import errors, exceptions
+from orcidlink.jsonrpc.errors import (
+    AuthorizationRequiredError,
+    ContentTypeError,
+    JSONDecodeError,
+    UpstreamError,
+)
+
+# from orcidlink.lib import error
 from orcidlink.lib.type import ServiceBaseModel
 
 
@@ -83,8 +90,8 @@ class KBaseAuth(object):
           is returned (raised by aiohttp)
         exceptions.JSONDecodeError - if the response does not parse correctly as
           JSON (raised by aiohttp)
-        exceptions.ServiceErrorY (401 - auth required) - if the error returned by the auth service is
-          10020 (invalid token
+        exceptions.ServiceErrorY (401 - auth required) - if the error returned by the
+          auth service is 10020 (invalid token
         exceptions.UpstreamError - for any other error reported by the auth service
         """
         try:
@@ -97,20 +104,20 @@ class KBaseAuth(object):
 
         except aiohttp.ContentTypeError as cte:
             # Raised if it is not application/json
-            data = exceptions.ContentTypeErrorData()
-            if cte.headers is not None:
-                data.originalContentType = cte.headers["content-type"]
-            raise exceptions.ContentTypeError("Wrong content type", data=data)
+            # data = exceptions.ContentTypeErrorData()
+            # if cte.headers is not None:
+            #     data.originalContentType = cte.headers["content-type"]
+            raise ContentTypeError("Wrong content type") from cte  # , data=data)
 
         except json.JSONDecodeError as jde:
-            raise exceptions.JSONDecodeError(
+            raise JSONDecodeError(
                 "Error decoding JSON response",
-                exceptions.JSONDecodeErrorData(message=str(jde)),
-            )
+                # JSONDecodeErrorData(message=str(jde)),
+            ) from jde
 
         except aiohttp.ClientConnectionError:
             # TODO: should be own bespoke error?
-            raise exceptions.UpstreamError("Error connecting to auth service")
+            raise UpstreamError("Error connecting to auth service")
 
         if not response.ok:
             # We don't care about the HTTP response code, just the appcode in the
@@ -118,12 +125,9 @@ class KBaseAuth(object):
             appcode = json_result["error"]["appcode"]
             json_result["error"]["message"]
             if appcode == 10020:
-                raise exceptions.ServiceErrorY(
-                    errors.ERRORS.authorization_required,
-                    "Invalid token, authorization required",
-                )
+                raise AuthorizationRequiredError()
             else:
-                raise exceptions.UpstreamError("Error authenticating with auth service")
+                raise UpstreamError("Error authenticating with auth service")
 
         return json_result
 
@@ -142,7 +146,7 @@ class KBaseAuth(object):
         Pydantic class matching the original structure.
         """
         if token == "":
-            raise exceptions.AuthorizationRequiredError("Token may not be empty")
+            raise AuthorizationRequiredError("Token may not be empty")
 
         json_result = await self._get("me", token)
 

@@ -16,26 +16,94 @@ root.
 """
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Generic, List, TypeVar
+from typing import Any, AsyncGenerator, Generic, List, Optional, TypeVar
 
 from asgi_correlation_id import CorrelationIdMiddleware
-from fastapi import FastAPI, Request
+from fastapi import Body, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi_jsonrpc import API, Entrypoint, JsonRpcContext
 from pydantic import Field
-from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import HTMLResponse, JSONResponse
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
+from orcidlink.jsonrpc.errors import (
+    AuthorizationRequiredError,
+    NotAuthorizedError,
+    NotFoundError,
+)
+from orcidlink.jsonrpc.methods.error_info import ErrorInfoResult, error_info_method
+from orcidlink.jsonrpc.methods.info import InfoResult, info_method
+from orcidlink.jsonrpc.methods.is_linked import is_linked_method
+from orcidlink.jsonrpc.methods.link import (
+    delete_link,
+    link_method_for_non_owner,
+    link_method_for_owner,
+)
+from orcidlink.jsonrpc.methods.linking_sessions import (
+    CreateLinkingSessionResult,
+    create_linking_session,
+    delete_linking_session,
+    finish_linking_session,
+    get_linking_session,
+)
+from orcidlink.jsonrpc.methods.manage import (
+    FindLinksResult,
+    GetLinkingSessionsResult,
+    GetLinkResult,
+    GetStatsResult,
+    IsManagerResult,
+    RefreshTokensResult,
+    SearchQuery,
+    delete_expired_linking_sessions,
+    delete_linking_session_completed,
+    delete_linking_session_initial,
+    delete_linking_session_started,
+    find_links,
+    get_link,
+    get_linking_sessions,
+    get_stats,
+    is_manager,
+    refresh_tokens,
+)
+from orcidlink.jsonrpc.methods.profile import get_profile
+from orcidlink.jsonrpc.methods.status import StatusResult, status_method
+from orcidlink.jsonrpc.methods.works import (
+    CreateWorkResult,
+    GetWorkResult,
+    SaveWorkResult,
+    create_work,
+    delete_work,
+    get_work,
+    get_works,
+    save_work,
+)
+from orcidlink.jsonrpc.utils import ensure_account2, ensure_authorization2
 from orcidlink.lib import errors, exceptions, logger
+
+# from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import (
+    AUTHORIZATION_HEADER,
+    PUT_CODE_PARAM,
+    SESSION_ID_PARAM,
+    USERNAME_PARAM,
     error_response,
     error_response2,
-    exception_error_response,
 )
+
+# from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
 from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.routers import link, linking_sessions, manage, root
-from orcidlink.routers.orcid import profile, works
+from orcidlink.model import (
+    LinkingSessionCompletePublic,
+    LinkRecordPublic,
+    LinkRecordPublicNonOwner,
+    NewWork,
+    ORCIDProfile,
+    ORCIDWorkGroup,
+    WorkUpdate,
+)
+from orcidlink.routers import linking_sessions
 from orcidlink.runtime import config, stats
 
 ###############################################################################
@@ -60,6 +128,7 @@ Once connected, *ORCID Link* enables certain integrations, including:
 """
 
 tags_metadata = [
+    {"name": "jsonrpc", "description": "JSON-RPC 2.0 method"},
     {"name": "misc", "description": "Miscellaneous operations"},
     {
         "name": "link",
@@ -130,7 +199,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
 
 
 # TODO: add fancy FastAPI configuration https://fastapi.tiangolo.com/tutorial/metadata/
-app = FastAPI(
+# app = FastAPI(
+#     docs_url=None,
+#     redoc_url=None,
+#     title="ORCID Link Service",
+#     description=description,
+#     terms_of_service="https://www.kbase.us/about/terms-and-conditions-v2/",
+#     contact={
+#         "name": "KBase, Lawrence Berkeley National Laboratory, DOE",
+#         "url": "https://www.kbase.us",
+#         "email": "engage@kbase.us",
+#     },
+#     license_info={
+#         "name": "The MIT License",
+#         "url": "https://github.com/kbase/kb_sdk/blob/develop/LICENSE.md",
+#     },
+#     openapi_tags=tags_metadata,
+#     lifespan=lifespan,
+# )
+
+app = API(
     docs_url=None,
     redoc_url=None,
     title="ORCID Link Service",
@@ -149,7 +237,393 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+COMMON_ERRORS = [AuthorizationRequiredError, NotAuthorizedError, NotFoundError]
+COMMON_ERRORS.extend(Entrypoint.default_errors)
+
+# JSON-RPC middlewares
+
+
+@asynccontextmanager
+async def logging_middleware(ctx: JsonRpcContext):
+    logger = logging.getLogger("api")
+    # logger.info('Request: %r', ctx.raw_request)
+    logger.info("jsonrpc request", extra={"request": ctx.raw_request})
+    try:
+        yield
+    finally:
+        # logger.info('Response: %r', ctx.raw_response)
+        logger.info("jsonrpc response", extra={"response": ctx.raw_response})
+
+
+api_v1 = Entrypoint("/api/v1",
+                    tags=["jsonrpc"],
+                    errors=COMMON_ERRORS,
+                    middlewares=[logging_middleware])
+
+
+app.bind_entrypoint(api_v1)
+
+
+@api_v1.method(name="status")
+def status() -> StatusResult:
+    return status_method()
+
+
+@api_v1.method()
+def info() -> InfoResult:
+    return info_method()
+
+
+@api_v1.method(name="error-info")
+def error_info(error_code: int) -> ErrorInfoResult:
+    return error_info_method(error_code)
+
+
+@api_v1.method(name="is-linked", errors=[AuthorizationRequiredError])
+async def is_linked(
+    username: str = USERNAME_PARAM, 
+    authorization: str | None = AUTHORIZATION_HEADER
+) -> bool:
+    logger = logging.getLogger("api")
+    logger.info(
+        "Called /is-linked method",
+        extra={
+            "type": "api",
+            "event": "call_started",
+            "params": {"authorization": "NOT_DISPLAYED"},
+            "path": "/is-linked",
+        },
+    )
+
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await is_linked_method(username, token_info.user)
+
+    logger.info(
+        "Successfully called /is_linked method",
+        extra={
+            "type": "api",
+            "event": "call_success",
+            "info": {"username": token_info.user},
+            "path": "/is_linked",
+        },
+    )
+
+    return result
+
+
+
+
+
+@api_v1.method(name="owner-link", errors=[*COMMON_ERRORS])
+async def owner_link(
+    username: str = USERNAME_PARAM, 
+    authorization: str | None = AUTHORIZATION_HEADER
+) -> LinkRecordPublic:
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await link_method_for_owner(username, token_info.user)
+
+    return result
+
+
+@api_v1.method(name="other-link", errors=[*COMMON_ERRORS])
+async def other_link(
+    username: str = USERNAME_PARAM, 
+    authorization: str | None = AUTHORIZATION_HEADER
+) -> LinkRecordPublicNonOwner:
+    _, _ = await ensure_authorization2(authorization)
+
+    result = await link_method_for_non_owner(username)
+
+    return result
+
+
+@api_v1.method(name="delete-link", errors=[*COMMON_ERRORS])
+async def delete_link_handler(
+    username: str = USERNAME_PARAM, 
+    authorization: str | None = AUTHORIZATION_HEADER
+) -> None:
+    _, token_info = await ensure_authorization2(authorization)
+
+    await delete_link(username, token_info.user)
+
+
+@api_v1.method(name="create-linking-session", errors=[*COMMON_ERRORS])
+async def create_linking_session_handler(
+    username: str = USERNAME_PARAM, 
+    authorization: str | None = AUTHORIZATION_HEADER
+) -> CreateLinkingSessionResult:
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await create_linking_session(username, token_info.user)
+
+    return result
+
+
+@api_v1.method(name="get-linking-session", errors=[*COMMON_ERRORS])
+async def get_linking_session_handler(
+    session_id: str = SESSION_ID_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> LinkingSessionCompletePublic:
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await get_linking_session(session_id, token_info.user)
+
+    return result
+
+
+@api_v1.method(name="delete-linking-session", errors=[*COMMON_ERRORS])
+async def delete_linking_session_handler(
+    session_id: str = SESSION_ID_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> None:
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await delete_linking_session(session_id, token_info.user)
+
+    return result
+
+
+@api_v1.method(name="finish-linking-session", errors=[*COMMON_ERRORS])
+async def finish_linking_session_handler(
+    session_id: str = SESSION_ID_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> None:
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await finish_linking_session(session_id, token_info.user)
+
+    return result
+
+
+#
+# Management
+#
+
+
+@api_v1.method(name="is-manager", errors=[*COMMON_ERRORS])
+async def is_manager_handler(
+    username: str, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> IsManagerResult:
+    _, account_info = await ensure_account2(authorization)
+
+    result = await is_manager(username, account_info)
+
+    return result
+
+
+@api_v1.method(name="find-links", errors=[*COMMON_ERRORS])
+async def find_links_handler(
+    query: Optional[SearchQuery], authorization: str = AUTHORIZATION_HEADER
+) -> FindLinksResult:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    result = await find_links(query)
+
+    return result
+
+
+@api_v1.method(name="get-link", errors=[*COMMON_ERRORS])
+async def get_link_handler(
+    username: str = USERNAME_PARAM,
+    authorization: str = AUTHORIZATION_HEADER
+) -> GetLinkResult:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    link_record = await get_link(username)
+
+    return link_record
+
+
+@api_v1.method(name="get-linking-sessions", errors=[*COMMON_ERRORS])
+async def get_linking_sessions_handler(
+    authorization: str = AUTHORIZATION_HEADER,
+) -> GetLinkingSessionsResult:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    result = await get_linking_sessions()
+
+    return result
+
+
+@api_v1.method(name="delete-expired-linking-sessions", errors=[*COMMON_ERRORS])
+async def delete_expired_linking_sessions_handler(
+    authorization: str = AUTHORIZATION_HEADER,
+) -> None:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    await delete_expired_linking_sessions()
+
+
+@api_v1.method(name="delete-linking-session-initial", errors=[*COMMON_ERRORS])
+async def delete_linking_session_initial_handler(
+    session_id: str = SESSION_ID_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> None:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    await delete_linking_session_initial(session_id)
+
+
+@api_v1.method(name="delete-linking-session-started", errors=[*COMMON_ERRORS])
+async def delete_linking_session_started_handler(
+    session_id: str = SESSION_ID_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> None:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    await delete_linking_session_started(session_id)
+
+
+@api_v1.method(name="delete-linking-session-completed", errors=[*COMMON_ERRORS])
+async def delete_linking_session_completed_handler(
+    session_id: str = SESSION_ID_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> None:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    await delete_linking_session_completed(session_id)
+
+
+@api_v1.method(name="get-stats", errors=[*COMMON_ERRORS])
+async def get_stats_handler(
+    authorization: str = AUTHORIZATION_HEADER,
+) -> GetStatsResult:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    result = await get_stats()
+    return result
+
+
+# TODO: I don't think this is used.
+@api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])
+async def refresh_tokens_handler(
+    username: str = USERNAME_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> RefreshTokensResult:
+    _, account_info = await ensure_account2(authorization)
+
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
+
+    result = await refresh_tokens(username)
+    return result
+
+
+@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
+async def get_orcid_profile_handler(
+    username: str = USERNAME_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> ORCIDProfile:
+    _, token_info = await ensure_authorization2(authorization)
+
+    result = await get_profile(username)
+    return result
+
+
+@api_v1.method(name="get-works", errors=[*COMMON_ERRORS])
+async def get_works_handler(
+    username: str = USERNAME_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> List[ORCIDWorkGroup]:
+    _, token_info = await ensure_authorization2(authorization)
+
+    if username != token_info.user:
+        raise NotAuthorizedError()
+
+    result = await get_works(username)
+    return result
+
+
+@api_v1.method(name="get-work", errors=[*COMMON_ERRORS])
+async def get_work_handler(
+    username: str = USERNAME_PARAM, 
+    put_code: int = PUT_CODE_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> GetWorkResult:
+    _, token_info = await ensure_authorization2(authorization)
+
+    if username != token_info.user:
+        raise NotAuthorizedError()
+
+    result = await get_work(username, put_code)
+    return result
+
+
+@api_v1.method(name="create-work", errors=[*COMMON_ERRORS])
+async def create_work_handler(
+    username: str = USERNAME_PARAM, 
+    new_work: NewWork = Body(..., description="New work activity record"), 
+    authorization: str = AUTHORIZATION_HEADER
+) -> CreateWorkResult:
+    _, token_info = await ensure_authorization2(authorization)
+
+    if username != token_info.user:
+        raise NotAuthorizedError()
+
+    result = await create_work(username, new_work)
+    return result
+
+
+@api_v1.method(name="update-work", errors=[*COMMON_ERRORS])
+async def save_work_handler(
+    username: str = USERNAME_PARAM,
+    work_update: WorkUpdate = Body(..., description="A work activity update record"), 
+    authorization: str = AUTHORIZATION_HEADER
+) -> SaveWorkResult:
+    _, token_info = await ensure_authorization2(authorization)
+
+    if username != token_info.user:
+        raise NotAuthorizedError()
+
+    result = await save_work(username, work_update)
+    return result
+
+
+@api_v1.method(name="delete-work", errors=[*COMMON_ERRORS])
+async def delete_work_handler(
+    username: str = USERNAME_PARAM, 
+    put_code: int = PUT_CODE_PARAM, 
+    authorization: str = AUTHORIZATION_HEADER
+) -> None:
+    _, token_info = await ensure_authorization2(authorization)
+
+    if username != token_info.user:
+        raise NotAuthorizedError()
+
+    result = await delete_work(username, put_code)
+    return result
+
+
 app.add_middleware(CorrelationIdMiddleware)
+
 
 ###############################################################################
 # Routers
@@ -157,13 +631,7 @@ app.add_middleware(CorrelationIdMiddleware)
 # All paths are included here as routers. Each router is defined in the "routers"
 # directory.
 ###############################################################################
-app.include_router(root.router)
-# app.include_router(rpc.router)
-app.include_router(link.router)
 app.include_router(linking_sessions.router)
-app.include_router(profile.router)
-app.include_router(works.router)
-app.include_router(manage.router)
 
 ###############################################################################
 #
@@ -212,7 +680,7 @@ async def validation_exception_handler(
         errors.ERRORS.request_validation_error,
         "This request does not comply with the schema for this endpoint",
         data=data,
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=HTTP_422_UNPROCESSABLE_ENTITY,
     )
 
 
@@ -232,20 +700,20 @@ async def service_errory_exception_handler(
 # programming logic errors. The reason to catch them here is to override the default
 # FastAPI error structure.
 #
-@app.exception_handler(500)
-async def internal_server_error_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
-    logging.error(
-        f"INTERNAL SERVER ERROR: {str(exc)}",
-        extra={"type": "internal-server-error", "exception": str(exc)},
-        exc_info=exc,
-    )
-    return exception_error_response(
-        errors.ERRORS.internal_server_error,
-        exc,
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    )
+# @app.exception_handler(500)
+# async def internal_server_error_handler(
+#     request: Request, exc: Exception
+# ) -> JSONResponse:
+#     logging.error(
+#         f"INTERNAL SERVER ERROR: {str(exc)}",
+#         extra={"type": "internal-server-error", "exception": str(exc)},
+#         exc_info=exc,
+#     )
+#     return exception_error_response(
+#         errors.ERRORS.internal_server_error,
+#         exc,
+#         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#     )
 
 
 class StarletteHTTPDetailData(ServiceBaseModel):
@@ -276,7 +744,7 @@ async def http_exception_handler(
                     detail=exc.detail, path=request.url.path
                 ),
             ),
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=HTTP_404_NOT_FOUND,
         )
 
     return error_response2(

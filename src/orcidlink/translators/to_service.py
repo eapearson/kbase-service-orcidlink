@@ -357,7 +357,8 @@ def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
     #         continue
     #     works.append(transform_work_summary(work_summary))
 
-    # if profile_raw.person.name is not None and profile_raw.person.name.credit_name is not None:
+    # if profile_raw.person.name is not None and profile_raw.person.name.credit_name
+    # is not None:
     #     creditName = profile_raw.person.name.credit_name.value
     # else:
     #     creditName = None
