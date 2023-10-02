@@ -12,6 +12,7 @@ cachetools = "5.3.1"
 dicttoxml2 = "2.1.0"
 email-validator = "2.0.0"
 fastapi = "0.103.1"
+fastapi-jsonrpc = "3.0.0b"
 httpx = "0.25.0"
 jinja2-tools = "1.0.7"
 motor = "3.3.1"
@@ -33,6 +34,7 @@ motor-types = "1.0.0b3"
 mypy = "1.5.1"
 pipdeptree = "2.13.0"
 pyfakefs = "5.2.4"
+pyright = "1.1.329"
 pytest = "7.4.2"
 pytest-asyncio = "0.21.1"
 pytest-cov = "4.1.0"
@@ -65,3 +67,6 @@ warn_untyped_fields = true
 
 [tool.isort]
 profile = "black"
+
+[tool.pyright]
+include = ["src"]
