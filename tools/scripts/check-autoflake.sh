@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "* Running autoflake check."
 # Ge sure mypy is on the last line, in order to return the result code, so that tooling can

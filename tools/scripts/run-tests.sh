@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 tests="${1}"
 test_file_path="src/test/${tests}"
 export TEST_DATA_DIR="${PWD}/test/data"
