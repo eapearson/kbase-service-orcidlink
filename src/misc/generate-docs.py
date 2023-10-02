@@ -326,11 +326,11 @@ def str_prop(
     value, found = get_prop(value, path)
     if not found:
         if default_value is None:
-            raise TypeError("Int prop not found")
+            raise TypeError(f"Str prop not found: {path}")
         return default_value
     if isinstance(value, str):
         return value
-    raise TypeError(f"Expected str")
+    raise TypeError("Expected str")
 
 
 def int_prop(
@@ -342,11 +342,11 @@ def int_prop(
     value, found = get_prop(value, path)
     if not found:
         if default_value is None:
-            raise TypeError("Int prop not found")
+            raise TypeError(f"Int prop not found: {path}")
         return default_value
     if isinstance(value, int):
         return value
-    raise TypeError(f"Expected int")
+    raise TypeError("Expected int")
 
 
 def dict_prop(
@@ -362,7 +362,7 @@ def dict_prop(
         return default_value
     if isinstance(value, dict):
         return value
-    raise TypeError(f"Expected dict")
+    raise TypeError("Expected dict")
 
 
 def list_prop(
@@ -378,7 +378,7 @@ def list_prop(
         return default_value
     if isinstance(value, list):
         return value
-    raise TypeError(f"Expected list")
+    raise TypeError("Expected list")
 
 
 def generate_parameters(parameters):

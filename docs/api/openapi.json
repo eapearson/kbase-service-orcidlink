@@ -16,867 +16,113 @@
         "version": "0.1.0"
     },
     "paths": {
-        "/status": {
-            "get": {
-                "tags": [
-                    "misc"
-                ],
-                "summary": "Get Status",
-                "description": "Get Service Status\n\nThis endpoint returns the current status of the service. The status code itself\nis always \"ok\", by definition. Other information includes the current time, and the\nstart time.\n\nIt can be used as a healthcheck, for basic latency measurement (as it makes no\ni/o or other high-latency calls), or for time synchronization (as it returns the\ncurrent time).",
-                "operationId": "get_status_status_get",
-                "responses": {
-                    "200": {
-                        "description": "Successfully returns the service status",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/StatusResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/info": {
-            "get": {
-                "tags": [
-                    "misc"
-                ],
-                "summary": "Get Info",
-                "description": "Get Service Information\n\nReturns basic information about the service and its configuration.",
-                "operationId": "get_info_info_get",
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/InfoResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/error-info/{error_code}": {
-            "get": {
-                "tags": [
-                    "misc"
-                ],
-                "summary": "Get Error Info",
-                "description": "Returns information about a given error.\n\nUseful for presenting standardized error information in interfaces.",
-                "operationId": "get_error_info_error_info__error_code__get",
-                "parameters": [
-                    {
-                        "name": "error_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "description": "The orcid id",
-                            "title": "Error Code"
-                        },
-                        "description": "The orcid id"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorInfoResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/link": {
-            "get": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Get Link",
-                "description": "Get ORCID Link\n\nReturn the link for the user associated with the KBase auth token passed in\nthe \"Authorization\" header",
-                "operationId": "get_link_link_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/LinkRecordPublic"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Link not available for this user",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Delete Link Impl",
-                "description": "Delete ORCID Link\n\nRemoves the link for the user associated with the KBase auth token passed in\nthe \"Authorization\" header",
-                "operationId": "delete_link_impl_link_delete",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Successfully deleted the link"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Link not available for this user",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/link/for_orcid/{orcid_id}": {
-            "get": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Get Link For Orcid",
-                "description": "Get ORCID Link for a given ORCID Id\n\nReturn the link for the given orcid id, as long as the user associated with the\nKBase auth token passed in the \"Authorization\" header is also the",
-                "operationId": "get_link_for_orcid_link_for_orcid__orcid_id__get",
-                "parameters": [
-                    {
-                        "name": "orcid_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "description": "The orcid id",
-                            "title": "Orcid Id"
-                        },
-                        "description": "The orcid id"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returns the <a href='#user-content-glossary_term_public-link-record'>Public link record</a> for this user; contains no secrets",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/LinkRecordPublic"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Link not available for this user",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/link/is_linked": {
-            "get": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Get Is Linked",
-                "description": "Get whether Is Linked\n\nDetermine if the user associated with the KBase auth token in the \"Authorization\"\nheader has a link to an ORCID account.",
-                "operationId": "get_is_linked_link_is_linked_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returns a boolean indicating whether the user account is linked to ORCID",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "boolean",
-                                    "title": "Response 200 Get Is Linked Link Is Linked Get"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/link/is_orcid_linked/{orcid_id}": {
-            "get": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Get Is Orcid Linked",
-                "description": "Get whether Is Linked\n\nDetermine if the user associated with the KBase auth token in the \"Authorization\"\nheader has a link to an ORCID account.",
-                "operationId": "get_is_orcid_linked_link_is_orcid_linked__orcid_id__get",
-                "parameters": [
-                    {
-                        "name": "orcid_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "description": "The orcid id",
-                            "title": "Orcid Id"
-                        },
-                        "description": "The orcid id"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returns a boolean indicating whether the orcid id linked to a KBase account",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "boolean",
-                                    "title": "Response 200 Get Is Orcid Linked Link Is Orcid Linked  Orcid Id  Get"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/link/share/{username}": {
-            "get": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Link Share",
-                "description": "Get whether Is Linked\n\nDetermine if the user associated with the KBase auth token in the \"Authorization\"\nheader has a link to an ORCID account.",
-                "operationId": "link_share_link_share__username__get",
-                "parameters": [
-                    {
-                        "name": "username",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "description": "The username",
-                            "title": "Username"
-                        },
-                        "description": "The username"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returns the shared portion of an ORCID Link record",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/LinkingRecordShared"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/linking-sessions": {
+        "/api/v1": {
             "post": {
                 "tags": [
-                    "linking-sessions"
+                    "jsonrpc"
                 ],
-                "summary": "Create Linking Session",
-                "description": "Create Linking Session\n\nCreates a new \"linking session\"; resulting in a linking session created in the\ndatabase, and the id for it returned for usage in an interactive linking session.",
-                "operationId": "create_linking_session_linking_sessions_post",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The linking session has been successfully created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CreateLinkingSessionResult"
-                                }
+                "summary": "Entrypoint",
+                "operationId": "entrypoint_api_v1_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/_Request"
                             }
                         }
                     },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/linking-sessions/{session_id}": {
-            "get": {
-                "tags": [
-                    "linking-sessions"
-                ],
-                "summary": "Get Linking Session",
-                "description": "Get Linking Session\n\nReturns the linking session record identified by the given linking session id,\nas long as it is owned by the user associated with the given KBase auth token.\n\nNote that the",
-                "operationId": "get_linking_session_linking_sessions__session_id__get",
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "minLength": 36,
-                            "maxLength": 36,
-                            "description": "The linking session id",
-                            "title": "Session Id"
-                        },
-                        "description": "The linking session id"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "minLength": 32,
-                            "maxLength": 32,
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
+                    "required": true
+                },
                 "responses": {
                     "200": {
-                        "description": "Returns the linking session",
+                        "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LinkingSessionCompletePublic"
+                                    "$ref": "#/components/schemas/_Response"
                                 }
                             }
                         }
                     },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
+                    "default": {
+                        "description": "Default Response"
+                    },
+                    "210": {
+                        "description": "[1010] Authorization Required",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_AuthorizationRequiredError_"
                                 }
                             }
                         }
                     },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
+                    "211": {
+                        "description": "[1011] Not Authorized",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_NotAuthorizedError_"
                                 }
                             }
                         }
                     },
-                    "404": {
-                        "description": "Linking session not found",
+                    "212": {
+                        "description": "[1020] Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_NotFoundError_"
                                 }
                             }
                         }
                     },
-                    "403": {
-                        "description": "User does not own linking session",
+                    "213": {
+                        "description": "[-32602] Invalid params\n\nInvalid method parameter(s)",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "linking-sessions"
-                ],
-                "summary": "Delete Linking Session",
-                "description": "Delete Linking Session\n\nDeletes the linking session record associated with the session id provided\nin the url, as long as it is owned by the user associated with the provided\nKBase auth token.",
-                "operationId": "delete_linking_session_linking_sessions__session_id__delete",
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "minLength": 36,
-                            "maxLength": 36,
-                            "description": "The linking session id",
-                            "title": "Session Id"
-                        },
-                        "description": "The linking session id"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Successfully deleted the session"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_InvalidParams_"
                                 }
                             }
                         }
                     },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
+                    "214": {
+                        "description": "[-32601] Method not found\n\nThe method does not exist / is not available",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_MethodNotFound_"
                                 }
                             }
                         }
                     },
-                    "403": {
-                        "description": "Username does not match linking session",
+                    "215": {
+                        "description": "[-32700] Parse error\n\nInvalid JSON was received by the server",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_ParseError_"
                                 }
                             }
                         }
                     },
-                    "404": {
-                        "description": "Linking session not found",
+                    "216": {
+                        "description": "[-32600] Invalid Request\n\nThe JSON sent is not a valid Request object",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/linking-sessions/{session_id}/finish": {
-            "put": {
-                "tags": [
-                    "linking-sessions"
-                ],
-                "summary": "Finish Linking Session",
-                "description": "Finish Linking Session\n\nThe final stage of the interactive linking session; called when the user confirms\nthe creation of the link, after OAuth flow has finished.",
-                "operationId": "finish_linking_session_linking_sessions__session_id__finish_put",
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "minLength": 36,
-                            "maxLength": 36,
-                            "description": "The linking session id",
-                            "title": "Session Id"
-                        },
-                        "description": "The linking session id"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The linking session has been finished successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SimpleSuccess"
+                                    "$ref": "#/components/schemas/_ErrorResponse_InvalidRequest_"
                                 }
                             }
                         }
                     },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
+                    "217": {
+                        "description": "[-32603] Internal error\n\nInternal JSON-RPC error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Username does not match linking session",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Linking session not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "$ref": "#/components/schemas/_ErrorResponse_InternalError_"
                                 }
                             }
                         }
@@ -1113,810 +359,6 @@
                 }
             }
         },
-        "/orcid/profile": {
-            "get": {
-                "tags": [
-                    "orcid"
-                ],
-                "summary": "Get Profile",
-                "description": "Get the ORCID profile for the user associated with the current auth token.\n\nSince ORCID Link is not a general purpose ORCID api, we may not fully\nrepresent the profile as ORCID does, but modify it for purpose.\nE.g. ORCID work records have a lot of optional fields which we\nactually require. This is reflected in the typing. So we can't really\nprovide all work records in the profile, just those created by\nKBase.\n\nReturns a 404 Not Found if the user is not linked",
-                "operationId": "get_profile_orcid_profile_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ORCIDProfile"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "User not linked or ORCID profile not available."
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/orcid/works/{put_code}": {
-            "get": {
-                "tags": [
-                    "works"
-                ],
-                "summary": "Get Work",
-                "description": "Fetch the work record, identified by `put_code`, for the user associated with the KBase auth token provided in the `Authorization` header",
-                "operationId": "get_work_orcid_works__put_code__get",
-                "parameters": [
-                    {
-                        "name": "put_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "description": "The ORCID `put code` for the work record to fetch",
-                            "title": "Put Code"
-                        },
-                        "description": "The ORCID `put code` for the work record to fetch"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Work-Output"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Link not available for this user"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "works"
-                ],
-                "summary": "Delete Work",
-                "operationId": "delete_work_orcid_works__put_code__delete",
-                "parameters": [
-                    {
-                        "name": "put_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "title": "Put Code"
-                        }
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Work record successfully deleted"
-                    },
-                    "404": {
-                        "description": "Not found"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/orcid/works": {
-            "get": {
-                "tags": [
-                    "works"
-                ],
-                "summary": "Get Works",
-                "description": "Fetch all of the \"work\" records from a user's ORCID account if their KBase account is linked.",
-                "operationId": "get_works_orcid_works_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ORCIDWorkGroup-Input"
-                                    },
-                                    "title": "Response 200 Get Works Orcid Works Get"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Link not available for this user"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "works"
-                ],
-                "summary": "Save Work",
-                "description": "Update a work record; the `work_update` contains the `put code`.",
-                "operationId": "save_work_orcid_works_put",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/WorkUpdate"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Work-Input"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Link not available for this user"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "works"
-                ],
-                "summary": "Create Work",
-                "operationId": "create_work_orcid_works_post",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/NewWork"
-                                    }
-                                ],
-                                "description": "The new work record to be added to the ORCID profile.",
-                                "title": "New Work"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Work record successfully created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Work-Input"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not found"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/is_manager": {
-            "get": {
-                "tags": [
-                    "manage"
-                ],
-                "summary": "Get Is Manager",
-                "description": "TEST",
-                "operationId": "get_is_manager_manage_is_manager_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully returns the service status",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IsManagerResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/links": {
-            "post": {
-                "tags": [
-                    "manage"
-                ],
-                "summary": "Get Links",
-                "description": "TEST",
-                "operationId": "get_links_manage_links_post",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "anyOf": [
-                                    {
-                                        "$ref": "#/components/schemas/SearchQuery"
-                                    },
-                                    {
-                                        "type": "null"
-                                    }
-                                ],
-                                "description": "A search expression by which to filter link records.\n        ",
-                                "title": "Query"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successfully returns the service status",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/GetLinksResponse-Input"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/link/{username}": {
-            "get": {
-                "tags": [
-                    "link"
-                ],
-                "summary": "Get Link",
-                "description": "Get ORCID Link\n\nReturn the link for the user associated with the KBase auth token passed in\nthe \"Authorization\" header",
-                "operationId": "get_link_manage_link__username__get",
-                "parameters": [
-                    {
-                        "name": "username",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "description": "The username",
-                            "title": "Username"
-                        },
-                        "description": "The username"
-                    },
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/LinkRecord"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/linking_sessions": {
-            "get": {
-                "tags": [
-                    "manage"
-                ],
-                "summary": "Get Linking Sessions",
-                "description": "TEST",
-                "operationId": "get_linking_sessions_manage_linking_sessions_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully returns the service status",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/GetLinksResponse-Input"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/expired_linking_sessions": {
-            "delete": {
-                "tags": [
-                    "linking-sessions"
-                ],
-                "summary": "Delete Expired Linking Sessions",
-                "description": "Delete Expired Linking Sessions",
-                "operationId": "delete_expired_linking_sessions_manage_expired_linking_sessions_delete",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Successfully deleted expired sessions"
-                    },
-                    "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/manage/stats": {
-            "get": {
-                "tags": [
-                    "manage"
-                ],
-                "summary": "Get Stats",
-                "description": "TEST",
-                "operationId": "get_stats_manage_stats_get",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string",
-                                    "minLength": 32,
-                                    "maxLength": 32
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "KBase auth token",
-                            "title": "Authorization"
-                        },
-                        "description": "KBase auth token"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully returns overview stats for the service",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/GetStatsResponse-Input"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/docs": {
             "get": {
                 "tags": [
@@ -1945,133 +387,23 @@
     },
     "components": {
         "schemas": {
-            "CitationType": {
-                "type": "string",
-                "enum": [
-                    "bibtex",
-                    "formatted-apa",
-                    "formatted-chicago",
-                    "formatted-harvard",
-                    "formatted-ieee",
-                    "formatted-mla",
-                    "formatted-vancouver",
-                    "formatted-unspecified",
-                    "ris"
-                ],
-                "title": "CitationType"
-            },
-            "ContributorRole": {
-                "properties": {
-                    "role": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ContributorRoleValue"
-                            }
-                        ],
-                        "title": "Role",
-                        "description": "The role performed by the collaborator or other contributor. "
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "role"
-                ],
-                "title": "ContributorRole"
-            },
-            "ContributorRoleValue": {
-                "type": "string",
-                "enum": [
-                    "http://credit.niso.org/contributor-roles/conceptualization/",
-                    "http://credit.niso.org/contributor-roles/data-curation/",
-                    "http://credit.niso.org/contributor-roles/formal-analysis/",
-                    "http://credit.niso.org/contributor-roles/funding-acquisition/",
-                    "http://credit.niso.org/contributor-roles/investigation/",
-                    "http://credit.niso.org/contributor-roles/methodology/",
-                    "http://credit.niso.org/contributor-roles/project-administration/",
-                    "http://credit.niso.org/contributor-roles/resources/",
-                    "http://credit.niso.org/contributor-roles/software/",
-                    "http://credit.niso.org/contributor-roles/supervision/",
-                    "http://credit.niso.org/contributor-roles/validation/",
-                    "http://credit.niso.org/contributor-roles/visualization/",
-                    "http://credit.niso.org/contributor-roles/writing-original-draft/",
-                    "http://credit.niso.org/contributor-roles/writing-review-editing/"
-                ],
-                "title": "ContributorRoleValue"
-            },
-            "CreateLinkingSessionResult": {
-                "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "maxLength": 36,
-                        "minLength": 36,
-                        "title": "Session Id",
-                        "description": "The linking session id"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "session_id"
-                ],
-                "title": "CreateLinkingSessionResult"
-            },
-            "ErrorCode2": {
+            "AuthorizationRequiredError": {
                 "properties": {
                     "code": {
                         "type": "integer",
-                        "enum": [
-                            1000,
-                            1010,
-                            1011,
-                            1020,
-                            1030,
-                            1040,
-                            1041,
-                            1050,
-                            1051,
-                            1052,
-                            1060,
-                            1061,
-                            1070,
-                            1080,
-                            1081,
-                            1082,
-                            1099
-                        ],
-                        "title": "Code"
+                        "title": "Code",
+                        "default": 1010,
+                        "example": 1010
                     },
-                    "title": {
+                    "message": {
                         "type": "string",
-                        "title": "Title"
-                    },
-                    "description": {
-                        "type": "string",
-                        "title": "Description"
-                    },
-                    "status_code": {
-                        "type": "integer",
-                        "title": "Status Code"
+                        "title": "Message",
+                        "default": "Authorization Required",
+                        "example": "Authorization Required"
                     }
                 },
                 "type": "object",
-                "required": [
-                    "code",
-                    "title",
-                    "description",
-                    "status_code"
-                ],
-                "title": "ErrorCode2"
-            },
-            "ErrorInfoResponse": {
-                "properties": {
-                    "error_info": {
-                        "$ref": "#/components/schemas/ErrorCode2"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "error_info"
-                ],
-                "title": "ErrorInfoResponse"
+                "title": "AuthorizationRequiredError"
             },
             "ErrorResponse": {
                 "properties": {
@@ -2131,1230 +463,42 @@
                 "title": "ErrorResponse",
                 "description": "A generic error object used for all error responses.\n\nSee [the error docs](docs/errors.md) for more information."
             },
-            "ExternalId": {
+            "InternalError": {
                 "properties": {
-                    "type": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ExternalIdType"
-                            }
-                        ],
-                        "title": "External Id Type",
-                        "description": "The type of an external identifier",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Supported external-id-type values can be found at https://pub.orcid.org/v2.0/identifiers",
-                            "Note that the above is an html table, although the page is simple, unstyled.",
-                            "From common.xsd: Must contain one or more charaters that are not a space, carriage return or linefeed",
-                            "Uses this regex as a rule to ensure this:  ",
-                            "[\\s\\S]*[^\\s\\n\\r]+[\\s\\S]*"
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "common:non-empty-string",
-                        "kbSourceTypeRef": "",
-                        "kbSourceValues": "https://pub.orcid.org/v2.0/identifiers",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
+                    "code": {
+                        "type": "integer",
+                        "title": "Code",
+                        "default": -32603,
+                        "example": -32603
                     },
-                    "value": {
+                    "message": {
                         "type": "string",
-                        "title": "External Id Value",
-                        "description": "The value of an external identifier",
-                        "kbComment": "",
-                        "kbNotes": [
-                            "Same generic 'non-empty-string' as above."
-                        ],
-                        "kbSourceName": "",
-                        "kbSourceType": "common:non-empty-string",
-                        "kbSourceTypeRef": "",
-                        "kbSourceValues": "https://pub.orcid.org/v2.0/identifiers",
-                        "kbUpstreamType": "xs:string",
-                        "kbUpstreamTypeRef": "https://www.w3.org/TR/xmlschema11-2/#string"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "External Id URL",
-                        "description": ""
-                    },
-                    "relationship": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/RelationshipType"
-                            }
-                        ],
-                        "title": "External Id Relationship",
-                        "description": ""
+                        "title": "Message",
+                        "default": "Internal error",
+                        "example": "Internal error"
                     }
                 },
                 "type": "object",
-                "required": [
-                    "type",
-                    "value",
-                    "url",
-                    "relationship"
-                ],
-                "title": "ExternalId",
-                "description": "See: https://github.com/ORCID/orcid-model/blob/e7a9c0c0060f843b2534e6100b30cab713c8aef5/src/main/resources/common_3.0/common-3.0.xsd#L1025"
+                "title": "InternalError"
             },
-            "ExternalIdType": {
-                "type": "string",
-                "enum": [
-                    "agr",
-                    "ark",
-                    "arxiv",
-                    "asin",
-                    "asin-tld",
-                    "authenticusid",
-                    "bibcode",
-                    "cba",
-                    "cienciaiul",
-                    "cit",
-                    "cstr",
-                    "ctx",
-                    "dnb",
-                    "doi",
-                    "eid",
-                    "emdb",
-                    "empiar",
-                    "ethos",
-                    "grant_number",
-                    "hal",
-                    "handle",
-                    "hir",
-                    "isbn",
-                    "ismn",
-                    "issn",
-                    "jfm",
-                    "jstor",
-                    "k10plus",
-                    "kuid",
-                    "lccn",
-                    "lensid",
-                    "mr",
-                    "oclc",
-                    "ol",
-                    "osti",
-                    "other-id",
-                    "pat",
-                    "pdb",
-                    "pmc",
-                    "pmid",
-                    "ppr",
-                    "proposal-id",
-                    "rfc",
-                    "rrid",
-                    "source-work-id",
-                    "ssrn",
-                    "uri",
-                    "urn",
-                    "wosuid",
-                    "zbl"
-                ],
-                "title": "ExternalIdType"
-            },
-            "FilterByCreationTime": {
+            "InvalidParams": {
                 "properties": {
-                    "eq": {
+                    "code": {
+                        "type": "integer",
+                        "title": "Code",
+                        "default": -32602,
+                        "example": -32602
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Invalid params",
+                        "example": "Invalid params"
+                    },
+                    "data": {
                         "anyOf": [
                             {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Eq"
-                    },
-                    "gte": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Gte"
-                    },
-                    "gt": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Gt"
-                    },
-                    "lte": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Lte"
-                    },
-                    "lt": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Lt"
-                    }
-                },
-                "type": "object",
-                "title": "FilterByCreationTime"
-            },
-            "FilterByExpirationTime": {
-                "properties": {
-                    "eq": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Eq"
-                    },
-                    "gte": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Gte"
-                    },
-                    "gt": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Gt"
-                    },
-                    "lte": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Lte"
-                    },
-                    "lt": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Lt"
-                    }
-                },
-                "type": "object",
-                "title": "FilterByExpirationTime"
-            },
-            "FilterByORCIDId": {
-                "properties": {
-                    "eq": {
-                        "type": "string",
-                        "title": "Eq"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "eq"
-                ],
-                "title": "FilterByORCIDId"
-            },
-            "FilterByUsername": {
-                "properties": {
-                    "eq": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Eq"
-                    },
-                    "contains": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Contains"
-                    }
-                },
-                "type": "object",
-                "title": "FilterByUsername"
-            },
-            "GetLinkingSessionsResponse": {
-                "properties": {
-                    "initial_linking_sessions": {
-                        "items": {
-                            "$ref": "#/components/schemas/LinkingSessionInitial"
-                        },
-                        "type": "array",
-                        "title": "Initial Linking Sessions"
-                    },
-                    "started_linking_sessions": {
-                        "items": {
-                            "$ref": "#/components/schemas/LinkingSessionStarted"
-                        },
-                        "type": "array",
-                        "title": "Started Linking Sessions"
-                    },
-                    "completed_linking_sessions": {
-                        "items": {
-                            "$ref": "#/components/schemas/LinkingSessionComplete"
-                        },
-                        "type": "array",
-                        "title": "Completed Linking Sessions"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "initial_linking_sessions",
-                    "started_linking_sessions",
-                    "completed_linking_sessions"
-                ],
-                "title": "GetLinkingSessionsResponse"
-            },
-            "GetLinksResponse-Input": {
-                "properties": {
-                    "links": {
-                        "items": {
-                            "$ref": "#/components/schemas/LinkRecord"
-                        },
-                        "type": "array",
-                        "title": "Links"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "links"
-                ],
-                "title": "GetLinksResponse"
-            },
-            "GetLinksResponse-Output": {
-                "properties": {
-                    "links": {
-                        "items": {
-                            "$ref": "#/components/schemas/LinkRecord"
-                        },
-                        "type": "array",
-                        "title": "Links"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "links"
-                ],
-                "title": "GetLinksResponse"
-            },
-            "GetStatsResponse-Input": {
-                "properties": {
-                    "stats": {
-                        "$ref": "#/components/schemas/StatsRecord"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "stats"
-                ],
-                "title": "GetStatsResponse"
-            },
-            "GetStatsResponse-Output": {
-                "properties": {
-                    "stats": {
-                        "$ref": "#/components/schemas/StatsRecord"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "stats"
-                ],
-                "title": "GetStatsResponse"
-            },
-            "GitInfo": {
-                "properties": {
-                    "commit_hash": {
-                        "type": "string",
-                        "title": "Commit Hash"
-                    },
-                    "commit_hash_abbreviated": {
-                        "type": "string",
-                        "title": "Commit Hash Abbreviated"
-                    },
-                    "author_name": {
-                        "type": "string",
-                        "title": "Author Name"
-                    },
-                    "author_date": {
-                        "type": "integer",
-                        "title": "Author Date"
-                    },
-                    "committer_name": {
-                        "type": "string",
-                        "title": "Committer Name"
-                    },
-                    "committer_date": {
-                        "type": "integer",
-                        "title": "Committer Date"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "Url"
-                    },
-                    "branch": {
-                        "type": "string",
-                        "title": "Branch"
-                    },
-                    "tag": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Tag"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "commit_hash",
-                    "commit_hash_abbreviated",
-                    "author_name",
-                    "author_date",
-                    "committer_name",
-                    "committer_date",
-                    "url",
-                    "branch",
-                    "tag"
-                ],
-                "title": "GitInfo"
-            },
-            "HTTPValidationError": {
-                "properties": {
-                    "detail": {
-                        "items": {
-                            "$ref": "#/components/schemas/ValidationError"
-                        },
-                        "type": "array",
-                        "title": "Detail"
-                    }
-                },
-                "type": "object",
-                "title": "HTTPValidationError"
-            },
-            "InfoResponse": {
-                "properties": {
-                    "service-description": {
-                        "$ref": "#/components/schemas/ServiceDescription"
-                    },
-                    "git-info": {
-                        "$ref": "#/components/schemas/GitInfo"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "service-description",
-                    "git-info"
-                ],
-                "title": "InfoResponse"
-            },
-            "IsManagerResponse": {
-                "properties": {
-                    "is_manager": {
-                        "type": "boolean",
-                        "title": "Is Manager"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "is_manager"
-                ],
-                "title": "IsManagerResponse"
-            },
-            "LinkRecord": {
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "created_at": {
-                        "type": "integer",
-                        "title": "Created At"
-                    },
-                    "expires_at": {
-                        "type": "integer",
-                        "title": "Expires At"
-                    },
-                    "orcid_auth": {
-                        "$ref": "#/components/schemas/ORCIDAuth"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "username",
-                    "created_at",
-                    "expires_at",
-                    "orcid_auth"
-                ],
-                "title": "LinkRecord"
-            },
-            "LinkRecordPublic": {
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "created_at": {
-                        "type": "integer",
-                        "title": "Created At"
-                    },
-                    "expires_at": {
-                        "type": "integer",
-                        "title": "Expires At"
-                    },
-                    "orcid_auth": {
-                        "$ref": "#/components/schemas/ORCIDAuthPublic"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "username",
-                    "created_at",
-                    "expires_at",
-                    "orcid_auth"
-                ],
-                "title": "LinkRecordPublic"
-            },
-            "LinkRecordPublicNonOwner": {
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "orcid_auth": {
-                        "$ref": "#/components/schemas/ORCIDAuthPublicNonOwner"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "username",
-                    "orcid_auth"
-                ],
-                "title": "LinkRecordPublicNonOwner"
-            },
-            "LinkSessionStats": {
-                "properties": {
-                    "active": {
-                        "type": "integer",
-                        "title": "Active"
-                    },
-                    "expired": {
-                        "type": "integer",
-                        "title": "Expired"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "active",
-                    "expired"
-                ],
-                "title": "LinkSessionStats"
-            },
-            "LinkStats": {
-                "properties": {
-                    "last_24_hours": {
-                        "type": "integer",
-                        "title": "Last 24 Hours"
-                    },
-                    "last_7_days": {
-                        "type": "integer",
-                        "title": "Last 7 Days"
-                    },
-                    "last_30_days": {
-                        "type": "integer",
-                        "title": "Last 30 Days"
-                    },
-                    "all_time": {
-                        "type": "integer",
-                        "title": "All Time"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "last_24_hours",
-                    "last_7_days",
-                    "last_30_days",
-                    "all_time"
-                ],
-                "title": "LinkStats"
-            },
-            "LinkingRecordShared": {
-                "properties": {
-                    "orcidId": {
-                        "type": "string",
-                        "title": "Orcidid"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "orcidId"
-                ],
-                "title": "LinkingRecordShared"
-            },
-            "LinkingSessionComplete": {
-                "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "title": "Session Id"
-                    },
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "created_at": {
-                        "type": "integer",
-                        "title": "Created At"
-                    },
-                    "expires_at": {
-                        "type": "integer",
-                        "title": "Expires At"
-                    },
-                    "return_link": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Return Link"
-                    },
-                    "skip_prompt": {
-                        "type": "boolean",
-                        "title": "Skip Prompt"
-                    },
-                    "ui_options": {
-                        "type": "string",
-                        "title": "Ui Options"
-                    },
-                    "orcid_auth": {
-                        "$ref": "#/components/schemas/ORCIDAuth"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "session_id",
-                    "username",
-                    "created_at",
-                    "expires_at",
-                    "return_link",
-                    "skip_prompt",
-                    "ui_options",
-                    "orcid_auth"
-                ],
-                "title": "LinkingSessionComplete"
-            },
-            "LinkingSessionCompletePublic": {
-                "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "title": "Session Id"
-                    },
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "created_at": {
-                        "type": "integer",
-                        "title": "Created At"
-                    },
-                    "expires_at": {
-                        "type": "integer",
-                        "title": "Expires At"
-                    },
-                    "return_link": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Return Link"
-                    },
-                    "skip_prompt": {
-                        "type": "boolean",
-                        "title": "Skip Prompt"
-                    },
-                    "ui_options": {
-                        "type": "string",
-                        "title": "Ui Options"
-                    },
-                    "orcid_auth": {
-                        "$ref": "#/components/schemas/ORCIDAuthPublic"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "session_id",
-                    "username",
-                    "created_at",
-                    "expires_at",
-                    "return_link",
-                    "skip_prompt",
-                    "ui_options",
-                    "orcid_auth"
-                ],
-                "title": "LinkingSessionCompletePublic"
-            },
-            "LinkingSessionInitial": {
-                "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "title": "Session Id"
-                    },
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "created_at": {
-                        "type": "integer",
-                        "title": "Created At"
-                    },
-                    "expires_at": {
-                        "type": "integer",
-                        "title": "Expires At"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "session_id",
-                    "username",
-                    "created_at",
-                    "expires_at"
-                ],
-                "title": "LinkingSessionInitial"
-            },
-            "LinkingSessionStarted": {
-                "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "title": "Session Id"
-                    },
-                    "username": {
-                        "type": "string",
-                        "title": "Username"
-                    },
-                    "created_at": {
-                        "type": "integer",
-                        "title": "Created At"
-                    },
-                    "expires_at": {
-                        "type": "integer",
-                        "title": "Expires At"
-                    },
-                    "return_link": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Return Link"
-                    },
-                    "skip_prompt": {
-                        "type": "boolean",
-                        "title": "Skip Prompt"
-                    },
-                    "ui_options": {
-                        "type": "string",
-                        "title": "Ui Options"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "session_id",
-                    "username",
-                    "created_at",
-                    "expires_at",
-                    "return_link",
-                    "skip_prompt",
-                    "ui_options"
-                ],
-                "title": "LinkingSessionStarted"
-            },
-            "NewWork": {
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Title",
-                        "description": "The main name or title of the work."
-                    },
-                    "date": {
-                        "type": "string",
-                        "title": "Date",
-                        "description": ""
-                    },
-                    "workType": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/WorkType"
-                            }
-                        ],
-                        "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "URL",
-                        "description": ""
-                    },
-                    "doi": {
-                        "type": "string",
-                        "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "External Ids",
-                        "description": ""
-                    },
-                    "journal": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published."
-                    },
-                    "shortDescription": {
-                        "type": "string",
-                        "maxLength": 5000,
-                        "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item."
-                    },
-                    "citation": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDCitation"
-                            }
-                        ],
-                        "title": "Citation",
-                        "description": ""
-                    },
-                    "selfContributor": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf-Input"
-                            }
-                        ],
-                        "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record."
-                    },
-                    "otherContributors": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor-Input"
-                        },
-                        "type": "array",
-                        "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work."
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "doi",
-                    "externalIds",
-                    "journal",
-                    "shortDescription",
-                    "citation",
-                    "selfContributor",
-                    "otherContributors"
-                ],
-                "title": "NewWork",
-                "description": "Represents a work record that is going to be added to ORCID."
-            },
-            "ORCIDAffiliation": {
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "title": "Name"
-                    },
-                    "role": {
-                        "type": "string",
-                        "title": "Role"
-                    },
-                    "startYear": {
-                        "type": "string",
-                        "title": "Startyear"
-                    },
-                    "endYear": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Endyear"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "name",
-                    "role",
-                    "startYear",
-                    "endYear"
-                ],
-                "title": "ORCIDAffiliation"
-            },
-            "ORCIDAuth": {
-                "properties": {
-                    "access_token": {
-                        "type": "string",
-                        "title": "Access Token"
-                    },
-                    "token_type": {
-                        "type": "string",
-                        "title": "Token Type"
-                    },
-                    "refresh_token": {
-                        "type": "string",
-                        "title": "Refresh Token"
-                    },
-                    "expires_in": {
-                        "type": "integer",
-                        "title": "Expires In"
-                    },
-                    "scope": {
-                        "type": "string",
-                        "title": "Scope"
-                    },
-                    "name": {
-                        "type": "string",
-                        "title": "Name"
-                    },
-                    "orcid": {
-                        "type": "string",
-                        "title": "Orcid"
-                    },
-                    "id_token": {
-                        "type": "string",
-                        "title": "Id Token"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "access_token",
-                    "token_type",
-                    "refresh_token",
-                    "expires_in",
-                    "scope",
-                    "name",
-                    "orcid",
-                    "id_token"
-                ],
-                "title": "ORCIDAuth"
-            },
-            "ORCIDAuthPublic": {
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "title": "Name"
-                    },
-                    "scope": {
-                        "type": "string",
-                        "title": "Scope"
-                    },
-                    "expires_in": {
-                        "type": "integer",
-                        "title": "Expires In"
-                    },
-                    "orcid": {
-                        "type": "string",
-                        "title": "Orcid"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "name",
-                    "scope",
-                    "expires_in",
-                    "orcid"
-                ],
-                "title": "ORCIDAuthPublic"
-            },
-            "ORCIDAuthPublicNonOwner": {
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "title": "Name"
-                    },
-                    "orcid": {
-                        "type": "string",
-                        "title": "Orcid"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "name",
-                    "orcid"
-                ],
-                "title": "ORCIDAuthPublicNonOwner"
-            },
-            "ORCIDBiographyFields": {
-                "properties": {
-                    "bio": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Bio"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "bio"
-                ],
-                "title": "ORCIDBiographyFields"
-            },
-            "ORCIDCitation": {
-                "properties": {
-                    "type": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/CitationType"
-                            }
-                        ],
-                        "title": "Type",
-                        "description": "The type (format) of the citation."
-                    },
-                    "value": {
-                        "type": "string",
-                        "title": "Value",
-                        "description": "Formatted citation text."
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "type",
-                    "value"
-                ],
-                "title": "ORCIDCitation"
-            },
-            "ORCIDContributor-Input": {
-                "properties": {
-                    "orcidId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "ORCID Id",
-                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 150,
-                        "title": "Name",
-                        "description": "The name to use for the researcher or contributor when credited or cited"
-                    },
-                    "roles": {
-                        "items": {
-                            "$ref": "#/components/schemas/ContributorRole"
-                        },
-                        "type": "array",
-                        "title": "Roles",
-                        "description": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "name",
-                    "roles"
-                ],
-                "title": "ORCIDContributor",
-                "description": "Note that the orcidId is not required for the \"regular\" contributor.\nThe \"self contributor\" described below, does, require it."
-            },
-            "ORCIDContributor-Output": {
-                "properties": {
-                    "orcidId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "ORCID Id",
-                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 150,
-                        "title": "Name",
-                        "description": "The name to use for the researcher or contributor when credited or cited"
-                    },
-                    "roles": {
-                        "items": {
-                            "$ref": "#/components/schemas/ContributorRole"
-                        },
-                        "type": "array",
-                        "title": "Roles",
-                        "description": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "orcidId",
-                    "name",
-                    "roles"
-                ],
-                "title": "ORCIDContributor",
-                "description": "Note that the orcidId is not required for the \"regular\" contributor.\nThe \"self contributor\" described below, does, require it."
-            },
-            "ORCIDContributorSelf-Input": {
-                "properties": {
-                    "orcidId": {
-                        "type": "string",
-                        "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
-                        "title": "ORCID Id",
-                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 150,
-                        "title": "Name",
-                        "description": "The name to use for the researcher or contributor when credited or cited"
-                    },
-                    "roles": {
-                        "items": {
-                            "$ref": "#/components/schemas/ContributorRole"
-                        },
-                        "type": "array",
-                        "title": "Roles",
-                        "description": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "orcidId",
-                    "name",
-                    "roles"
-                ],
-                "title": "ORCIDContributorSelf"
-            },
-            "ORCIDContributorSelf-Output": {
-                "properties": {
-                    "orcidId": {
-                        "type": "string",
-                        "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
-                        "title": "ORCID Id",
-                        "description": "ORCID iD for the contributor - only add if you have collected an authenticated iD for the contributor"
-                    },
-                    "name": {
-                        "type": "string",
-                        "maxLength": 150,
-                        "title": "Name",
-                        "description": "The name to use for the researcher or contributor when credited or cited"
-                    },
-                    "roles": {
-                        "items": {
-                            "$ref": "#/components/schemas/ContributorRole"
-                        },
-                        "type": "array",
-                        "title": "Roles",
-                        "description": ""
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "orcidId",
-                    "name",
-                    "roles"
-                ],
-                "title": "ORCIDContributorSelf"
-            },
-            "ORCIDEmailFields": {
-                "properties": {
-                    "emailAddresses": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "title": "Emailaddresses"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "emailAddresses"
-                ],
-                "title": "ORCIDEmailFields"
-            },
-            "ORCIDFieldGroup_ORCIDBiographyFields_": {
-                "properties": {
-                    "private": {
-                        "type": "boolean",
-                        "title": "Private"
-                    },
-                    "fields": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDBiographyFields"
+                                "$ref": "#/components/schemas/_ErrorData__Error_"
                             },
                             {
                                 "type": "null"
@@ -3363,479 +507,140 @@
                     }
                 },
                 "type": "object",
-                "required": [
-                    "private",
-                    "fields"
-                ],
-                "title": "ORCIDFieldGroup[ORCIDBiographyFields]"
+                "title": "InvalidParams"
             },
-            "ORCIDFieldGroup_ORCIDEmailFields_": {
+            "InvalidRequest": {
                 "properties": {
-                    "private": {
-                        "type": "boolean",
-                        "title": "Private"
-                    },
-                    "fields": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDEmailFields"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "private",
-                    "fields"
-                ],
-                "title": "ORCIDFieldGroup[ORCIDEmailFields]"
-            },
-            "ORCIDFieldGroup_ORCIDNameFields_": {
-                "properties": {
-                    "private": {
-                        "type": "boolean",
-                        "title": "Private"
-                    },
-                    "fields": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDNameFields"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "private",
-                    "fields"
-                ],
-                "title": "ORCIDFieldGroup[ORCIDNameFields]"
-            },
-            "ORCIDNameFields": {
-                "properties": {
-                    "firstName": {
-                        "type": "string",
-                        "title": "Firstname"
-                    },
-                    "lastName": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Lastname"
-                    },
-                    "creditName": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Creditname"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "firstName",
-                    "lastName",
-                    "creditName"
-                ],
-                "title": "ORCIDNameFields"
-            },
-            "ORCIDProfile": {
-                "properties": {
-                    "orcidId": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Orcidid"
-                    },
-                    "nameGroup": {
-                        "$ref": "#/components/schemas/ORCIDFieldGroup_ORCIDNameFields_"
-                    },
-                    "biographyGroup": {
-                        "$ref": "#/components/schemas/ORCIDFieldGroup_ORCIDBiographyFields_"
-                    },
-                    "emailGroup": {
-                        "$ref": "#/components/schemas/ORCIDFieldGroup_ORCIDEmailFields_"
-                    },
-                    "employment": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDAffiliation"
-                        },
-                        "type": "array",
-                        "title": "Employment"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "orcidId",
-                    "nameGroup",
-                    "biographyGroup",
-                    "emailGroup",
-                    "employment"
-                ],
-                "title": "ORCIDProfile"
-            },
-            "ORCIDWorkGroup-Input": {
-                "properties": {
-                    "updatedAt": {
+                    "code": {
                         "type": "integer",
-                        "title": "Updatedat"
+                        "title": "Code",
+                        "default": -32600,
+                        "example": -32600
                     },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "Externalids"
-                    },
-                    "works": {
-                        "items": {
-                            "$ref": "#/components/schemas/WorkSummary-Input"
-                        },
-                        "type": "array",
-                        "title": "Works"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "updatedAt",
-                    "externalIds",
-                    "works"
-                ],
-                "title": "ORCIDWorkGroup"
-            },
-            "ORCIDWorkGroup-Output": {
-                "properties": {
-                    "updatedAt": {
-                        "type": "integer",
-                        "title": "Updatedat"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "Externalids"
-                    },
-                    "works": {
-                        "items": {
-                            "$ref": "#/components/schemas/WorkSummary-Output"
-                        },
-                        "type": "array",
-                        "title": "Works"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "updatedAt",
-                    "externalIds",
-                    "works"
-                ],
-                "title": "ORCIDWorkGroup"
-            },
-            "QueryFind": {
-                "properties": {
-                    "username": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/FilterByUsername"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "orcid": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/FilterByORCIDId"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "created": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/FilterByCreationTime"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "expires": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/FilterByExpirationTime"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    }
-                },
-                "additionalProperties": false,
-                "type": "object",
-                "title": "QueryFind"
-            },
-            "QuerySort": {
-                "properties": {
-                    "specs": {
-                        "items": {
-                            "$ref": "#/components/schemas/QuerySortSpec"
-                        },
-                        "type": "array",
-                        "title": "Specs"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "specs"
-                ],
-                "title": "QuerySort"
-            },
-            "QuerySortSpec": {
-                "properties": {
-                    "field_name": {
+                    "message": {
                         "type": "string",
-                        "title": "Field Name"
+                        "title": "Message",
+                        "default": "Invalid Request",
+                        "example": "Invalid Request"
                     },
-                    "descending": {
+                    "data": {
                         "anyOf": [
                             {
-                                "type": "boolean"
+                                "$ref": "#/components/schemas/_ErrorData__Error_"
                             },
                             {
                                 "type": "null"
                             }
-                        ],
-                        "title": "Descending"
+                        ]
                     }
                 },
                 "type": "object",
-                "required": [
-                    "field_name"
-                ],
-                "title": "QuerySortSpec"
+                "title": "InvalidRequest"
             },
-            "RelationshipType": {
-                "type": "string",
-                "enum": [
-                    "self",
-                    "part-of",
-                    "version-of",
-                    "funded-by"
-                ],
-                "title": "RelationshipType"
-            },
-            "SearchQuery": {
+            "MethodNotFound": {
                 "properties": {
-                    "find": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/QueryFind"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
+                    "code": {
+                        "type": "integer",
+                        "title": "Code",
+                        "default": -32601,
+                        "example": -32601
                     },
-                    "sort": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/QuerySort"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "offset": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Offset"
-                    },
-                    "limit": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Limit"
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Method not found",
+                        "example": "Method not found"
                     }
                 },
-                "additionalProperties": false,
                 "type": "object",
-                "title": "SearchQuery"
+                "title": "MethodNotFound"
+            },
+            "NotAuthorizedError": {
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "title": "Code",
+                        "default": 1011,
+                        "example": 1011
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Not Authorized",
+                        "example": "Not Authorized"
+                    }
+                },
+                "type": "object",
+                "title": "NotAuthorizedError"
+            },
+            "NotFoundError": {
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "title": "Code",
+                        "default": 1020,
+                        "example": 1020
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Not Found",
+                        "example": "Not Found"
+                    }
+                },
+                "type": "object",
+                "title": "NotFoundError"
+            },
+            "ParseError": {
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "title": "Code",
+                        "default": -32700,
+                        "example": -32700
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message",
+                        "default": "Parse error",
+                        "example": "Parse error"
+                    }
+                },
+                "type": "object",
+                "title": "ParseError"
             },
             "ServiceBaseModel": {
                 "properties": {},
                 "type": "object",
                 "title": "ServiceBaseModel"
             },
-            "ServiceDescription": {
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 2,
-                        "title": "Name"
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 100,
-                        "minLength": 5,
-                        "title": "Title"
-                    },
-                    "version": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 5,
-                        "title": "Version"
-                    },
-                    "language": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 1,
-                        "title": "Language"
-                    },
-                    "description": {
-                        "type": "string",
-                        "maxLength": 4000,
-                        "minLength": 50,
-                        "title": "Description"
-                    },
-                    "repoURL": {
-                        "type": "string",
-                        "maxLength": 100,
-                        "minLength": 15,
-                        "title": "Repourl"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "name",
-                    "title",
-                    "version",
-                    "language",
-                    "description",
-                    "repoURL"
-                ],
-                "title": "ServiceDescription"
-            },
-            "SimpleSuccess": {
-                "properties": {
-                    "ok": {
-                        "type": "boolean",
-                        "title": "Ok"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "ok"
-                ],
-                "title": "SimpleSuccess"
-            },
-            "StatsRecord": {
-                "properties": {
-                    "links": {
-                        "$ref": "#/components/schemas/LinkStats"
-                    },
-                    "linking_sessions_initial": {
-                        "$ref": "#/components/schemas/LinkSessionStats"
-                    },
-                    "linking_sessions_started": {
-                        "$ref": "#/components/schemas/LinkSessionStats"
-                    },
-                    "linking_sessions_completed": {
-                        "$ref": "#/components/schemas/LinkSessionStats"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "links",
-                    "linking_sessions_initial",
-                    "linking_sessions_started",
-                    "linking_sessions_completed"
-                ],
-                "title": "StatsRecord"
-            },
-            "StatusResponse": {
-                "properties": {
-                    "status": {
-                        "type": "string",
-                        "title": "Status"
-                    },
-                    "current_time": {
-                        "type": "integer",
-                        "title": "Current Time"
-                    },
-                    "start_time": {
-                        "type": "integer",
-                        "title": "Start Time"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "status",
-                    "current_time",
-                    "start_time"
-                ],
-                "title": "StatusResponse"
-            },
-            "ValidationError": {
+            "_Error": {
                 "properties": {
                     "loc": {
                         "items": {
-                            "anyOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "integer"
-                                }
-                            ]
+                            "type": "string"
                         },
                         "type": "array",
-                        "title": "Location"
+                        "title": "Loc"
                     },
                     "msg": {
                         "type": "string",
-                        "title": "Message"
+                        "title": "Msg"
                     },
                     "type": {
                         "type": "string",
-                        "title": "Error Type"
+                        "title": "Type"
+                    },
+                    "ctx": {
+                        "anyOf": [
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ctx"
                     }
                 },
                 "type": "object",
@@ -3844,629 +649,351 @@
                     "msg",
                     "type"
                 ],
-                "title": "ValidationError"
+                "title": "_Error"
             },
-            "Work-Input": {
+            "_ErrorData__Error_": {
                 "properties": {
-                    "putCode": {
-                        "type": "integer",
-                        "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
-                    },
-                    "createdAt": {
-                        "type": "integer",
-                        "title": "Created At",
-                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
-                    },
-                    "updatedAt": {
+                    "errors": {
                         "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/_Error"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Errors"
+                    }
+                },
+                "type": "object",
+                "title": "_ErrorData[_Error]"
+            },
+            "_ErrorResponse_AuthorizationRequiredError_": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
                             {
                                 "type": "integer"
-                            },
-                            {
-                                "type": "null"
                             }
                         ],
-                        "title": "Updated At",
-                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
+                        "title": "Id",
+                        "example": 0
                     },
-                    "source": {
+                    "error": {
+                        "$ref": "#/components/schemas/AuthorizationRequiredError"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "error"
+                ],
+                "title": "_ErrorResponse[AuthorizationRequiredError]"
+            },
+            "_ErrorResponse_InternalError_": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
                         "anyOf": [
                             {
                                 "type": "string"
                             },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Source",
-                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Title",
-                        "description": "The main name or title of the work."
-                    },
-                    "date": {
-                        "type": "string",
-                        "title": "Date",
-                        "description": ""
-                    },
-                    "workType": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/WorkType"
-                            }
-                        ],
-                        "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "URL",
-                        "description": ""
-                    },
-                    "doi": {
-                        "type": "string",
-                        "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "External Ids",
-                        "description": ""
-                    },
-                    "journal": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published."
-                    },
-                    "shortDescription": {
-                        "type": "string",
-                        "maxLength": 5000,
-                        "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item."
-                    },
-                    "citation": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDCitation"
-                            }
-                        ],
-                        "title": "Citation",
-                        "description": ""
-                    },
-                    "selfContributor": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf-Input"
-                            }
-                        ],
-                        "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record."
-                    },
-                    "otherContributors": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor-Input"
-                        },
-                        "type": "array",
-                        "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work."
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "putCode",
-                    "createdAt",
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "doi",
-                    "externalIds",
-                    "journal",
-                    "shortDescription",
-                    "citation",
-                    "selfContributor",
-                    "otherContributors"
-                ],
-                "title": "Work"
-            },
-            "Work-Output": {
-                "properties": {
-                    "putCode": {
-                        "type": "integer",
-                        "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
-                    },
-                    "createdAt": {
-                        "type": "integer",
-                        "title": "Created At",
-                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
-                    },
-                    "updatedAt": {
-                        "anyOf": [
                             {
                                 "type": "integer"
-                            },
-                            {
-                                "type": "null"
                             }
                         ],
-                        "title": "Updated At",
-                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
+                        "title": "Id",
+                        "example": 0
                     },
-                    "source": {
+                    "error": {
+                        "$ref": "#/components/schemas/InternalError"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "error"
+                ],
+                "title": "_ErrorResponse[InternalError]"
+            },
+            "_ErrorResponse_InvalidParams_": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
                         "anyOf": [
                             {
                                 "type": "string"
                             },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Source",
-                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Title",
-                        "description": "The main name or title of the work."
-                    },
-                    "date": {
-                        "type": "string",
-                        "title": "Date",
-                        "description": ""
-                    },
-                    "workType": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/WorkType"
-                            }
-                        ],
-                        "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "URL",
-                        "description": ""
-                    },
-                    "doi": {
-                        "type": "string",
-                        "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "External Ids",
-                        "description": ""
-                    },
-                    "journal": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published."
-                    },
-                    "shortDescription": {
-                        "type": "string",
-                        "maxLength": 5000,
-                        "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item."
-                    },
-                    "citation": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDCitation"
-                            }
-                        ],
-                        "title": "Citation",
-                        "description": ""
-                    },
-                    "selfContributor": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf-Output"
-                            }
-                        ],
-                        "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record."
-                    },
-                    "otherContributors": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor-Output"
-                        },
-                        "type": "array",
-                        "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work."
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "putCode",
-                    "createdAt",
-                    "updatedAt",
-                    "source",
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "doi",
-                    "externalIds",
-                    "journal",
-                    "shortDescription",
-                    "citation",
-                    "selfContributor",
-                    "otherContributors"
-                ],
-                "title": "Work"
-            },
-            "WorkSummary-Input": {
-                "properties": {
-                    "putCode": {
-                        "type": "integer",
-                        "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
-                    },
-                    "createdAt": {
-                        "type": "integer",
-                        "title": "Created At",
-                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
-                    },
-                    "updatedAt": {
-                        "anyOf": [
                             {
                                 "type": "integer"
-                            },
-                            {
-                                "type": "null"
                             }
                         ],
-                        "title": "Updated At",
-                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
+                        "title": "Id",
+                        "example": 0
                     },
-                    "source": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Source",
-                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Title",
-                        "description": "The main name or title of the work."
-                    },
-                    "date": {
-                        "type": "string",
-                        "title": "Date",
-                        "description": ""
-                    },
-                    "workType": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/WorkType"
-                            }
-                        ],
-                        "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "URL",
-                        "description": ""
-                    },
-                    "doi": {
-                        "type": "string",
-                        "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "External Ids",
-                        "description": ""
-                    },
-                    "journal": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Journal"
+                    "error": {
+                        "$ref": "#/components/schemas/InvalidParams"
                     }
                 },
+                "additionalProperties": false,
                 "type": "object",
                 "required": [
-                    "putCode",
-                    "createdAt",
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "doi",
-                    "externalIds"
+                    "error"
                 ],
-                "title": "WorkSummary"
+                "title": "_ErrorResponse[InvalidParams]"
             },
-            "WorkSummary-Output": {
+            "_ErrorResponse_InvalidRequest_": {
                 "properties": {
-                    "putCode": {
-                        "type": "integer",
-                        "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
                     },
-                    "createdAt": {
-                        "type": "integer",
-                        "title": "Created At",
-                        "description": "Moment in time at which the work record was created; in epoch milliseconds."
-                    },
-                    "updatedAt": {
+                    "id": {
                         "anyOf": [
+                            {
+                                "type": "string"
+                            },
                             {
                                 "type": "integer"
-                            },
-                            {
-                                "type": "null"
                             }
                         ],
-                        "title": "Updated At",
-                        "description": "Moment in time at which the work record was updated; in epoch milliseconds."
+                        "title": "Id",
+                        "example": 0
                     },
-                    "source": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Source",
-                        "description": "Internal (generated by ORCID) field representing which entity created the work record. KBase has it's own code for CI (and in the future, prod)."
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Title",
-                        "description": "The main name or title of the work."
-                    },
-                    "date": {
-                        "type": "string",
-                        "title": "Date",
-                        "description": ""
-                    },
-                    "workType": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/WorkType"
-                            }
-                        ],
-                        "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types"
-                    },
-                    "url": {
-                        "type": "string",
-                        "title": "URL",
-                        "description": ""
-                    },
-                    "doi": {
-                        "type": "string",
-                        "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "External Ids",
-                        "description": ""
-                    },
-                    "journal": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Journal"
+                    "error": {
+                        "$ref": "#/components/schemas/InvalidRequest"
                     }
                 },
+                "additionalProperties": false,
                 "type": "object",
                 "required": [
-                    "putCode",
-                    "createdAt",
-                    "updatedAt",
-                    "source",
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "doi",
-                    "externalIds",
-                    "journal"
+                    "error"
                 ],
-                "title": "WorkSummary"
+                "title": "_ErrorResponse[InvalidRequest]"
             },
-            "WorkType": {
-                "type": "string",
-                "enum": [
-                    "book",
-                    "book-chapter",
-                    "book-review",
-                    "dictionary-entry",
-                    "dissertation",
-                    "dissertation-thesis",
-                    "encyclopedia-entry",
-                    "edited-book",
-                    "journal-article",
-                    "journal-issue",
-                    "magazine-article",
-                    "manual",
-                    "online-resource",
-                    "newsletter-article",
-                    "newspaper-article",
-                    "preprint",
-                    "report",
-                    "review",
-                    "research-tool",
-                    "supervised-student-publication",
-                    "test",
-                    "translation",
-                    "website",
-                    "working-paper",
-                    "conference-abstract",
-                    "conference-paper",
-                    "conference-poster",
-                    "disclosure",
-                    "license",
-                    "patent",
-                    "registered-copyright",
-                    "trademark",
-                    "annotation",
-                    "artistic-performance",
-                    "data-management-plan",
-                    "data-set",
-                    "invention",
-                    "lecture-speech",
-                    "physical-object",
-                    "research-technique",
-                    "software",
-                    "spin-off-company",
-                    "standards-and-policy",
-                    "technical-standard",
-                    "other"
-                ],
-                "title": "WorkType"
-            },
-            "WorkUpdate": {
+            "_ErrorResponse_MethodNotFound_": {
                 "properties": {
-                    "putCode": {
-                        "type": "integer",
-                        "title": "Put Code",
-                        "description": "Uniquely identifies a work record for a given user; required when updating or deleting a work record."
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
                     },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Title",
-                        "description": "The main name or title of the work."
-                    },
-                    "date": {
-                        "type": "string",
-                        "title": "Date",
-                        "description": ""
-                    },
-                    "workType": {
-                        "allOf": [
+                    "id": {
+                        "anyOf": [
                             {
-                                "$ref": "#/components/schemas/WorkType"
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
                             }
                         ],
-                        "title": "Work Type",
-                        "description": "The type of object that the work is, from a list of available types"
+                        "title": "Id",
+                        "example": 0
                     },
-                    "url": {
-                        "type": "string",
-                        "title": "URL",
-                        "description": ""
-                    },
-                    "doi": {
-                        "type": "string",
-                        "title": "DOI",
-                        "description": "The Digitial Object Identifier (DOI) assigned to the Narrative"
-                    },
-                    "externalIds": {
-                        "items": {
-                            "$ref": "#/components/schemas/ExternalId"
-                        },
-                        "type": "array",
-                        "title": "External Ids",
-                        "description": ""
-                    },
-                    "journal": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Journal",
-                        "description": "The title of the publication or group under which the work was published."
-                    },
-                    "shortDescription": {
-                        "type": "string",
-                        "maxLength": 5000,
-                        "title": "Short Description",
-                        "description": "A short narrative (few sentences) describing the item."
-                    },
-                    "citation": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDCitation"
-                            }
-                        ],
-                        "title": "Citation",
-                        "description": ""
-                    },
-                    "selfContributor": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ORCIDContributorSelf-Input"
-                            }
-                        ],
-                        "title": "Self Contributor",
-                        "description": "The contribution container for the owner of this work record."
-                    },
-                    "otherContributors": {
-                        "items": {
-                            "$ref": "#/components/schemas/ORCIDContributor-Input"
-                        },
-                        "type": "array",
-                        "title": "Other Contributors",
-                        "description": "Container for the contributors of a Work."
+                    "error": {
+                        "$ref": "#/components/schemas/MethodNotFound"
                     }
                 },
+                "additionalProperties": false,
                 "type": "object",
                 "required": [
-                    "putCode",
-                    "title",
-                    "date",
-                    "workType",
-                    "url",
-                    "doi",
-                    "externalIds",
-                    "journal",
-                    "shortDescription",
-                    "citation",
-                    "selfContributor",
-                    "otherContributors"
+                    "error"
                 ],
-                "title": "WorkUpdate",
-                "description": "Represents a work record which has been fetched from ORCID, modified,\nand can be sent back to update the ORCID work record"
+                "title": "_ErrorResponse[MethodNotFound]"
+            },
+            "_ErrorResponse_NotAuthorizedError_": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Id",
+                        "example": 0
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/NotAuthorizedError"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "error"
+                ],
+                "title": "_ErrorResponse[NotAuthorizedError]"
+            },
+            "_ErrorResponse_NotFoundError_": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Id",
+                        "example": 0
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/NotFoundError"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "error"
+                ],
+                "title": "_ErrorResponse[NotFoundError]"
+            },
+            "_ErrorResponse_ParseError_": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Id",
+                        "example": 0
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ParseError"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "error"
+                ],
+                "title": "_ErrorResponse[ParseError]"
+            },
+            "_Request": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Id",
+                        "example": 0
+                    },
+                    "method": {
+                        "type": "string",
+                        "title": "Method"
+                    },
+                    "params": {
+                        "type": "object",
+                        "title": "Params"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "method"
+                ],
+                "title": "_Request"
+            },
+            "_Response": {
+                "properties": {
+                    "jsonrpc": {
+                        "const": "2.0",
+                        "title": "Jsonrpc",
+                        "default": "2.0",
+                        "example": "2.0"
+                    },
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Id",
+                        "example": 0
+                    },
+                    "result": {
+                        "type": "object",
+                        "title": "Result"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "result"
+                ],
+                "title": "_Response"
             }
         }
     },
     "tags": [
+        {
+            "name": "jsonrpc",
+            "description": "JSON-RPC 2.0 method"
+        },
         {
             "name": "misc",
             "description": "Miscellaneous operations"
