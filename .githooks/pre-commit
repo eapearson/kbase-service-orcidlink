@@ -2,6 +2,7 @@
 
 set -eo pipefail
 
-./Taskfile mypy
-./Taskfile black
+./Taskfile pyright
+./Taskfile black 
+./Taskfile isort
 ./Taskfile check-openapi
