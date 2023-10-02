@@ -194,8 +194,13 @@ async def get_linking_sessions() -> GetLinkingSessionsResult:
     initial_linking_sessions = await model.get_linking_sessions_initial()
     started_linking_sessions = await model.get_linking_sessions_started()
     completed_linking_sessions = await model.get_linking_sessions_completed()
+    print('')
+    print('')
+    print('OOPs', completed_linking_sessions)
+    print('')
+    print('')
     completed_linking_sessions_public = [
-        LinkingSessionCompletePublic.model_validate(linking_session)
+        LinkingSessionCompletePublic.model_validate(linking_session.model_dump())
         for linking_session in completed_linking_sessions
     ]
 
