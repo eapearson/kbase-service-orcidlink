@@ -11,7 +11,7 @@ python = "3.11.5"
 cachetools = "5.3.1"
 dicttoxml2 = "2.1.0"
 email-validator = "2.0.0"
-fastapi = "0.103.1"
+fastapi = "0.103.2"
 fastapi-jsonrpc = "3.0.0b"
 httpx = "0.25.0"
 jinja2-tools = "1.0.7"
@@ -27,11 +27,10 @@ xmltodict = "0.13.0"
 [tool.poetry.group.dev.dependencies]
 autoflake = "2.2.1"
 black = "23.9.1"
-fastapi = { version = "0.103.1", extras = ["all"] }
+fastapi = { version = "0.103.2", extras = ["all"] }
 isort = "5.12.0"
 mongomock = "4.1.2"
 motor-types = "1.0.0b3"
-mypy = "1.5.1"
 pipdeptree = "2.13.0"
 pyfakefs = "5.2.4"
 pyright = "1.1.329"
@@ -48,16 +47,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-
-[tool.mypy]
-plugins = ["pydantic.mypy"]
-mypy_path = "src"
-files = "src/orcidlink/**/*.py"
-explicit_package_bases = true
-no_namespace_packages = false
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-strict = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

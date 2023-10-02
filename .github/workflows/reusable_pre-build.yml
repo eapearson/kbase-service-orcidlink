@@ -9,8 +9,8 @@ jobs:
       - name: Check out GitHub Repo
         uses: actions/checkout@v3
 
-      - name: Run type checks via mypy
-        run: ./Taskfile mypy
+      - name: Run type checks via pyright
+        run: ./Taskfile pyright
 
       - name: Run "black" to ensure is formatted correctly
         run: ./Taskfile black

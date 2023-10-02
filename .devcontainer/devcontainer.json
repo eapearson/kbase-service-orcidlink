@@ -22,7 +22,7 @@
 				"ms-python.flake8",
 				"mikoz.autoflake-extension",
 				"ms-vscode.live-server",
-				"ms-python.mypy-type-checker"
+				// "ms-python.mypy-type-checker"
 			]
 		}
 	}

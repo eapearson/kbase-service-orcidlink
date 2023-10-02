@@ -16,7 +16,7 @@ if [[ $result_code -gt 0 ]]; then
 else
   echo
   echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-  echo "> mypy finished successfully "
+  echo "> pyright finished successfully "
   echo "> Good to Go!                "
   echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
   echo
