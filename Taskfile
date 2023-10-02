@@ -37,8 +37,12 @@ function _run {
 # COMMANDS
 #
 
-function mypy {
-  _run runner tools/scripts/run-mypy.sh
+# function mypy {
+#   _run runner tools/scripts/run-mypy.sh
+# }
+
+function pyright {
+  _run runner tools/scripts/run-pyright.sh
 }
 
 function autoflake {
