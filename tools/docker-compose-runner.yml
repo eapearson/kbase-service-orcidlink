@@ -5,6 +5,9 @@ services:
       context: .
     volumes:
       - .:/kb/module
+    
+    ports:
+      - "5100:5100"
     environment:
       # Environment must be supplied just to satisfy render-config-dev which
       # needs these to populate the config!
