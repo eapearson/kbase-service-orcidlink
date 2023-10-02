@@ -240,6 +240,10 @@ def migrate_v030_to_v040(db: database.Database):
 
     # Update the database description
     description = db.get_collection("description").find_one()
+
+    if description is None:
+        raise Exception("No description document found")
+
     db.get_collection("description").update_one(
         {"_id": description["_id"]},
         {"$set": {"version": service_version, "migrated": True}},
