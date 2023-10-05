@@ -50,7 +50,7 @@ function autoflake {
 }
 
 function isort {
-  _run runner tools/scripts/run-isort.sh
+  _run runner tools/scripts/run-isort.sh "${1}" "${2}"
 }
 
 function black {
