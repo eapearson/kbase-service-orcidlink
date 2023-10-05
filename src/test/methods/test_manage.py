@@ -13,6 +13,7 @@ from test.mocks.testing_utils import (
     assert_json_rpc_result,
     assert_json_rpc_result_ignore_result,
     clear_storage_model,
+    create_link,
     generate_kbase_token,
     rpc_call,
 )
@@ -30,10 +31,14 @@ from orcidlink.jsonrpc.methods.manage import (
     QuerySortSpec,
     SearchQuery,
     augment_with_time_filter,
+    delete_expired_linking_sessions,
+    delete_linking_session_completed,
+    delete_linking_session_initial,
+    delete_linking_session_started,
 )
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.main import app
-from orcidlink.model import LinkingSessionInitial, LinkRecord
+from orcidlink.model import LinkingSessionInitial, LinkRecord, ORCIDAuth
 from orcidlink.storage.storage_model import storage_model
 
 client = TestClient(app)
@@ -43,18 +48,34 @@ TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
 TEST_LINK = load_data_json(TEST_DATA_DIR, "link1.json")
 TEST_LINK_BAR = load_data_json(TEST_DATA_DIR, "link-bar.json")
 
+EXAMPLE_LINKING_SESSION_RECORD_1 = {
+    "session_id": "foo-session",
+    "username": "foo",
+    "created_at": 123,
+    "expires_at": 456,
+}
+
+
+EXAMPLE_LINKING_SESSION_RECORD_2 = {
+    "session_id": "bar-session",
+    "username": "bar",
+    "created_at": 123,
+    "expires_at": 456,
+}
+
+EXAMPLE_LINKING_SESSION_RECORD_3 = {
+    "session_id": "baz-session",
+    "username": "baz",
+    "created_at": 123,
+    "expires_at": 456,
+}
+
 
 @contextlib.contextmanager
 def mock_services():
     with no_stderr():
         with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
             yield
-
-
-async def create_link(link_record):
-    sm = storage_model()
-    await sm.db.links.drop()
-    await sm.create_link_record(LinkRecord.model_validate(link_record))
 
 
 #
@@ -74,12 +95,17 @@ async def test_is_manager_yup():
 async def test_is_manager_nope():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            await create_link(TEST_LINK)
-
-            await create_link(TEST_LINK)
             params = {"username": "foo"}
             response = rpc_call("is-manager", params, generate_kbase_token("foo"))
             assert_json_rpc_result(response, {"is_manager": False})
+
+
+async def test_is_manager_wrong_user():
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            params = {"username": "bar"}
+            response = rpc_call("is-manager", params, generate_kbase_token("foo"))
+            assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
 async def test_augment_with_time_filter_none():
@@ -405,6 +431,96 @@ async def test_delete_expired_linking_sessions_some():
             assert stats.linking_sessions_initial.expired == 0
 
 
+async def test_delete_expired_linking_sessions_all():
+    """
+    In this test, we create one session in each state.
+
+    It should succeed with 204. We use the stats call to see how many
+    sessions there are before (should all be 0) and after (should all be 1).
+    """
+    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+        with mock_services():
+            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+                storage = storage_model()
+                await clear_storage_model()
+
+                now = posix_time_millis()
+                then = posix_time_millis() - 60_000
+
+                # Create some initial sessions
+                await storage.create_linking_session(
+                    LinkingSessionInitial(
+                        session_id="foo-session",
+                        username="foo",
+                        created_at=now,
+                        expires_at=then,
+                    )
+                )
+                await storage.create_linking_session(
+                    LinkingSessionInitial(
+                        session_id="bar-session",
+                        username="bar",
+                        created_at=now,
+                        expires_at=then,
+                    )
+                )
+                await storage.create_linking_session(
+                    LinkingSessionInitial(
+                        session_id="baz-session",
+                        username="baz",
+                        created_at=now,
+                        expires_at=then,
+                    )
+                )
+
+                # Move to to be started
+                # Now move them onto started.
+                await storage.update_linking_session_to_started(
+                    "foo-session", "return-link", False, "ui-options"
+                )
+                await storage.update_linking_session_to_started(
+                    "bar-session", "return-link", False, "ui-options"
+                )
+
+                # Now move on to be finished
+                orcid_auth = ORCIDAuth(
+                    access_token="access_token",
+                    token_type="b",
+                    refresh_token="c",
+                    expires_in=123,
+                    scope="d",
+                    name="e",
+                    orcid="f",
+                )
+                await storage.update_linking_session_to_finished(
+                    "foo-session", orcid_auth
+                )
+                # Ensure it is not initial still
+                record = await storage.get_linking_session_initial("foo-session")
+                assert record is None
+
+                stats = await storage.get_stats()
+                assert stats.linking_sessions_initial.expired == 1
+                assert stats.linking_sessions_started.expired == 1
+                assert stats.linking_sessions_completed.expired == 1
+
+                # TODO: setup and test all status conditions.
+                # params = {"username": "amanager"}
+                await delete_expired_linking_sessions()
+                # response = rpc_call(
+                #     "delete-expired-linking-sessions",
+                #     params,
+                #     generate_kbase_token("amanager"),
+                # )
+                # print('OH?', response.text)
+                # assert_json_rpc_result_ignore_result(response)
+
+                stats = await storage.get_stats()
+                assert stats.linking_sessions_initial.expired == 0
+                assert stats.linking_sessions_started.expired == 0
+                assert stats.linking_sessions_completed.expired == 0
+
+
 async def test_delete_expired_linking_sessions_error_not_admin():
     """
     In this test, we attempt to delete expired linking sessions with a
@@ -518,51 +634,151 @@ async def test_get_link_error_not_admin():
             assert_json_rpc_error(response, 1011, "Not Authorized")
 
 
-async def test_patch_refresh_tokens():
-    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        with mock_services():
-            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-                await create_link(TEST_LINK_BAR)
+# async def test_patch_refresh_tokens():
+#     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+#         with mock_services():
+#             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+#                 await create_link(TEST_LINK_BAR)
 
-                params = {"username": "bar"}
-                response = rpc_call(
-                    "refresh-tokens", params, generate_kbase_token("amanager")
-                )
+#                 params = {"username": "bar"}
+#                 response = rpc_call(
+#                     "refresh-tokens", params, generate_kbase_token("amanager")
+#                 )
 
-                result = assert_json_rpc_result_ignore_result(response)
+#                 result = assert_json_rpc_result_ignore_result(response)
 
-                # response2 = client.patch(
-                #     "/manage/refresh-tokens/bar",
-                #     headers={"Authorization": generate_kbase_token("amanager")},
-                # )
-                # assert response2.status_code == 200
+#                 # response2 = client.patch(
+#                 #     "/manage/refresh-tokens/bar",
+#                 #     headers={"Authorization": generate_kbase_token("amanager")},
+#                 # )
+#                 # assert response2.status_code == 200
 
-                # response_value = response2.json()
-                assert result["link"]["username"] == TEST_LINK_BAR["username"]
-
-
-async def test_patch_refresh_tokens_not_authorized():
-    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        with mock_services():
-            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-                await create_link(TEST_LINK_BAR)
-
-                params = {"username": "bar"}
-                response = rpc_call(
-                    "refresh-tokens", params, generate_kbase_token("foo")
-                )
-
-                assert_json_rpc_error(response, 1011, "Not Authorized")
+#                 # response_value = response2.json()
+#                 assert result["link"]["username"] == TEST_LINK_BAR["username"]
 
 
-async def test_patch_refresh_tokens_error_not_found():
-    with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        with mock_services():
-            with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-                await create_link(TEST_LINK_BAR)
+# async def test_patch_refresh_tokens_not_authorized():
+#     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+#         with mock_services():
+#             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+#                 await create_link(TEST_LINK_BAR)
 
-                params = {"username": "baz"}
-                response = rpc_call(
-                    "refresh-tokens", params, generate_kbase_token("amanager")
-                )
-                assert_json_rpc_error(response, 1020, "Not Found")
+#                 params = {"username": "bar"}
+#                 response = rpc_call(
+#                     "refresh-tokens", params, generate_kbase_token("foo")
+#                 )
+
+#                 assert_json_rpc_error(response, 1011, "Not Authorized")
+
+
+# async def test_patch_refresh_tokens_error_not_found():
+#     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
+#         with mock_services():
+#             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
+#                 await create_link(TEST_LINK_BAR)
+
+#                 params = {"username": "baz"}
+#                 response = rpc_call(
+#                     "refresh-tokens", params, generate_kbase_token("amanager")
+#                 )
+#                 assert_json_rpc_error(response, 1020, "Not Found")
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_delete_linking_session_initial():
+    sm = storage_model()
+    await sm.reset_database()
+
+    # Create an initial linking session
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
+
+    # ENsure it is there
+    record = await sm.get_linking_session_initial("foo-session")
+    assert record is not None
+    assert record.session_id == "foo-session"
+
+    # Use the method implementation
+    await delete_linking_session_initial("foo-session")
+
+    # And now it should be gone.
+    record = await sm.get_linking_session_initial("foo-session")
+    assert record is None
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_delete_linking_session_started():
+    sm = storage_model()
+    await sm.reset_database()
+
+    # Create an initial linking session
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
+
+    # Now move them onto started.
+    await sm.update_linking_session_to_started(
+        "foo-session", "return-link", False, "ui-options"
+    )
+
+    # Ensure it is not initial still
+    record = await sm.get_linking_session_initial("foo-session")
+    assert record is None
+
+    # Ensure it is there
+    record = await sm.get_linking_session_started("foo-session")
+    assert record is not None
+    assert record.session_id == "foo-session"
+
+    # Use the method implementation
+    await delete_linking_session_started("foo-session")
+
+    # And now it should be gone.
+    record = await sm.get_linking_session_started("foo-session")
+    assert record is None
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_delete_linking_session_completed():
+    sm = storage_model()
+    await sm.reset_database()
+
+    # Create an initial linking session
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
+
+    # Now move them onto started.
+    await sm.update_linking_session_to_started(
+        "foo-session", "return-link", False, "ui-options"
+    )
+    # Now move them onto started.
+    orcid_auth = ORCIDAuth(
+        access_token="a",
+        token_type="b",
+        refresh_token="c",
+        expires_in=123,
+        scope="d",
+        name="e",
+        orcid="f",
+    )
+    await sm.update_linking_session_to_finished("foo-session", orcid_auth)
+    # Ensure it is not initial still
+    record = await sm.get_linking_session_initial("foo-session")
+    assert record is None
+
+    # Ensure it is there
+    record = await sm.get_linking_session_started("foo-session")
+    assert record is None
+
+    record = await sm.get_linking_session_completed("foo-session")
+    assert record is not None
+    assert record.session_id == "foo-session"
+
+    # Use the method implementation
+    await delete_linking_session_completed("foo-session")
+
+    # And now it should be gone.
+    record = await sm.get_linking_session_completed("foo-session")
+    assert record is None

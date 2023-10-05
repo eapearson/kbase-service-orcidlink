@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from orcidlink.lib import errors, exceptions
+from orcidlink.jsonrpc.errors import NotFoundError
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import LinkingSessionInitial, LinkRecord, ORCIDAuth
 
@@ -442,7 +442,7 @@ async def test_update_linking_session_to_started_bad_session_id():
     assert record.session_id == "foo-session"
 
     # updated_record = copy.deepcopy(EXAMPLE_LINKING_SESSION_RECORD_1)
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await sm.update_linking_session_to_started(
             "baz", "return-link", False, "ui-options"
         )
@@ -473,11 +473,11 @@ async def test_update_linking_session_to_finished_bad_session_id():
         orcid="f",
     )
 
-    with pytest.raises(exceptions.ServiceErrorY) as error:
+    with pytest.raises(NotFoundError) as error:
         await sm.update_linking_session_to_finished("baz", orcid_auth)
 
-    assert error.value.message == "Linking session not found"
-    assert error.value.error.code == errors.ERRORS.not_found.code
+    assert error.value.MESSAGE == "Not Found"
+    assert error.value.CODE == NotFoundError.CODE
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -524,6 +524,23 @@ async def test_delete_linking_session_started():
 
     # record = await sm.get_linking_session_completed("bar")
     # assert record is None
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_delete_linking_session_initial():
+    sm = storage_model()
+    await sm.reset_database()
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
+    record = await sm.get_linking_session_initial("foo-session")
+    assert record is not None
+    assert record.session_id == "foo-session"
+
+    await sm.delete_linking_session_initial("foo-session")
+
+    record = await sm.get_linking_session_initial("foo-session")
+    assert record is None
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -588,3 +605,63 @@ async def test_delete_expired_sessions():
     assert stats.linking_sessions_initial.expired == 0
     assert stats.linking_sessions_started.expired == 0
     assert stats.linking_sessions_completed.expired == 0
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_get_expired_sessions():
+    sm = storage_model()
+    await sm.reset_database()
+
+    now = posix_time_millis()
+    # make a time one minute in the past.
+    in_the_past = now - 60 * 1000
+    test_session_1 = copy.deepcopy(EXAMPLE_LINKING_SESSION_RECORD_1)
+    test_session_1["expires_at"] = in_the_past
+    test_session_2 = copy.deepcopy(EXAMPLE_LINKING_SESSION_RECORD_2)
+    test_session_2["expires_at"] = in_the_past
+    test_session_3 = copy.deepcopy(EXAMPLE_LINKING_SESSION_RECORD_3)
+    test_session_3["expires_at"] = in_the_past
+
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_1)
+    )
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_2)
+    )
+    await sm.create_linking_session(
+        LinkingSessionInitial.model_validate(EXAMPLE_LINKING_SESSION_RECORD_3)
+    )
+
+    # Now move them onto started.
+    await sm.update_linking_session_to_started(
+        "bar-session", "return-link", False, "ui-options"
+    )
+    await sm.update_linking_session_to_started(
+        "baz-session", "return-link", False, "ui-options"
+    )
+
+    # Now move them onto completed!
+    orcid_auth = ORCIDAuth(
+        access_token="a",
+        token_type="b",
+        refresh_token="c",
+        expires_in=123,
+        scope="d",
+        name="e",
+        orcid="f",
+    )
+    await sm.update_linking_session_to_finished("baz-session", orcid_auth)
+
+    expired_initial = await sm.get_expired_initial_sessions(now)
+    assert len(expired_initial) == 1
+
+    expired_started = await sm.get_expired_started_sessions(now)
+    assert len(expired_started) == 1
+
+    expired_completed = await sm.get_expired_completed_sessions(now)
+    assert len(expired_completed) == 1
+
+    expired_sessions = await sm.get_expired_sessions(now)
+    assert len(expired_sessions.initial_sessions) == 1
+    assert len(expired_sessions.started_sessions) == 1
+    assert len(expired_sessions.completed_sessions) == 1

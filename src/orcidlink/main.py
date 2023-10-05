@@ -20,27 +20,20 @@ from typing import Any, AsyncGenerator, Generic, List, Optional, TypeVar
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import Body, FastAPI, Request
-from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi_jsonrpc import API, Entrypoint, JsonRpcContext
 from pydantic import Field
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import HTMLResponse, JSONResponse
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.responses import HTMLResponse
 
 from orcidlink.jsonrpc.errors import (
     AuthorizationRequiredError,
     NotAuthorizedError,
     NotFoundError,
 )
+from orcidlink.jsonrpc.methods.delete_link import delete_link
 from orcidlink.jsonrpc.methods.error_info import ErrorInfoResult, error_info_method
 from orcidlink.jsonrpc.methods.info import InfoResult, info_method
 from orcidlink.jsonrpc.methods.is_linked import is_linked_method
-from orcidlink.jsonrpc.methods.link import (
-    delete_link,
-    link_method_for_non_owner,
-    link_method_for_owner,
-)
 from orcidlink.jsonrpc.methods.linking_sessions import (
     CreateLinkingSessionResult,
     create_linking_session,
@@ -54,7 +47,6 @@ from orcidlink.jsonrpc.methods.manage import (
     GetLinkResult,
     GetStatsResult,
     IsManagerResult,
-    RefreshTokensResult,
     SearchQuery,
     delete_expired_linking_sessions,
     delete_linking_session_completed,
@@ -65,8 +57,9 @@ from orcidlink.jsonrpc.methods.manage import (
     get_linking_sessions,
     get_stats,
     is_manager,
-    refresh_tokens,
 )
+from orcidlink.jsonrpc.methods.other_link import other_link
+from orcidlink.jsonrpc.methods.owner_link import owner_link
 from orcidlink.jsonrpc.methods.profile import get_profile
 from orcidlink.jsonrpc.methods.status import StatusResult, status_method
 from orcidlink.jsonrpc.methods.works import (
@@ -80,19 +73,15 @@ from orcidlink.jsonrpc.methods.works import (
     save_work,
 )
 from orcidlink.jsonrpc.utils import ensure_account2, ensure_authorization2
-from orcidlink.lib import errors, exceptions, logger
-
-# from orcidlink.lib.auth import ensure_authorization
+from orcidlink.lib import logger
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     PUT_CODE_PARAM,
     SESSION_ID_PARAM,
     USERNAME_PARAM,
-    error_response,
-    error_response2,
+    UIError,
+    ui_error_response,
 )
-
-# from orcidlink.lib.service_clients.kbase_auth import KBaseAuth, TokenInfo
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.model import (
     LinkingSessionCompletePublic,
@@ -256,10 +245,9 @@ async def logging_middleware(ctx: JsonRpcContext):
         logger.info("jsonrpc response", extra={"response": ctx.raw_response})
 
 
-api_v1 = Entrypoint("/api/v1",
-                    tags=["jsonrpc"],
-                    errors=COMMON_ERRORS,
-                    middlewares=[logging_middleware])
+api_v1 = Entrypoint(
+    "/api/v1", tags=["jsonrpc"], errors=COMMON_ERRORS, middlewares=[logging_middleware]
+)
 
 
 app.bind_entrypoint(api_v1)
@@ -282,8 +270,7 @@ def error_info(error_code: int) -> ErrorInfoResult:
 
 @api_v1.method(name="is-linked", errors=[AuthorizationRequiredError])
 async def is_linked(
-    username: str = USERNAME_PARAM, 
-    authorization: str | None = AUTHORIZATION_HEADER
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> bool:
     logger = logging.getLogger("api")
     logger.info(
@@ -313,37 +300,48 @@ async def is_linked(
     return result
 
 
-
-
-
 @api_v1.method(name="owner-link", errors=[*COMMON_ERRORS])
-async def owner_link(
-    username: str = USERNAME_PARAM, 
-    authorization: str | None = AUTHORIZATION_HEADER
+async def owner_link_handler(
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> LinkRecordPublic:
+    """
+    Returns the "public" ORCID Link for the calling user.
+
+    Note that this is designed to be used by a user for their own link,
+    as it reveals information about their link that is not necessarily
+    appropriate for another user to access. The "public" record alread
+    has ORCID tokens stripped out, leaving just link metadata, but that
+    could be considered sensitive as well, or at least not needed by any
+    other user. See "other-link" for an fetching the link for anyone.
+    """
     _, token_info = await ensure_authorization2(authorization)
 
-    result = await link_method_for_owner(username, token_info.user)
+    result = await owner_link(username, token_info.user)
 
     return result
 
 
 @api_v1.method(name="other-link", errors=[*COMMON_ERRORS])
-async def other_link(
-    username: str = USERNAME_PARAM, 
-    authorization: str | None = AUTHORIZATION_HEADER
+async def other_link_handler(
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> LinkRecordPublicNonOwner:
+    """
+    Returns the "public non-owner" version of the ORCID Link for the calling user.
+
+    Note that this reduces down to almost just the ORCID Id, with most metadata
+    including the tokens stripped out. This call may be used on behalf of any
+    user in a context in which the user's orcid id is needed.
+    """
     _, _ = await ensure_authorization2(authorization)
 
-    result = await link_method_for_non_owner(username)
+    result = await other_link(username)
 
     return result
 
 
 @api_v1.method(name="delete-link", errors=[*COMMON_ERRORS])
 async def delete_link_handler(
-    username: str = USERNAME_PARAM, 
-    authorization: str | None = AUTHORIZATION_HEADER
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> None:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -352,8 +350,7 @@ async def delete_link_handler(
 
 @api_v1.method(name="create-linking-session", errors=[*COMMON_ERRORS])
 async def create_linking_session_handler(
-    username: str = USERNAME_PARAM, 
-    authorization: str | None = AUTHORIZATION_HEADER
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> CreateLinkingSessionResult:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -364,8 +361,7 @@ async def create_linking_session_handler(
 
 @api_v1.method(name="get-linking-session", errors=[*COMMON_ERRORS])
 async def get_linking_session_handler(
-    session_id: str = SESSION_ID_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> LinkingSessionCompletePublic:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -376,8 +372,7 @@ async def get_linking_session_handler(
 
 @api_v1.method(name="delete-linking-session", errors=[*COMMON_ERRORS])
 async def delete_linking_session_handler(
-    session_id: str = SESSION_ID_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -388,8 +383,7 @@ async def delete_linking_session_handler(
 
 @api_v1.method(name="finish-linking-session", errors=[*COMMON_ERRORS])
 async def finish_linking_session_handler(
-    session_id: str = SESSION_ID_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -405,8 +399,7 @@ async def finish_linking_session_handler(
 
 @api_v1.method(name="is-manager", errors=[*COMMON_ERRORS])
 async def is_manager_handler(
-    username: str, 
-    authorization: str = AUTHORIZATION_HEADER
+    username: str, authorization: str = AUTHORIZATION_HEADER
 ) -> IsManagerResult:
     _, account_info = await ensure_account2(authorization)
 
@@ -431,8 +424,7 @@ async def find_links_handler(
 
 @api_v1.method(name="get-link", errors=[*COMMON_ERRORS])
 async def get_link_handler(
-    username: str = USERNAME_PARAM,
-    authorization: str = AUTHORIZATION_HEADER
+    username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> GetLinkResult:
     _, account_info = await ensure_account2(authorization)
 
@@ -472,8 +464,7 @@ async def delete_expired_linking_sessions_handler(
 
 @api_v1.method(name="delete-linking-session-initial", errors=[*COMMON_ERRORS])
 async def delete_linking_session_initial_handler(
-    session_id: str = SESSION_ID_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
@@ -485,8 +476,7 @@ async def delete_linking_session_initial_handler(
 
 @api_v1.method(name="delete-linking-session-started", errors=[*COMMON_ERRORS])
 async def delete_linking_session_started_handler(
-    session_id: str = SESSION_ID_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
@@ -498,8 +488,7 @@ async def delete_linking_session_started_handler(
 
 @api_v1.method(name="delete-linking-session-completed", errors=[*COMMON_ERRORS])
 async def delete_linking_session_completed_handler(
-    session_id: str = SESSION_ID_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
@@ -522,36 +511,41 @@ async def get_stats_handler(
     return result
 
 
-# TODO: I don't think this is used.
-@api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])
-async def refresh_tokens_handler(
-    username: str = USERNAME_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
-) -> RefreshTokensResult:
+# # TODO: I don't think this is used.
+# @api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])
+# async def refresh_tokens_handler(
+#     username: str = USERNAME_PARAM,
+#     authorization: str = AUTHORIZATION_HEADER
+# ) -> RefreshTokensResult:
+#     _, account_info = await ensure_account2(authorization)
+
+#     if "orcidlink_admin" not in account_info.customroles:
+#         raise NotAuthorizedError("Not authorized for management operations")
+
+#     result = await refresh_tokens(username)
+#     return result
+
+
+@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
+async def get_orcid_profile_handler(
+    username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
+) -> ORCIDProfile:
     _, account_info = await ensure_account2(authorization)
 
     if "orcidlink_admin" not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
-    result = await refresh_tokens(username)
-    return result
+    return await get_profile(username)
 
 
-@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
-async def get_orcid_profile_handler(
-    username: str = USERNAME_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
-) -> ORCIDProfile:
-    _, token_info = await ensure_authorization2(authorization)
-
-    result = await get_profile(username)
-    return result
+#
+# Works
+#
 
 
-@api_v1.method(name="get-works", errors=[*COMMON_ERRORS])
-async def get_works_handler(
-    username: str = USERNAME_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+@api_v1.method(name="get-orcid-works", errors=[*COMMON_ERRORS])
+async def get_orcid_works_handler(
+    username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> List[ORCIDWorkGroup]:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -562,11 +556,11 @@ async def get_works_handler(
     return result
 
 
-@api_v1.method(name="get-work", errors=[*COMMON_ERRORS])
-async def get_work_handler(
-    username: str = USERNAME_PARAM, 
-    put_code: int = PUT_CODE_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+@api_v1.method(name="get-orcid-work", errors=[*COMMON_ERRORS])
+async def get_orcid_work_handler(
+    username: str = USERNAME_PARAM,
+    put_code: int = PUT_CODE_PARAM,
+    authorization: str = AUTHORIZATION_HEADER,
 ) -> GetWorkResult:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -577,11 +571,11 @@ async def get_work_handler(
     return result
 
 
-@api_v1.method(name="create-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="create-orcid-work", errors=[*COMMON_ERRORS])
 async def create_work_handler(
-    username: str = USERNAME_PARAM, 
-    new_work: NewWork = Body(..., description="New work activity record"), 
-    authorization: str = AUTHORIZATION_HEADER
+    username: str = USERNAME_PARAM,
+    new_work: NewWork = Body(..., description="New work activity record"),
+    authorization: str = AUTHORIZATION_HEADER,
 ) -> CreateWorkResult:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -592,11 +586,11 @@ async def create_work_handler(
     return result
 
 
-@api_v1.method(name="update-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="update-orcid-work", errors=[*COMMON_ERRORS])
 async def save_work_handler(
     username: str = USERNAME_PARAM,
-    work_update: WorkUpdate = Body(..., description="A work activity update record"), 
-    authorization: str = AUTHORIZATION_HEADER
+    work_update: WorkUpdate = Body(..., description="A work activity update record"),
+    authorization: str = AUTHORIZATION_HEADER,
 ) -> SaveWorkResult:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -607,11 +601,11 @@ async def save_work_handler(
     return result
 
 
-@api_v1.method(name="delete-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-orcid-work", errors=[*COMMON_ERRORS])
 async def delete_work_handler(
-    username: str = USERNAME_PARAM, 
-    put_code: int = PUT_CODE_PARAM, 
-    authorization: str = AUTHORIZATION_HEADER
+    username: str = USERNAME_PARAM,
+    put_code: int = PUT_CODE_PARAM,
+    authorization: str = AUTHORIZATION_HEADER,
 ) -> None:
     _, token_info = await ensure_authorization2(authorization)
 
@@ -666,33 +660,56 @@ class ValidationError(ServiceBaseModel):
 # returned when the API is misused; they should not occur in production. Note that
 # response validation errors are caught by FastAPI and converted to Internal Server
 # errors. https://fastapi.tiangolo.com/tutorial/handling-errors/
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(
-    request: Request, exc: RequestValidationError
-) -> JSONResponse:
-    logging.error(
-        "RequestValidationError: see validation_error_info for details",
-        extra={"type": "validation-error", "validation_error_info": exc.errors()},
-    )
-    detail = list(exc.errors())
-    data: ValidationError = ValidationError(detail=detail, body=exc.body)
-    return error_response(
-        errors.ERRORS.request_validation_error,
-        "This request does not comply with the schema for this endpoint",
-        data=data,
-        status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-    )
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(
+#     request: Request, exc: RequestValidationError
+# ) -> JSONResponse:
+#     logging.error(
+#         "RequestValidationError: see validation_error_info for details",
+#         extra={"type": "validation-error", "validation_error_info": exc.errors()},
+#     )
+#     detail = list(exc.errors())
+#     data: ValidationError = ValidationError(detail=detail, body=exc.body)
+#     return error_response(
+#         errors.ERRORS.request_validation_error,
+#         "This request does not comply with the schema for this endpoint",
+#         data=data,
+#         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+#     )
 
 
-@app.exception_handler(exceptions.ServiceErrorY)
-async def service_errory_exception_handler(
-    _: Request, exc: exceptions.ServiceErrorY
-) -> JSONResponse:
-    logging.error(
-        f"ServiceErrorY: {str(exc)}",
-        extra={"type": "service-error", "details": exc.asdict()},
-    )
-    return exc.get_response()
+@app.exception_handler(UIError)
+async def ui_error_exception_handler(request: Request, exception: UIError):
+    return ui_error_response(exception.code, exception.message, exception.data)
+
+
+# @app.exception_handler(exceptions.ServiceErrorY)
+# async def service_errory_exception_handler(
+#     _: Request, exc: exceptions.ServiceErrorY
+# ) -> JSONResponse:
+#     logging.error(
+#         f"ServiceErrorY: {str(exc)}",
+#         extra={"type": "service-error", "details": exc.asdict()},
+#     )
+#     return exc.get_response()
+
+
+# @app.exception_handler(AuthError)
+# async def auth_error_exception_handler(
+#     _: Request, exc: AuthError
+# ) -> JSONResponse:
+#     # logging.error(
+#     #     f"ServiceErrorY: {str(exc)}",
+#     #     extra={"type": "service-error", "details": exc.asdict()},
+#     # )
+#     error_content = exc.to_json_rpc_error()
+
+#     content = jsonrpc_error_response(
+#         error_content,
+
+#     )
+
+#     return JSONResponse(status_code=200, content=json_content)
 
 
 #
@@ -729,33 +746,44 @@ class StarletteHTTPNotFoundData(StarletteHTTPDetailData):
 # overriding to return a normalized JSON form. This should be all of them. See:
 # https://fastapi.tiangolo.com/tutorial/handling-errors/
 #
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(
-    request: Request, exc: StarletteHTTPException
-) -> JSONResponse:
-    logging.error(f"StarletteHTTPException: {str(exc)}")
-    if exc.status_code == 404:
-        return error_response2(
-            errors.ErrorResponse[StarletteHTTPNotFoundData](
-                code=errors.ERRORS.not_found.code,
-                title=errors.ERRORS.not_found.title,
-                message="The requested resource was not found",
-                data=StarletteHTTPNotFoundData(
-                    detail=exc.detail, path=request.url.path
-                ),
-            ),
-            status_code=HTTP_404_NOT_FOUND,
-        )
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(
+#     request: Request, exc: StarletteHTTPException
+# ) -> JSONResponse:
+#     logging.error(f"StarletteHTTPException: {str(exc)}")
+#     return JSONResponse(
+#         status_code=exc.status_code,
+#         content=json.dumps({
 
-    return error_response2(
-        errors.ErrorResponse[StarletteHTTPDetailData](
-            code=errors.ERRORS.fastapi_error.code,
-            title=errors.ERRORS.fastapi_error.title,
-            message="Internal FastAPI Exception",
-            data=StarletteHTTPDetailData(detail=exc.detail),
-        ),
-        status_code=exc.status_code,
-    )
+#         })
+#         content=jsonable_encoder(response_content, exclude_unset=True),
+#     )
+
+# if exc.status_code == 404:
+#     # Will be thrown by some non-api call, as those all
+#     # use JSON-RPC on /api/v1, so 404 not possible.
+
+#     return error_response2(
+#         errors.ErrorResponse[StarletteHTTPNotFoundData](
+#             code=errors.ERRORS.not_found.code,
+#             title=errors.ERRORS.not_found.title,
+#             message="The requested resource was not found",
+#             data=StarletteHTTPNotFoundData(
+#                 detail=exc.detail, path=request.url.path
+#             ),
+#         ),
+#         status_code=HTTP_404_NOT_FOUND,
+#     )
+
+# return error_response2(
+#     errors.ErrorResponse[StarletteHTTPDetailData](
+#         code=errors.ERRORS.fastapi_error.code,
+#         title=errors.ERRORS.fastapi_error.title,
+#         message="Internal FastAPI Exception",
+#         data=StarletteHTTPDetailData(detail=exc.detail),
+#     ),
+#     status_code=exc.status_code,
+# )
 
 
 ###############################################################################

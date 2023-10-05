@@ -4,7 +4,7 @@ import pymongo
 from pydantic import Field
 
 from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
-from orcidlink.jsonrpc.kbase_auth import AccountInfo
+from orcidlink.lib.service_clients.kbase_auth import AccountInfo
 from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
@@ -14,7 +14,6 @@ from orcidlink.model import (
     LinkingSessionStarted,
     LinkRecordPublic,
 )
-from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.storage.storage_model_mongo import StatsRecord
 
@@ -194,11 +193,7 @@ async def get_linking_sessions() -> GetLinkingSessionsResult:
     initial_linking_sessions = await model.get_linking_sessions_initial()
     started_linking_sessions = await model.get_linking_sessions_started()
     completed_linking_sessions = await model.get_linking_sessions_completed()
-    print('')
-    print('')
-    print('OOPs', completed_linking_sessions)
-    print('')
-    print('')
+
     completed_linking_sessions_public = [
         LinkingSessionCompletePublic.model_validate(linking_session.model_dump())
         for linking_session in completed_linking_sessions
@@ -214,7 +209,9 @@ async def get_linking_sessions() -> GetLinkingSessionsResult:
 async def delete_expired_linking_sessions() -> None:
     model = storage_model()
 
-    expired_sessions = await model.get_expired_sesssions()
+    now = posix_time_millis()
+
+    expired_sessions = await model.get_expired_sessions(now)
 
     for expired_completed_session in expired_sessions.completed_sessions:
         await orcid_oauth().revoke_access_token(
@@ -251,33 +248,33 @@ async def get_stats() -> GetStatsResult:
     return GetStatsResult(stats=stats)
 
 
-class RefreshTokensResult(ServiceBaseModel):
-    link: LinkRecordPublic
+# class RefreshTokensResult(ServiceBaseModel):
+#     link: LinkRecordPublic
 
 
-async def refresh_tokens(username: str) -> RefreshTokensResult:
-    orcid_oauth_api = orcid_oauth()
+# async def refresh_tokens(username: str) -> RefreshTokensResult:
+#     orcid_oauth_api = orcid_oauth()
 
-    storage = storage_model()
-    link_record = await storage.get_link_record(username=username)
+#     storage = storage_model()
+#     link_record = await storage.get_link_record(username=username)
 
-    if link_record is None:
-        raise NotFoundError("Link record not found for this user")
+#     if link_record is None:
+#         raise NotFoundError("Link record not found for this user")
 
-    # refresh the tokens
-    orcid_auth = await orcid_oauth_api.refresh_token(
-        link_record.orcid_auth.refresh_token
-    )
+#     # refresh the tokens
+#     orcid_auth = await orcid_oauth_api.refresh_token(
+#         link_record.orcid_auth.refresh_token
+#     )
 
-    link_record.orcid_auth = orcid_auth
-    link_record.created_at = posix_time_millis()
-    link_record.expires_at = (
-        link_record.created_at + config().linking_session_lifetime * 1000
-    )
+#     link_record.orcid_auth = orcid_auth
+#     link_record.created_at = posix_time_millis()
+#     link_record.expires_at = (
+#         link_record.created_at + config().linking_session_lifetime * 1000
+#     )
 
-    # update the link with the new orcid_auth
-    await storage.save_link_record(link_record)
+#     # update the link with the new orcid_auth
+#     await storage.save_link_record(link_record)
 
-    return RefreshTokensResult(
-        link=LinkRecordPublic.model_validate(link_record.model_dump())
-    )
+#     return RefreshTokensResult(
+#         link=LinkRecordPublic.model_validate(link_record.model_dump())
+#     )

@@ -1,10 +1,9 @@
 from typing import Optional
 
-from orcidlink.lib import exceptions
+from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
 from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
-    LinkingSessionComplete,
     LinkingSessionInitial,
     LinkingSessionStarted,
     LinkRecord,
@@ -21,40 +20,13 @@ async def delete_link(username: str) -> None:
     link_record = await storage.get_link_record(username)
 
     if link_record is None:
-        raise exceptions.NotFoundError("User does not have an ORCID Link")
+        raise NotFoundError("User does not have an ORCID Link")
 
     # TODO: handle error? or propagate? or in a transaction?
     await orcid_oauth().revoke_access_token(link_record.orcid_auth.access_token)
 
     # TODO: handle error? or propagate?
     await storage.delete_link_record(username)
-
-
-async def get_linking_session_completed(
-    session_id: str, username: str
-) -> LinkingSessionComplete:
-    model = storage_model()
-
-    session_record = await model.get_linking_session_completed(session_id)
-
-    if session_record is None:
-        raise exceptions.NotFoundError("Linking session not found")
-
-    if session_record.username != username:
-        raise exceptions.UnauthorizedError("Username does not match linking session")
-
-    return session_record
-
-
-async def delete_completed_linking_session(session_id: str, username: str) -> None:
-    storage = storage_model()
-
-    session_record = await get_linking_session_completed(session_id, username)
-
-    await storage.delete_linking_session_completed(session_record.session_id)
-
-    # TODO: handle error? or propagate? or in a transaction?
-    await orcid_oauth().revoke_access_token(session_record.orcid_auth.access_token)
 
 
 async def link_record_for_user(username: str) -> Optional[LinkRecord]:
@@ -122,10 +94,10 @@ async def get_linking_session_initial(
     session_record = await model.get_linking_session_initial(session_id)
 
     if session_record is None:
-        raise exceptions.NotFoundError("Linking session not found")
+        raise NotFoundError("Linking session not found")
 
     if not session_record.username == username:
-        raise exceptions.UnauthorizedError("Username does not match linking session")
+        raise NotAuthorizedError("Username does not match linking session")
 
     return session_record
 
@@ -138,9 +110,9 @@ async def get_linking_session_started(
     session_record = await model.get_linking_session_started(session_id)
 
     if session_record is None:
-        raise exceptions.NotFoundError("Linking session not found")
+        raise NotFoundError("Linking session not found")
 
     if not session_record.username == username:
-        raise exceptions.UnauthorizedError("Username does not match linking session")
+        raise NotAuthorizedError("Username does not match linking session")
 
     return session_record

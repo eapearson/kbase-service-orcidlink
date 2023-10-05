@@ -1,16 +1,9 @@
 from orcidlink import process
 from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
-from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
-from orcidlink.model import (
-    LinkRecordPublic,
-    LinkRecordPublicNonOwner,
-    ORCIDAuthPublic,
-    ORCIDAuthPublicNonOwner,
-)
-from orcidlink.storage.storage_model import storage_model
+from orcidlink.model import LinkRecordPublic, ORCIDAuthPublic
 
 
-async def link_method_for_owner(username: str, owner_username: str) -> LinkRecordPublic:
+async def owner_link(username: str, owner_username: str) -> LinkRecordPublic:
     link_record = await process.link_record_for_user(username)
 
     if link_record is None:
@@ -34,40 +27,7 @@ async def link_method_for_owner(username: str, owner_username: str) -> LinkRecor
     )
 
 
-async def link_method_for_non_owner(username: str) -> LinkRecordPublicNonOwner:
-    link_record = await process.link_record_for_user(username)
-
-    if link_record is None:
-        raise NotFoundError()
-
-    return LinkRecordPublicNonOwner(
-        username=link_record.username,
-        orcid_auth=ORCIDAuthPublicNonOwner(
-            name=link_record.orcid_auth.name, orcid=link_record.orcid_auth.orcid
-        ),
-    )
-
-
-async def delete_link(username: str, owner_username: str) -> None:
-    """
-    Deletes the a linking record for a given user.
-    """
-    storage = storage_model()
-    link_record = await storage.get_link_record(username)
-
-    if link_record is None:
-        raise NotFoundError("User does not have an ORCID Link")
-
-    if link_record.username != owner_username:
-        if link_record.username != owner_username:
-            raise NotAuthorizedError("User not authorized to access this link")
-
-    # TODO: handle error? or propagate? or in a transaction?
-    await orcid_oauth().revoke_access_token(link_record.orcid_auth.access_token)
-
-    # TODO: handle error? or propagate?
-    await storage.delete_link_record(username)
-
+# REMOVED these, for now. Don't know whey they were useful.
 
 # async def link_record_for_orcid_id(
 #         orcid_id: str,

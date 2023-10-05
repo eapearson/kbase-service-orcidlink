@@ -4,7 +4,9 @@ from test.mocks.data import load_test_data
 import pytest
 
 from orcidlink import model
-from orcidlink.lib import exceptions
+from orcidlink.jsonrpc.errors import ORCIDProfileNamePrivate
+
+# from orcidlink.lib import exceptions
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.lib.service_clients.orcid_api import (
     ExternalId,
@@ -138,8 +140,8 @@ def test_transform_work_errors_profile_name_private():
     )
     test_profile.person.name = None
     with pytest.raises(
-        exceptions.ORCIDProfileNamePrivate,
-        match="Your ORCID Profile has your name set as private",
+        ORCIDProfileNamePrivate,
+        match="ORCID Profile has name set to private",
     ):
         to_service.transform_work(test_profile, test_work)
 

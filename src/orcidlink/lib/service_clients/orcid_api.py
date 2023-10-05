@@ -626,10 +626,6 @@ def extract_error(result: Any) -> ORCIDAPIError | APIResponseError | None:
         return None
 
 
-def extract_error2(result: Any) -> APIResponseError:
-    return APIResponseError.model_validate(result)
-
-
 class ORCIDAPIClient:
     base_url: str
     access_token: str

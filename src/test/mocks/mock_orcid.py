@@ -33,7 +33,6 @@ class MockORCIDAPI(MockService):
             self.send_json(work_record, "application/vnd.orcid+json")
 
         elif self.path == "/0000-0003-4997-3076/works/123":
-            print("GETting", self.path)
             self.send_text("foobar")
 
         elif self.path == "/0000-0003-4997-3076/works/456":
@@ -162,6 +161,10 @@ class MockORCIDAPIWithErrors(MockService):
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "get-profile-415-error")
             self.send_json_error(test_data, 415, "application/vnd.orcid+json")
 
+        elif self.path == "/trigger-500/record":
+            test_data = load_test_data(TEST_DATA_DIR, "orcid", "get-profile-500-error")
+            self.send_json_error(test_data, 500, "application/vnd.orcid+json")
+
         elif self.path == "/trigger-no-content-type/record":
             test_data = load_test_data(TEST_DATA_DIR, "orcid", "profile")
             self.send_json(test_data, None)
@@ -210,7 +213,82 @@ class MockORCIDAPIWithErrors(MockService):
 class MockORCIDOAuth(MockService):
     def do_POST(self):
         if self.path == "/revoke":
-            self.send_empty(status_code=200)
+            data = parse_qs(self.get_body_string())
+            token = data.get("token")
+            # print('REVOKE', data, token)
+            if token is None:
+                # what?
+                pass
+
+            elif token == ["access_token"]:
+                # The "normal" case
+                self.send_empty(status_code=200)
+
+            elif token == ["access-token-foo"]:
+                # The "normal" case
+                # TODO: do we really need a duplicate case here?
+                self.send_empty(status_code=200)
+
+            elif token == ["access_token_for_foo"]:
+                # The "normal" case
+                # TODO: do we really need a duplicate case here?
+                self.send_empty(status_code=200)
+
+            elif token == ["foo"]:
+                # The "normal" case
+                # TODO: do we really need a duplicate case here?
+                self.send_empty(status_code=200)
+
+            elif token == ["unauthorized_access_token"]:
+                error = {
+                    "error": "unauthorized_client",
+                    "error_description": "a description of the error",
+                }
+                # It is probably a 401, but who knows, and we don't care,
+                # just that it is not 2xx and then we look at the json content
+                self.send_json_error(error, 401, "application/json")
+
+            elif token == ["other_error_access_token"]:
+                error = {
+                    "error": "some_other_error",
+                    "error_description": "a description of the error",
+                }
+                self.send_json_error(error, 400, "application/json")
+
+            elif token == ["no-content-length"]:
+                # We need to have a content length to get past that check
+                self.send(200, {}, None)
+
+            elif token == ["non-empty-response"]:
+                # The response is expected to be 200 and empty, so this triggers
+                # an error.
+                self.send(200, {"Content-Length": 3}, "foo")
+
+            elif token == ["empty-response"]:
+                # The response is expected to be 200 and not empty, so this triggers
+                # an error.
+                self.send(200, {"Content-Length": 0}, None)
+
+            elif token == ["error-response-no-content-type"]:
+                # We need to have a content length to get past that check
+                self.send(400, {"Content-Length": 3}, "bar")
+
+            elif token == ["error-response-not-json-content-type"]:
+                self.send(400, {"Content-Length": 7, "Content-Type": "foo-son"}, None)
+
+            elif token == ["error-response-not-json"]:
+                self.send(
+                    400,
+                    {"Content-Length": 3, "Content-Type": "application/json"},
+                    "foo",
+                )
+
+            elif token == ["error-response-invalid-json"]:
+                self.send(
+                    400,
+                    {"Content-Length": 14, "Content-Type": "application/json"},
+                    '{"foo": "bar"}',
+                )
 
         elif self.path == "/token":
             data = parse_qs(self.get_body_string())
@@ -228,6 +306,8 @@ class MockORCIDOAuth(MockService):
                         "name": "Foo bar",
                         "orcid": "orcid-id-foo",
                     }
+                    self.send_json(test_data, "application/json")
+
                 elif data["refresh_token"] == ["refresh-token-bar"]:
                     test_data = {
                         "access_token": "access-token-bar-refreshed",
@@ -238,9 +318,56 @@ class MockORCIDOAuth(MockService):
                         "name": "Bar Bear",
                         "orcid": " 0000-1111-2222-3333",
                     }
+                    self.send_json(test_data, "application/json")
+
+                elif data["refresh_token"] == ["refresh-token-unauthorized"]:
+                    error = {
+                        "error": "unauthorized_client",
+                        "error_description": "a description of the error",
+                    }
+                    self.send_json_error(error, 401, "application/json")
+
+                elif data["refresh_token"] == ["refresh-token-other-error"]:
+                    error = {
+                        "error": "some_other_error",
+                        "error_description": "a description of the error",
+                    }
+                    self.send_json_error(error, 400, "application/json")
+
+                elif data["refresh_token"] == ["no-content-length"]:
+                    # We need to have a content length to get past that check
+                    self.send(200, {}, None)
+
+                elif data["refresh_token"] == ["empty-content"]:
+                    # We need to have a content length to get past that check
+                    self.send(200, {"Content-Length": 0}, None)
+
+                elif data["refresh_token"] == ["no-content-type"]:
+                    # We need to have a content length to get past that check
+                    self.send(200, {"Content-Length": 10}, None)
+
+                elif data["refresh_token"] == ["not-json-content-type"]:
+                    self.send(
+                        200, {"Content-Length": 7, "Content-Type": "foo-son"}, None
+                    )
+
+                elif data["refresh_token"] == ["not-json-content"]:
+                    self.send(
+                        400,
+                        {"Content-Length": 3, "Content-Type": "application/json"},
+                        "foo",
+                    )
+
+                elif data["refresh_token"] == ["invalid-error"]:
+                    self.send(
+                        400,
+                        {"Content-Length": 14, "Content-Type": "application/json"},
+                        '{"foo": "bar"}',
+                    )
+
                 else:
                     raise Exception("Sorry, this case not handled")
-                self.send_json(test_data, "application/json")
+
             else:
                 if data["code"] == ["foo"]:
                     # TODO: should this be in a file?
@@ -254,10 +381,19 @@ class MockORCIDOAuth(MockService):
                         "orcid": "abc123",
                     }
                     self.send_json(test_data, "application/json")
-                elif data["code"] == ["no-content-type"]:
+                elif data["code"] == ["no-content-length"]:
+                    # We need to have a content length to get past that check
                     self.send(200, {}, None)
+                elif data["code"] == ["empty-content"]:
+                    # We need to have a content length to get past that check
+                    self.send(200, {"Content-Length": 0}, None)
+                elif data["code"] == ["no-content-type"]:
+                    # We need to have a content length to get past that check
+                    self.send(200, {"Content-Length": 10}, None)
                 elif data["code"] == ["not-json-content-type"]:
-                    self.send(200, {"Content-Type": "foo-son"}, None)
+                    self.send(
+                        200, {"Content-Length": 7, "Content-Type": "foo-son"}, None
+                    )
                 elif data["code"] == ["error-incorrect-error-format"]:
                     self.send_json_error({"foo": "bar"}, 400, "application/json")
                 elif data["code"] == ["error-correct-error-format"]:
@@ -268,6 +404,24 @@ class MockORCIDOAuth(MockService):
                     self.send_json_error(error, 400, "application/json")
                 elif data["code"] == ["not-json-content"]:
                     self.send_json_text("foo", "application/json")
+                elif data["code"] == ["internal-error-500"]:
+                    error = {
+                        "error": "some error",
+                        "error_description": "a description of some error",
+                    }
+                    self.send_json_error(error, 500, "application/json")
+                elif data["code"] == ["trigger-internal-error"]:
+                    # Maybe sending and invalid response will do the trick?
+                    # Yes, the trick is to set the content length too long for the
+                    # content.
+                    # This triggers a "ClientPayloadError", which is not specifically
+                    # caught but rather caught in the "Exception" catchall in
+                    # InteractiveRoute, and re-cast as an internal server error.
+                    self.send(
+                        200,
+                        {"content-length": 100, "content-type": "application/json"},
+                        '{"farr": "too short"}',
+                    )
                 else:
                     test_data = {
                         "access_token": "access_token",
@@ -291,4 +445,5 @@ class MockORCIDOAuth2(MockService):
     def do_POST(self):
         # TODO: Reminder - switch to normal auth2 endpoint in config and here.
         if self.path == "/revoke":
+            print("GETTING THERE", self.headers)
             self.send_empty(status_code=204)

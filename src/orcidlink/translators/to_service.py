@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from orcidlink import model
-from orcidlink.lib import exceptions
+from orcidlink.jsonrpc.errors import ORCIDProfileNamePrivate
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
 from orcidlink.model import (
@@ -201,9 +201,7 @@ def transform_work(
                 )
 
     if profile.person.name is None:
-        raise exceptions.ORCIDProfileNamePrivate(
-            "Your ORCID Profile has your name set as private"
-        )
+        raise ORCIDProfileNamePrivate("Your ORCID Profile has your name set as private")
     elif profile.person.name.credit_name is not None:
         name = profile.person.name.credit_name
     elif profile.person.name.family_name is None:

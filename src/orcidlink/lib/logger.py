@@ -82,6 +82,14 @@ class JSONLogger:
         return log_id
 
 
+# def format_time_in_rfc3339(
+#     _self: logging.Formatter, record: logging.LogRecord, _: str | None = None
+# ) -> str:
+#     return datetime.datetime.fromtimestamp(
+#         record.created, datetime.timezone.utc
+#     ).isoformat()
+
+
 ORCID_LOGGER = None
 
 

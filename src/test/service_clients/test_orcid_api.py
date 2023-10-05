@@ -194,6 +194,21 @@ async def test_ORCIDAPI_get_profile_some_other_error():
                 await client.get_profile(orcid_id)
 
 
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_ORCIDAPI_get_profile_some_500_error():
+    with no_stderr():
+        with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT) as [
+            _,
+            _,
+            url,
+            port,
+        ]:
+            orcid_id = "trigger-500"
+            with pytest.raises(UpstreamError):
+                client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
+                await client.get_profile(orcid_id)
+
+
 # @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 # async def test_ORCIDAPI_get_profile_error_wrong_content_type():
 #     with no_stderr():
@@ -361,7 +376,7 @@ async def test_ORCIDAPI_save_work_error(fake_fs):
             # the constructor, and a randomly generated port.
             #
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
-            with pytest.raises(UpstreamError) as ex:
+            with pytest.raises(UpstreamError):
                 put_code = 1526002
                 work_update = orcid_api.WorkUpdate.model_validate(
                     load_test_data(TEST_DATA_DIR, "orcid", f"work_{str(put_code)}")[

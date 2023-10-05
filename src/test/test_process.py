@@ -17,7 +17,7 @@ from unittest import mock
 
 import pytest
 
-from orcidlink.lib import exceptions
+from orcidlink.jsonrpc.errors import NotFoundError
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import LinkRecord
 from orcidlink.process import (
@@ -90,7 +90,7 @@ async def test_delete_link_error_not_found():
             # Adds a test link directly to the database
             await create_link(TEST_LINK)
 
-            with pytest.raises(exceptions.NotFoundError):
+            with pytest.raises(NotFoundError):
                 await delete_link("bar")
 
 

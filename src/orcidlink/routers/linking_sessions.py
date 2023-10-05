@@ -11,19 +11,32 @@ import logging
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Cookie, Path, Query, responses
+from fastapi_jsonrpc import InvalidParams
 from pydantic import Field
 from starlette.responses import RedirectResponse
 
-from orcidlink.lib import errors, exceptions
-from orcidlink.lib.auth import ensure_authorization
-from orcidlink.lib.responses import AUTH_RESPONSES, STD_RESPONSES, ui_error_response
+# from orcidlink.lib import errors, exceptions
+from orcidlink.jsonrpc.errors import (
+    AlreadyLinkedError,
+    AuthorizationRequiredError,
+    JSONRPCError,
+    NotAuthorizedError,
+    UpstreamError,
+)
+from orcidlink.lib.auth import ensure_authorization_ui
+
+# from orcidlink.lib.auth import ensure_authorization
+from orcidlink.lib.responses import AUTH_RESPONSES, STD_RESPONSES, UIError
 from orcidlink.lib.service_clients.orcid_api import AuthorizeParams
-from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
+from orcidlink.lib.service_clients.orcid_oauth_interactive import (
+    orcid_oauth_interactive,
+)
 from orcidlink.process import get_linking_session_initial, get_linking_session_started
+from orcidlink.routers.interactive_route import InteractiveRoute
 from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 
-router = APIRouter(prefix="/linking-sessions")
+router = APIRouter(prefix="/linking-sessions", route_class=InteractiveRoute)
 
 
 #
@@ -82,15 +95,21 @@ KBASE_SESSION_BACKUP_COOKIE = Cookie(
     response_class=RedirectResponse,
     status_code=302,
     responses={
-        302: {"description": "Redirect to ORCID if a valid linking session"},
+        302: {
+            "description": (
+                "Redirect to ORCID if a valid linking session, back to KBase in "
+                "the case of an error"
+            )
+        },
         **AUTH_RESPONSES,
         **STD_RESPONSES,
-        404: {
-            "description": (
-                "Response when a linking session not found for the supplied session id"
-            ),
-            "model": errors.ErrorResponse,
-        },
+        # 404: {
+        #     "description": (
+        #         "Response when a linking session not found for the supplied
+        # session id"
+        #     ),
+        #     "model": errors.ErrorResponse,
+        # },
     },
     tags=["linking-sessions"],
 )
@@ -117,20 +136,23 @@ async def start_linking_session(
 
     if kbase_session is None:
         if kbase_session_backup is None:
-            raise exceptions.AuthorizationRequiredError(
-                "Linking requires authentication"
+            raise UIError(
+                NotAuthorizedError.CODE,
+                "Linking requires authorization",
             )
-            # raise HTTPException(401, "Linking requires authentication")
         else:
             authorization = kbase_session_backup
     else:
         authorization = kbase_session
 
-    _, token_info = await ensure_authorization(authorization)
+    _, token_info = await ensure_authorization_ui(authorization)
 
     # We don't need the record, but we want to ensure it exists
     # and is owned by this user.
-    await get_linking_session_initial(session_id, token_info.user)
+    try:
+        await get_linking_session_initial(session_id, token_info.user)
+    except JSONRPCError as je:
+        raise UIError(je.CODE, je.MESSAGE)
 
     # TODO: enhance session record to record the status - so that we can prevent
     # starting a session twice!
@@ -240,53 +262,69 @@ async def linking_sessions_continue(
     # So we use the state to get the session id.
     if kbase_session is None:
         if kbase_session_backup is None:
-            # TODO: this should be our own exception, otherwise it will be caught by
-            # the global fastapi hooks.
-            raise exceptions.AuthorizationRequiredError(
-                "Linking requires authentication"
+            raise UIError(
+                AuthorizationRequiredError.CODE, "Linking requires authentication"
             )
-            # raise HTTPException(401, "Linking requires authentication")
         else:
             authorization = kbase_session_backup
     else:
         authorization = kbase_session
 
-    authorization, token_info = await ensure_authorization(authorization)
+    authorization, token_info = await ensure_authorization_ui(authorization)
 
     #
     # TODO: MAJOR: ensure ui error responses are working; refactor
     #
 
     if error is not None:
-        return ui_error_response(errors.ERRORS.linking_session_error, error)
+        # return ui_error_response(errors.ERRORS.linking_session_error, error)
+        raise UIError(
+            UpstreamError.CODE,
+            "Error returned by ORCID OAuth",
+            data={"originalError": error},
+        )
 
     if code is None:
-        return ui_error_response(
-            errors.ERRORS.linking_session_continue_invalid_param,
-            "The 'code' query param is required but missing",
+        raise UIError(
+            InvalidParams.CODE, "The 'code' query param is required but missing"
         )
+        # return ui_error_response(
+        #     errors.ERRORS.linking_session_continue_invalid_param,
+        #     "The 'code' query param is required but missing",
+        # )
 
     if state is None:
-        return ui_error_response(
-            errors.ERRORS.linking_session_continue_invalid_param,
-            "The 'state' query param is required but missing",
+        raise UIError(
+            InvalidParams.CODE, "The 'state' query param is required but missing"
         )
+        # return ui_error_response(
+        #     errors.ERRORS.linking_session_continue_invalid_param,
+        #     "The 'state' query param is required but missing",
+        # )
 
     unpacked_state = json.loads(state)
 
     if "session_id" not in unpacked_state:
-        return ui_error_response(
-            errors.ERRORS.linking_session_continue_invalid_param,
+        raise UIError(
+            InvalidParams.CODE,
             "The 'session_id' was not provided in the 'state' query param",
         )
+        # return ui_error_response(
+        #     errors.ERRORS.linking_session_continue_invalid_param,
+        #     "The 'session_id' was not provided in the 'state' query param",
+        # )
 
     session_id = unpacked_state.get("session_id")
-    session_record = await get_linking_session_started(session_id, token_info.user)
+
+    try:
+        session_record = await get_linking_session_started(session_id, token_info.user)
+    except JSONRPCError as be:
+        raise UIError(be.CODE, be.MESSAGE)
 
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
-    orcid_auth = await orcid_oauth().exchange_code_for_token(code)
+    orcid_auth = await orcid_oauth_interactive().exchange_code_for_token(code)
 
     #
     # Note that it isn't until this point that we know the orcid id the user
@@ -302,9 +340,13 @@ async def linking_sessions_continue(
         await model.delete_linking_session_started(session_id)
 
         # TODO: send the orcid in case the user wants to investigate?
-        return ui_error_response(
-            errors.ERRORS.linking_session_already_linked_orcid,
-            "The chosen ORCID account is already linked to another KBase account",
+        # return ui_error_response(
+        #     errors.ERRORS.linking_session_already_linked_orcid,
+        #     "The chosen ORCID account is already linked to another KBase account",
+        # )
+        raise UIError(
+            AlreadyLinkedError.CODE,
+            ("The chosen ORCID account is already linked to another " "KBase account"),
         )
 
     #

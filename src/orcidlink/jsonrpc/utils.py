@@ -1,7 +1,13 @@
 from typing import Tuple
 
 from orcidlink.jsonrpc.errors import AuthorizationRequiredError
-from orcidlink.jsonrpc.kbase_auth import AccountInfo, KBaseAuth, TokenInfo
+from orcidlink.lib.service_clients.kbase_auth import (
+    AccountInfo,
+    AuthError,
+    KBaseAuth,
+    TokenInfo,
+    auth_error_to_jsonrpc_error,
+)
 from orcidlink.runtime import config
 
 
@@ -28,7 +34,11 @@ async def ensure_authorization2(
     # TODO: rectify with JSON-RPC errors. Ultimately, all API calls will be JSON-RPC,
     # with just some OAuth stuff remaining as "REST-ish"
 
-    token_info = await auth.get_token_info(authorization)
+    try:
+        token_info = await auth.get_token_info(authorization)
+    except AuthError as ae:
+        raise auth_error_to_jsonrpc_error(ae)
+
     return authorization, token_info
 
 
@@ -47,5 +57,9 @@ async def ensure_account2(
     # TODO: rectify with JSON-RPC errors. Ultimately, all API calls will be JSON-RPC,
     # with just some OAuth stuff remaining as "REST-ish"
 
-    account_info = await auth.get_me(authorization)
+    try:
+        account_info = await auth.get_me(authorization)
+    except AuthError as ae:
+        raise auth_error_to_jsonrpc_error(ae)
+
     return authorization, account_info

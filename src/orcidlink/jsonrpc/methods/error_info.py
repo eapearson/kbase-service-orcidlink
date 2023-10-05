@@ -1,7 +1,6 @@
 from pydantic import Field
 
-from orcidlink.jsonrpc.errors import NotFoundError
-from orcidlink.lib.errors import ERRORS_MAP, ErrorCode2
+from orcidlink.jsonrpc.errors import ERRORS_MAP, ErrorDescription, NotFoundError
 from orcidlink.lib.type import ServiceBaseModel
 
 
@@ -10,7 +9,7 @@ class ErrorInfoParams(ServiceBaseModel):
 
 
 class ErrorInfoResult(ServiceBaseModel):
-    error_info: ErrorCode2
+    error_info: ErrorDescription
 
 
 def error_info_method(error_code: int) -> ErrorInfoResult:

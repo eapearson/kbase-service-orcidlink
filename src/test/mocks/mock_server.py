@@ -5,7 +5,9 @@ import time
 from socket import socket
 from urllib.parse import parse_qs
 
-from orcidlink.lib.errors import INVALID_PARAMS, METHOD_NOT_FOUND
+from orcidlink.jsonrpc.errors import INVALID_PARAMS, METHOD_NOT_FOUND
+
+# from orcidlink.lib.errors import INVALID_PARAMS, METHOD_NOT_FOUND
 
 
 class MockService(http.server.BaseHTTPRequestHandler):
@@ -42,10 +44,12 @@ class MockService(http.server.BaseHTTPRequestHandler):
         cls.total_call_count = {"success": 0, "error": 0}
         cls.method_call_counts = {}
 
-    def send(self, status_code: int, header: dict[str, str], data: str | None = None):
+    def send(
+        self, status_code: int, header: dict[str, str | int], data: str | None = None
+    ):
         self.send_response(status_code)
         for key, value in header.items():
-            self.send_header(key, value)
+            self.send_header(key, str(value))
         self.end_headers()
         if data is not None:
             self.wfile.write(bytes(data, encoding="utf-8"))

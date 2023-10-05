@@ -5,13 +5,60 @@ The SDK version has been modified to integrate with this codebase, such as
 using httpx, pydantic models.
 """
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import aiohttp
+from fastapi_jsonrpc import BaseError
 from pydantic import Field
 
-from orcidlink.lib import errors, exceptions
+from orcidlink.jsonrpc import errors
+from orcidlink.lib.responses import UIError
 from orcidlink.lib.type import ServiceBaseModel
+
+# from orcidlink.jsonrpc.errors import (
+#     AuthorizationRequiredError,
+#     ContentTypeError,
+#     JSONDecodeError,
+#     UpstreamError,
+# )
+
+#
+# Auth Exceptions
+#
+# Note that these should be caught by an adapter layer which will translate the
+# errors into either JSON-RPC 2.0 error responses or UI error redirects.
+#
+
+
+class AuthError(Exception):
+    message: str
+    data: Optional[Any]
+
+    def __init__(self, message: str, data: Optional[Any] = None):
+        super().__init__(message)
+        self.message = message
+        self.data = data
+
+
+class AuthorizationRequiredAuthError(AuthError):
+    pass
+
+
+class ContentTypeAuthError(AuthError):
+    pass
+
+
+class JSONDecodeAuthError(AuthError):
+    pass
+
+
+class OtherAuthError(AuthError):
+    pass
+
+
+#
+# Types in support of the auth api.
+#
 
 
 class TokenInfo(ServiceBaseModel):
@@ -83,8 +130,8 @@ class KBaseAuth(object):
           is returned (raised by aiohttp)
         exceptions.JSONDecodeError - if the response does not parse correctly as
           JSON (raised by aiohttp)
-        exceptions.ServiceErrorY (401 - auth required) - if the error returned by the auth service is
-          10020 (invalid token
+        exceptions.ServiceErrorY (401 - auth required) - if the error returned by the
+          auth service is 10020 (invalid token
         exceptions.UpstreamError - for any other error reported by the auth service
         """
         try:
@@ -97,20 +144,23 @@ class KBaseAuth(object):
 
         except aiohttp.ContentTypeError as cte:
             # Raised if it is not application/json
-            data = exceptions.ContentTypeErrorData()
+            # data = exceptions.ContentTypeErrorData()
+            # if cte.headers is not None:
+            #     data.originalContentType = cte.headers["content-type"]
+            error_data: Dict[str, Any] = {}
             if cte.headers is not None:
-                data.originalContentType = cte.headers["content-type"]
-            raise exceptions.ContentTypeError("Wrong content type", data=data)
+                error_data["originalContentType"] = cte.headers["content-type"]
+
+            raise ContentTypeAuthError("Wrong content type", error_data) from cte
 
         except json.JSONDecodeError as jde:
-            raise exceptions.JSONDecodeError(
-                "Error decoding JSON response",
-                exceptions.JSONDecodeErrorData(message=str(jde)),
-            )
+            raise JSONDecodeAuthError(
+                "Error decoding JSON response", {"decodeErrorMessage": str(jde)}
+            ) from jde
 
         except aiohttp.ClientConnectionError:
             # TODO: should be own bespoke error?
-            raise exceptions.UpstreamError("Error connecting to auth service")
+            raise OtherAuthError("Error connecting to auth service")
 
         if not response.ok:
             # We don't care about the HTTP response code, just the appcode in the
@@ -118,12 +168,9 @@ class KBaseAuth(object):
             appcode = json_result["error"]["appcode"]
             json_result["error"]["message"]
             if appcode == 10020:
-                raise exceptions.ServiceErrorY(
-                    errors.ERRORS.authorization_required,
-                    "Invalid token, authorization required",
-                )
+                raise AuthorizationRequiredAuthError("Authorization Required")
             else:
-                raise exceptions.UpstreamError("Error authenticating with auth service")
+                raise OtherAuthError("Error authenticating with auth service")
 
         return json_result
 
@@ -142,8 +189,33 @@ class KBaseAuth(object):
         Pydantic class matching the original structure.
         """
         if token == "":
-            raise exceptions.AuthorizationRequiredError("Token may not be empty")
+            raise AuthorizationRequiredAuthError("Token may not be empty")
 
         json_result = await self._get("me", token)
 
+        # TODO: we need this model validation to trigger a ui error.
+        # though, to be fair, this would be an internal error, not something the user
+        # can do anything about.
         return AccountInfo.model_validate(json_result)
+
+
+def auth_error_to_jsonrpc_error(error: AuthError) -> BaseError:
+    if isinstance(error, AuthorizationRequiredAuthError):
+        return errors.AuthorizationRequiredError(error.message)
+    elif isinstance(error, ContentTypeAuthError):
+        return errors.ContentTypeError(error.message)
+    elif isinstance(error, JSONDecodeAuthError):
+        return errors.JSONDecodeError(error.message)
+    elif isinstance(error, OtherAuthError):
+        return errors.UpstreamError(error.message)
+    else:
+        return errors.UpstreamError(error.message)
+
+
+def auth_error_to_ui_error(error: AuthError) -> UIError:
+    json_rpc_error = auth_error_to_jsonrpc_error(error)
+    # Weird that the BaseError from jsonrpc-fastapi has code as optional;
+    # imo it should be required, as the spec requires it
+    return UIError(
+        code=json_rpc_error.CODE or 0, message=error.message, data=error.data
+    )

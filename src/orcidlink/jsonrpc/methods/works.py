@@ -16,7 +16,7 @@ from orcidlink.translators import to_orcid, to_service
 async def get_works(username: str) -> List[ORCIDWorkGroup]:
     link_record = await process.link_record_for_user(username)
     if link_record is None:
-        raise NotFoundError("ORCID Profile Not Found")
+        raise NotFoundError("Link Record Not Found")
 
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
@@ -62,7 +62,6 @@ async def get_work(username: str, put_code: int) -> GetWorkResult:
 
     # try:
     # TODO: move into model
-    print("ABOUT TO...", token, orcid_id, put_code)
     raw_work = await orcid_api.orcid_api(token).get_work(orcid_id, put_code)
     profile = await orcid_api.orcid_api(token).get_profile(orcid_id)
     return GetWorkResult(work=to_service.transform_work(profile, raw_work.bulk[0].work))

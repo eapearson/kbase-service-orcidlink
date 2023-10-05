@@ -342,4 +342,3 @@ def get_git_info() -> GitInfo:
     )
     with open(path, "rb") as fin:
         return GitInfo.model_validate(json.load(fin))
-        return GitInfo.model_validate(json.load(fin))

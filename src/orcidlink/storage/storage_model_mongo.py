@@ -2,7 +2,9 @@ from typing import Any, List, Optional
 
 import motor.motor_asyncio
 
-from orcidlink.lib import errors, exceptions
+from orcidlink.jsonrpc.errors import NotFoundError
+
+# from orcidlink.lib import errors, exceptions
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
@@ -228,9 +230,7 @@ class StorageModelMongo:
             linking_sessions_completed.append(link)
         return linking_sessions_completed
 
-    async def get_expired_sesssions(self) -> ExpiredSessions:
-        now = posix_time_millis()
-
+    async def get_expired_sessions(self, now: int) -> ExpiredSessions:
         linking_sessions_initial = await self.get_expired_initial_sessions(now)
         linking_sessions_started = await self.get_expired_started_sessions(now)
         linking_sessions_completed = await self.get_expired_completed_sessions(now)
@@ -325,7 +325,7 @@ class StorageModelMongo:
             )
 
             if linking_session is None:
-                raise exceptions.NotFoundError("Linking session not found")
+                raise NotFoundError("Linking session not found")
 
             updated_linking_session = dict(linking_session)
 
@@ -351,10 +351,11 @@ class StorageModelMongo:
             )
 
             if linking_session is None:
-                raise exceptions.ServiceErrorY(
-                    error=errors.ERRORS.not_found,
-                    message="Linking session not found",
-                )
+                raise NotFoundError("Linking session not found")
+                # raise exceptions.ServiceErrorY(
+                #     error=errors.ERRORS.not_found,
+                #     message="Linking session not found",
+                # )
 
             updated_linking_session = dict(linking_session)
 

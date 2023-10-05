@@ -15,6 +15,8 @@ from test.mocks.testing_utils import (
     assert_json_rpc_error,
     assert_json_rpc_result_ignore_result,
     clear_storage_model,
+    create_link,
+    generate_kbase_token,
     repeat_str,
     rpc_call,
 )
@@ -24,10 +26,8 @@ from urllib.parse import parse_qs, urlparse
 from fastapi.testclient import TestClient
 from httpx import Response
 
-from orcidlink.lib import errors
+from orcidlink.jsonrpc.errors import NotAuthorizedError
 from orcidlink.main import app
-from orcidlink.model import LinkRecord
-from orcidlink.storage.storage_model import storage_model
 
 TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
 TEST_LINK = load_data_json(TEST_DATA_DIR, "link2.json")
@@ -35,25 +35,12 @@ TEST_LINK1 = load_data_json(TEST_DATA_DIR, "link1.json")
 TEST_LINK_BAR = load_data_json(TEST_DATA_DIR, "link-bar.json")
 
 
-async def create_link(link_data):
-    sm = storage_model()
-    await sm.create_link_record(LinkRecord.model_validate(link_data))
-
-
 #
 # Canned assertions
 #
-async def assert_create_linking_session(client, authorization: str):
-    rpc = {
-        "jsonrpc": "2.0",
-        "id": "123",
-        "method": "create-linking-session",
-        "params": {"username": "foo"},
-    }
-
-    response = client.post(
-        "/api/v1", json=rpc, headers={"Authorization": authorization}
-    )
+async def assert_create_linking_session(authorization: str):
+    params = {"username": "foo"}
+    response = rpc_call("create-linking-session", params, authorization)
     result = assert_json_rpc_result_ignore_result(response)
     assert "session_id" in result
     assert isinstance(result["session_id"], str)
@@ -67,11 +54,17 @@ async def assert_create_linking_session_error(
     assert_json_rpc_error(response, code, message)
 
 
-def assert_get_linking_session(client, session_id: str):
-    response = client.get(
-        f"/linking-sessions/{session_id}", headers={"Authorization": TOKEN_FOO}
-    )
+async def assert_create_linking_session_error2(
+    username: str, authorization: str | None, code: int, message: str
+):
+    response = rpc_call("create-linking-session", {"username": username}, authorization)
+    assert_json_rpc_error(response, code, message)
 
+
+def assert_get_linking_session(session_id: str):
+    response = rpc_call(
+        "get-linking-session", {"session_id": session_id}, generate_kbase_token("foo")
+    )
     assert response.status_code == 200
     session_info = response.json()
     session_id = session_info["session_id"]
@@ -80,7 +73,7 @@ def assert_get_linking_session(client, session_id: str):
 
 
 def assert_start_linking_session(
-    client,
+    client: TestClient,
     session_id: str,
     kbase_session: str | None = None,
     kbase_session_backup: str | None = None,
@@ -128,8 +121,40 @@ def assert_start_linking_session(
     # return session_info
 
 
+def assert_start_linking_session_error(
+    client: TestClient,
+    session_id: str,
+    expected_error_code: int,
+    kbase_session: str | None = None,
+    return_link: str | None = None,
+    skip_prompt: str | None = None,
+) -> None:
+    headers = {}
+    if kbase_session is not None:
+        headers["Cookie"] = f"kbase_session={kbase_session}"
+    # elif kbase_session_backup is not None:
+    #     headers["Cookie"] = f"kbase_session_backup={kbase_session_backup}"
+
+    params = {}
+    if return_link is not None:
+        params["return_link"] = return_link
+    if skip_prompt is not None:
+        params["skip_prompt"] = skip_prompt
+
+    # TODO: should be put or post
+    response = client.get(
+        f"/linking-sessions/{session_id}/oauth/start",
+        headers=headers,
+        params=params,
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+
+    assert_ui_error_response(response, expected_error_code)
+
+
 def assert_continue_linking_session(
-    client,
+    client: TestClient,
     session_id: str,
     kbase_session: str | None = None,
     expected_response_code: int | None = None,
@@ -153,13 +178,110 @@ def assert_continue_linking_session(
         params=params,
         follow_redirects=False,
     )
-    assert response.status_code == expected_response_code
 
-    # response = client.put(
-    #     f"/linking-sessions/{session_id}/finish",
-    #     headers={"Authorization": kbase_session},
-    # )
-    # assert response.status_code == 200
+    assert response.status_code == 302
+
+    return response
+
+
+def as_str(something: str | bytes) -> str:
+    if isinstance(something, str):
+        return something
+    else:
+        return str(something, encoding="utf-8")
+
+
+def assert_ui_error_response(response: Response, expected_error_code: int) -> None:
+    assert response.status_code == 302
+    assert "location" in response.headers
+    location_value = response.headers.get("location")
+    assert location_value is not None
+
+    assert location_value.endswith("#orcidlink/error")
+    url = urlparse(response.headers.get("location"))
+    assert url.scheme == "http"
+    assert url.path == ""
+    assert url.hostname == "127.0.0.1"
+    assert url.fragment == "orcidlink/error"
+    # assert url.query
+    # annoyingly, may be string or bytes, so coerce, primarily to make
+    # typing happy.
+    query_string = as_str(url.query)
+    query = parse_qs(query_string)  # type: ignore
+    assert "code" in query
+    assert query["code"] == [str(expected_error_code)]
+
+
+def assert_continue_linking_session_error(
+    client: TestClient,
+    session_id: str,
+    expected_error_code: int,
+    kbase_session: str | None = None,
+) -> None:
+    # FINISH
+    #
+    # Get linking session again.
+    #
+
+    params = {
+        "code": "foo",
+        "state": json.dumps({"session_id": session_id}),
+    }
+
+    headers = {}
+    if kbase_session is not None:
+        headers["Cookie"] = f"kbase_session={kbase_session}"
+
+    response = client.get(
+        "/linking-sessions/oauth/continue",
+        headers=headers,
+        params=params,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+
+    assert_ui_error_response(response, expected_error_code)
+
+
+def assert_continue_linking_session_internal_error(
+    client: TestClient,
+    session_id: str,
+    expected_error_code: int,
+    kbase_session: str | None = None,
+) -> None:
+    """
+    Here we test the bahvior of the oauth/continue endpoint in the face
+    of an internal error.
+
+    An internal error will be handled by the custom route handler
+    (InteractiveRoute).
+
+    So the trick is to orchestrate an internal error be triggered during
+    this call. We do that with the specially-named oauth code
+    "trigger-internal-error".
+    """
+    params = {
+        "code": "trigger-internal-error",
+        "state": json.dumps({"session_id": session_id}),
+    }
+
+    headers = {}
+    if kbase_session is not None:
+        headers["Cookie"] = f"kbase_session={kbase_session}"
+
+    response = client.get(
+        "/linking-sessions/oauth/continue",
+        headers=headers,
+        params=params,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+
+    assert_ui_error_response(response, expected_error_code)
+
+    # Now upwrap the location header, etc.
 
 
 def assert_finish_linking_session(session_id: str, authorization: str):
@@ -206,11 +328,10 @@ async def test_create_linking_session():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await clear_storage_model()
-            client = TestClient(app)
-            await assert_create_linking_session(client, TOKEN_FOO)
+            await assert_create_linking_session(TOKEN_FOO)
 
 
-async def test_create_linking_session_erros():
+async def test_create_linking_session_errors():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await clear_storage_model()
@@ -247,9 +368,7 @@ async def test_get_linking_session():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(
-                    client, TOKEN_FOO
-                )
+                initial_session_info = await assert_create_linking_session(TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -309,9 +428,7 @@ async def test_delete_linking_session():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(
-                    client, TOKEN_FOO
-                )
+                initial_session_info = await assert_create_linking_session(TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -376,7 +493,7 @@ async def test_get_linking_session_errors():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-                client = TestClient(app)
+                client = TestClient(app, raise_server_exceptions=False)
 
                 await clear_storage_model()
 
@@ -395,7 +512,7 @@ async def test_get_linking_session_errors():
 
                 # Should also be 404, because it is not completed yet.
                 await clear_storage_model()
-                session_info = await assert_create_linking_session(client, TOKEN_FOO)
+                session_info = await assert_create_linking_session(TOKEN_FOO)
 
                 session_id = session_info["session_id"]
 
@@ -415,11 +532,20 @@ async def test_get_linking_session_errors():
                     skip_prompt="no",
                 )
 
-                assert_continue_linking_session(
-                    client,
-                    session_id,
-                    TOKEN_BAR,
-                    expected_response_code=403,
+                #
+                # By using an token not matching the linking session, we get a
+                # Not Authorized Error
+                #
+                assert_continue_linking_session_error(
+                    client, session_id, NotAuthorizedError.CODE, kbase_session=TOKEN_BAR
+                )
+
+                #
+                # Triggers a _real_ internal error within the code by
+                # orchestrating an invalid response from the mock orcid oauth server.
+                #
+                assert_continue_linking_session_internal_error(
+                    client, session_id, -32603, kbase_session=TOKEN_FOO
                 )
 
                 assert_continue_linking_session(
@@ -447,9 +573,7 @@ async def test_start_linking_session():
 
                 await clear_storage_model()
 
-                initial_session_info = await assert_create_linking_session(
-                    client, TOKEN_FOO
-                )
+                initial_session_info = await assert_create_linking_session(TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -476,9 +600,7 @@ async def test_start_linking_session_backup_cookie():
                 #
                 # Create linking session.
                 #
-                initial_session_info = await assert_create_linking_session(
-                    client, TOKEN_FOO
-                )
+                initial_session_info = await assert_create_linking_session(TOKEN_FOO)
                 initial_session_id = initial_session_info["session_id"]
 
                 assert_start_linking_session(
@@ -497,16 +619,15 @@ async def test_start_linking_session_errors():
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            client = TestClient(app)
+            client = TestClient(app, raise_server_exceptions=False)
 
             await clear_storage_model()
 
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(
-                client, TOKEN_FOO
-            )
+            initial_session_info = await assert_create_linking_session(TOKEN_FOO)
+
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -531,37 +652,23 @@ async def test_start_linking_session_errors():
             # initial_session_id)
 
             # No auth cookie
-            response = client.get(
-                f"/linking-sessions/{initial_session_id}/oauth/start",
-                follow_redirects=False,
-            )
-            assert response.status_code == 401
 
-            # username doesn't  match
-            response = client.get(
-                f"/linking-sessions/{initial_session_id}/oauth/start",
-                headers={"Cookie": "kbase_session=bar; Path=/"},
-                follow_redirects=False,
+            assert_start_linking_session_error(client, initial_session_id, 1011, None)
+
+            # username doesn't match
+            assert_start_linking_session_error(
+                client, initial_session_id, 1011, generate_kbase_token("bar")
             )
-            assert response.status_code == 403
 
             # linking session id not correct format (s.b. 36 characters)
-            response = client.get(
-                "/linking-sessions/foo/oauth/start",
-                headers={"Cookie": "kbase_session=bar; Path=/"},
-                follow_redirects=False,
+            assert_start_linking_session_error(
+                client, "foo", -30602, generate_kbase_token("bar")
             )
-            assert response.status_code == 422
 
             # linking session not found
-            response = client.get(
-                f"/linking-sessions/{repeat_str('x', 36)}/oauth/start",
-                headers={"Cookie": "kbase_session=bar; Path=/"},
-                follow_redirects=False,
+            assert_start_linking_session_error(
+                client, repeat_str("x", 36), 1020, generate_kbase_token("bar")
             )
-            assert response.status_code == 404
-
-            # TODO more assertions?
 
 
 async def test_linking_session_continue():
@@ -586,9 +693,7 @@ async def test_linking_session_continue():
             # Create linking session.
             #
             await clear_storage_model()
-            initial_session_info = await assert_create_linking_session(
-                client, TOKEN_FOO
-            )
+            initial_session_info = await assert_create_linking_session(TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -708,9 +813,7 @@ async def test_continue_linking_session_errors():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(
-                client, TOKEN_FOO
-            )
+            initial_session_info = await assert_create_linking_session(TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -751,13 +854,17 @@ async def test_continue_linking_session_errors():
                 "state": json.dumps({"session_id": initial_session_id}),
             }
 
-            # No auth cookie: no kbase_session or kbase_session_backup
-            response = client.get(
-                "/linking-sessions/oauth/continue",
-                params=params,
-                follow_redirects=False,
+            response = assert_continue_linking_session_error(
+                client, initial_session_id, 1010
             )
-            assert response.status_code == 401
+
+            # No auth cookie: no kbase_session or kbase_session_backup
+            # response = client.get(
+            #     "/linking-sessions/oauth/continue",
+            #     params=params,
+            #     follow_redirects=False,
+            # )
+            # assert response.status_code == 401
 
             # Error returned from orcid
             # TODO: double check the ORCID error structure; here we assume it is a
@@ -784,11 +891,9 @@ async def test_continue_linking_session_errors():
             assert_location_params(
                 response,
                 {
-                    "code": str(
-                        errors.ERRORS.linking_session_continue_invalid_param.code
-                    ),
-                    "title": errors.ERRORS.linking_session_continue_invalid_param.title,
-                    "message": "The 'code' query param is required but missing",
+                    "code": str("-32602"),
+                    # "title": errors.ERRORS.linking_session_continue_invalid_param.title,
+                    # "message": "The 'code' query param is required but missing",
                 },
             )
 
@@ -804,11 +909,7 @@ async def test_continue_linking_session_errors():
             assert_location_params(
                 response,
                 {
-                    "code": str(
-                        errors.ERRORS.linking_session_continue_invalid_param.code
-                    ),
-                    "title": errors.ERRORS.linking_session_continue_invalid_param.title,
-                    "message": "The 'state' query param is required but missing",
+                    "code": str("-32602"),
                 },
             )
 
@@ -824,13 +925,11 @@ async def test_continue_linking_session_errors():
             assert_location_params(
                 response,
                 {
-                    "code": str(
-                        errors.ERRORS.linking_session_continue_invalid_param.code
-                    ),
-                    "title": errors.ERRORS.linking_session_continue_invalid_param.title,
-                    "message": (
-                        "The 'session_id' was not provided in the 'state' query param"
-                    ),
+                    "code": str("-32602"),
+                    # "title": errors.ERRORS.linking_session_continue_invalid_param.title,
+                    # "message": (
+                    #     "The 'session_id' was not provided in the 'state' query param"
+                    # ),
                 },
             )
 
@@ -852,9 +951,7 @@ async def test_continue_linking_session_error_already_continued():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(
-                client, TOKEN_FOO
-            )
+            initial_session_info = await assert_create_linking_session(TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -908,6 +1005,7 @@ async def test_continue_linking_session_error_already_continued():
                 follow_redirects=False,
             )
             assert response.status_code == 302
+            # TODO: make assertion about location
 
             # Second time it should produce an error
             response = client.get(
@@ -916,7 +1014,18 @@ async def test_continue_linking_session_error_already_continued():
                 params=params,
                 follow_redirects=False,
             )
-            assert response.status_code == 404
+            assert response.status_code == 302
+            assert_location_params(
+                response,
+                {
+                    "code": str("1020"),
+                    # "title": errors.ERRORS.linking_session_continue_invalid_param.title,
+                    # "message": (
+                    #     "The 'session_id' was not provided in the 'state' query param"
+                    # ),
+                },
+            )
+
             # TODO: should be a 302, redirected to the error page.
             # assert response.status_code == 302
             # assert_location_params(
@@ -939,16 +1048,12 @@ async def test_finish_linking_session_error_already_finished():
     """
     with mock_services():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
-            client = TestClient(app)
-
             await clear_storage_model()
 
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(
-                client, TOKEN_FOO
-            )
+            initial_session_info = await assert_create_linking_session(TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #
@@ -1118,9 +1223,7 @@ async def test_continue_linking_session_error_link_already_exists():
             #
             # Create linking session.
             #
-            initial_session_info = await assert_create_linking_session(
-                client, TOKEN_FOO
-            )
+            initial_session_info = await assert_create_linking_session(TOKEN_FOO)
             initial_session_id = initial_session_info["session_id"]
 
             #

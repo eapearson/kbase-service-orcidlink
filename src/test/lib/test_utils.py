@@ -1,6 +1,20 @@
+import contextlib
 import time
+from test.mocks.env import MOCK_KBASE_SERVICES_PORT
+from test.mocks.mock_contexts import mock_auth_service, no_stderr
 
+import pytest
+
+from orcidlink.jsonrpc.errors import AuthorizationRequiredError
+from orcidlink.jsonrpc.utils import ensure_authorization2
 from orcidlink.lib import utils
+
+
+@contextlib.contextmanager
+def mock_services():
+    with no_stderr():
+        with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
+            yield
 
 
 def test_posix_time_millis():
@@ -31,3 +45,11 @@ def test_make_date():
 
     # nothing
     assert utils.make_date() == "** invalid date **"
+
+
+# TODO: this just covers one case, the rest are covered via other tests, but
+# it sure would be nice to directly test this.
+async def test_ensure_authorization2_error_no_authorization():
+    with mock_services():
+        with pytest.raises(AuthorizationRequiredError):
+            await ensure_authorization2(None)

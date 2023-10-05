@@ -6,7 +6,12 @@ from fastapi.testclient import TestClient
 from httpx import Response
 
 from orcidlink.main import app
-from orcidlink.model import LinkRecord
+from orcidlink.model import (
+    LinkingSessionComplete,
+    LinkingSessionInitial,
+    LinkingSessionStarted,
+    LinkRecord,
+)
 from orcidlink.storage.storage_model import storage_model
 
 
@@ -142,16 +147,45 @@ async def get_link(username: str) -> LinkRecord | None:
     return link_record
 
 
+async def get_linking_session_initial(session_id: str) -> LinkingSessionInitial | None:
+    storage = storage_model()
+    return await storage.get_linking_session_initial(session_id)
+
+
+async def add_linking_session_initial(linking_session: LinkingSessionInitial) -> None:
+    storage = storage_model()
+    await storage.db.linking_sessions_initial.insert_one(linking_session.model_dump())
+
+
+async def add_linking_session_started(linking_session: LinkingSessionStarted) -> None:
+    storage = storage_model()
+    await storage.db.linking_sessions_started.insert_one(linking_session.model_dump())
+
+
+async def add_linking_session_completed(
+    linking_session: LinkingSessionComplete,
+) -> None:
+    storage = storage_model()
+    await storage.db.linking_sessions_completed.insert_one(linking_session.model_dump())
+
+
 # JSON-RPC
 
 
-def rpc_call(method: str, params: Any, authorization: str) -> Response:
+def rpc_call(method: str, params: Any, authorization: str | None) -> Response:
     client = TestClient(app)
-    rpc = {"jsonrpc": "2.0", "id": "123", "method": method, "params": params}
 
-    response = client.post(
-        "/api/v1", json=rpc, headers={"Authorization": authorization}
-    )
+    if params is None:
+        rpc = {"jsonrpc": "2.0", "id": "123", "method": method}
+    else:
+        rpc = {"jsonrpc": "2.0", "id": "123", "method": method, "params": params}
+
+    headers = {}
+
+    if authorization is not None:
+        headers["Authorization"] = authorization
+
+    response = client.post("/api/v1", json=rpc, headers=headers)
 
     return response
 
@@ -180,3 +214,7 @@ def assert_json_rpc_result_ignore_result(response: Response) -> Any:
     content = response.json()
     assert "result" in content
     return content["result"]
+
+
+async def clear_database():
+    return await storage_model().reset_database()

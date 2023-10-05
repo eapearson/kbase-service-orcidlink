@@ -8,10 +8,9 @@ from test.mocks.mock_contexts import (
     no_stderr,
 )
 from test.mocks.testing_utils import (
-    TOKEN_BAR,
-    TOKEN_FOO,
     assert_json_rpc_error,
     assert_json_rpc_result_ignore_result,
+    generate_kbase_token,
     rpc_call,
 )
 from unittest import mock
@@ -103,7 +102,11 @@ async def test_get_profile(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             await create_link()
-            response = rpc_call("get-orcid-profile", {"username": "foo"}, TOKEN_FOO)
+            response = rpc_call(
+                "get-orcid-profile",
+                {"username": "foo"},
+                generate_kbase_token("amanager"),
+            )
             result = assert_json_rpc_result_ignore_result(response)
             assert result["orcidId"] == "0000-0003-4997-3076"
             # TODO: test something else about the result.
@@ -112,5 +115,9 @@ async def test_get_profile(fake_fs):
 def test_get_profile_not_found(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
-            response = rpc_call("get-orcid-profile", {"username": "bar"}, TOKEN_BAR)
+            response = rpc_call(
+                "get-orcid-profile",
+                {"username": "bar"},
+                generate_kbase_token("amanager"),
+            )
             assert_json_rpc_error(response, 1020, "Not Found")
