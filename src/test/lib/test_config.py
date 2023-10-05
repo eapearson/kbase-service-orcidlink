@@ -7,9 +7,9 @@ from unittest import mock
 import pytest
 
 from orcidlink.lib.config import (
-    Config2,
-    IntConstantDefault,
-    StrConstantDefault,
+    IntEnvironmentVariable,
+    ServiceConfig,
+    StrEnvironmentVariable,
     get_git_info,
     get_service_description,
 )
@@ -57,7 +57,7 @@ def test_get_config():
     Test all config properties with default behavior, if available.
     """
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        config = Config2().runtime_config
+        config = ServiceConfig().runtime_config
         assert config.auth_url == "http://foo/services/auth"
         # assert config.workspace_url == "http://foo/services/ws"
         assert config.orcidlink_url == "http://foo/services/orcidlink"
@@ -92,7 +92,7 @@ def test_get_config_bad_env():
                 "missing and there is no default value"
             ),
         ):
-            Config2()
+            ServiceConfig()
 
 
 # get_int_constant
@@ -100,8 +100,8 @@ def test_get_config_bad_env():
 
 def test_get_int_constant_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = Config2.get_int_constant(
-            IntConstantDefault(
+        value = ServiceConfig.get_int_constant(
+            IntEnvironmentVariable(
                 required=True, env_name="FOO", unit="foo", description="my foo"
             )
         )
@@ -110,8 +110,8 @@ def test_get_int_constant_no_default():
 
 def test_get_int_constant_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = Config2.get_int_constant(
-            IntConstantDefault(
+        value = ServiceConfig.get_int_constant(
+            IntEnvironmentVariable(
                 required=True,
                 env_name="FOO",
                 value=456,
@@ -124,8 +124,8 @@ def test_get_int_constant_with_default():
 
 def test_get_int_constant_missing_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = Config2.get_int_constant(
-            IntConstantDefault(
+        value = ServiceConfig.get_int_constant(
+            IntEnvironmentVariable(
                 required=True,
                 env_name="BAR",
                 value=100,
@@ -145,8 +145,8 @@ def test_get_int_constant_missing_no_default():
                 "default value"
             ),
         ):
-            Config2.get_int_constant(
-                IntConstantDefault(
+            ServiceConfig.get_int_constant(
+                IntEnvironmentVariable(
                     required=True, env_name="BAR", unit="foo", description="my foo"
                 )
             )
@@ -157,16 +157,16 @@ def test_get_int_constant_missing_no_default():
 
 def test_get_str_constant_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = Config2.get_str_constant(
-            StrConstantDefault(required=True, env_name="FOO", description="my foo")
+        value = ServiceConfig.get_str_constant(
+            StrEnvironmentVariable(required=True, env_name="FOO", description="my foo")
         )
         assert value == "123"
 
 
 def test_get_str_constant_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = Config2.get_str_constant(
-            StrConstantDefault(
+        value = ServiceConfig.get_str_constant(
+            StrEnvironmentVariable(
                 required=True, env_name="FOO", value="456", description="my foo"
             )
         )
@@ -175,8 +175,8 @@ def test_get_str_constant_with_default():
 
 def test_get_str_constant_missing_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = Config2.get_str_constant(
-            StrConstantDefault(
+        value = ServiceConfig.get_str_constant(
+            StrEnvironmentVariable(
                 required=True, env_name="BAR", value="baz", description="my bar"
             )
         )
@@ -192,8 +192,10 @@ def test_get_str_constant_missing_no_default():
                 "is no default value"
             ),
         ):
-            Config2.get_str_constant(
-                StrConstantDefault(required=True, env_name="BAR", description="my bar")
+            ServiceConfig.get_str_constant(
+                StrEnvironmentVariable(
+                    required=True, env_name="BAR", description="my bar"
+                )
             )
 
 

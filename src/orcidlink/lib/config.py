@@ -50,7 +50,7 @@ SERVICE_DEFAULTS = ServiceDefaults(
 )
 
 
-class IntConstantDefault(ServiceBaseModel):
+class IntEnvironmentVariable(ServiceBaseModel):
     value: Optional[int] = Field(default=None)
     unit: str = Field(...)
     required: bool = Field(...)
@@ -58,17 +58,17 @@ class IntConstantDefault(ServiceBaseModel):
     description: str = Field(...)
 
 
-class IntConstantDefaults(ServiceBaseModel):
-    token_cache_lifetime: IntConstantDefault = Field(...)
-    token_cache_max_items: IntConstantDefault = Field(...)
-    request_timeout: IntConstantDefault = Field(...)
-    mongo_port: IntConstantDefault = Field(...)
-    linking_session_lifetime: IntConstantDefault = Field(...)
-    orcid_authorization_retirement_age: IntConstantDefault = Field(...)
+class IntEnvironmentVariables(ServiceBaseModel):
+    token_cache_lifetime: IntEnvironmentVariable = Field(...)
+    token_cache_max_items: IntEnvironmentVariable = Field(...)
+    request_timeout: IntEnvironmentVariable = Field(...)
+    mongo_port: IntEnvironmentVariable = Field(...)
+    linking_session_lifetime: IntEnvironmentVariable = Field(...)
+    orcid_authorization_retirement_age: IntEnvironmentVariable = Field(...)
 
 
-INT_CONSTANT_DEFAULTS = IntConstantDefaults(
-    token_cache_lifetime=IntConstantDefault(
+INT_CONSTANT_DEFAULTS = IntEnvironmentVariables(
+    token_cache_lifetime=IntEnvironmentVariable(
         value=300,
         unit="second",
         required=True,
@@ -78,7 +78,7 @@ INT_CONSTANT_DEFAULTS = IntConstantDefaults(
             "may be cached."
         ),
     ),
-    token_cache_max_items=IntConstantDefault(
+    token_cache_max_items=IntEnvironmentVariable(
         value=20000,
         unit="items",
         required=True,
@@ -88,24 +88,24 @@ INT_CONSTANT_DEFAULTS = IntConstantDefaults(
             "The caching strategy determines behavior when the cache is full."
         ),
     ),
-    request_timeout=IntConstantDefault(
+    request_timeout=IntEnvironmentVariable(
         value=60,
         unit="second",
         required=True,
         env_name="REQUEST_TIMEOUT",
         description=(""),
     ),
-    mongo_port=IntConstantDefault(
+    mongo_port=IntEnvironmentVariable(
         required=True, unit="port", env_name="MONGO_PORT", description=("")
     ),
-    linking_session_lifetime=IntConstantDefault(
+    linking_session_lifetime=IntEnvironmentVariable(
         required=True,
         env_name="LINKING_SESSION_LIFETIME",
         value=600,
         unit="second",
         description=(""),
     ),
-    orcid_authorization_retirement_age=IntConstantDefault(
+    orcid_authorization_retirement_age=IntEnvironmentVariable(
         required=True,
         env_name="ORCID_AUTHORIZATION_RETIREMENT_AGE",
         value=1_209_600,
@@ -118,73 +118,73 @@ INT_CONSTANT_DEFAULTS = IntConstantDefaults(
 # String constants
 
 
-class StrConstantDefault(ServiceBaseModel):
+class StrEnvironmentVariable(ServiceBaseModel):
     value: Optional[str] = Field(default=None)
     required: bool = Field(...)
     env_name: str = Field(...)
     description: str = Field(...)
 
 
-class StrConstantDefaults(ServiceBaseModel):
-    service_directory: StrConstantDefault = Field(...)
-    kbase_endpoint: StrConstantDefault = Field(...)
-    orcid_api_base_url: StrConstantDefault = Field(...)
-    orcid_oauth_base_url: StrConstantDefault = Field(...)
-    orcid_client_id: StrConstantDefault = Field(...)
-    orcid_client_secret: StrConstantDefault = Field(...)
-    orcid_link_manager_role: StrConstantDefault = Field(...)
-    mongo_host: StrConstantDefault = Field(...)
-    mongo_database: StrConstantDefault = Field(...)
-    mongo_username: StrConstantDefault = Field(...)
-    mongo_password: StrConstantDefault = Field(...)
-    orcid_scopes: StrConstantDefault = Field(...)
-    log_level: StrConstantDefault = Field(...)
+class StrEnvironmentVariables(ServiceBaseModel):
+    service_directory: StrEnvironmentVariable = Field(...)
+    kbase_endpoint: StrEnvironmentVariable = Field(...)
+    orcid_api_base_url: StrEnvironmentVariable = Field(...)
+    orcid_oauth_base_url: StrEnvironmentVariable = Field(...)
+    orcid_client_id: StrEnvironmentVariable = Field(...)
+    orcid_client_secret: StrEnvironmentVariable = Field(...)
+    orcid_link_manager_role: StrEnvironmentVariable = Field(...)
+    mongo_host: StrEnvironmentVariable = Field(...)
+    mongo_database: StrEnvironmentVariable = Field(...)
+    mongo_username: StrEnvironmentVariable = Field(...)
+    mongo_password: StrEnvironmentVariable = Field(...)
+    orcid_scopes: StrEnvironmentVariable = Field(...)
+    log_level: StrEnvironmentVariable = Field(...)
 
 
-STR_CONSTANT_DEFAULTS = StrConstantDefaults(
-    service_directory=StrConstantDefault(
+STR_CONSTANT_DEFAULTS = StrEnvironmentVariables(
+    service_directory=StrEnvironmentVariable(
         required=True, env_name="SERVICE_DIRECTORY", description=("")
     ),
-    kbase_endpoint=StrConstantDefault(
+    kbase_endpoint=StrEnvironmentVariable(
         required=True, env_name="KBASE_ENDPOINT", description=("")
     ),
-    orcid_api_base_url=StrConstantDefault(
+    orcid_api_base_url=StrEnvironmentVariable(
         required=True, env_name="ORCID_API_BASE_URL", description=("")
     ),
-    orcid_oauth_base_url=StrConstantDefault(
+    orcid_oauth_base_url=StrEnvironmentVariable(
         required=True, env_name="ORCID_OAUTH_BASE_URL", description=("")
     ),
-    orcid_client_id=StrConstantDefault(
+    orcid_client_id=StrEnvironmentVariable(
         required=True, env_name="ORCID_CLIENT_ID", description=("")
     ),
-    orcid_client_secret=StrConstantDefault(
+    orcid_client_secret=StrEnvironmentVariable(
         required=True, env_name="ORCID_CLIENT_SECRET", description=("")
     ),
-    orcid_scopes=StrConstantDefault(
+    orcid_scopes=StrEnvironmentVariable(
         required=True,
         env_name="ORCID_SCOPES",
         value="/read-limited /activities/update",
         description=(""),
     ),
-    orcid_link_manager_role=StrConstantDefault(
+    orcid_link_manager_role=StrEnvironmentVariable(
         required=True,
         env_name="ORCID_LINK_MANAGER_ROLE",
         value="orcidlink_admin",
         description=(""),
     ),
-    mongo_host=StrConstantDefault(
+    mongo_host=StrEnvironmentVariable(
         required=True, env_name="MONGO_HOST", description=("")
     ),
-    mongo_database=StrConstantDefault(
+    mongo_database=StrEnvironmentVariable(
         required=True, env_name="MONGO_DATABASE", description=("")
     ),
-    mongo_username=StrConstantDefault(
+    mongo_username=StrEnvironmentVariable(
         required=True, env_name="MONGO_USERNAME", description=("")
     ),
-    mongo_password=StrConstantDefault(
+    mongo_password=StrEnvironmentVariable(
         required=True, env_name="MONGO_PASSWORD", description=("")
     ),
-    log_level=StrConstantDefault(
+    log_level=StrEnvironmentVariable(
         required=True, env_name="LOG_LEVEL", value="INFO", description=("")
     ),
 )
@@ -219,7 +219,7 @@ class RuntimeConfig(ServiceBaseModel):
     orcidlink_url: str = Field(...)
 
 
-class Config2:
+class ServiceConfig:
     kbase_endpoint: str
     runtime_config: RuntimeConfig
 
@@ -281,7 +281,7 @@ class Config2:
     # Integer constants
 
     @staticmethod
-    def get_int_constant(constant_default: IntConstantDefault) -> int:
+    def get_int_constant(constant_default: IntEnvironmentVariable) -> int:
         value = os.environ.get(constant_default.env_name)
 
         if value is not None:
@@ -297,7 +297,7 @@ class Config2:
 
     # String constants
     @staticmethod
-    def get_str_constant(constant_default: StrConstantDefault) -> str:
+    def get_str_constant(constant_default: StrEnvironmentVariable) -> str:
         value = os.environ.get(constant_default.env_name)
 
         if value is not None:
@@ -330,7 +330,7 @@ class Config2:
 
 def get_service_description() -> ServiceDescription:
     file_path = os.path.join(
-        Config2().runtime_config.service_directory, "SERVICE_DESCRIPTION.toml"
+        ServiceConfig().runtime_config.service_directory, "SERVICE_DESCRIPTION.toml"
     )
     with open(file_path, "rb") as file:
         return ServiceDescription.model_validate(tomllib.load(file))
@@ -338,7 +338,7 @@ def get_service_description() -> ServiceDescription:
 
 def get_git_info() -> GitInfo:
     path = os.path.join(
-        Config2().runtime_config.service_directory, "build/git-info.json"
+        ServiceConfig().runtime_config.service_directory, "build/git-info.json"
     )
     with open(path, "rb") as fin:
         return GitInfo.model_validate(json.load(fin))

@@ -2,7 +2,7 @@
 
 Configuration of the service is through environment variables. All configuration loading and validation is located in the module `orcidlink.lib.config`. 
 
-The `Config2` class loads all expected environment variables and raises errors if any or missing or invalid. This class itself is loaded by the `main` service entry point module, simply to force any errors to occur as the service is starting, not during operation.
+The `ServiceConfig` class loads all expected environment variables and raises errors if any or missing or invalid. This class itself is loaded by the `main` service entry point module, simply to force any errors to occur as the service is starting, not during operation.
 
 All service code accesses configuration via the `orcidlink.runtime.config` function. This function will create the configuration object the first time it is run, and will use the previously created object after this.
 

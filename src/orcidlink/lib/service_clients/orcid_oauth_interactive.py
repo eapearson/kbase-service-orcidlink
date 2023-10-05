@@ -6,11 +6,7 @@ from multidict import CIMultiDict
 from pydantic import Field
 
 from orcidlink import model
-from orcidlink.jsonrpc.errors import (
-    ContentTypeError,
-    JSONDecodeError,
-    UpstreamError,
-)
+from orcidlink.jsonrpc.errors import ContentTypeError, JSONDecodeError, UpstreamError
 from orcidlink.lib.responses import UIError
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.runtime import config

@@ -4,7 +4,7 @@
 
 import os
 
-from orcidlink.lib.config import Config2, RuntimeConfig
+from orcidlink.lib.config import RuntimeConfig, ServiceConfig
 from orcidlink.lib.utils import posix_time_millis
 
 CONFIG: RuntimeConfig | None = None
@@ -23,7 +23,7 @@ STATS: RuntimeStats | None = None
 def config() -> RuntimeConfig:
     global CONFIG
     if CONFIG is None:
-        CONFIG = Config2().runtime_config
+        CONFIG = ServiceConfig().runtime_config
     return CONFIG
 
 

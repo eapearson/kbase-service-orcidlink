@@ -3,11 +3,7 @@ from typing import Optional
 from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
 from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
 from orcidlink.lib.utils import posix_time_millis
-from orcidlink.model import (
-    LinkingSessionInitial,
-    LinkingSessionStarted,
-    LinkRecord,
-)
+from orcidlink.model import LinkingSessionInitial, LinkingSessionStarted, LinkRecord
 from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 

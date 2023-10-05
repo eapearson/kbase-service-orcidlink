@@ -12,7 +12,6 @@ from typing import (
     Union,
 )
 
-# import httpx
 import aiohttp
 from asgi_correlation_id import correlation_id
 from multidict import CIMultiDict
