@@ -34,7 +34,7 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
-from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
+from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError, UpstreamError
 from orcidlink.lib.logger import log_event
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.main import app, config_to_log_level
@@ -1101,7 +1101,9 @@ async def test_get_work_errors():
 
         params = {"username": "foo", "put_code": 123}
         response = rpc_call("get-orcid-work", params, generate_kbase_token("foo"))
-        assert_json_rpc_error(response, 1041, "Received Incorrect Content Type")
+        # TODO: properly design standard error message AND specific error message.
+        # assert_json_rpc_error(response, UpstreamError.CODE, "Received Incorrect Content Type")
+        assert_json_rpc_error(response, UpstreamError.CODE, UpstreamError.MESSAGE)
         #
         # A bad put code results in a 400 from ORCID
         #

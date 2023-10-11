@@ -3,7 +3,6 @@ from typing import Any, Dict
 
 import aiohttp
 from multidict import CIMultiDict
-from pydantic import Field
 
 from orcidlink import model
 from orcidlink.jsonrpc.errors import (
@@ -12,18 +11,15 @@ from orcidlink.jsonrpc.errors import (
     NotAuthorizedError,
     UpstreamError,
 )
-from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.service_clients.orcid_api_errors import OAuthError
 from orcidlink.runtime import config
-
-
-class ORCIDOAuthError(ServiceBaseModel):
-    error: str = Field(...)
-    error_description: str = Field(...)
 
 
 class ORCIDOAuthClient:
     """
-    An OAuth client supporting various operations.
+    An OAuth client supporting API operations.
+
+    For interactive endpoints which support 3-legged OAuth flow, see "orcid_oauth_interactive.py"
     """
 
     url: str
@@ -35,6 +31,13 @@ class ORCIDOAuthClient:
         return f"{self.base_url}/{path}"
 
     def header(self) -> CIMultiDict[str]:
+        """
+        Form the common header for OAuth API calls.
+
+        Note that the API returns JSON (as "application/json"), but accepts data as html
+        form encoding ("application/x-www-form-urlencoded"). This is a requirement of
+        the OAUth 2.0 3-legged flow.
+        """
         return CIMultiDict(
             [
                 ("Accept", "application/json"),
@@ -83,13 +86,13 @@ class ORCIDOAuthClient:
             return json_response
         else:
             if "error" in json_response:
-                return ORCIDOAuthError.model_validate(json_response)
+                return OAuthError.model_validate(json_response)
             else:
                 raise UpstreamError("Unexpected Error Response from ORCID")
 
     async def handle_empty_response(
         self, response: aiohttp.ClientResponse
-    ) -> None | ORCIDOAuthError:
+    ) -> None | OAuthError:
         """
         Given a response from the ORCID OAuth service, as an aiohttp
         response object, extract and return JSON from the body, handling
@@ -128,7 +131,7 @@ class ORCIDOAuthClient:
             ) from jde
 
         if "error" in json_response:
-            return ORCIDOAuthError.model_validate(json_response)
+            return OAuthError.model_validate(json_response)
         else:
             raise UpstreamError("Unexpected Error Response from ORCID")
 
@@ -202,7 +205,7 @@ class ORCIDOAuthClient:
             ) as response:
                 json_response = await self.handle_json_response(response)
 
-                if isinstance(json_response, ORCIDOAuthError):
+                if isinstance(json_response, OAuthError):
                     # This is returned when the main token set (access token, etc.) is
                     # no longer valid,
                     if json_response.error == "unauthorized_client":

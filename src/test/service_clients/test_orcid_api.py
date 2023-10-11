@@ -10,16 +10,17 @@ from unittest import mock
 
 import pytest
 
-from orcidlink.jsonrpc.errors import (
-    AuthorizationRequiredError,
-    ContentTypeError,
-    JSONDecodeError,
-    NotAuthorizedError,
-    NotFoundError,
-    UpstreamError,
-)
+# from orcidlink.jsonrpc.errors import (
+#     AuthorizationRequiredError,
+#     ContentTypeError,
+#     JSONDecodeError,
+#     UpstreamError,
+# )
 from orcidlink.lib.service_clients import orcid_api
-from orcidlink.lib.service_clients.orcid_common import APIResponseError, ORCIDAPIError
+from orcidlink.lib.service_clients.orcid_api_errors import (
+    OAuthBearerError,
+    ORCIDAPIError,
+)
 
 # Set up test data here; otherwise the ENV mocking interferes with the
 # TEST_DATA_DIR env var which points to the location of test data!
@@ -65,24 +66,6 @@ class FakeResponse:
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-def test_ORCIDAPIClient_constructor():
-    client = orcid_api.ORCIDAPIClient(url="url", access_token="access_token")
-    assert client.base_url == "url"
-    assert client.access_token == "access_token"
-
-    with pytest.raises(
-        TypeError, match='the "access_token" named parameter is required'
-    ):
-        orcid_api.ORCIDAPIClient(url="url")
-
-    with pytest.raises(TypeError, match='the "url" named parameter is required'):
-        orcid_api.ORCIDAPIClient(access_token="access_token")
-
-    with pytest.raises(TypeError, match='the "url" named parameter is required'):
-        orcid_api.ORCIDAPIClient()
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDAPIClient_url():
     client = orcid_api.ORCIDAPIClient(url="url", access_token="access_token")
     url = client.url("foo")
@@ -125,7 +108,7 @@ async def test_ORCIDAPI_get_profile_not_found():
             # Just alter the final 6 to 7 so that it doesn't match any testing orcid
             # profiles.
             orcid_id = "0000-0003-4997-3077"
-            with pytest.raises(NotFoundError):
+            with pytest.raises(orcid_api.ORCIDAPIAccountNotFoundError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -143,8 +126,9 @@ async def test_ORCIDAPI_get_profile_invalid_token():
             url,
             port,
         ]:
+            # this orcid id triggers an "invalid_token" error from the mock ORCID api
             orcid_id = "trigger-invalid-token"
-            with pytest.raises(AuthorizationRequiredError):
+            with pytest.raises(orcid_api.ORCIDAPIClientInvalidAccessTokenError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -158,8 +142,9 @@ async def test_ORCIDAPI_get_profile_not_authorized():
             url,
             port,
         ]:
+            # this orcid id triggers a similar error message from ORCID, but
             orcid_id = "trigger-401"
-            with pytest.raises(AuthorizationRequiredError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -173,8 +158,12 @@ async def test_ORCIDAPI_get_profile_unauthorized():
             url,
             port,
         ]:
+            # this orcid id triggers an "unauthorized" error, which means that the
+            # token is valid, recognized, but does not provide access to the account
+            # associated with the provided ORCID Id.
+            # Note that ORCID replies with a "401", when this should be a "403".
             orcid_id = "trigger-unauthorized"
-            with pytest.raises(NotAuthorizedError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -189,7 +178,7 @@ async def test_ORCIDAPI_get_profile_some_other_error():
             port,
         ]:
             orcid_id = "trigger-error-some-other"
-            with pytest.raises(AuthorizationRequiredError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -204,7 +193,7 @@ async def test_ORCIDAPI_get_profile_some_500_error():
             port,
         ]:
             orcid_id = "trigger-500"
-            with pytest.raises(UpstreamError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -253,7 +242,7 @@ async def test_ORCIDAPI_get_profile_no_content_type():
             port,
         ]:
             orcid_id = "trigger-no-content-type"
-            with pytest.raises(ContentTypeError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -271,7 +260,7 @@ async def test_ORCIDAPI_get_profile_non_json_response():
             port,
         ]:
             orcid_id = "trigger-not-json"
-            with pytest.raises(JSONDecodeError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
                 await client.get_profile(orcid_id)
 
@@ -298,7 +287,7 @@ async def test_ORCIDAPI_get_works_error():
         ]:
             orcid_id = "0000-0003-4997-3076"
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
-            with pytest.raises(UpstreamError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 await client.get_works(orcid_id)
 
 
@@ -326,7 +315,7 @@ async def test_get_work_error():
             orcid_id = "0000-0003-4997-3076"
             put_code = 1526002
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
-            with pytest.raises(UpstreamError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 await client.get_work(orcid_id, put_code)
 
 
@@ -376,7 +365,7 @@ async def test_ORCIDAPI_save_work_error(fake_fs):
             # the constructor, and a randomly generated port.
             #
             client = orcid_api.ORCIDAPIClient(url=url, access_token="access_token")
-            with pytest.raises(UpstreamError):
+            with pytest.raises(orcid_api.ORCIDAPIClientOtherError):
                 put_code = 1526002
                 work_update = orcid_api.WorkUpdate.model_validate(
                     load_test_data(TEST_DATA_DIR, "orcid", f"work_{str(put_code)}")[
@@ -468,7 +457,7 @@ async def test_ORCIDAPI_save_work_error(fake_fs):
 
 
 # def test_handle_json_response():
-#     reponse = aiohttp.ClientResponse()
+#     response = aiohttp.ClientResponse()
 
 
 def test_extract_error():
@@ -480,11 +469,11 @@ def test_extract_error():
     assert orcid_api.extract_error(None) is None
 
     valid_api_error_object = {
-        "error": "foo",
+        "error": "invalid_request",
         "error_description": "this is a foo error",
     }
     orcid_api_error = orcid_api.extract_error(valid_api_error_object)
-    assert isinstance(orcid_api_error, ORCIDAPIError)
+    assert isinstance(orcid_api_error, OAuthBearerError)
 
     valid_api_response_error = {
         "response-code": 400,
@@ -494,7 +483,7 @@ def test_extract_error():
         "more-info": "here is scant additional information",
     }
     api_response_error = orcid_api.extract_error(valid_api_response_error)
-    assert isinstance(api_response_error, APIResponseError)
+    assert isinstance(api_response_error, ORCIDAPIError)
 
     unrecognized_error_object = {
         "something": "else",

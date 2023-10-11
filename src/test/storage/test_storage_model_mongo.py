@@ -249,7 +249,7 @@ async def test_get_linking_session_started_not_found():
     sm = storage_model()
     await sm.reset_database()
 
-    record = await sm.get_linking_session_started("foo-sesssion")
+    record = await sm.get_linking_session_started("foo-session")
     assert record is None
 
 
@@ -600,7 +600,7 @@ async def test_delete_expired_sessions():
     assert stats.links.last_7_days == 0
     assert stats.links.last_30_days == 0
 
-    await sm.delete_expired_sesssions()
+    await sm.delete_expired_sessions()
     stats = await sm.get_stats()
     assert stats.linking_sessions_initial.expired == 0
     assert stats.linking_sessions_started.expired == 0

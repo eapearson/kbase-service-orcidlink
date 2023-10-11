@@ -147,7 +147,7 @@ class StorageModelMongo:
         # sessions.
         await self.db.linking_sessions_completed.delete_one({"session_id": session_id})
 
-    # async def delete_expired_sesssionsx(self) -> None:
+    # async def delete_expired_sessionsx(self) -> None:
     #     now = posix_time_millis()
 
     #     # For now, we fetch the docs, then delete them.
@@ -177,7 +177,7 @@ class StorageModelMongo:
     #             {"session_id": {"$eq": session.get("session_id")}}
     #         )
 
-    async def delete_expired_sesssions(self) -> None:
+    async def delete_expired_sessions(self) -> None:
         now = posix_time_millis()
 
         await self.db.linking_sessions_initial.delete_many(

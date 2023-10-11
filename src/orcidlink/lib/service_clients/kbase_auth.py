@@ -8,19 +8,11 @@ import json
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from fastapi_jsonrpc import BaseError
 from pydantic import Field
 
 from orcidlink.jsonrpc import errors
 from orcidlink.lib.responses import UIError
 from orcidlink.lib.type import ServiceBaseModel
-
-# from orcidlink.jsonrpc.errors import (
-#     AuthorizationRequiredError,
-#     ContentTypeError,
-#     JSONDecodeError,
-#     UpstreamError,
-# )
 
 #
 # Auth Exceptions
@@ -103,7 +95,11 @@ class AccountInfo(ServiceBaseModel):
 
 class KBaseAuth(object):
     """
-    A very basic KBase auth client for the Python server.
+    A basic KBase auth client which only implements methods utilized by this service.
+
+    Note that this is not a caching client. The primary task of auth in the service
+    is to validate a token, and to obtain the username and roles for the user who owns
+    the token.
     """
 
     def __init__(
@@ -126,13 +122,14 @@ class KBaseAuth(object):
         agnostic about the structure of the response.
 
         It raises several errors, under the following conditions:
-        exceptions.ContentTypeError - if the wrong content type (not application/json)
+
+        - ContentTypeError - if the wrong content type (not application/json)
           is returned (raised by aiohttp)
-        exceptions.JSONDecodeError - if the response does not parse correctly as
+        - JSONDecodeError - if the response does not parse correctly as
           JSON (raised by aiohttp)
-        exceptions.ServiceErrorY (401 - auth required) - if the error returned by the
-          auth service is 10020 (invalid token
-        exceptions.UpstreamError - for any other error reported by the auth service
+        - AuthorizationRequiredAuthError - if the error returned by the
+          auth service is 10020 (invalid token),
+        - OtherAuthError - for any other error reported by the auth service
         """
         try:
             async with aiohttp.ClientSession() as session:
@@ -178,6 +175,9 @@ class KBaseAuth(object):
         """
         Fetches token information from the auth service and returns it in a
         Pydantic class matching the original structure.
+
+        Other than errors thrown by _get, it may throw a ValidationError if the data
+        returned from the auth service is not compliant with the TokenInfo type
         """
         json_result = await self._get("token", token)
 
@@ -187,6 +187,9 @@ class KBaseAuth(object):
         """
         Fetches user account information from the auth service and returns it in a
         Pydantic class matching the original structure.
+
+        Other than errors thrown by _get, it may throw a ValidationError if the data
+        returned from the auth service is not compliant with the AccountINfo type
         """
         if token == "":
             raise AuthorizationRequiredAuthError("Token may not be empty")
@@ -199,7 +202,13 @@ class KBaseAuth(object):
         return AccountInfo.model_validate(json_result)
 
 
-def auth_error_to_jsonrpc_error(error: AuthError) -> BaseError:
+def auth_error_to_jsonrpc_error(error: AuthError) -> errors.JSONRPCError:
+    """
+    An adapter for an AuthError, as defined in this module, to a JSONPRCError.
+
+    Designed to be used in JSONRPC methods to so that auth errors may propagate
+    naturally in that context.
+    """
     if isinstance(error, AuthorizationRequiredAuthError):
         return errors.AuthorizationRequiredError(error.message)
     elif isinstance(error, ContentTypeAuthError):
@@ -213,6 +222,15 @@ def auth_error_to_jsonrpc_error(error: AuthError) -> BaseError:
 
 
 def auth_error_to_ui_error(error: AuthError) -> UIError:
+    """
+    An adapter for an AuthError, as defined in this module, to a UIError.
+
+    Designed to be used in JSONRPC methods to so that auth errors may propagate
+    naturally in that context.
+
+    Note that the auth error -> jsonrpc error transformation is applied first, as the
+    same code and message are sent as ui errors.
+    """
     json_rpc_error = auth_error_to_jsonrpc_error(error)
     # Weird that the BaseError from jsonrpc-fastapi has code as optional;
     # imo it should be required, as the spec requires it

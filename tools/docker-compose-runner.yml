@@ -15,6 +15,7 @@ services:
       - KBASE_ENDPOINT
       - ORCID_API_BASE_URL
       - ORCID_OAUTH_BASE_URL
+      - ORCID_SITE_BASE_URL
       - ORCID_CLIENT_ID
       - ORCID_CLIENT_SECRET
       - MONGO_HOST

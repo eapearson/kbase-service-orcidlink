@@ -1,5 +1,5 @@
 from orcidlink import process
-from orcidlink.jsonrpc.errors import NotFoundError
+from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError, UpstreamError
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.model import ORCIDProfile
 from orcidlink.translators import to_service
@@ -17,9 +17,14 @@ async def get_profile(username: str) -> ORCIDProfile:
     #
     # Get the user's profile from ORCID
     #
-
-    # TODO: what if the profile is not found?
-    profile_json = await orcid_api.orcid_api(access_token).get_profile(orcid_id)
+    try:
+        profile_json = await orcid_api.orcid_api(access_token).get_profile(orcid_id)
+    except orcid_api.ORCIDAPIAccountNotFoundError as err:
+        raise NotFoundError(err.message)
+    except orcid_api.ORCIDAPIClientInvalidAccessTokenError as err:
+        raise NotAuthorizedError(err.message)
+    except orcid_api.ORCIDAPIClientOtherError as err:
+        raise UpstreamError(err.message)
 
     profile = to_service.orcid_profile(profile_json)
 

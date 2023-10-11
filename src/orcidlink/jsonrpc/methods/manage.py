@@ -219,7 +219,7 @@ async def delete_expired_linking_sessions() -> None:
         )
 
     # TODO: rectify with the above.
-    await model.delete_expired_sesssions()
+    await model.delete_expired_sessions()
 
 
 async def delete_linking_session_initial(session_id: str) -> None:

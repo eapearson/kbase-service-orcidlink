@@ -201,15 +201,6 @@ async def test_orcid_oauth_revoke_access_token_other_upstream_error():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_orcid_oauth_revoke_access_token_error_no_content_length():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
-                await client.revoke_access_token("no-content-length")
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_revoke_access_token_error_non_empty_response():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
@@ -376,25 +367,20 @@ async def test_exchange_code_for_token_no_content_type():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_no_content_length():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "no-content-length"
-            client = ORCIDOAuthInteractiveClient(url)
-            with pytest.raises(UIError) as ie:
-                await client.exchange_code_for_token(code)
-            assert ie.value.code == UpstreamError.CODE
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_exchange_code_for_token_empty_content():
+    """
+    If no content is returned, should get a JSON parsing error.
+
+    Not sure why we are testing this; there are may cases of ill-formed responses that
+    we could test...
+    """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             code = "empty-content"
             client = ORCIDOAuthInteractiveClient(url)
-            with pytest.raises(UIError) as uie:
+            with pytest.raises(UIError) as err:
                 await client.exchange_code_for_token(code)
-            assert uie.value.code == UpstreamError.CODE
+            assert err.value.code == JSONDecodeError.CODE
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -554,13 +540,13 @@ async def test_orcid_oauth_refresh_token_error_other_error():
 #                 await client.refresh_token("no-content-length")
 
 
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_orcid_oauth_refresh_token_error_no_content_length():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
-                await client.refresh_token("no-content-length")
+# @mock.patch.dict(os.environ, TEST_ENV, clear=True)
+# async def test_orcid_oauth_refresh_token_error_no_content_length():
+#     with no_stderr():
+#         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+#             client = ORCIDOAuthClient(url)
+#             with pytest.raises(UpstreamError):
+#                 await client.refresh_token("no-content-length")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)

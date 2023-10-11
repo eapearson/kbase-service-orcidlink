@@ -121,6 +121,7 @@ function dev-server {
   export KBASE_ENDPOINT=https://ci.kbase.us/services/
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
   export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://sandbox.orcid.org
   export ORCID_CLIENT_ID=${ORCID_CLIENT_ID:?Required environment variable 'ORCID_CLIENT_ID' not provided}
   export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
   export MONGO_HOST=mongo
@@ -135,6 +136,7 @@ function server {
   export KBASE_ENDPOINT=https://ci.kbase.us/services/
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
   export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://orcid.org
   export ORCID_CLIENT_ID=${ORCID_CLIENT_ID:?Required environment variable 'ORCID_CLIENT_ID' not provided}
   export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
   export MONGO_HOST=mongo

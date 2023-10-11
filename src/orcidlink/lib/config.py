@@ -130,6 +130,7 @@ class StrEnvironmentVariables(ServiceBaseModel):
     kbase_endpoint: StrEnvironmentVariable = Field(...)
     orcid_api_base_url: StrEnvironmentVariable = Field(...)
     orcid_oauth_base_url: StrEnvironmentVariable = Field(...)
+    orcid_site_base_url: StrEnvironmentVariable = Field(...)
     orcid_client_id: StrEnvironmentVariable = Field(...)
     orcid_client_secret: StrEnvironmentVariable = Field(...)
     orcid_link_manager_role: StrEnvironmentVariable = Field(...)
@@ -153,6 +154,9 @@ STR_CONSTANT_DEFAULTS = StrEnvironmentVariables(
     ),
     orcid_oauth_base_url=StrEnvironmentVariable(
         required=True, env_name="ORCID_OAUTH_BASE_URL", description=("")
+    ),
+    orcid_site_base_url=StrEnvironmentVariable(
+        required=True, env_name="ORCID_SITE_BASE_URL", description=("")
     ),
     orcid_client_id=StrEnvironmentVariable(
         required=True, env_name="ORCID_CLIENT_ID", description=("")
@@ -200,6 +204,7 @@ class RuntimeConfig(ServiceBaseModel):
 
     orcid_api_base_url: str = Field(...)
     orcid_oauth_base_url: str = Field(...)
+    orcid_site_base_url: str = Field(...)
     orcid_client_id: str = Field(...)
     orcid_client_secret: str = Field(...)
     orcid_scopes: str = Field(...)
@@ -250,6 +255,9 @@ class ServiceConfig:
             ),
             orcid_oauth_base_url=self.get_str_constant(
                 STR_CONSTANT_DEFAULTS.orcid_oauth_base_url
+            ),
+            orcid_site_base_url=self.get_str_constant(
+                STR_CONSTANT_DEFAULTS.orcid_site_base_url
             ),
             orcid_client_id=self.get_str_constant(
                 STR_CONSTANT_DEFAULTS.orcid_client_id

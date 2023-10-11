@@ -250,14 +250,10 @@ class MockORCIDOAuth(MockService):
 
             elif token == ["other_error_access_token"]:
                 error = {
-                    "error": "some_other_error",
+                    "error": "invalid_scope",
                     "error_description": "a description of the error",
                 }
                 self.send_json_error(error, 400, "application/json")
-
-            elif token == ["no-content-length"]:
-                # We need to have a content length to get past that check
-                self.send(200, {}, None)
 
             elif token == ["non-empty-response"]:
                 # The response is expected to be 200 and empty, so this triggers
@@ -329,14 +325,10 @@ class MockORCIDOAuth(MockService):
 
                 elif data["refresh_token"] == ["refresh-token-other-error"]:
                     error = {
-                        "error": "some_other_error",
+                        "error": "invalid_request",
                         "error_description": "a description of the error",
                     }
                     self.send_json_error(error, 400, "application/json")
-
-                elif data["refresh_token"] == ["no-content-length"]:
-                    # We need to have a content length to get past that check
-                    self.send(200, {}, None)
 
                 elif data["refresh_token"] == ["empty-content"]:
                     # We need to have a content length to get past that check
@@ -386,7 +378,11 @@ class MockORCIDOAuth(MockService):
                     self.send(200, {}, None)
                 elif data["code"] == ["empty-content"]:
                     # We need to have a content length to get past that check
-                    self.send(200, {"Content-Length": 0}, None)
+                    self.send(
+                        200,
+                        {"Content-Length": 0, "Content-Type": "application/json"},
+                        None,
+                    )
                 elif data["code"] == ["no-content-type"]:
                     # We need to have a content length to get past that check
                     self.send(200, {"Content-Length": 10}, None)
@@ -398,7 +394,7 @@ class MockORCIDOAuth(MockService):
                     self.send_json_error({"foo": "bar"}, 400, "application/json")
                 elif data["code"] == ["error-correct-error-format"]:
                     error = {
-                        "error": "some error",
+                        "error": "invalid_request",
                         "error_description": "a description of some error",
                     }
                     self.send_json_error(error, 400, "application/json")
@@ -406,7 +402,7 @@ class MockORCIDOAuth(MockService):
                     self.send_json_text("foo", "application/json")
                 elif data["code"] == ["internal-error-500"]:
                     error = {
-                        "error": "some error",
+                        "error": "invalid_request",
                         "error_description": "a description of some error",
                     }
                     self.send_json_error(error, 500, "application/json")

@@ -13,26 +13,10 @@ class ORCIDStringValue(ServiceBaseModel):
     value: str = Field(...)
 
 
-# This is the usual error response for 4xx
-class APIResponseError(ServiceBaseModel):
-    response_code: int = Field(
-        validation_alias="response-code", serialization_alias="response-code"
-    )
-    developer_message: str = Field(
-        validation_alias="developer-message", serialization_alias="developer-message"
-    )
-    user_message: str = Field(
-        validation_alias="user-message", serialization_alias="user-message"
-    )
-    error_code: int = Field(
-        validation_alias="error-code", serialization_alias="error-code"
-    )
-    more_info: str = Field(
-        validation_alias="more-info", serialization_alias="more-info"
-    )
-
-
-# This is the usual error response for 500
+#
+# This is the usual error response for 500; I don't remember how this was
+# triggered!
+#
 class APIResponseInternalServerError(ServiceBaseModel):
     message_version: str = Field(
         validation_alias="message-version", serialization_alias="message-version"
@@ -62,14 +46,9 @@ class APIResponseUnauthorized(ServiceBaseModel):
     )
 
 
-# Please list here cases in which this is returned:
-# /ORCID/record with bad token
-# /ORCID/record with revoked trusted party access
-
-
-class ORCIDAPIError(ServiceBaseModel):
-    error: str = Field(...)
-    error_description: str = Field(...)
+#
+# INVESTIGATE
+#
 
 
 class APIResponseUnknownError(ServiceBaseModel):

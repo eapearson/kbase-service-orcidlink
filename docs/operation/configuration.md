@@ -25,6 +25,7 @@ All environment variables utilized are required. Several have defaults, however,
 | MONGO_PASSWORD | str | n/a | The password associated with the MONGO_USERNAME | secret_password |
 | ORCID_API_BASE_URL | str | n/a | The base url to use for calls to the ORCID API | https://api.sandbox.orcid.org/v3.0 |
 | ORCID_OAUTH_BASE_URL | str | n/a | The base url to use for calls to the ORCID OAuth API | https://sandbox.orcid.org/oauth |
+| ORCID_SITE_BASE_URL | str | n/a | The base url to use for Links to the ORCID site | https://sandbox.orcid.org |
 | ORCID_CLIENT_ID | str | n/a | The "client id" assigned by ORCID to  KBase for using with ORCID APIs | |
 | ORCID_CLIENT_SECRET | str | n/a | The "client secret" assigned by ORCID to KBase for using with ORCID APIs | |
 

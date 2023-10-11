@@ -38,6 +38,7 @@ TEST_ENV = {
     "SERVICE_DIRECTORY": os.environ.get("SERVICE_DIRECTORY"),
     "ORCID_API_BASE_URL": "http://orcidapi",
     "ORCID_OAUTH_BASE_URL": "http://orcidoauth",
+    "ORCID_SITE_BASE_URL": "https://sandbox.orcid.org",
     "ORCID_CLIENT_ID": "CLIENT-ID",
     "ORCID_CLIENT_SECRET": "CLIENT-SECRET",
     "MONGO_HOST": "MONGO-HOST",

@@ -3,18 +3,12 @@ from typing import Any, Dict
 
 import aiohttp
 from multidict import CIMultiDict
-from pydantic import Field
 
 from orcidlink import model
 from orcidlink.jsonrpc.errors import ContentTypeError, JSONDecodeError, UpstreamError
 from orcidlink.lib.responses import UIError
-from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.lib.service_clients.orcid_api_errors import OAuthError
 from orcidlink.runtime import config
-
-
-class ORCIDOAuthError(ServiceBaseModel):
-    error: str = Field(...)
-    error_description: str = Field(...)
 
 
 class ORCIDOAuthInteractiveClient:
@@ -47,15 +41,15 @@ class ORCIDOAuthInteractiveClient:
         response object, extract and return JSON from the body, handling
         any erroneous conditions.
         """
-        content_length_raw = response.headers.get("Content-Length")
-        if content_length_raw is None:
-            raise UIError(UpstreamError.CODE, "No content length in response")
-        content_length = int(content_length_raw)
-        if content_length == 0:
-            # We don't have any cases of an empty response, so consider
-            # this an error. We need to cover this case, even though we
-            # don't expect it in reality.
-            raise UIError(UpstreamError.CODE, "Unexpected empty body")
+        # content_length_raw = response.headers.get("Content-Length")
+        # if content_length_raw is None:
+        #     raise UIError(UpstreamError.CODE, "No content length in response")
+        # content_length = int(content_length_raw)
+        # if content_length == 0:
+        #     # We don't have any cases of an empty response, so consider
+        #     # this an error. We need to cover this case, even though we
+        #     # don't expect it in reality.
+        #     raise UIError(UpstreamError.CODE, "Unexpected empty body")
 
         content_type_raw = response.headers.get("Content-Type")
 
@@ -68,7 +62,10 @@ class ORCIDOAuthInteractiveClient:
                 ContentTypeError.CODE, f"Expected JSON response, got {content_type}"
             )
         try:
-            json_response = await response.json()
+            # Parse it ourselves, as aiohttp's .json() will return None for empty
+            # content, which is incorrect (imo).
+            text_response = await response.text(encoding="utf-8")
+            json_response = json.loads(text_response)
         except json.JSONDecodeError as jde:
             raise UIError(JSONDecodeError.CODE, "Error decoding JSON response") from jde
 
@@ -76,7 +73,7 @@ class ORCIDOAuthInteractiveClient:
             return json_response
         else:
             if "error" in json_response:
-                return ORCIDOAuthError.model_validate(json_response)
+                return OAuthError.model_validate(json_response)
             else:
                 raise UIError(
                     UpstreamError.CODE, "Unexpected Error Response from ORCID"
@@ -111,10 +108,12 @@ class ORCIDOAuthInteractiveClient:
                 f"{config().orcid_oauth_base_url}/token", headers=header, data=data
             ) as response:
                 json_response = await self.handle_json_response(response)
-                if isinstance(json_response, ORCIDOAuthError):
+                if isinstance(json_response, OAuthError):
                     # TODO: also provide the OAUTH error code; in fact, this should be
                     # an OAUTHError type, not Upstream error...
-                    raise UIError(UpstreamError.CODE, json_response.error_description)
+                    raise UIError(
+                        UpstreamError.CODE, json_response.error_description or ""
+                    )
                 else:
                     return model.ORCIDAuth.model_validate(json_response)
 
