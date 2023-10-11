@@ -74,3 +74,55 @@ as the tokens last for 20 years.
 
 The user should be given the opportunity to delete their ORCID Link and then recreate it. 
 
+
+## Weird Error Conditions
+
+### 1011: Parent token is disabled
+
+```json
+{
+    "jsonrpc": "2.0",
+    "error": {
+        "code": 1011,
+        "message": "Not Authorized",
+        "data": "Parent token is disabled"
+    },
+    "id": "123"
+}
+```
+
+This error indicates that the access_token (?) has been revoked, and a refresh has been
+attempted.
+
+This should not occur under normal conditions.
+
+Try reproducing:
+
+Directly, as an admin, to observe API behavior:
+
+- create a link
+- remove authorization at ORCID
+- use the admin refresh-tokens method.
+
+or 
+
+Indirectly, as a user, to observe API and UI behavior:
+
+- create a link
+- remove authorization at ORCID
+- set the retirement date to some time in the past (to trigger a refresh) 
+- pull up the oricdlink ui 
+
+TODO:
+
+this should not be a general "not authorized" exception, which applies to the KBase
+authorization.
+
+For an ORCID "not authorized" we need another code. 
+
+The reason is that an ORCID not-authorized cannot be recovered from other than deleting
+and recreating the link. A KBase not-authorized means the user needs to either log in
+(and is accessing the orcidlink api w/out a token) or the KBase token has expired or
+been revoked in another session. Just very different recovery scenarios that need to be
+distinguished.
+

@@ -12,6 +12,7 @@ from orcidlink.jsonrpc.errors import (
     ContentTypeError,
     JSONDecodeError,
     NotAuthorizedError,
+    ORCIDUnauthorizedClient,
     UpstreamError,
 )
 from orcidlink.lib.responses import UIError
@@ -518,7 +519,7 @@ async def test_orcid_oauth_refresh_token_error_not_authorized():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
             client = ORCIDOAuthClient(url)
-            with pytest.raises(NotAuthorizedError):
+            with pytest.raises(ORCIDUnauthorizedClient):
                 await client.refresh_token("refresh-token-unauthorized")
 
 

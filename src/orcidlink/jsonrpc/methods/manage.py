@@ -14,6 +14,7 @@ from orcidlink.model import (
     LinkingSessionStarted,
     LinkRecordPublic,
 )
+from orcidlink.runtime import config
 from orcidlink.storage.storage_model import storage_model
 from orcidlink.storage.storage_model_mongo import StatsRecord
 
@@ -248,33 +249,29 @@ async def get_stats() -> GetStatsResult:
     return GetStatsResult(stats=stats)
 
 
-# class RefreshTokensResult(ServiceBaseModel):
-#     link: LinkRecordPublic
+class RefreshTokensResult(ServiceBaseModel):
+    link: LinkRecordPublic
 
 
-# async def refresh_tokens(username: str) -> RefreshTokensResult:
-#     orcid_oauth_api = orcid_oauth()
+async def refresh_tokens(username: str) -> RefreshTokensResult:
+    storage = storage_model()
+    link_record = await storage.get_link_record(username=username)
 
-#     storage = storage_model()
-#     link_record = await storage.get_link_record(username=username)
+    if link_record is None:
+        raise NotFoundError("Link record not found for this user")
 
-#     if link_record is None:
-#         raise NotFoundError("Link record not found for this user")
+    # refresh the tokens
+    orcid_auth = await orcid_oauth().refresh_token(link_record.orcid_auth.refresh_token)
 
-#     # refresh the tokens
-#     orcid_auth = await orcid_oauth_api.refresh_token(
-#         link_record.orcid_auth.refresh_token
-#     )
+    link_record.orcid_auth = orcid_auth
+    link_record.created_at = posix_time_millis()
+    link_record.expires_at = (
+        link_record.created_at + config().linking_session_lifetime * 1000
+    )
 
-#     link_record.orcid_auth = orcid_auth
-#     link_record.created_at = posix_time_millis()
-#     link_record.expires_at = (
-#         link_record.created_at + config().linking_session_lifetime * 1000
-#     )
+    # update the link with the new orcid_auth
+    await storage.save_link_record(link_record)
 
-#     # update the link with the new orcid_auth
-#     await storage.save_link_record(link_record)
-
-#     return RefreshTokensResult(
-#         link=LinkRecordPublic.model_validate(link_record.model_dump())
-#     )
+    return RefreshTokensResult(
+        link=LinkRecordPublic.model_validate(link_record.model_dump())
+    )

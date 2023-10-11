@@ -11,6 +11,11 @@ class JSONRPCError(BaseError):
     MESSAGE: str
 
 
+class AlreadyLinkedError(JSONRPCError):
+    CODE = 1000
+    MESSAGE = "User already linked"
+
+
 class AuthorizationRequiredError(JSONRPCError):
     CODE = 1010
     MESSAGE = "Authorization Required"
@@ -21,9 +26,9 @@ class NotAuthorizedError(JSONRPCError):
     MESSAGE = "Not Authorized"
 
 
-class ContentTypeError(JSONRPCError):
-    CODE = 1041
-    MESSAGE = "Received Incorrect Content Type"
+class NotFoundError(JSONRPCError):
+    CODE = 1020
+    MESSAGE = "Not Found"
 
 
 class JSONDecodeError(JSONRPCError):
@@ -31,24 +36,24 @@ class JSONDecodeError(JSONRPCError):
     MESSAGE = "Error decoding JSON response"
 
 
+class ContentTypeError(JSONRPCError):
+    CODE = 1041
+    MESSAGE = "Received Incorrect Content Type"
+
+
 class UpstreamError(JSONRPCError):
     CODE = 1050
     MESSAGE = "Upstream Error"
 
 
-class NotFoundError(JSONRPCError):
-    CODE = 1020
-    MESSAGE = "Not Found"
-
-
-class AlreadyLinkedError(JSONRPCError):
-    CODE = 1000
-    MESSAGE = "User already linked"
-
-
 class ORCIDProfileNamePrivate(JSONRPCError):
     CODE = 1100
     MESSAGE = "ORCID Profile has name set to private"
+
+
+class ORCIDUnauthorizedClient(JSONRPCError):
+    CODE = 1101
+    MESSAGE = "ORCID unauthorized client"
 
 
 # Standard JSON-RPC 2.0 Errors
@@ -81,6 +86,9 @@ ERRORS: List[ErrorDescription] = [
     ErrorDescription(code=1020, message="Not Found"),
     ErrorDescription(code=1000, message="Already Linked"),
     ErrorDescription(code=1100, message="ORCID Profile has name set to private"),
+    ErrorDescription(
+        code=ORCIDUnauthorizedClient.CODE, message=ORCIDUnauthorizedClient.MESSAGE
+    ),
 ]
 
 ERRORS_MAP: Dict[int, ErrorDescription] = {}

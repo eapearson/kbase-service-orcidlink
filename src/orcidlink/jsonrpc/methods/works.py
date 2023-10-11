@@ -4,7 +4,11 @@ from typing import List
 import aiohttp
 
 from orcidlink import process
-from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError, UpstreamError
+from orcidlink.jsonrpc.errors import (
+    NotFoundError,
+    ORCIDUnauthorizedClient,
+    UpstreamError,
+)
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
 from orcidlink.lib.type import ServiceBaseModel
@@ -69,7 +73,7 @@ async def get_work(username: str, put_code: int) -> GetWorkResult:
     except orcid_api.ORCIDAPIAccountNotFoundError as err:
         raise NotFoundError(err.message)
     except orcid_api.ORCIDAPIClientInvalidAccessTokenError as err:
-        raise NotAuthorizedError(err.message)
+        raise ORCIDUnauthorizedClient(err.message)
     except orcid_api.ORCIDAPIClientOtherError as err:
         raise UpstreamError(err.message)
 

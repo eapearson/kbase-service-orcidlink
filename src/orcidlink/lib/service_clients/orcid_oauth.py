@@ -9,6 +9,7 @@ from orcidlink.jsonrpc.errors import (
     ContentTypeError,
     JSONDecodeError,
     NotAuthorizedError,
+    ORCIDUnauthorizedClient,
     UpstreamError,
 )
 from orcidlink.lib.service_clients.orcid_api_errors import OAuthError
@@ -209,7 +210,7 @@ class ORCIDOAuthClient:
                     # This is returned when the main token set (access token, etc.) is
                     # no longer valid,
                     if json_response.error == "unauthorized_client":
-                        raise NotAuthorizedError(json_response.error_description)
+                        raise ORCIDUnauthorizedClient(json_response.error_description)
                     else:
                         raise UpstreamError(json_response.error_description)
                 else:

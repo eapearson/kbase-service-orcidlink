@@ -47,6 +47,7 @@ from orcidlink.jsonrpc.methods.manage import (
     GetLinkResult,
     GetStatsResult,
     IsManagerResult,
+    RefreshTokensResult,
     SearchQuery,
     delete_expired_linking_sessions,
     delete_linking_session_completed,
@@ -57,6 +58,7 @@ from orcidlink.jsonrpc.methods.manage import (
     get_linking_sessions,
     get_stats,
     is_manager,
+    refresh_tokens,
 )
 from orcidlink.jsonrpc.methods.other_link import other_link
 from orcidlink.jsonrpc.methods.owner_link import owner_link
@@ -511,19 +513,18 @@ async def get_stats_handler(
     return result
 
 
-# # TODO: I don't think this is used.
-# @api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])
-# async def refresh_tokens_handler(
-#     username: str = USERNAME_PARAM,
-#     authorization: str = AUTHORIZATION_HEADER
-# ) -> RefreshTokensResult:
-#     _, account_info = await ensure_account2(authorization)
+# TODO: I don't think this is used.
+@api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])
+async def refresh_tokens_handler(
+    username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
+) -> RefreshTokensResult:
+    _, account_info = await ensure_account2(authorization)
 
-#     if "orcidlink_admin" not in account_info.customroles:
-#         raise NotAuthorizedError("Not authorized for management operations")
+    if "orcidlink_admin" not in account_info.customroles:
+        raise NotAuthorizedError("Not authorized for management operations")
 
-#     result = await refresh_tokens(username)
-#     return result
+    result = await refresh_tokens(username)
+    return result
 
 
 @api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
