@@ -10,6 +10,7 @@ from test.mocks.mock_contexts import (
 from test.mocks.testing_utils import (
     assert_json_rpc_error,
     assert_json_rpc_result_ignore_result,
+    clear_database,
     generate_kbase_token,
     rpc_call,
 )
@@ -19,6 +20,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from orcidlink import model
+from orcidlink.jsonrpc.errors import NotFoundError
 from orcidlink.main import app
 from orcidlink.storage import storage_model
 
@@ -105,19 +107,20 @@ async def test_get_profile(fake_fs):
             response = rpc_call(
                 "get-orcid-profile",
                 {"username": "foo"},
-                generate_kbase_token("amanager"),
+                generate_kbase_token("foo"),
             )
             result = assert_json_rpc_result_ignore_result(response)
             assert result["orcidId"] == "0000-0003-4997-3076"
             # TODO: test something else about the result.
 
 
-def test_get_profile_not_found(fake_fs):
+async def test_get_profile_not_found(fake_fs):
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
+            await clear_database()
             response = rpc_call(
                 "get-orcid-profile",
-                {"username": "bar"},
-                generate_kbase_token("amanager"),
+                {"username": "foo"},
+                generate_kbase_token("foo"),
             )
-            assert_json_rpc_error(response, 1020, "Not Found")
+            assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)

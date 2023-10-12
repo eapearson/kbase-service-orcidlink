@@ -31,6 +31,7 @@ from orcidlink.jsonrpc.errors import (
     NotFoundError,
 )
 from orcidlink.jsonrpc.methods.delete_link import delete_link
+from orcidlink.jsonrpc.methods.delete_own_link import delete_own_link
 from orcidlink.jsonrpc.methods.error_info import ErrorInfoResult, error_info_method
 from orcidlink.jsonrpc.methods.info import InfoResult, info_method
 from orcidlink.jsonrpc.methods.is_linked import is_linked_method
@@ -341,13 +342,13 @@ async def other_link_handler(
     return result
 
 
-@api_v1.method(name="delete-link", errors=[*COMMON_ERRORS])
-async def delete_link_handler(
+@api_v1.method(name="delete-own-link", errors=[*COMMON_ERRORS])
+async def delete_own_link_handler(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> None:
     _, token_info = await ensure_authorization2(authorization)
 
-    await delete_link(username, token_info.user)
+    await delete_own_link(username, token_info.user)
 
 
 @api_v1.method(name="create-linking-session", errors=[*COMMON_ERRORS])
@@ -507,6 +508,15 @@ async def delete_linking_session_completed_handler(
         raise NotAuthorizedError("Not authorized for management operations")
 
     await delete_linking_session_completed(session_id)
+
+
+@api_v1.method(name="delete-link", errors=[*COMMON_ERRORS])
+async def delete_link_handler(
+    username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
+) -> None:
+    _, account_info = await ensure_account2(authorization)
+
+    await delete_link(username, account_info)
 
 
 @api_v1.method(name="get-stats", errors=[*COMMON_ERRORS])

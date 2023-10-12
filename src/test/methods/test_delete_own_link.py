@@ -39,7 +39,7 @@ def mock_services():
 #
 
 
-async def test_delete_link():
+async def test_delete_own_link():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
         with mock_services():
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
@@ -50,14 +50,14 @@ async def test_delete_link():
                 rpc = {
                     "jsonrpc": "2.0",
                     "id": "123",
-                    "method": "delete-link",
+                    "method": "delete-own-link",
                     "params": {"username": "foo"},
                 }
 
                 response = client.post(
                     "/api/v1",
                     json=rpc,
-                    headers={"Authorization": generate_kbase_token("amanager")},
+                    headers={"Authorization": generate_kbase_token("foo")},
                 )
                 assert_json_rpc_result(response, None)
 
@@ -65,7 +65,7 @@ async def test_delete_link():
                 response = client.post(
                     "/api/v1",
                     json=rpc,
-                    headers={"Authorization": generate_kbase_token("amanager")},
+                    headers={"Authorization": generate_kbase_token("foo")},
                 )
                 assert_json_rpc_error(response, 1020, "Not Found")
 
@@ -80,7 +80,7 @@ async def test_delete_link():
                 # Need to add back a link, so we don't get not-found first.
                 await create_link(TEST_LINK)
 
-                # Try it with a non-manager user, should not be authorized
+                # Try it with a different user, should not be authorized
                 response = client.post(
                     "/api/v1",
                     json=rpc,
@@ -88,19 +88,10 @@ async def test_delete_link():
                 )
                 assert_json_rpc_error(response, 1011, "Not Authorized")
 
-                # Should even fail if used by owner.
-                response = client.post(
-                    "/api/v1",
-                    json=rpc,
-                    headers={"Authorization": generate_kbase_token("foo")},
-                )
-                assert_json_rpc_error(response, 1011, "Not Authorized")
-
-                # Simply never existed.
                 rpc["params"]["username"] = "bar"
                 response = client.post(
                     "/api/v1",
                     json=rpc,
-                    headers={"Authorization": generate_kbase_token("amanager")},
+                    headers={"Authorization": generate_kbase_token("foo")},
                 )
                 assert_json_rpc_error(response, 1020, "Not Found")

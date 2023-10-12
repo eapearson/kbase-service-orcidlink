@@ -349,7 +349,7 @@ async def test_other_link():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_delete_link():
+async def test_delete_own_link():
     with mock_services():
         await clear_database()
 
@@ -362,7 +362,7 @@ async def test_delete_link():
 
         # Delete link.
         params = {"username": "foo"}
-        response = rpc_call("delete-link", params, generate_kbase_token("foo"))
+        response = rpc_call("delete-own-link", params, generate_kbase_token("foo"))
         assert_json_rpc_result_ignore_result(response)
 
         # Ensure it doesn't exist.
@@ -371,19 +371,19 @@ async def test_delete_link():
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_delete_link_errors():
+async def test_delete_own_link_errors():
     with mock_services():
         await clear_database()
 
         # Delete link that doesn't exist, should return NotFoundError
         params = {"username": "foo"}
-        response = rpc_call("delete-link", params, generate_kbase_token("foo"))
+        response = rpc_call("delete-own-link", params, generate_kbase_token("foo"))
         assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
 
         # Delete link for other user, should return NotAuthorizedError
         await create_link(TEST_LINK)
         params = {"username": "foo"}
-        response = rpc_call("delete-link", params, generate_kbase_token("bar"))
+        response = rpc_call("delete-own-link", params, generate_kbase_token("bar"))
         assert_json_rpc_error(
             response, NotAuthorizedError.CODE, NotAuthorizedError.MESSAGE
         )
@@ -948,9 +948,7 @@ async def test_get_orcid_profile():
         await create_link(test_link.model_dump())
 
         params = {"username": "foo"}
-        response = rpc_call(
-            "get-orcid-profile", params, generate_kbase_token("amanager")
-        )
+        response = rpc_call("get-orcid-profile", params, generate_kbase_token("foo"))
         assert_json_rpc_result_ignore_result(response)
 
 
@@ -969,14 +967,12 @@ async def test_get_orcid_profile_errors():
 
         # No link for user bar
         params = {"username": "bar"}
-        response = rpc_call(
-            "get-orcid-profile", params, generate_kbase_token("amanager")
-        )
+        response = rpc_call("get-orcid-profile", params, generate_kbase_token("bar"))
         assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
 
-        # Can't do unless a manager.
+        # Can't do unless owner.
         params = {"username": "foo"}
-        response = rpc_call("get-orcid-profile", params, generate_kbase_token("foo"))
+        response = rpc_call("get-orcid-profile", params, generate_kbase_token("bar"))
         assert_json_rpc_error(
             response, NotAuthorizedError.CODE, NotAuthorizedError.MESSAGE
         )
