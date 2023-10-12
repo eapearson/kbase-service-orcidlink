@@ -394,6 +394,15 @@ async def finish_linking_session_handler(
     return result
 
 
+@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
+async def get_orcid_profile_handler(
+    username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
+) -> ORCIDProfile:
+    _, token_info = await ensure_authorization2(authorization)
+
+    return await get_profile(username, token_info.user)
+
+
 #
 # Management
 #
@@ -525,18 +534,6 @@ async def refresh_tokens_handler(
 
     result = await refresh_tokens(username)
     return result
-
-
-@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
-async def get_orcid_profile_handler(
-    username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
-) -> ORCIDProfile:
-    _, account_info = await ensure_account2(authorization)
-
-    if "orcidlink_admin" not in account_info.customroles:
-        raise NotAuthorizedError("Not authorized for management operations")
-
-    return await get_profile(username)
 
 
 #

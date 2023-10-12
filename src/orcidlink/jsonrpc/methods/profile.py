@@ -1,5 +1,6 @@
 from orcidlink import process
 from orcidlink.jsonrpc.errors import (
+    NotAuthorizedError,
     NotFoundError,
     ORCIDUnauthorizedClient,
     UpstreamError,
@@ -9,8 +10,12 @@ from orcidlink.model import ORCIDProfile
 from orcidlink.translators import to_service
 
 
-async def get_profile(username: str) -> ORCIDProfile:
+async def get_profile(username: str, auth_username: str) -> ORCIDProfile:
+    if username != auth_username:
+        raise NotAuthorizedError("Only the link owner may request their profile")
+
     user_link_record = await process.link_record_for_user(username)
+
     if user_link_record is None:
         raise NotFoundError("ORCID Profile Not Found")
 
