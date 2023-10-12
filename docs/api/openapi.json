@@ -218,37 +218,13 @@
                 ],
                 "responses": {
                     "302": {
-                        "description": "Redirect to ORCID if a valid linking session"
+                        "description": "Redirect to ORCID if a valid linking session, back to KBase in the case of an error"
                     },
                     "401": {
-                        "description": "KBase auth token absent or invalid",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
+                        "description": "KBase auth token absent or invalid"
                     },
                     "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Response when a linking session not found for the supplied session id",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
+                        "description": "Input or output data does not comply with the API schema"
                     }
                 }
             }
@@ -347,14 +323,7 @@
                         "description": "Linking requires authorization; same meaning as standard auth 401, but caught and issued in a different manner"
                     },
                     "422": {
-                        "description": "Input or output data does not comply with the API schema",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
+                        "description": "Input or output data does not comply with the API schema"
                     }
                 }
             }
@@ -404,64 +373,6 @@
                 },
                 "type": "object",
                 "title": "AuthorizationRequiredError"
-            },
-            "ErrorResponse": {
-                "properties": {
-                    "code": {
-                        "type": "integer",
-                        "enum": [
-                            1000,
-                            1010,
-                            1011,
-                            1020,
-                            1030,
-                            1040,
-                            1041,
-                            1050,
-                            1051,
-                            1052,
-                            1060,
-                            1061,
-                            1070,
-                            1080,
-                            1081,
-                            1082,
-                            1099
-                        ],
-                        "title": "Code",
-                        "description": "A unique code associated with this specific type of error"
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 50,
-                        "minLength": 5,
-                        "title": "Title",
-                        "description": "A human-readable title for this error; displayable as an error dialog title"
-                    },
-                    "message": {
-                        "type": "string",
-                        "title": "Message",
-                        "description": "A human-readable error message, meant to be displayed to an end user or developer"
-                    },
-                    "data": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/ServiceBaseModel"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "code",
-                    "title",
-                    "message"
-                ],
-                "title": "ErrorResponse",
-                "description": "A generic error object used for all error responses.\n\nSee [the error docs](docs/errors.md) for more information."
             },
             "InternalError": {
                 "properties": {
@@ -609,16 +520,18 @@
                 "type": "object",
                 "title": "ParseError"
             },
-            "ServiceBaseModel": {
-                "properties": {},
-                "type": "object",
-                "title": "ServiceBaseModel"
-            },
             "_Error": {
                 "properties": {
                     "loc": {
                         "items": {
-                            "type": "string"
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
                         },
                         "type": "array",
                         "title": "Loc"
@@ -983,6 +896,8 @@
                 "additionalProperties": false,
                 "type": "object",
                 "required": [
+                    "jsonrpc",
+                    "id",
                     "result"
                 ],
                 "title": "_Response"

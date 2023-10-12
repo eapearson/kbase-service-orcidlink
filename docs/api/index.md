@@ -142,7 +142,7 @@ access_token stored at KBase for future use by the user.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>302</td><td>Redirect to ORCID if a valid linking session</td><td><i>none</i></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>404</td><td>Response when a linking session not found for the supplied session id</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>302</td><td>Redirect to ORCID if a valid linking session, back to KBase in the case of an error</td><td><i>none</i></td></tr><tr><td>401</td><td>KBase auth token absent or invalid</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><i>none</i></td></tr></tbody></table>
 
 
 ---
@@ -168,7 +168,7 @@ encountered, it redirects to an error viewing endpoint in kbase-ui.
 
 <a name="header_output"></a>
 #### Output
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>302</td><td>Redirect to the continuation page; or error page</td><td><i>none</i></td></tr><tr><td>401</td><td>Linking requires authorization; same meaning as standard auth 401, but caught and issued in a different manner</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><a href="#user-content-header_type_errorresponse">ErrorResponse</a></td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="150px"></th><th><img width="1000px"></th><th><img width="150px"></th><tr><th>Status Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>302</td><td>Redirect to the continuation page; or error page</td><td><i>none</i></td></tr><tr><td>401</td><td>Linking requires authorization; same meaning as standard auth 401, but caught and issued in a different manner</td><td><i>none</i></td></tr><tr><td>422</td><td>Input or output data does not comply with the API schema</td><td><i>none</i></td></tr></tbody></table>
 
 
 ---
@@ -195,15 +195,6 @@ alphabetically, which is fine for looking them up, but not for their relationshi
 ##### AuthorizationRequiredError
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>integer</td><td></td></tr><tr><td>message</td><td>string</td><td></td></tr></tbody></table>
-
-
-
-<a name="header_type_errorresponse"></a>
-##### ErrorResponse
-A generic error object used for all error responses.
-
-See [the error docs](docs/errors.md) for more information.
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>integer</td><td>✓</td></tr><tr><td>title</td><td>string</td><td>✓</td></tr><tr><td>message</td><td>string</td><td>✓</td></tr><tr><td>data</td><td><div><i>Any Of</i></div><div><a href="#user-content-header_type_servicebasemodel">ServiceBaseModel</a></div><div>null</div></td><td></td></tr></tbody></table>
 
 
 
@@ -253,13 +244,6 @@ See [the error docs](docs/errors.md) for more information.
 ##### ParseError
 
 <table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>code</td><td>integer</td><td></td></tr><tr><td>message</td><td>string</td><td></td></tr></tbody></table>
-
-
-
-<a name="header_type_servicebasemodel"></a>
-##### ServiceBaseModel
-
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody></tbody></table>
 
 
 
@@ -343,7 +327,7 @@ See [the error docs](docs/errors.md) for more information.
 <a name="header_type__response"></a>
 ##### _Response
 
-<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>jsonrpc</td><td>!! NOT HANDLED !!</td><td></td></tr><tr><td>id</td><td><div><i>Any Of</i></div><div>string</div><div>integer</div></td><td></td></tr><tr><td>result</td><td>object</td><td>✓</td></tr></tbody></table>
+<table><thead><tr><th colspan="3"><img width="2000px"></th></tr><tr><th><img width="1000px"></th><th><img width="200px"></th><th><img width="75px"></th><tr><th>Name</th><th>Type</th><th>Required</th></tr></thead><tbody><tr><td>jsonrpc</td><td>!! NOT HANDLED !!</td><td>✓</td></tr><tr><td>id</td><td><div><i>Any Of</i></div><div>string</div><div>integer</div></td><td>✓</td></tr><tr><td>result</td><td>object</td><td>✓</td></tr></tbody></table>
 
 
 
