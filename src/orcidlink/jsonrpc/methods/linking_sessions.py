@@ -5,7 +5,7 @@ from orcidlink.jsonrpc.methods.common import (
     SESSION_ID_FIELD,
     get_linking_session_completed,
 )
-from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
+from orcidlink.lib.service_clients.orcid_oauth_api import orcid_oauth_api
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
@@ -74,7 +74,7 @@ async def delete_linking_session(session_id: str, auth_username: str) -> None:
     await storage.delete_linking_session_completed(session_record.session_id)
 
     # TODO: handle error? or propagate? or in a transaction?
-    await orcid_oauth().revoke_access_token(session_record.orcid_auth.access_token)
+    await orcid_oauth_api().revoke_access_token(session_record.orcid_auth.access_token)
 
     return None
 

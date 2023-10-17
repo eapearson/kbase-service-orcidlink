@@ -1,7 +1,7 @@
 from typing import Optional
 
 from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
-from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
+from orcidlink.lib.service_clients.orcid_oauth_api import orcid_oauth_api
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import LinkingSessionInitial, LinkingSessionStarted, LinkRecord
 from orcidlink.runtime import config
@@ -19,7 +19,7 @@ async def delete_link(username: str) -> None:
         raise NotFoundError("User does not have an ORCID Link")
 
     # TODO: handle error? or propagate? or in a transaction?
-    await orcid_oauth().revoke_access_token(link_record.orcid_auth.access_token)
+    await orcid_oauth_api().revoke_access_token(link_record.orcid_auth.access_token)
 
     # TODO: handle error? or propagate?
     await storage.delete_link_record(username)
@@ -61,11 +61,10 @@ async def link_record_for_orcid_id(orcid_id: str) -> Optional[LinkRecord]:
 
 
 async def refresh_token_for_link(link_record: LinkRecord) -> LinkRecord:
-    orcid_oauth_api = orcid_oauth()
     now = posix_time_millis()
 
     # refresh the tokens
-    orcid_auth = await orcid_oauth_api.refresh_token(
+    orcid_auth = await orcid_oauth_api().refresh_token(
         link_record.orcid_auth.refresh_token
     )
 

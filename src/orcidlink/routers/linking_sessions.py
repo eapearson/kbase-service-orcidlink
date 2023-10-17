@@ -28,9 +28,7 @@ from orcidlink.lib.auth import ensure_authorization_ui
 # from orcidlink.lib.auth import ensure_authorization
 from orcidlink.lib.responses import AUTH_RESPONSES, STD_RESPONSES, UIError
 from orcidlink.lib.service_clients.orcid_api import AuthorizeParams
-from orcidlink.lib.service_clients.orcid_oauth_interactive import (
-    orcid_oauth_interactive,
-)
+from orcidlink.lib.service_clients.orcid_oauth_api import orcid_oauth_api
 from orcidlink.process import get_linking_session_initial, get_linking_session_started
 from orcidlink.routers.interactive_route import InteractiveRoute
 from orcidlink.runtime import config
@@ -324,7 +322,15 @@ async def linking_sessions_continue(
     #
     # Exchange the temporary token from ORCID for the authorized token.
     #
-    orcid_auth = await orcid_oauth_interactive().exchange_code_for_token(code)
+    # Note that the ORCID OAuth API will throw a JSONRPC Exception, because that
+    # is how they are normall used, but in this case we are in an interactive
+    # http request in which the browser follows the url, so we need to convert
+    # this to a UI Error.
+    #
+    try:
+        orcid_auth = await orcid_oauth_api().exchange_code_for_token(code)
+    except JSONRPCError as err:
+        raise UIError(err.CODE, err.MESSAGE)
 
     #
     # Note that it isn't until this point that we know the orcid id the user

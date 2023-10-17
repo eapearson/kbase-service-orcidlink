@@ -4,6 +4,18 @@ from typing import Optional
 
 from pydantic import Field
 
+from orcidlink.jsonrpc.errors import (
+    JSONRPCError,
+    ORCIDInsufficientAuthorizationError,
+    ORCIDNotAuthorizedError,
+    ORCIDNotFoundError,
+    UpstreamError,
+)
+from orcidlink.lib.json_support import JSONObject
+from orcidlink.lib.service_clients.orcid_api_error_codes import (
+    ORCID_API_ERROR_MAP,
+    ORCIDAPIErrorCategory,
+)
 from orcidlink.lib.type import ServiceBaseModel
 
 
@@ -33,16 +45,15 @@ class ORCIDAPIError(ServiceBaseModel):
 # The OAuth Bearer error has the same basic shape as the basic OAuth error,
 # but the range of error codes (see the enum below) is different.
 #
-
-
-class OAUthBearerErrorEnum(str, Enum):
+#  SEE https://www.rfc-editor.org/rfc/rfc6750
+#
+class OAUthBearerErrorType(str, Enum):
     # for bearer tokens
     invalid_request = "invalid_request"
     invalid_token = "invalid_token"
     insufficient_scope = "insufficient_scope"
 
 
-#  SEE https://www.rfc-editor.org/rfc/rfc6750
 class OAuthBearerError(ServiceBaseModel):
     """
     Although the name implies it is only for OAuth API errors, it may also be returned
@@ -51,9 +62,17 @@ class OAuthBearerError(ServiceBaseModel):
     See https://datatracker.ietf.org/doc/html/rfc6749#page-45
     """
 
-    error: OAUthBearerErrorEnum = Field(...)
+    error: OAUthBearerErrorType = Field(...)
     error_description: Optional[str] = Field(default=None)
     error_uri: Optional[str] = Field(default=None)
+
+
+class ORCIDAPIOtherErrorDetail(ServiceBaseModel):
+    upstream_error: JSONObject
+
+
+class ORCIDOAuthBearerErrorDetail(ServiceBaseModel):
+    upstream_error: OAuthBearerError
 
 
 #
@@ -70,14 +89,57 @@ class OAUthErrorEnum(str, Enum):
     invalid_scope = "invalid_scope"
 
 
-class OAuthError(ServiceBaseModel):
-    """
-    Although the name implies it is only for OAuth API errors, it may also be returned
-    for authentication-related errors via the ORCID API.
+# class OAuthError(ServiceBaseModel):
+#     """
+#     Although the name implies it is only for OAuth API errors, it may also be returned
+#     for authentication-related errors via the ORCID API.
 
-    See https://datatracker.ietf.org/doc/html/rfc6749#page-45
-    """
+#     See https://datatracker.ietf.org/doc/html/rfc6749#page-45
+#     """
 
-    error: OAUthErrorEnum = Field(...)
-    error_description: Optional[str] = Field(default=None)
-    error_uri: Optional[str] = Field(default=None)
+#     error: OAUthErrorEnum = Field(...)
+#     error_description: Optional[str] = Field(default=None)
+#     error_uri: Optional[str] = Field(default=None)
+
+
+class ORCIDAPIErrorDetail(ServiceBaseModel):
+    upstream_error: ORCIDAPIError
+
+
+def orcid_api_error_to_json_rpc_error(api_error: ORCIDAPIError) -> JSONRPCError:
+    error_code = ORCID_API_ERROR_MAP.get(api_error.error_code)
+    error_detail = ORCIDAPIErrorDetail(upstream_error=api_error).model_dump
+    if error_code is None:
+        return UpstreamError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.connection:
+        return UpstreamError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.bad_request:
+        return UpstreamError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.internal_error:
+        return UpstreamError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.not_authorized:
+        return ORCIDNotAuthorizedError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.insufficient_authorization:
+        return ORCIDInsufficientAuthorizationError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.not_found:
+        return ORCIDNotFoundError(data=error_detail)
+    elif error_code.category == ORCIDAPIErrorCategory.other_error:
+        return UpstreamError(data=error_detail)
+    else:
+        return UpstreamError(data=error_detail)
+
+
+def orcid_oauth_bearer_to_json_rpc_error(error: OAuthBearerError) -> JSONRPCError:
+    error_detail = ORCIDOAuthBearerErrorDetail(upstream_error=error).model_dump()
+    if error.error == OAUthBearerErrorType.invalid_token:
+        # This indicates that either the token is actually malformed, or, in the
+        # context of ORCID Link, that that the token has become invalid at
+        # ORCID. The most likely cause being the user directly removing
+        # authorization for KBase.
+        raise ORCIDNotAuthorizedError(data=error_detail)
+    elif error.error == OAUthBearerErrorType.invalid_request:
+        raise UpstreamError(data=error_detail)
+    elif error.error == OAUthBearerErrorType.insufficient_scope:
+        raise ORCIDInsufficientAuthorizationError(data=error_detail)
+    else:
+        raise UpstreamError(data=error_detail)

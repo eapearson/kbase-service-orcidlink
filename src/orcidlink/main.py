@@ -98,6 +98,7 @@ from orcidlink.model import (
 from orcidlink.routers import linking_sessions
 from orcidlink.runtime import config, stats
 
+
 ###############################################################################
 # FastAPI application setup
 #
@@ -399,6 +400,11 @@ async def finish_linking_session_handler(
 async def get_orcid_profile_handler(
     username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> ORCIDProfile:
+    """
+    Implements the "get-orcid-profile" method handler.
+
+    See the method implementation for details.
+    """
     _, token_info = await ensure_authorization2(authorization)
 
     return await get_profile(username, token_info.user)

@@ -5,7 +5,7 @@ from pydantic import Field
 
 from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
 from orcidlink.lib.service_clients.kbase_auth import AccountInfo
-from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
+from orcidlink.lib.service_clients.orcid_oauth_api import orcid_oauth_api
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.model import (
@@ -215,7 +215,7 @@ async def delete_expired_linking_sessions() -> None:
     expired_sessions = await model.get_expired_sessions(now)
 
     for expired_completed_session in expired_sessions.completed_sessions:
-        await orcid_oauth().revoke_access_token(
+        await orcid_oauth_api().revoke_access_token(
             expired_completed_session.orcid_auth.access_token
         )
 
@@ -261,7 +261,9 @@ async def refresh_tokens(username: str) -> RefreshTokensResult:
         raise NotFoundError("Link record not found for this user")
 
     # refresh the tokens
-    orcid_auth = await orcid_oauth().refresh_token(link_record.orcid_auth.refresh_token)
+    orcid_auth = await orcid_oauth_api().refresh_token(
+        link_record.orcid_auth.refresh_token
+    )
 
     link_record.orcid_auth = orcid_auth
     link_record.created_at = posix_time_millis()

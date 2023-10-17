@@ -1,9 +1,6 @@
 import os
 from test.mocks.env import MOCK_ORCID_OAUTH_PORT, TEST_ENV
-from test.mocks.mock_contexts import (  # mock_orcid_oauth_service2,
-    mock_orcid_oauth_service,
-    no_stderr,
-)
+from test.mocks.mock_contexts import mock_orcid_oauth_service, no_stderr
 from unittest import mock
 
 import pytest
@@ -11,17 +8,13 @@ import pytest
 from orcidlink.jsonrpc.errors import (
     ContentTypeError,
     JSONDecodeError,
-    NotAuthorizedError,
-    ORCIDUnauthorizedClient,
+    ORCIDNotAuthorizedError,
     UpstreamError,
 )
-from orcidlink.lib.responses import UIError
-
-# from orcidlink.lib import exceptions
 from orcidlink.lib.service_clients import orcid_api
-from orcidlink.lib.service_clients.orcid_oauth import ORCIDOAuthClient, orcid_oauth
-from orcidlink.lib.service_clients.orcid_oauth_interactive import (
-    ORCIDOAuthInteractiveClient,
+from orcidlink.lib.service_clients.orcid_oauth_api import (
+    ORCIDOAuthAPIClient,
+    orcid_oauth_api,
 )
 
 # Set up test data here; otherwise the ENV mocking interferes with the
@@ -58,21 +51,21 @@ def test_orcid_api():
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_orcid_oauth():
-    value = orcid_oauth()
-    assert isinstance(value, ORCIDOAuthClient)
+    value = orcid_oauth_api()
+    assert isinstance(value, ORCIDOAuthAPIClient)
     # assert isinstance(value.url, str)
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDOAuthClient_url():
-    client = ORCIDOAuthClient(url="url")
+    client = ORCIDOAuthAPIClient(url="url")
     url = client.url_path("foo")
     assert url == "url/foo"
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 def test_ORCIDOAuthClient_header():
-    client = ORCIDOAuthClient(url="url")
+    client = ORCIDOAuthAPIClient(url="url")
     header = client.header()
     assert header.get("accept") == "application/json"
     assert header.get("content-type") == "application/x-www-form-urlencoded"
@@ -174,9 +167,12 @@ class FakeResponse:
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_revoke_access_token_success():
+    """
+    The happy path
+    """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             response = await client.revoke_access_token("access_token")
             assert response is None
 
@@ -184,11 +180,19 @@ async def test_orcid_oauth_revoke_access_token_success():
 # This test doesn't make any sense -- the error is not thrown
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_revoke_access_token_not_authorized_error():
+    """
+    A call to revoke an ORCID access token with a token which returns the
+    "unauthorized_client" error.
+
+    TODO: how to replicate
+    """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(NotAuthorizedError):
-                await client.revoke_access_token("unauthorized_access_token")
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(ORCIDNotAuthorizedError) as err:
+                await client.revoke_access_token("error-unauthorized-client")
+            assert err.value.CODE == ORCIDNotAuthorizedError.CODE
+            assert err.value.data["upstream_error"]["error"] == "unauthorized_client"
 
 
 # This test doesn't make any sense -- the error is not thrown
@@ -196,45 +200,34 @@ async def test_orcid_oauth_revoke_access_token_not_authorized_error():
 async def test_orcid_oauth_revoke_access_token_other_upstream_error():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
-                await client.revoke_access_token("other_error_access_token")
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(UpstreamError) as err:
+                await client.revoke_access_token("error-invalid-scope")
+            assert err.value.CODE == UpstreamError.CODE
+            assert err.value.data["upstream_error"]["error"] == "invalid_scope"
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_revoke_access_token_error_non_empty_response():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             with pytest.raises(UpstreamError):
                 await client.revoke_access_token("non-empty-response")
 
 
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_orcid_oauth_revoke_access_token_error_no_content_type():
-    """
-    Although the normal response is empty and doesn't care about a content-type
-    being present or not, for an error condition it must have a content type
-    (and in the test below, it must be application/json)
-    """
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(ContentTypeError):
-                await client.revoke_access_token("error-response-no-content-type")
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_orcid_oauth_revoke_access_token_error_not_json_content_type():
-    """
-    Although the normal response is empty and doesn't care about a content-type
-    being present or not, for an error condition it must be application/json.
-    """
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(ContentTypeError):
-                await client.revoke_access_token("error-response-not-json-content-type")
+# @mock.patch.dict(os.environ, TEST_ENV, clear=True)
+# async def test_orcid_oauth_revoke_access_token_error_no_content_type():
+#     """
+#     Although the normal response is empty and doesn't care about a content-type
+#     being present or not, for an error condition it must have a content type
+#     (and in the test below, it must be application/json)
+#     """
+#     with no_stderr():
+#         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+#             client = ORCIDOAuthAPIClient(url)
+#             with pytest.raises(ContentTypeError):
+#                 await client.revoke_access_token("error-response-no-content-type")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -245,7 +238,7 @@ async def test_orcid_oauth_revoke_access_token_error_not_json():
     """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             with pytest.raises(JSONDecodeError):
                 await client.revoke_access_token("error-response-not-json")
 
@@ -258,9 +251,11 @@ async def test_orcid_oauth_revoke_access_token_error_invalid_json():
     """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(UpstreamError) as err:
                 await client.revoke_access_token("error-response-invalid-json")
+            assert err.value.CODE == UpstreamError.CODE
+            assert err.value.data["upstream_error"]["foo"] == "bar"
 
 
 # @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -341,166 +336,6 @@ async def test_orcid_oauth_revoke_access_token_error_invalid_json():
 
 
 #
-# Exchange code for token
-#
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "foo"
-            client = ORCIDOAuthInteractiveClient(url)
-            response = await client.exchange_code_for_token(code)
-            assert response.access_token == "access_token_for_foo"
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_no_content_type():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "no-content-type"
-            client = ORCIDOAuthInteractiveClient(url)
-            with pytest.raises(UIError) as ie:
-                await client.exchange_code_for_token(code)
-            assert ie.value.code == ContentTypeError.CODE
-            # assert ie.value.message == "No content-type in response"
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_empty_content():
-    """
-    If no content is returned, should get a JSON parsing error.
-
-    Not sure why we are testing this; there are may cases of ill-formed responses that
-    we could test...
-    """
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "empty-content"
-            client = ORCIDOAuthInteractiveClient(url)
-            with pytest.raises(UIError) as err:
-                await client.exchange_code_for_token(code)
-            assert err.value.code == JSONDecodeError.CODE
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_not_json_content():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "not-json-content"
-            client = ORCIDOAuthInteractiveClient(url)
-            with pytest.raises(UIError) as err:
-                await client.exchange_code_for_token(code)
-            assert err.value.code == JSONDecodeError.CODE
-            # assert ie.value.message == "Error decoding JSON response"
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_not_json_content_type():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "not-json-content-type"
-            client = ORCIDOAuthInteractiveClient(url)
-            with pytest.raises(UIError) as uie:
-                await client.exchange_code_for_token(code)
-            assert uie.value.code == ContentTypeError.CODE
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_error_incorrect_error_format():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "error-incorrect-error-format"
-            client = ORCIDOAuthInteractiveClient(url=url)
-            with pytest.raises(UIError) as uie:
-                await client.exchange_code_for_token(code)
-            assert uie.value.code == UpstreamError.CODE
-
-
-@mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_exchange_code_for_token_error_correct_error_format():
-    with no_stderr():
-        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            code = "error-correct-error-format"
-            client = ORCIDOAuthInteractiveClient(url=url)
-            with pytest.raises(UIError) as uie:
-                await client.exchange_code_for_token(code)
-            assert uie.value.code == UpstreamError.CODE
-
-
-# @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-# def test_make_upstream_error_401(fake_fs):
-#     # A 401 from ORCID
-#     error_content = {"error": "My Error", "error_description": "Should not see me"}
-#     status_code = 401
-
-#     result = exceptions.make_upstream_error(status_code, error_content, "foo")
-#     assert isinstance(result, exceptions.UpstreamORCIDAPIError)
-#     # assert result.status_code == 502
-#     assert result.error.code == 1052
-#     assert result.error.title == "Upstream ORCID Error"
-#     assert result.data is not None and result.data.source == "foo"
-#     assert (
-#         isinstance(result.data.detail, dict)
-#         and result.data.detail["error"] is not None
-#         and result.data.detail["error"] == "My Error"
-#     )
-#     assert result.data.detail.get("error_description") is None
-#     # assert "error_description" not in result.error.data.detail
-
-
-# @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-# def test_make_upstream_error_non_401(fake_fs):
-#     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-#         error_content = {
-#             "response-code": 123,
-#             "developer-message": "My Developer Message",
-#             "user-message": "My User Message",
-#             "error-code": 456,
-#             "more-info": "My More Info",
-#         }
-#         status_code = 400
-
-#         result = exceptions.make_upstream_error(status_code, error_content, "foo")
-#         assert isinstance(result, exceptions.ServiceErrorY)
-#         # assert result.status_code == 502
-#         assert result.error.code == exceptions.ERRORS.upstream_orcid_error.code
-#         assert result.error.title == "Upstream ORCID Error"
-#         assert (
-#             isinstance(result.data, exceptions.UpstreamErrorData)
-#             and result.data.source == "foo"
-#         )
-#         # assert isinstance(result.data['detail'], dict) and result.data["detail"]["response-code"] == 123
-#         # assert result.error.data.detail.error_description is None
-#         # assert "error_description" not in result.error.data.detail
-
-
-# def test_make_upstream_error_internal_server(fake_fs):
-#     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-#         error_content = {
-#             "message-version": "123",
-#             "orcid-profile": None,
-#             "orcid-search-results": None,
-#             "error-desc": {"value": "My error desc"},
-#         }
-#         status_code = 500
-
-#         result = exceptions.make_upstream_error(status_code, error_content, "foo")
-#         assert isinstance(result, exceptions.ServiceErrorY)
-#         # assert result.status_code == 502
-#         assert result.error.code == exceptions.ERRORS.upstream_orcid_error.code
-#         assert result.error.title == "Upstream ORCID Error"
-#         assert (
-#             isinstance(result.data, exceptions.UpstreamErrorData)
-#             and result.data.source == "foo"
-#         )
-#         # assert isinstance(result.data['detail'], dict) and
-# result.data["detail"]["message-version"] == "123"
-#         # assert result.error.data.detail.error_description is None
-# assert "error_description" not in result.error.data.detail
-
-#
 # Refresh token
 #
 
@@ -509,27 +344,46 @@ async def test_exchange_code_for_token_error_correct_error_format():
 async def test_orcid_oauth_refresh_token():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             response = await client.refresh_token("refresh-token-foo")
             assert response is not None
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
-async def test_orcid_oauth_refresh_token_error_not_authorized():
+async def test_orcid_oauth_refresh_token_error_unauthorized_client():
+    """
+    Tests the case in which the client autorization has failed; perhaps it the client id
+    or secret are corrupted, or have been revoked.
+    """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(ORCIDUnauthorizedClient):
-                await client.refresh_token("refresh-token-unauthorized")
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(ORCIDNotAuthorizedError):
+                await client.refresh_token("refresh-token-unauthorized-client")
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_orcid_oauth_refresh_token_error_invalid_grant():
+    """
+    Tests the case in which the client autorization has failed; perhaps it the client id
+    or secret are corrupted, or have been revoked.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(ORCIDNotAuthorizedError):
+                await client.refresh_token("refresh-token-invalid-grant")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_refresh_token_error_other_error():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(UpstreamError) as err:
                 await client.refresh_token("refresh-token-other-error")
+            assert err.value.CODE == UpstreamError.CODE
+            assert err.value.data["upstream_error"]["error"] == "invalid_request"
 
 
 # @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -548,13 +402,17 @@ async def test_orcid_oauth_refresh_token_error_other_error():
 #             client = ORCIDOAuthClient(url)
 #             with pytest.raises(UpstreamError):
 #                 await client.refresh_token("no-content-length")
+
+#
+# revoke_access_token
+#
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_revoke_access_token_no_content_type():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             with pytest.raises(ContentTypeError):
                 await client.refresh_token("no-content-type")
 
@@ -573,8 +431,8 @@ async def test_orcid_oauth_revoke_access_token_no_content_type():
 async def test_orcid_oauth_revoke_access_token_empty_content():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(JSONDecodeError):
                 await client.refresh_token("empty-content")
 
 
@@ -582,7 +440,7 @@ async def test_orcid_oauth_revoke_access_token_empty_content():
 async def test_orcid_oauth_revoke_access_token_not_json_content():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             with pytest.raises(JSONDecodeError):
                 await client.refresh_token("not-json-content")
 
@@ -591,18 +449,28 @@ async def test_orcid_oauth_revoke_access_token_not_json_content():
 async def test_orcid_oauth_revoke_access_token_not_json_content_type():
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
+            client = ORCIDOAuthAPIClient(url)
             with pytest.raises(ContentTypeError):
                 await client.refresh_token("not-json-content-type")
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_orcid_oauth_revoke_access_token_invalid_error():
+    """
+    When a refresh token call is invoked, we may get back an error in an unexpected
+    (incorrect!) format. It will be JSON, but just not the expected, standard, form.
+
+    In this case, the error returned is {"foo": "bar"}, and is signaled by a non-200
+    response code.
+    """
     with no_stderr():
         with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
-            client = ORCIDOAuthClient(url)
-            with pytest.raises(UpstreamError):
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(UpstreamError) as err:
                 await client.refresh_token("invalid-error")
+
+            assert err.value.CODE == UpstreamError.CODE
+            assert err.value.data["upstream_error"]["foo"] == "bar"
 
 
 # @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -624,3 +492,119 @@ async def test_orcid_oauth_revoke_access_token_invalid_error():
 #             with pytest.raises(UIError) as uie:
 #                 await client.refresh_token("error-correct-error-format")
 #             assert uie.value.code == UpstreamError.CODE
+
+
+#
+# Exchange code for token
+#
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token():
+    """
+    During the OAUTH 3-legged, interactive session, the ORCIDLink service needs to make
+    a server-server call to exchange the oauth code for the orcid auth info, which
+    includes the access_token.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "foo"
+            client = ORCIDOAuthAPIClient(url)
+            response = await client.exchange_code_for_token(code)
+            assert response.access_token == "access_token_for_foo"
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token_empty_content():
+    """
+    If no content is returned, should get a JSON parsing error.
+
+    Not sure why we are testing this; there are may cases of ill-formed responses that
+    we could test...
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "empty-content"
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(JSONDecodeError) as err:
+                await client.exchange_code_for_token(code)
+            assert err.value.CODE == JSONDecodeError.CODE
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token_not_json_content():
+    """
+    It is possible that even though the response says it is application/json, it is
+    something else. We do catch that as a matter of course, and here we ensure that the
+    expected Exception is thrown.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "not-json-content"
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(JSONDecodeError) as err:
+                await client.exchange_code_for_token(code)
+            assert err.value.CODE == JSONDecodeError.CODE
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token_not_json_content_type():
+    """
+    The response for the ORCID OAuth API must always be JSON - application/json. This
+    test ensures that a non-complant response triggers the expected error.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "not-json-content-type"
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(ContentTypeError) as uie:
+                await client.exchange_code_for_token(code)
+            assert uie.value.CODE == ContentTypeError.CODE
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token_no_content_type():
+    """
+    Similar to the wrong content type, the lack of content type is also a detected error.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "no-content-type"
+            client = ORCIDOAuthAPIClient(url)
+            with pytest.raises(ContentTypeError) as ie:
+                await client.exchange_code_for_token(code)
+            assert ie.value.CODE == ContentTypeError.CODE
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token_error_incorrect_error_format():
+    """
+    We have exceeding confidence that the ORCID APIs will always return the
+    expected error format. To handle that case, we have a catch-all which just returns
+    the returned JSON as the data property.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "error-incorrect-error-format"
+            client = ORCIDOAuthAPIClient(url=url)
+            with pytest.raises(UpstreamError) as uie:
+                await client.exchange_code_for_token(code)
+            assert uie.value.CODE == UpstreamError.CODE
+            assert uie.value.data["upstream_error"]["foo"] == "bar"
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_exchange_code_for_token_error_correct_error_format():
+    """
+    Excercises one case of error, but the point of this is to demonstrate that a
+    "normal" error is handled correctly, and propagates through the UpstreamError
+    JSON-RPC error, which serves as an error wrapper.
+    """
+    with no_stderr():
+        with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT) as [_, _, url, port]:
+            code = "error-correct-error-format"
+            client = ORCIDOAuthAPIClient(url=url)
+            with pytest.raises(UpstreamError) as uie:
+                await client.exchange_code_for_token(code)
+            assert uie.value.CODE == UpstreamError.CODE
+            assert uie.value.data["upstream_error"]["error"] == "invalid_request"

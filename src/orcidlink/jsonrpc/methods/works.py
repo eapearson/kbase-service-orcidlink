@@ -4,11 +4,7 @@ from typing import List
 import aiohttp
 
 from orcidlink import process
-from orcidlink.jsonrpc.errors import (
-    NotFoundError,
-    ORCIDUnauthorizedClient,
-    UpstreamError,
-)
+from orcidlink.jsonrpc.errors import NotFoundError, UpstreamError
 from orcidlink.lib.service_clients import orcid_api
 from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
 from orcidlink.lib.type import ServiceBaseModel
@@ -64,18 +60,16 @@ async def get_work(username: str, put_code: int) -> GetWorkResult:
     token = link_record.orcid_auth.access_token
     orcid_id = link_record.orcid_auth.orcid
 
-    try:
-        raw_work = await orcid_api.orcid_api(token).get_work(orcid_id, put_code)
-        profile = await orcid_api.orcid_api(token).get_profile(orcid_id)
-        return GetWorkResult(
-            work=to_service.transform_work(profile, raw_work.bulk[0].work)
-        )
-    except orcid_api.ORCIDAPIAccountNotFoundError as err:
-        raise NotFoundError(err.message)
-    except orcid_api.ORCIDAPIClientInvalidAccessTokenError as err:
-        raise ORCIDUnauthorizedClient(err.message)
-    except orcid_api.ORCIDAPIClientOtherError as err:
-        raise UpstreamError(err.message)
+    # try:
+    raw_work = await orcid_api.orcid_api(token).get_work(orcid_id, put_code)
+    profile = await orcid_api.orcid_api(token).get_profile(orcid_id)
+    return GetWorkResult(work=to_service.transform_work(profile, raw_work.bulk[0].work))
+    # except orcid_api.ORCIDAPINotFoundError as err:
+    #     raise NotFoundError(err.message)
+    # except orcid_api.ORCIDAPIClientInvalidAccessTokenError as err:
+    #     raise ORCIDInsufficientAuthorizationError(err.message)
+    # except orcid_api.ORCIDAPIClientOtherError as err:
+    #     raise UpstreamError(err.message)
 
 
 class CreateWorkResult(ServiceBaseModel):

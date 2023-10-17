@@ -40,14 +40,23 @@ from asgi_correlation_id import correlation_id
 from multidict import CIMultiDict
 from pydantic import Field
 
+from orcidlink.jsonrpc.errors import UpstreamError
+from orcidlink.lib.json_support import JSONObject
 from orcidlink.lib.service_clients.orcid_api_errors import (
     OAuthBearerError,
     ORCIDAPIError,
+    ORCIDAPIOtherErrorDetail,
+    orcid_api_error_to_json_rpc_error,
+    orcid_oauth_bearer_to_json_rpc_error,
 )
 from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
+
+# from orcidlink.lib.service_clients.orcid_oauth_api import orcid_oauth_to_json_rpc_error
+# from orcidlink.lib.service_clients.orcid_oauth_api_errors import OAuthAPIError
 from orcidlink.lib.type import ServiceBaseModel
 from orcidlink.runtime import config
 
+ORCID_API_CONTENT_TYPE = "application/vnd.orcid+json"
 #
 # API Type modeling via Pydantic classses.
 #
@@ -629,67 +638,63 @@ class CreateWorkInput(ServiceBaseModel):
 #
 
 
-class ORCIDAPIClientError(Exception):
-    api_error: Optional[ORCIDAPIError]
-    oauth_error: Optional[OAuthBearerError]
-    message: str
-
-    def __init__(
-        self,
-        message: str,
-        api_error: Optional[ORCIDAPIError] = None,
-        oauth_error: Optional[OAuthBearerError] = None,
-    ):
-        super().__init__(message)
-        self.message = message
-        self.api_error = api_error
-        self.oauth_error = oauth_error
-
-
-class ORCIDAPIClientInvalidAccessTokenError(ORCIDAPIClientError):
-    pass
-
-
-class ORCIDAPIAccountNotFoundError(ORCIDAPIClientError):
-    pass
-
-
-class ORCIDAPIClientOtherError(ORCIDAPIClientError):
-    pass
-
-
 async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     """
-    Given a response from the ORCID OAuth service, as an aiohttp
-    response object, extract and return JSON from the body, handling
-    any erroneous conditions.
+    Given a response from the ORCID API, as an aiohttp response object, extract and
+    return JSON from the body, handling any erroneous conditions.
+
+    ORCID API Errors? The documentation is terrible, but here are some resources:
+
+    - https://github.com/ORCID/ORCID-Source/blob/main/orcid-api-web/tutorial/api_errors.md,
+      general discussion of errors in the context of response codes, messages. Not very
+      useful for us as we ignore the response code, and just use the error code.
+    - Listing of error codes and messages in the orcid-core codebase. This is the only
+      place I found the actual error codes itemized:
+      https://github.com/ORCID/ORCID-Source/blob/b0016f3284875e48e81631bea149be831da78d22/orcid-core/src/main/resources/i18n/api_en.properties#L53
     """
 
     # Just some basic sanity testing; also, forced by using type analysis
     content_type_raw = response.headers.get("Content-Type")
     if content_type_raw is None:
-        raise ORCIDAPIClientOtherError("No content-type in response")
+        raise UpstreamError("No content-type in response")
 
     content_type, _, _ = content_type_raw.partition(";")
-    if content_type != "application/vnd.orcid+json":
-        raise ORCIDAPIClientOtherError(
+    if content_type != ORCID_API_CONTENT_TYPE:
+        raise UpstreamError(
             (
-                "Expected JSON response (application/vnd.orcid+json), "
+                f"Expected JSON response ({ORCID_API_CONTENT_TYPE}), "
                 f"got {content_type}"
             )
         )
 
+    # Perform the JSON parsing manually, as the aiohttp "json()" method will return
+    # None for an empty body (which is simply wrong).
     try:
-        json_response = await response.json()
+        text_response = await response.text()
+        json_response = json.loads(text_response)
     except json.JSONDecodeError as jde:
-        raise ORCIDAPIClientOtherError(
+        raise UpstreamError(
             "Error decoding JSON response",
-            # JSONDecodeErrorData(message=str(jde)),
         ) from jde
 
     # Return immediately if all is well.
+    #
+    # TODO: OMG, sometimes errors are returned with a 200;
+    # deal with this later, if at all. E.g. getting works with an invalid
+    # putCode ends up with an API error, but it is wrapped in a "bulk" property
+    # and is in a 200 response. This is probably because all bulk calls can have
+    # some bulk items returned, and others with errors
+    #
     if response.status == 200:
-        return json_response
+        # let's just handle the case of a work not found.
+        simple_bulk_error = (
+            "bulk" in json_response
+            and len(json_response["bulk"]) == 1
+            and "error" in json_response["bulk"][0]
+        )
+        if not simple_bulk_error:
+            return json_response
+        json_response = json_response["bulk"][0]["error"]
 
     # Shoehorn the error code into the appropriate structure
     error = extract_error(json_response)
@@ -708,51 +713,64 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # )
 
     # 1. ORCID Id does not correspond to a user.
-    if response.status == 404:
-        raise ORCIDAPIAccountNotFoundError("ORCID User Not Found")
+    # if response.status == 404:
+    #     raise ORCIDAPINotFoundError("Not Found")
 
-    if response.status == 401:
-        # raise AuthorizationRequiredError(
-        #     "Not authorized for ORCID Access"
-        # )
-        # TODO: Perhaps we should just return UpstreamError and wrap the original error.
-        if isinstance(error, ORCIDAPIError):
-            if error.error_code == 9017:
-                # 3. access_code does not match requested account, there is
-                # nothing to do here other than inform the user.
-                #
-                # This should not occur under normal circumstances, as we
-                # currently only make profile calls from the orcid link
-                # ui, which is carried out under the orcid link owner.
-                #
-                # Thus this is a service error, and no not something the user can do anything about.
-                # raise NotAuthorizedError(
-                #     "Not authorized for access to this account"
-                # )
-                raise ORCIDAPIClientOtherError(
-                    "Not authorized for access to this account"
-                )
-            else:
-                raise ORCIDAPIClientOtherError("Authorization error", api_error=error)
-                # raise AuthorizationRequiredError(
-                #     "Not authorized for ORCID Access"
-                # )
-        elif isinstance(error, OAuthBearerError):
-            if error.error == "invalid_token":
-                # This indicates that either the token is actually malformed, or, in the
-                # context of ORCID Link, that that the token has become invalid at
-                # ORCID. The most likely cause being the user directly removing
-                # authorization for KBase.
-                raise ORCIDAPIClientInvalidAccessTokenError(
-                    "Invalid ORCID access token"
-                )
-            else:
-                raise ORCIDAPIClientOtherError(
-                    "Not authorized for ORCID Access", oauth_error=error
-                )
-        else:
-            # Wow, some other type of error.
-            raise ORCIDAPIClientOtherError("Other ORCID API 401 Error")
+    # if response.status == 401:
+    # raise AuthorizationRequiredError(
+    #     "Not authorized for ORCID Access"
+    # )
+    # TODO: Perhaps we should just return UpstreamError and wrap the original error.
+    # For now, ignore the status code.
+    if isinstance(error, ORCIDAPIError):
+        raise orcid_api_error_to_json_rpc_error(error)
+        # api_error_code = get_orcid_api_error_code(error.error_code)
+
+        # if error.error_code == 9017:
+        #     # 3. access_code does not match requested account, there is
+        #     # nothing to do here other than inform the user.
+        #     #
+        #     # This should not occur under normal circumstances, as we
+        #     # currently only make profile calls from the orcid link
+        #     # ui, which is carried out under the orcid link owner.
+        #     #
+        #     # Thus this is a service error, and no not something the user can do anything about.
+        #     # raise NotAuthorizedError(
+        #     #     "Not authorized for access to this account"
+        #     # )
+        #     raise ORCIDAPIClientOtherError(
+        #         "Not authorized for access to this account"
+        #     )
+        # elif error.error_code == 9016:
+        #     raise ORCIDAPINotFoundError("Not found")
+        # elif error.error_code == 9034:
+        #     raise ORCIDAPINotFoundError("Not found")
+        # else:
+        #     raise ORCIDAPIClientOtherError("Authorization error", api_error=error)
+        #     # raise AuthorizationRequiredError(
+        #     #     "Not authorized for ORCID Access"
+        #     # )
+    elif isinstance(error, OAuthBearerError):
+        raise orcid_oauth_bearer_to_json_rpc_error(error)
+        # if error.error == "invalid_token":
+        #     # This indicates that either the token is actually malformed, or, in the
+        #     # context of ORCID Link, that that the token has become invalid at
+        #     # ORCID. The most likely cause being the user directly removing
+        #     # authorization for KBase.
+        #     raise ORCIDAPIClientInvalidAccessTokenError(
+        #         "Invalid ORCID access token"
+        #     )
+        # else:
+        #     raise ORCIDAPIClientOtherError(
+        #         "Not authorized for ORCID Access", oauth_error=error
+        #     )
+    elif error is None:
+        raise UpstreamError(data={"message": "Error is not a JSON object"})
+    else:
+        # Wow, some other type of error.
+        raise UpstreamError(
+            data=ORCIDAPIOtherErrorDetail(upstream_error=error).model_dump()
+        )
 
     # This will capture any >=300 errors, which we just
     # in through as an internal error.
@@ -764,10 +782,10 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # raise exceptions.make_upstream_error(
     #     response.status, result, source="get_profile"
     # )
-    raise ORCIDAPIClientOtherError("Other ORCID API Error")
+    # raise ORCIDAPIClientOtherError("Other ORCID API Error")
 
 
-def extract_error(result: Any) -> ORCIDAPIError | OAuthBearerError | None:
+def extract_error(result: Any) -> ORCIDAPIError | OAuthBearerError | JSONObject | None:
     # Shoehorn the error code into the appropriate structure
     if not isinstance(result, dict):
         return None
@@ -780,7 +798,7 @@ def extract_error(result: Any) -> ORCIDAPIError | OAuthBearerError | None:
     elif "error-code" in result:
         return ORCIDAPIError.model_validate(result)
     else:
-        return None
+        return result
 
 
 class ORCIDAPIClient:
@@ -810,8 +828,8 @@ class ORCIDAPIClient:
     def header(self) -> CIMultiDict[str]:
         return CIMultiDict(
             [
-                ("Accept", "application/vnd.orcid+json"),
-                ("Content-Type", "application/vnd.orcid+json"),
+                ("Accept", ORCID_API_CONTENT_TYPE),
+                ("Content-Type", ORCID_API_CONTENT_TYPE),
                 ("Authorization", f"Bearer {self.access_token}"),
             ]
         )

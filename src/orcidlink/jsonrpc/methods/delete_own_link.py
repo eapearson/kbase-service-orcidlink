@@ -1,5 +1,5 @@
 from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError
-from orcidlink.lib.service_clients.orcid_oauth import orcid_oauth
+from orcidlink.lib.service_clients.orcid_oauth_api import orcid_oauth_api
 from orcidlink.storage.storage_model import storage_model
 
 
@@ -17,7 +17,7 @@ async def delete_own_link(username: str, owner_username: str) -> None:
         raise NotAuthorizedError("User not authorized to access this link")
 
     # TODO: handle error? or propagate? or in a transaction?
-    await orcid_oauth().revoke_access_token(link_record.orcid_auth.access_token)
+    await orcid_oauth_api().revoke_access_token(link_record.orcid_auth.access_token)
 
     # TODO: handle error? or propagate?
     await storage.delete_link_record(username)

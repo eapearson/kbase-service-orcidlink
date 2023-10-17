@@ -5,18 +5,15 @@ import aiohttp
 from multidict import CIMultiDict
 
 from orcidlink import model
-from orcidlink.jsonrpc.errors import (
-    ContentTypeError,
-    JSONDecodeError,
-    NotAuthorizedError,
-    ORCIDUnauthorizedClient,
-    UpstreamError,
+from orcidlink.jsonrpc.errors import ContentTypeError, JSONDecodeError, UpstreamError
+from orcidlink.lib.service_clients.orcid_oauth_api_errors import (
+    OAuthAPIError,
+    orcid_oauth_api_to_json_rpc_error,
 )
-from orcidlink.lib.service_clients.orcid_api_errors import OAuthError
 from orcidlink.runtime import config
 
 
-class ORCIDOAuthClient:
+class ORCIDOAuthAPIClient:
     """
     An OAuth client supporting API operations.
 
@@ -58,16 +55,6 @@ class ORCIDOAuthClient:
         response object, extract and return JSON from the body, handling
         any erroneous conditions.
         """
-        content_length_raw = response.headers.get("Content-Length")
-        if content_length_raw is None:
-            raise UpstreamError("No content length in response")
-        content_length = int(content_length_raw)
-        if content_length == 0:
-            # We don't have any cases of an empty response, so consider
-            # this an error. We need to cover this case, even though we
-            # don't expect it in reality.
-            raise UpstreamError("Unexpected empty body")
-
         content_type_raw = response.headers.get("Content-Type")
 
         if content_type_raw is None:
@@ -77,7 +64,8 @@ class ORCIDOAuthClient:
         if content_type != "application/json":
             raise ContentTypeError(f"Expected JSON response, got {content_type}")
         try:
-            json_response = await response.json()
+            text_response = await response.text()
+            json_response = json.loads(text_response)
         except json.JSONDecodeError as jde:
             raise JSONDecodeError(
                 "Error decoding JSON response",
@@ -87,54 +75,40 @@ class ORCIDOAuthClient:
             return json_response
         else:
             if "error" in json_response:
-                return OAuthError.model_validate(json_response)
+                return OAuthAPIError.model_validate(json_response)
             else:
-                raise UpstreamError("Unexpected Error Response from ORCID")
+                raise UpstreamError(data={"upstream_error": json_response})
 
     async def handle_empty_response(
         self, response: aiohttp.ClientResponse
-    ) -> None | OAuthError:
+    ) -> None | OAuthAPIError:
         """
         Given a response from the ORCID OAuth service, as an aiohttp
         response object, extract and return JSON from the body, handling
         any erroneous conditions.
         """
-        content_length_raw = response.headers.get("Content-Length")
-        if content_length_raw is None:
-            # raise some error?
-            raise UpstreamError("No content length in response")
+        text_response = await response.text()
 
-        # We don't bother handling a malformed content length header; that will
-        # just throw a ValueError which will percolate up through FastAPI/Starlette
-        # and become an internal server error, which is good enough.
-        content_length = int(content_length_raw)
-        if content_length == 0:
-            # This is our normal condition; we exit early.
+        #
+        # The "normal" response
+        #
+        if len(text_response) == 0:
             return None
 
         if response.status == 200:
             raise UpstreamError("Expected empty response")
 
-        content_type_raw = response.headers.get("Content-Type")
-        if content_type_raw is None:
-            raise ContentTypeError("No content-type in response")
-
-        content_type, _, _ = content_type_raw.partition(";")
-        if content_type != "application/json":
-            raise ContentTypeError(f"Expected JSON response, got {content_type}")
-
         try:
-            json_response = await response.json()
+            json_response = json.loads(text_response)
         except json.JSONDecodeError as jde:
             raise JSONDecodeError(
                 "Error decoding JSON response",
-                # exceptions.JSONDecodeErrorData(message=str(jde)),
             ) from jde
 
         if "error" in json_response:
-            return OAuthError.model_validate(json_response)
+            return OAuthAPIError.model_validate(json_response)
         else:
-            raise UpstreamError("Unexpected Error Response from ORCID")
+            raise UpstreamError(data={"upstream_error": json_response})
 
     #
     # Revoke ORCID side of link.
@@ -166,17 +140,16 @@ class ORCIDOAuthClient:
                 empty_response = await self.handle_empty_response(response)
                 if empty_response is None:
                     return
-                # if response.status != 200:
-                #     raise exceptions.make_upstream_error(
-                #         response.status, None, source="revoke_link"
-                #     )
+
+                if isinstance(empty_response, OAuthAPIError):
+                    raise orcid_oauth_api_to_json_rpc_error(empty_response)
 
                 # This is returned when the main token set (access token, etc.) is
                 # no longer valid,
-                if empty_response.error == "unauthorized_client":
-                    raise NotAuthorizedError(empty_response.error_description)
-                else:
-                    raise UpstreamError(empty_response.error_description)
+                # if empty_response.error == "unauthorized_client":
+                #     raise NotAuthorizedError(empty_response.error_description)
+                # else:
+                #     raise UpstreamError(empty_response.error_description)
 
     #
     # Obtain a new set of tokens for a given refresh token
@@ -198,30 +171,59 @@ class ORCIDOAuthClient:
         data["grant_type"] = "refresh_token"
         data["revoke_old"] = "true"
 
-        # TODO: determine all possible ORCID errors here, or the
-        # pattern with which we can return useful info
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 self.url_path("token"), headers=header, data=data
             ) as response:
                 json_response = await self.handle_json_response(response)
 
-                if isinstance(json_response, OAuthError):
-                    # This is returned when the main token set (access token, etc.) is
-                    # no longer valid,
-                    if json_response.error == "unauthorized_client":
-                        raise ORCIDUnauthorizedClient(json_response.error_description)
-                    else:
-                        raise UpstreamError(json_response.error_description)
+                if isinstance(json_response, OAuthAPIError):
+                    raise orcid_oauth_api_to_json_rpc_error(json_response)
+                else:
+                    return model.ORCIDAuth.model_validate(json_response)
+
+    async def exchange_code_for_token(self, code: str) -> model.ORCIDAuth:
+        """
+        Exchange the temporary token from ORCID for the authorized token.
+
+        ORCID does not specifically document this, but refers to the OAuth spec:
+        https://datatracker.ietf.org/doc/html/rfc8693.
+
+        Error structure defined here:
+        https://www.rfc-editor.org/rfc/rfc6749#section-5.2
+        """
+        header = self.header()
+        header["accept"] = "application/json"
+        data = self.constrained_data()
+        data["grant_type"] = "authorization_code"
+        data["code"] = code
+
+        # Note that the redirect uri below is just for the api - it is not actually used
+        # for redirection in this case.
+        # TODO: investigate and point to the docs, because this is weird.
+        # TODO: put in orcid client!
+        data[
+            "redirect_uri"
+        ] = f"{config().orcidlink_url}/linking-sessions/oauth/continue"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{config().orcid_oauth_base_url}/token", headers=header, data=data
+            ) as response:
+                json_response = await self.handle_json_response(response)
+                if isinstance(json_response, OAuthAPIError):
+                    raise orcid_oauth_api_to_json_rpc_error(json_response)
                 else:
                     return model.ORCIDAuth.model_validate(json_response)
 
 
-def orcid_oauth() -> ORCIDOAuthClient:
+def orcid_oauth_api() -> ORCIDOAuthAPIClient:
     """
     Creates an instance of ORCIDOAuthClient for support of the ORCID OAuth API.
+
+    Note that this is
 
     This not for support of OAuth flow, but rather interactions with ORCID OAuth or
     simply Auth services.
     """
-    return ORCIDOAuthClient(url=config().orcid_oauth_base_url)
+    return ORCIDOAuthAPIClient(url=config().orcid_oauth_base_url)

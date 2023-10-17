@@ -12,7 +12,9 @@ from test.mocks.env import (
 from test.mocks.mock_contexts import (
     mock_auth_service,
     mock_orcid_api_service,
+    mock_orcid_api_service_with_errors,
     mock_orcid_oauth_service,
+    mock_orcid_oauth_service2,
     no_stderr,
 )
 from test.mocks.testing_utils import (
@@ -34,7 +36,12 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
-from orcidlink.jsonrpc.errors import NotAuthorizedError, NotFoundError, UpstreamError
+from orcidlink.jsonrpc.errors import (
+    NotAuthorizedError,
+    NotFoundError,
+    ORCIDNotFoundError,
+    UpstreamError,
+)
 from orcidlink.lib.logger import log_event
 from orcidlink.lib.utils import posix_time_millis
 from orcidlink.main import app, config_to_log_level
@@ -90,6 +97,15 @@ def mock_services():
         with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
             with mock_orcid_oauth_service(MOCK_ORCID_OAUTH_PORT):
                 with mock_orcid_api_service(MOCK_ORCID_API_PORT):
+                    yield
+
+
+@contextlib.contextmanager
+def mock_services_with_errors():
+    with no_stderr():
+        with mock_auth_service(MOCK_KBASE_SERVICES_PORT):
+            with mock_orcid_oauth_service2(MOCK_ORCID_OAUTH_PORT):
+                with mock_orcid_api_service_with_errors(MOCK_ORCID_API_PORT):
                     yield
 
 
@@ -550,6 +566,11 @@ async def test_find_links_error():
         )
 
 
+#
+# get-link
+#
+
+
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_get_link():
     with mock_services():
@@ -580,6 +601,49 @@ async def test_get_link_error():
         params = {"username": "foo"}
         response = rpc_call("get-link", params, generate_kbase_token("amanager"))
         assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
+
+
+#
+# refresh-tokens
+#
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_refresh_tokens():
+    with mock_services():
+        # Let us populate with a links.
+        await create_link(TEST_LINK)
+
+        # Now they should be found.
+        params = {"username": "foo"}
+        response = rpc_call("refresh-tokens", params, generate_kbase_token("amanager"))
+        result = assert_json_rpc_result_ignore_result(response)
+        link = result["link"]
+        assert link["username"] == "foo"
+
+
+@mock.patch.dict(os.environ, TEST_ENV, clear=True)
+async def test_refresh_tokens_errors():
+    with mock_services():
+        # Let us populate with a links.
+        await create_link(TEST_LINK)
+
+        # Only admins!
+        params = {"username": "foo"}
+        response = rpc_call("refresh-tokens", params, generate_kbase_token("foo"))
+        assert_json_rpc_error(
+            response, NotAuthorizedError.CODE, NotAuthorizedError.MESSAGE
+        )
+
+        # What, no bar?
+        params = {"username": "bar"}
+        response = rpc_call("refresh-tokens", params, generate_kbase_token("amanager"))
+        assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
+
+
+#
+# get-linking-sessions
+#
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -954,7 +1018,7 @@ async def test_get_orcid_profile():
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_get_orcid_profile_errors():
-    with mock_services():
+    with mock_services_with_errors():
         await clear_database()
 
         # Create a link
@@ -977,7 +1041,22 @@ async def test_get_orcid_profile_errors():
             response, NotAuthorizedError.CODE, NotAuthorizedError.MESSAGE
         )
 
-        # TODO: errors propagated from ORCID API
+        # errors propagated from ORCID API
+
+        # Set the orcid id to "not-found" so that it triggers this condition in
+        # the mock_orcid service.
+        orcid_id = "not-found"
+        test_link = LinkRecord.model_validate(TEST_LINK)
+        test_link.orcid_auth.orcid = orcid_id
+        await create_link(test_link.model_dump())
+
+        params = {"username": "foo"}
+
+        response = rpc_call("get-orcid-profile", params, generate_kbase_token("foo"))
+
+        assert_json_rpc_error(
+            response, ORCIDNotFoundError.CODE, ORCIDNotFoundError.MESSAGE
+        )
 
 
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
@@ -1051,6 +1130,8 @@ async def test_get_work2():
 @mock.patch.dict(os.environ, TEST_ENV, clear=True)
 async def test_get_work_errors():
     with mock_services():
+        await clear_database()
+        await create_link(TEST_LINK)
         #
         # Omitting a param
         # TODO: do we really need to test this?
@@ -1062,14 +1143,20 @@ async def test_get_work_errors():
         assert_json_rpc_error(response, -32602, "Invalid params")
 
         #
-        # An unlinked user gets a 422, since fastapi validates the url param
-        # and it should be int.
+        # An unlinked user gets a Not Found, which is caught by the method impl.
         #
         params = {"username": "bar", "put_code": 1526002}
         response = rpc_call("get-orcid-work", params, generate_kbase_token("bar"))
         assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
 
-        params = {"username": "foo", "put_code": 1526002}
+        # Another cause of not-found is if the work is not found.
+        params = {"username": "foo", "put_code": 1234}
+        response = rpc_call("get-orcid-work", params, generate_kbase_token("foo"))
+        assert_json_rpc_error(
+            response, ORCIDNotFoundError.CODE, ORCIDNotFoundError.MESSAGE
+        )
+
+        params = {"username": "foo", "put_code": 12345}
         response = rpc_call("get-orcid-work", params, generate_kbase_token("bar"))
         assert_json_rpc_error(
             response, NotAuthorizedError.CODE, NotAuthorizedError.MESSAGE
