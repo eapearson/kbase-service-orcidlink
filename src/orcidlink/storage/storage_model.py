@@ -1,7 +1,12 @@
-from orcidlink.lib.config import config
+from orcidlink.runtime import config
 from orcidlink.storage.storage_model_mongo import StorageModelMongo
 
 
 def storage_model() -> StorageModelMongo:
-    mc = config().mongo
-    return StorageModelMongo(mc.host, mc.port, mc.database, mc.username, mc.password)
+    return StorageModelMongo(
+        config().mongo_host,
+        config().mongo_port,
+        config().mongo_database,
+        config().mongo_username,
+        config().mongo_password,
+    )

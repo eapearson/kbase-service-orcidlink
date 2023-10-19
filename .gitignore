@@ -3,7 +3,6 @@
 /_local
 /dev/work/data
 /lib/
-.idea
 
 # Development artifacts
 LOCAL_ONLY_README.md
@@ -13,6 +12,8 @@ custom.env
 docs/api/index.html
 /deploy/*
 /build
+/_attic
+orcidlink-errors.log
 
 
 # Testing
@@ -24,3 +25,7 @@ coverage.lcov
 
 # Deployment
 /deploy
+
+# IDEs
+.idea
+.fleet

@@ -32,9 +32,15 @@
     "orcidId": "0000-0003-4997-3076",
     "name": "Erik A Pearson",
     "roles": [
-      "http://credit.niso.org/contributor-roles/conceptualization/",
-      "http://credit.niso.org/contributor-roles/methodology/",
-      "http://credit.niso.org/contributor-roles/investigation/"
+      {
+        "role": "http://credit.niso.org/contributor-roles/conceptualization/"
+      },
+      {
+        "role": "http://credit.niso.org/contributor-roles/methodology/"
+      },
+      {
+        "role": "http://credit.niso.org/contributor-roles/investigation/"
+      }
     ]
   },
   "otherContributors": [
@@ -42,15 +48,21 @@
       "orcidId": null,
       "name": "Foo Fox",
       "roles": [
-        "http://credit.niso.org/contributor-roles/data-curation/"
+        {
+          "role": "http://credit.niso.org/contributor-roles/data-curation/"
+        }
       ]
     },
     {
       "orcidId": "1111-2222-3333-4444",
       "name": "Bar Bunny",
       "roles": [
-        "http://credit.niso.org/contributor-roles/data-curation/",
-        "http://credit.niso.org/contributor-roles/methodology/"
+        {
+          "role": "http://credit.niso.org/contributor-roles/data-curation/"
+        },
+        {
+          "role": "http://credit.niso.org/contributor-roles/methodology/"
+        }
       ]
     }
   ]

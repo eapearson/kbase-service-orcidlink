@@ -1,8 +1,22 @@
 from typing import Dict, List
 
 from orcidlink import model
-from orcidlink.model import ORCIDContributorSelf
-from orcidlink.service_clients import orcid_api
+from orcidlink.jsonrpc.errors import ORCIDProfileNamePrivate
+from orcidlink.lib.service_clients import orcid_api
+from orcidlink.lib.service_clients.orcid_common import ORCIDStringValue
+from orcidlink.model import (
+    CitationType,
+    ContributorRole,
+    ContributorRoleValue,
+    ExternalIdType,
+    ORCIDBiographyFields,
+    ORCIDContributorSelf,
+    ORCIDEmailFields,
+    ORCIDFieldGroup,
+    ORCIDNameFields,
+    RelationshipType,
+    WorkType,
+)
 
 
 def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
@@ -33,11 +47,18 @@ def orcid_date_to_string_date(orcid_date: orcid_api.Date) -> str:
 
 
 def transform_external_id(external_id: orcid_api.ExternalId) -> model.ExternalId:
+    """
+    Transforms an ORCID external id to an orcidlink model external id.
+
+    As with many of these transformations, it simplifies the structure. The ORCID
+    structures often have fields we don't need, overly verbose property names, and
+    "value" sub-properties.
+    """
     return model.ExternalId(
-        type=external_id.external_id_type,
+        type=ExternalIdType(external_id.external_id_type),
         value=external_id.external_id_value,
         url=external_id.external_id_url.value,
-        relationship=external_id.external_id_relationship,
+        relationship=RelationshipType(external_id.external_id_relationship),
     )
 
 
@@ -92,12 +113,16 @@ def transform_work_summary(
     return model.WorkSummary(
         putCode=work_summary.put_code,
         createdAt=work_summary.created_date.value,
-        updatedAt=work_summary.last_modified_date.value,
-        source=work_summary.source.source_name.value,
+        updatedAt=work_summary.last_modified_date.value
+        if work_summary.last_modified_date is not None
+        else None,
+        source=work_summary.source.source_name.value
+        if work_summary.source.source_name is not None
+        else None,
         title=work_summary.title.title.value,
         journal=journal,
         date=orcid_date_to_string_date(work_summary.publication_date),
-        workType=work_summary.type,
+        workType=WorkType(work_summary.type),
         url=work_summary.url.value,
         doi=doi,
         externalIds=external_ids,
@@ -116,10 +141,17 @@ def transform_work(
     """
     put_code = raw_work.put_code
     created_at = raw_work.created_date.value
-    updated_at = raw_work.last_modified_date.value
+    if raw_work.last_modified_date is not None:
+        updated_at = raw_work.last_modified_date.value
+    else:
+        updated_at = None
 
     # TODO: should also get the source app id
-    source = raw_work.source.source_name.value
+    source = (
+        raw_work.source.source_name.value
+        if raw_work.source.source_name is not None
+        else None
+    )
     date = orcid_date_to_string_date(raw_work.publication_date)
     title = raw_work.title.title.value
     journal = (
@@ -160,14 +192,28 @@ def transform_work(
     for contributor in raw_work.contributors.contributor:
         if contributor.contributor_orcid.path == profile.orcid_identifier.path:
             if contributor.contributor_attributes is not None:
-                self_roles.append(contributor.contributor_attributes.contributor_role)
+                self_roles.append(
+                    ContributorRole(
+                        role=ContributorRoleValue(
+                            contributor.contributor_attributes.contributor_role
+                        )
+                    )
+                )
 
-    if profile.person.name.credit_name is not None:
+    if profile.person.name is None:
+        raise ORCIDProfileNamePrivate("Your ORCID Profile has your name set as private")
+    elif profile.person.name.credit_name is not None:
         name = profile.person.name.credit_name
+    elif profile.person.name.family_name is None:
+        name = ORCIDStringValue(value=f"{profile.person.name.given_names.value}")
     else:
-        name = orcid_api.StringValue(
-            value=f"{profile.person.name.given_names.value} {profile.person.name.family_name.value}"
+        name = ORCIDStringValue(
+            value=(
+                f"{profile.person.name.given_names.value} "
+                f"{profile.person.name.family_name.value}"
+            )
         )
+
     self_contributor = ORCIDContributorSelf(
         name=name.value, orcidId=profile.orcid_identifier.path, roles=self_roles
     )
@@ -176,7 +222,8 @@ def transform_work(
         raise ValueError('the "citation" field may not be empty')
 
     citation = model.ORCIDCitation(
-        type=raw_work.citation.citation_type, value=raw_work.citation.citation_value
+        type=CitationType(raw_work.citation.citation_type),
+        value=raw_work.citation.citation_value,
     )
 
     # A note on how we deal with building a list of contributors.
@@ -202,7 +249,7 @@ def transform_work(
             role = contributor.contributor_attributes.contributor_role
             new_contributor = model.ORCIDContributor(
                 name=contributor.credit_name.value,
-                roles=[role],
+                roles=[ContributorRole(role=ContributorRoleValue(role))],
                 orcidId=contributor.contributor_orcid.path,
             )
             # We optionally set the orcidId.
@@ -214,7 +261,9 @@ def transform_work(
             # And if we have seen this contributor before, we simply
             # append the role for this entry.
             role = contributor.contributor_attributes.contributor_role
-            contributors_map[contributor.credit_name.value].roles.append(role)
+            contributors_map[contributor.credit_name.value].roles.append(
+                ContributorRole(role=ContributorRoleValue(role))
+            )
 
     other_contributors = list(contributors_map.values())
 
@@ -231,7 +280,7 @@ def transform_work(
         title=title,
         journal=journal,
         date=date,
-        workType=work_type,
+        workType=WorkType(work_type),
         url=url,
         doi=doi,
         externalIds=external_ids,
@@ -287,14 +336,10 @@ def transform_affilations(
 
 
 def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
-    email_addresses = []
-    for email in profile_raw.person.emails.email:
-        email_addresses.append(email.email)
-
     # Organizations / Employment!
 
     affiliation_group = profile_raw.activities_summary.employments.affiliation_group
-    affiliations = transform_affilations(affiliation_group)
+    transform_affilations(affiliation_group)
 
     #
     # Publications
@@ -310,26 +355,62 @@ def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
     #         continue
     #     works.append(transform_work_summary(work_summary))
 
-    if profile_raw.person.name.credit_name is not None:
-        creditName = profile_raw.person.name.credit_name.value
+    # if profile_raw.person.name is not None and profile_raw.person.name.credit_name
+    # is not None:
+    #     creditName = profile_raw.person.name.credit_name.value
+    # else:
+    #     creditName = None
+
+    # bio = None
+    # if profile_raw.person.biography is not None:
+    #     bio = profile_raw.person.biography.content
+
+    if profile_raw.person.name is None:
+        name_group = ORCIDFieldGroup[ORCIDNameFields](private=True, fields=None)
     else:
-        creditName = None
+        name_group = ORCIDFieldGroup[ORCIDNameFields](
+            private=False,
+            fields=ORCIDNameFields(
+                firstName=profile_raw.person.name.given_names.value,
+                lastName=profile_raw.person.name.family_name.value
+                if profile_raw.person.name.family_name is not None
+                else None,
+                creditName=profile_raw.person.name.credit_name.value
+                if profile_raw.person.name.credit_name is not None
+                else None,
+            ),
+        )
+
+    if profile_raw.person.biography is None:
+        biography_group = ORCIDFieldGroup[ORCIDBiographyFields](
+            private=True, fields=None
+        )
+    else:
+        biography_group = ORCIDFieldGroup[ORCIDBiographyFields](
+            private=False,
+            fields=ORCIDBiographyFields(bio=profile_raw.person.biography.content),
+        )
+
+    if profile_raw.person.emails is None:
+        email_group = ORCIDFieldGroup[ORCIDEmailFields](private=True, fields=None)
+    else:
+        email_addresses = []
+        for email in profile_raw.person.emails.email:
+            email_addresses.append(email.email)
+        email_group = ORCIDFieldGroup[ORCIDEmailFields](
+            private=False, fields=ORCIDEmailFields(emailAddresses=email_addresses)
+        )
 
     return model.ORCIDProfile(
         orcidId=profile_raw.orcid_identifier.path,
-        firstName=profile_raw.person.name.given_names.value,
-        lastName=profile_raw.person.name.family_name.value,
-        creditName=creditName,
-        bio=profile_raw.person.biography.content,
-        distinctions=transform_affilations(
-            profile_raw.activities_summary.distinctions.affiliation_group
-        ),
-        education=transform_affilations(
-            profile_raw.activities_summary.educations.affiliation_group
-        ),
+        nameGroup=name_group,
+        biographyGroup=biography_group,
+        # works=works,
+        # emailAddresses=email_addresses,
+        emailGroup=email_group,
+        # what is missing?
+        # websites + social links, keywords, countries
         employment=transform_affilations(
             profile_raw.activities_summary.employments.affiliation_group
         ),
-        # works=works,
-        emailAddresses=email_addresses,
     )

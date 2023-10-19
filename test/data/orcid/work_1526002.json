@@ -36,7 +36,7 @@
         },
         "short-description": "my short description",
         "citation": {
-          "citation_type": "vancouver",
+          "citation_type": "formatted-vancouver",
           "citation_value": "my citation"
         },
         "type": "online-resource",

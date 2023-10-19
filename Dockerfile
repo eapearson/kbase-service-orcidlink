@@ -1,4 +1,4 @@
-FROM python:3.11.2-slim-bullseye
+FROM python:3.11.5-slim-bookworm
 # Note that the python version needs to match that used to create
 # poetry.lock.
 
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y curl git
 SHELL ["/bin/bash", "-c"]
 
 # Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
 
 # Temporary fix for broken Python venv.
 # setuptools is not used by poetry (see the install command below), but it is present
@@ -30,10 +30,8 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.3.2
 # against it. Just upgrading to the latest version, to avoid having to fix this when poetry's
 # venv has a more recent version than 65.5.1 (which fixes the CVE). When the upstream issue is fixed,
 # this line can be removed.
+# TODO: can it be removed now?
 RUN cd /root/.local/share/pypoetry && source venv/bin/activate && pip install --upgrade setuptools
-
-# Don't need curl any more.
-RUN apt-get purge -y curl && apt-get autoremove -y
 
 # Annoyingly it puts it here.
 ENV PATH="/root/.local/bin:$PATH"
@@ -48,19 +46,21 @@ COPY ./scripts /kb/module/scripts
 COPY ./src/orcidlink /kb/module/src/orcidlink
 COPY ./src/boot /kb/module/src/boot
 COPY ./src/misc /kb/module/src/misc
-COPY ./etc /kb/module/etc
+COPY ./schema /kb/module/schema
 COPY ./poetry.lock /kb/module
 COPY ./pyproject.toml /kb/module
 COPY ./SERVICE_DESCRIPTION.toml /kb/module
 COPY .git /kb/module
-# NB: build should be populated at build time
-#COPY ./build /kb/module
+COPY ./log_config.yaml /kb/module
 
 WORKDIR /kb/module
 
 RUN poetry config virtualenvs.create false && poetry config virtualenvs.options.no-setuptools true && poetry install --no-dev
 
 RUN poetry run python src/misc/git-info.py
+
+# Don't need curl or git any more.
+RUN apt-get purge -y curl git && apt-get autoremove -y
 
 RUN rm -rf /kb/module/.git && rm -rf /kb/module/src/misc
 

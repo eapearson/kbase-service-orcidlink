@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 subcommand=${1:-check}
 target=${2:-src}

@@ -1,0 +1,60 @@
+{
+    "collMod": "linking_sessions",
+    "validator": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "_id",
+                "session_id",
+                "username",
+                "created_at",
+                "expires_at",
+                "skip_prompt"
+            ],
+            "description": "Contains the state for a linking session",
+            "properties": {
+                "_id": {
+                    "bsonType": "objectId",
+                    "description": "Built-in document identifier"
+                },
+                "session_id": {
+                    "bsonType": "string",
+                    "description": "A unique (uuid) identifier for this session"
+                },
+                "username": {
+                    "bsonType": "string",
+                    "description": "The username of the kbase user who created and thus 'owns' this session"
+                },
+                "created_at": {
+                    "bsonType": "long",
+                    "minimum": 1672531200000,
+                    "maximum": 4828204800000,
+                    "description": "The time, in milliseconds epoch, at which the sesison was generated"
+                },
+                "expires_at": {
+                    "bsonType": "long",
+                    "minimum": 1672531200000,
+                    "maximum": 4828204800000,
+                    "description": "The time, in milliseconds epoch, at which the sesison after which the session is considered invalid"
+                },
+                "skip_prompt": {
+                    "bsonType": "bool",
+                    "description": "If 'true' the linking flow will skip the page asking the user to confirm creation of the link, after they have authorized it via ORCID."
+                },
+                "return_link": {
+                    "bsonType": [
+                        "string",
+                        "null"
+                    ],
+                    "minLength": 14,
+                    "description": "If provided, indicates url to which the browser should be directed to after the linking session is completed"
+                },
+                "ui_options": {
+                    "bsonType": "string",
+                    "maxLength": 1000,
+                    "description": "If provided, a freeform string field for usage of the UI to pass information through the linking session"
+                }
+            }
+        }
+    }
+}

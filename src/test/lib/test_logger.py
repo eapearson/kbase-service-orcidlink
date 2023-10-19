@@ -2,17 +2,12 @@ import json
 import logging
 
 import pytest
+
 from orcidlink.lib.logger import JSONLogger
 
 
 @pytest.fixture
 def fake_fs(fs):
-    # fs.create_dir("/tmp")
-    # fs.create_file(utils.module_path("deploy/config.toml"), contents=config_file)
-    # fs.create_file(
-    #     utils.module_path("SERVICE_DESCRIPTION.toml"), contents=service_description_toml
-    # )
-    # fs.add_real_directory(utils.module_path("test/data"))
     yield fs
 
 
@@ -30,7 +25,7 @@ def fake_fs(fs):
 #     assert log["event"]["data"] == {"bar": "baz"}
 
 
-def test_JSONLogger(fake_fs):
+def test_JSONLogger():
     logger = JSONLogger("foo")
     logger.log_level(logging.DEBUG)
     log_id = logger.log_event("foo", {"bar": "baz"})

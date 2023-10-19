@@ -1,37 +1,61 @@
 [tool.poetry]
 name = "orcid-link"
-version = "0.1.0"
+version = "0.4.0"
 description = ""
 authors = ["Erik Pearson <eapearson@lbl.gov>"]
 
 [tool.poetry.dependencies]
-python = "3.11.2"
-cachetools = "5.3.0"
+aiohttp = "3.8.6"
+asgi-correlation-id = "4.2.0"
+python = "3.11.5"
+cachetools = "5.3.1"
 dicttoxml2 = "2.1.0"
-email-validator = "1.3.1"
-fastapi = "0.95.0"
-httpx = "0.23.3"
+email-validator = "2.0.0.post2"
+fastapi = "0.103.2"
+fastapi-jsonrpc = "3.0.0b2"
+httpx = "0.25.0"
 jinja2-tools = "1.0.7"
-pymongo = "4.3.3"
-PyYAML = "6.0"
-toml = "0.10.2"
-uvicorn = "0.21.1"
+motor = "3.3.1"
+pymongo = "4.5.0"
+python-json-logger = "2.0.7"
+PyYAML = "6.0.1"
+tomli-w = "1.0.0"
+uvicorn = "0.23.2"
+uvloop = "0.18.0"
 xmltodict = "0.13.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "23.1.0"
+autoflake = "2.2.1"
+black = "23.10.0"
+fastapi = { version = "0.103.2", extras = ["all"] }
+isort = "5.12.0"
 mongomock = "4.1.2"
-mypy = "1.1.1"
-pipdeptree = "2.6.0"
-pyfakefs = "5.1.0"
-pytest = "7.2.2"
-pytest-cov = "4.0.0"
-types-cachetools = "5.3.0.4"
-types-python-dateutil = "2.8.19.10"
-types-PyYAML = "6.0.12.8"
-types-toml = "0.10.8.5"
+motor-types = "1.0.0b3"
+pipdeptree = "2.13.0"
+pyfakefs = "5.3.0"
+pyright = "1.1.331"
+pytest = "7.4.2"
+pytest-asyncio = "0.21.1"
+pytest-cov = "4.1.0"
+types-cachetools = "5.3.0.6"
+types-python-dateutil = "2.8.19.14"
+types-PyYAML = "6.0.12.12"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
+[tool.isort]
+profile = "black"
+
+[tool.pyright]
+include = ["src"]

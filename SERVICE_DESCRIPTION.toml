@@ -2,7 +2,7 @@ name = "ORCIDLink"
 
 title = "ORCID Link"
 
-version = "0.2.1"
+version = "0.4.0"
 
 language = "Python"
 
@@ -14,3 +14,5 @@ If a linkage, known herein as an "ORCID Link", exists for a user, the following 
     - read, create, update, and delete work activity (publications)
     - remove ORCID Link
 """
+
+repoURL = "https://github.com/kbase/kbase-service-orcidlink"

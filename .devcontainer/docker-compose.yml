@@ -1,0 +1,56 @@
+version: '3.6'
+networks:
+  kbase-dev:
+    name: kbase-dev
+services:
+  orcidlink:
+    build:
+      context: ..
+      dockerfile: Dockerfile.dev
+
+    image: kbase/orcidlink:dev
+
+    container_name: orcidlink
+    dns: 8.8.8.8
+    ports:
+      - "5001:5000"
+    volumes:
+      - ..:/workspace:cached
+    networks:
+      - kbase-dev
+      # environment:
+      # - PORT=80
+      # - DEPLOY_ENV=${DEPLOY_ENV:-ci}
+      # Required for a devcontainer -- keeps the container running.
+      # Don't worry, our main interaction with the container is through the 
+      # VSC terminal, which for a devcontainer opens a shell within the
+      # container.
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    depends_on:
+      - mongo
+      # - mongo-express
+  mongo:
+    # image: mongo:3.6.13
+    image: mongo:6.0.7
+    restart: always
+    networks:
+      - kbase-dev
+    volumes:
+      - ../tools/scripts/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - 27017:27017
+    # TODO: add volume mount to preserve data between runs.
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev_root
+      MONGO_INITDB_ROOT_PASSWORD: dev_r00t
+  # mongo-express:
+  #   image: mongo-express
+  #   restart: always
+  #   networks:
+  #     - kbase-dev
+  #   ports:
+  #     - 8091:8081
+  #   environment:
+  #     ME_CONFIG_MONGODB_ADMINUSERNAME: dev_root
+  #     ME_CONFIG_MONGODB_ADMINPASSWORD: dev_r00t
+  #     ME_CONFIG_MONGODB_URL: mongodb://dev_root:dev_r00t@mongo:27017/

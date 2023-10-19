@@ -10,7 +10,7 @@
 # Runs docker compose with the given docker compose filename suffix with the given command arguments
 #
 function _run-in {
-  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --rm orcidlink "${@:2}"
+  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --remove-orphans --rm orcidlink "${@:2}"
 }
 
 function _dc-up {
@@ -28,15 +28,29 @@ function _dc-up {
 function _run {
   echo "Running: "
   echo "${@:1}"
-  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --rm "${1}" "${@:2}"
+  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --remove-orphans --rm "${1}" "${@:2}"
+  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools down
+
 }
 
 #
 # COMMANDS
 #
 
-function mypy {
-  _run runner tools/scripts/run-mypy.sh
+# function mypy {
+#   _run runner tools/scripts/run-mypy.sh
+# }
+
+function pyright {
+  _run runner tools/scripts/run-pyright.sh
+}
+
+function autoflake {
+  _run runner tools/scripts/run-autoflake.sh
+}
+
+function isort {
+  _run runner tools/scripts/run-isort.sh "${1}" "${2}"
 }
 
 function black {
@@ -47,10 +61,10 @@ function git-info {
   _run runner poetry --quiet run python src/misc/git-info.py
 }
 
-function render-config {
-  mkdir -p deploy
-  _run-in-service runner scripts/render-config.sh
+function lock {
+  _run runner poetry lock
 }
+
 
 #
 # Generates the openapi spec in memory, and compares it to the one already existing in docs/api/openapi.json.
@@ -77,6 +91,10 @@ function generate-docs {
   _run runner poetry --quiet run python src/misc/generate-docs.py /app
 }
 
+function extract-schema {
+  _run runner poetry --quiet run python src/misc/extract-schema.py /app "${1}"
+}
+
 function shell {
   _run runner bash
 }
@@ -85,23 +103,7 @@ function shell {
 #  docker compose -f tools/docker-compose-prod-like.yml
 #}
 
-#
-# For generating a config to be used
-# Environment variables are filled with either test
-#
-function render-config-dev {
-  export KBASE_ENDPOINT=https://ci.kbase.us/services/
-  export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
-  export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
-  export ORCID_CLIENT_ID=${ORCID_CLIENT_ID}
-  export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET}
-  export MONGO_HOST=mongo
-  export MONGO_PORT=27017
-  export MONGO_DATABASE=orcidlink
-  export MONGO_USERNAME=dev
-  export MONGO_PASSWORD=d3v
-  _run-in-server runner scripts/render-config.sh
-}
+
 
 function test {
   # Testing only touches locally controlled services, either mock
@@ -119,6 +121,7 @@ function dev-server {
   export KBASE_ENDPOINT=https://ci.kbase.us/services/
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
   export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://sandbox.orcid.org
   export ORCID_CLIENT_ID=${ORCID_CLIENT_ID:?Required environment variable 'ORCID_CLIENT_ID' not provided}
   export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
   export MONGO_HOST=mongo
@@ -133,6 +136,7 @@ function server {
   export KBASE_ENDPOINT=https://ci.kbase.us/services/
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
   export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://orcid.org
   export ORCID_CLIENT_ID=${ORCID_CLIENT_ID:?Required environment variable 'ORCID_CLIENT_ID' not provided}
   export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
   export MONGO_HOST=mongo

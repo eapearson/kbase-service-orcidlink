@@ -1,72 +1,25 @@
 """
 Configuration support for this service
 
-A KBase service requires at least a minimal, and often substantial, configuration in order to operate.
-Some configuration, like the base url for services, differs between each KBase environment.
-Other configuration represents information that may change over time, such as urls.
-Sill other configuration data contains private information like credentials, which must be well controlled.
+A KBase service requires at least a minimal, and often substantial, configuration in
+order to operate. Some configuration, like the base url for services, differs between
+each KBase environment. Other configuration represents information that may change over
+time, such as urls. Sill other configuration data contains private information like
+credentials, which must be well controlled.
 
-Because configuration is needed throughout the service's code, it is provided by means of a module variable
-which is populated when the module is first loaded.
+Because configuration is needed throughout the service's code, it is provided by means
+of a module variable which is populated when the module is first loaded.
 """
+import json
 import os
-import threading
+import tomllib
 from typing import Optional
+from urllib.parse import urljoin, urlparse
 
-import toml
-from orcidlink.lib.type import ServiceBaseModel
-from orcidlink.lib.utils import module_dir
-from orcidlink.model import ServiceDescription
 from pydantic import Field
 
-
-class KBaseService(ServiceBaseModel):
-    url: str = Field(...)
-
-
-class Auth2Service(KBaseService):
-    tokenCacheLifetime: int = Field(...)
-    tokenCacheMaxSize: int = Field(...)
-
-
-class ORCIDLinkService(KBaseService):
-    pass
-
-
-class ORCIDConfig(ServiceBaseModel):
-    oauthBaseURL: str = Field(...)
-    apiBaseURL: str = Field(...)
-    clientId: str = Field(...)
-    clientSecret: str = Field(...)
-
-
-class MongoConfig(ServiceBaseModel):
-    host: str = Field(...)
-    port: int = Field(...)
-    database: str = Field(...)
-    username: str = Field(...)
-    password: str = Field(...)
-
-
-class ModuleConfig(ServiceBaseModel):
-    serviceRequestTimeout: int = Field(...)
-
-
-class Services(ServiceBaseModel):
-    Auth2: Auth2Service
-    ORCIDLink: ORCIDLinkService = Field(...)
-
-
-class UIConfig(ServiceBaseModel):
-    origin: str = Field(...)
-
-
-class Config(ServiceBaseModel):
-    services: Services = Field(...)
-    ui: UIConfig = Field(...)
-    orcid: ORCIDConfig = Field(...)
-    mongo: MongoConfig = Field(...)
-    module: ModuleConfig = Field(...)
+from orcidlink.lib.type import ServiceBaseModel
+from orcidlink.model import ServiceDescription
 
 
 class GitInfo(ServiceBaseModel):
@@ -81,45 +34,339 @@ class GitInfo(ServiceBaseModel):
     tag: Optional[str] = Field(default=None)
 
 
-class ConfigManager:
-    def __init__(self, config_path: str):
-        self.config_path = config_path
-        self.lock = threading.RLock()
-        self.config_data = self.get_config_data()
-
-    def get_config_data(self) -> Config:
-        with self.lock:
-            file_name = self.config_path
-            with open(file_name, "r") as in_file:
-                config_yaml = toml.load(in_file)
-                return Config.parse_obj(config_yaml)
-
-    def config(self, reload: bool = False) -> Config:
-        if reload:
-            self.config_data = self.get_config_data()
-
-        return self.config_data
+class ServiceDefault(ServiceBaseModel):
+    path: str = Field(...)
+    env_name: str = Field(...)
 
 
-GLOBAL_CONFIG_MANAGER = None
+class ServiceDefaults(ServiceBaseModel):
+    auth2: ServiceDefault = Field(...)
+    orcid_link: ServiceDefault = Field(...)
 
 
-def config(reload: bool = False) -> Config:
-    global GLOBAL_CONFIG_MANAGER
-    if GLOBAL_CONFIG_MANAGER is None:
-        GLOBAL_CONFIG_MANAGER = ConfigManager(
-            os.path.join(module_dir(), "deploy/config.toml")
+SERVICE_DEFAULTS = ServiceDefaults(
+    auth2=ServiceDefault(path="auth", env_name="KBASE_SERVICE_AUTH"),
+    orcid_link=ServiceDefault(path="orcidlink", env_name="KBASE_SERVICE_ORCID_LINK"),
+)
+
+
+class IntEnvironmentVariable(ServiceBaseModel):
+    value: Optional[int] = Field(default=None)
+    unit: str = Field(...)
+    required: bool = Field(...)
+    env_name: str = Field(...)
+    description: str = Field(...)
+
+
+class IntEnvironmentVariables(ServiceBaseModel):
+    token_cache_lifetime: IntEnvironmentVariable = Field(...)
+    token_cache_max_items: IntEnvironmentVariable = Field(...)
+    request_timeout: IntEnvironmentVariable = Field(...)
+    mongo_port: IntEnvironmentVariable = Field(...)
+    linking_session_lifetime: IntEnvironmentVariable = Field(...)
+    orcid_authorization_retirement_age: IntEnvironmentVariable = Field(...)
+
+
+INT_CONSTANT_DEFAULTS = IntEnvironmentVariables(
+    token_cache_lifetime=IntEnvironmentVariable(
+        value=300,
+        unit="second",
+        required=True,
+        env_name="TOKEN_CACHE_LIFETIME",
+        description=(
+            "The duration, in seconds, for which KBase Auth Service tokens "
+            "may be cached."
+        ),
+    ),
+    token_cache_max_items=IntEnvironmentVariable(
+        value=20000,
+        unit="items",
+        required=True,
+        env_name="TOKEN_CACHE_MAX_ITEMS",
+        description=(
+            "The number of KBase Auth tokens which may be cached at one time. "
+            "The caching strategy determines behavior when the cache is full."
+        ),
+    ),
+    request_timeout=IntEnvironmentVariable(
+        value=60,
+        unit="second",
+        required=True,
+        env_name="REQUEST_TIMEOUT",
+        description=(""),
+    ),
+    mongo_port=IntEnvironmentVariable(
+        required=True, unit="port", env_name="MONGO_PORT", description=("")
+    ),
+    linking_session_lifetime=IntEnvironmentVariable(
+        required=True,
+        env_name="LINKING_SESSION_LIFETIME",
+        value=600,
+        unit="second",
+        description=(""),
+    ),
+    orcid_authorization_retirement_age=IntEnvironmentVariable(
+        required=True,
+        env_name="ORCID_AUTHORIZATION_RETIREMENT_AGE",
+        value=1_209_600,
+        unit="second",
+        description=(""),
+    ),
+)
+
+
+# String constants
+
+
+class StrEnvironmentVariable(ServiceBaseModel):
+    value: Optional[str] = Field(default=None)
+    required: bool = Field(...)
+    env_name: str = Field(...)
+    description: str = Field(...)
+
+
+class StrEnvironmentVariables(ServiceBaseModel):
+    service_directory: StrEnvironmentVariable = Field(...)
+    kbase_endpoint: StrEnvironmentVariable = Field(...)
+    orcid_api_base_url: StrEnvironmentVariable = Field(...)
+    orcid_oauth_base_url: StrEnvironmentVariable = Field(...)
+    orcid_site_base_url: StrEnvironmentVariable = Field(...)
+    orcid_client_id: StrEnvironmentVariable = Field(...)
+    orcid_client_secret: StrEnvironmentVariable = Field(...)
+    manager_role: StrEnvironmentVariable = Field(...)
+    mongo_host: StrEnvironmentVariable = Field(...)
+    mongo_database: StrEnvironmentVariable = Field(...)
+    mongo_username: StrEnvironmentVariable = Field(...)
+    mongo_password: StrEnvironmentVariable = Field(...)
+    orcid_scopes: StrEnvironmentVariable = Field(...)
+    log_level: StrEnvironmentVariable = Field(...)
+
+
+STR_ENVIRONMENT_VARIABLE_DEFAULTS = StrEnvironmentVariables(
+    service_directory=StrEnvironmentVariable(
+        required=True, env_name="SERVICE_DIRECTORY", description=("")
+    ),
+    kbase_endpoint=StrEnvironmentVariable(
+        required=True, env_name="KBASE_ENDPOINT", description=("")
+    ),
+    orcid_api_base_url=StrEnvironmentVariable(
+        required=True, env_name="ORCID_API_BASE_URL", description=("")
+    ),
+    orcid_oauth_base_url=StrEnvironmentVariable(
+        required=True, env_name="ORCID_OAUTH_BASE_URL", description=("")
+    ),
+    orcid_site_base_url=StrEnvironmentVariable(
+        required=True, env_name="ORCID_SITE_BASE_URL", description=("")
+    ),
+    orcid_client_id=StrEnvironmentVariable(
+        required=True, env_name="ORCID_CLIENT_ID", description=("")
+    ),
+    orcid_client_secret=StrEnvironmentVariable(
+        required=True, env_name="ORCID_CLIENT_SECRET", description=("")
+    ),
+    orcid_scopes=StrEnvironmentVariable(
+        required=True,
+        env_name="ORCID_SCOPES",
+        value="/read-limited /activities/update",
+        description=(""),
+    ),
+    manager_role=StrEnvironmentVariable(
+        required=True,
+        env_name="MANAGER_ROLE",
+        value="ORCIDLINK_MANAGER",
+        description=(""),
+    ),
+    mongo_host=StrEnvironmentVariable(
+        required=True, env_name="MONGO_HOST", description=("")
+    ),
+    mongo_database=StrEnvironmentVariable(
+        required=True, env_name="MONGO_DATABASE", description=("")
+    ),
+    mongo_username=StrEnvironmentVariable(
+        required=True, env_name="MONGO_USERNAME", description=("")
+    ),
+    mongo_password=StrEnvironmentVariable(
+        required=True, env_name="MONGO_PASSWORD", description=("")
+    ),
+    log_level=StrEnvironmentVariable(
+        required=True, env_name="LOG_LEVEL", value="INFO", description=("")
+    ),
+)
+
+
+class RuntimeConfig(ServiceBaseModel):
+    service_directory: str = Field(...)
+    kbase_endpoint: str = Field(...)
+    request_timeout: int = Field(...)
+    token_cache_lifetime: int = Field(...)
+    token_cache_max_items: int = Field(...)
+    log_level: str = Field(...)
+    manager_role: str = Field(...)
+
+    orcid_api_base_url: str = Field(...)
+    orcid_oauth_base_url: str = Field(...)
+    orcid_site_base_url: str = Field(...)
+    orcid_client_id: str = Field(...)
+    orcid_client_secret: str = Field(...)
+    orcid_scopes: str = Field(...)
+    orcid_authorization_retirement_age: int = Field(...)
+
+    linking_session_lifetime: int = Field(...)
+
+    mongo_host: str = Field(...)
+    mongo_port: int = Field(...)
+    mongo_database: str = Field(...)
+    mongo_username: str = Field(...)
+    mongo_password: str = Field(...)
+
+    ui_origin: str = Field(...)
+
+    auth_url: str = Field(...)
+    orcidlink_url: str = Field(...)
+
+
+class ServiceConfig:
+    kbase_endpoint: str
+    runtime_config: RuntimeConfig
+
+    def __init__(self) -> None:
+        self.kbase_endpoint = self.get_str_environment_variable(
+            STR_ENVIRONMENT_VARIABLE_DEFAULTS.kbase_endpoint
         )
-    return GLOBAL_CONFIG_MANAGER.config(reload)
+        self.runtime_config = RuntimeConfig(
+            service_directory=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.service_directory
+            ),
+            kbase_endpoint=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.kbase_endpoint
+            ),
+            request_timeout=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.request_timeout
+            ),
+            token_cache_lifetime=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.token_cache_lifetime
+            ),
+            token_cache_max_items=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.token_cache_max_items
+            ),
+            orcid_authorization_retirement_age=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.orcid_authorization_retirement_age
+            ),
+            log_level=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.log_level
+            ),
+            manager_role=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.manager_role
+            ),
+            orcid_api_base_url=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_api_base_url
+            ),
+            orcid_oauth_base_url=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_oauth_base_url
+            ),
+            orcid_site_base_url=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_site_base_url
+            ),
+            orcid_client_id=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_client_id
+            ),
+            orcid_client_secret=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_client_secret
+            ),
+            orcid_scopes=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_scopes
+            ),
+            linking_session_lifetime=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.linking_session_lifetime
+            ),
+            mongo_host=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_host
+            ),
+            mongo_port=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.mongo_port
+            ),
+            mongo_database=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_database
+            ),
+            mongo_username=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_username
+            ),
+            mongo_password=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_password
+            ),
+            ui_origin=self.get_ui_origin(),
+            auth_url=self.get_service_url(SERVICE_DEFAULTS.auth2),
+            orcidlink_url=self.get_service_url(SERVICE_DEFAULTS.orcid_link),
+        )
+
+    def get_service_url(self, service_default: ServiceDefault) -> str:
+        env_path = os.environ.get(service_default.env_name)
+        path = env_path or service_default.path
+        return urljoin(self.kbase_endpoint, path)
+
+    # MORE...
+
+    # Integer constants
+
+    @staticmethod
+    def get_int_environment_variable(constant_default: IntEnvironmentVariable) -> int:
+        value = os.environ.get(constant_default.env_name)
+
+        if value is not None:
+            return int(value)
+
+        if constant_default.value is not None:
+            return constant_default.value
+
+        raise ValueError(
+            f'The environment variable "{constant_default.env_name}" is missing '
+            "and there is no default value"
+        )
+
+    # String constants
+    @staticmethod
+    def get_str_environment_variable(constant_default: StrEnvironmentVariable) -> str:
+        value = os.environ.get(constant_default.env_name)
+
+        if value is not None:
+            return value
+
+        if constant_default.value is not None:
+            return constant_default.value
+
+        raise ValueError(
+            f'The environment variable "{constant_default.env_name}" is missing'
+            " and there is no default value"
+        )
+
+    # misc
+
+    def get_ui_origin(self) -> str:
+        endpoint_url = urlparse(self.kbase_endpoint)
+
+        # We need to handle the ui endpoint for prod specially, as it operates
+        # with the service host kbase.us and ui host narrative.kbase.us
+        # The kbase-wide "KBASE_ENDPOINT" is for services, but from it we can
+        # determine the ui endpoint.
+        host = (
+            "narrative.kbase.us"
+            if endpoint_url.hostname == "kbase.us"
+            else endpoint_url.netloc
+        )
+        return f"{endpoint_url.scheme}://{host}"
 
 
 def get_service_description() -> ServiceDescription:
-    file_path = os.path.join(module_dir(), "SERVICE_DESCRIPTION.toml")
-    with open(file_path, "r") as file:
-        return ServiceDescription.parse_obj(toml.load(file))
+    file_path = os.path.join(
+        ServiceConfig().runtime_config.service_directory, "SERVICE_DESCRIPTION.toml"
+    )
+    with open(file_path, "rb") as file:
+        return ServiceDescription.model_validate(tomllib.load(file))
 
 
 def get_git_info() -> GitInfo:
-    path = os.path.join(module_dir(), "build/git-info.toml")
-    with open(path, "r") as fin:
-        return GitInfo.parse_obj(toml.load(fin))
+    path = os.path.join(
+        ServiceConfig().runtime_config.service_directory, "build/git-info.json"
+    )
+    with open(path, "rb") as fin:
+        return GitInfo.model_validate(json.load(fin))

@@ -1,9 +1,10 @@
 import json
 import sys
-from typing import Any, List
+from typing import Any, List, Tuple, cast
 
-from orcidlink.lib.json_file import get_prop
-from orcidlink.lib.utils import http_client
+import httpx
+
+# from orcidlink.lib.json_file import get_prop
 
 
 def flatten(md: List[Any]):
@@ -39,28 +40,29 @@ def save_markdown(markdown: List[str], file: str, dest: str):
 
 def save_markdown_rendered(markdown: List[str], file: str, dest: str):
     content = json.dumps({"text": render_markdown_list(markdown), "mode": "gfm"})
-    result = http_client().post(
-        "https://api.github.com/markdown",
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/vnd.github+json",
-        },
-        content=content,
-    )
-    doc = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<link type="text/css" rel="stylesheet" href="gfm.css">
-</head>
-<body class="markdown-body">
-{result.text}
-</body>
-</html>
-"""
-    with open(f"{dest}/docs/api/{file}", "w") as fout:
-        fout.write(doc)
+    with httpx.Client() as client:
+        result = client.post(
+            "https://api.github.com/markdown",
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.github+json",
+            },
+            content=content,
+        )
+        doc = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="gfm.css">
+    </head>
+    <body class="markdown-body">
+    {result.text}
+    </body>
+    </html>
+    """
+        with open(f"{dest}/docs/api/{file}", "w") as fout:
+            fout.write(doc)
 
 
 def md_line(n=1):
@@ -241,6 +243,11 @@ def generate_schema(schema):
         for any_of in schema["anyOf"]:
             html += f"<div>{generate_schema(any_of)}</div>"
         return html
+    elif "allOf" in schema:
+        html = "<div><i>All Of</i></div>"
+        for all_of in schema["allOf"]:
+            html += f"<div>{generate_schema(all_of)}</div>"
+        return html
     else:
         print("NOT HANDLED", schema)
         return "!! NOT HANDLED !!"
@@ -252,13 +259,15 @@ def generate_response_content(content):
 
     # The response, if any, should always be
     # application/json, so we just assume that.
-    json_content_type = prop(content, "application/json")
-    if json_content_type is None:
+    if not has_prop(content, "application/json"):
         return list(content)[0]
 
-    schema = prop(json_content_type, "schema")
-    if schema is None:
+    json_content_type = dict_prop(content, "application/json", {})
+
+    if not has_prop(json_content_type, "schema"):
         return "NO TYPE!"
+
+    schema = dict_prop(json_content_type, "schema")
 
     return generate_schema(schema)
 
@@ -280,13 +289,96 @@ def generate_responses(responses):
     )
 
 
-def prop(value, path, default_value=None):
+def get_prop(value: Any, path: List[str | int]) -> Tuple[Any, bool]:
+    temp: Any = value
+    for name in path:
+        if isinstance(temp, dict):
+            if isinstance(name, str):
+                temp = temp.get(name)
+                if temp is None:
+                    return None, False
+            else:
+                raise ValueError("Path element not str")
+        elif isinstance(temp, list):
+            if isinstance(name, int):
+                if name >= len(temp) or name < 0:
+                    return None, False
+                temp = temp[name]
+            else:
+                raise ValueError("Path element not int")
+    return temp, True
+
+
+def has_prop(value, path: str | List[str | int]) -> bool:
     if isinstance(path, str):
-        path = path.split(".")
+        # stupid python types
+        path = cast(List[str | int], path.split("."))
+    value, found = get_prop(value, path)
+    return found
+
+
+def str_prop(
+    value, path: str | List[str | int], default_value: str | None = None
+) -> str:
+    if isinstance(path, str):
+        # stupid python types
+        path = cast(List[str | int], path.split("."))
     value, found = get_prop(value, path)
     if not found:
+        if default_value is None:
+            raise TypeError(f"Str prop not found: {path}")
         return default_value
-    return value
+    if isinstance(value, str):
+        return value
+    raise TypeError("Expected str")
+
+
+def int_prop(
+    value, path: str | List[str | int], default_value: int | None = None
+) -> int:
+    if isinstance(path, str):
+        # stupid python types
+        path = cast(List[str | int], path.split("."))
+    value, found = get_prop(value, path)
+    if not found:
+        if default_value is None:
+            raise TypeError(f"Int prop not found: {path}")
+        return default_value
+    if isinstance(value, int):
+        return value
+    raise TypeError("Expected int")
+
+
+def dict_prop(
+    value, path: str | List[str | int], default_value: dict | None = None
+) -> dict:
+    if isinstance(path, str):
+        # stupid python types
+        path = cast(List[str | int], path.split("."))
+    value, found = get_prop(value, path)
+    if not found:
+        if default_value is None:
+            raise TypeError("Int prop not found")
+        return default_value
+    if isinstance(value, dict):
+        return value
+    raise TypeError("Expected dict")
+
+
+def list_prop(
+    value, path: str | List[str | int], default_value: list | None = None
+) -> list:
+    if isinstance(path, str):
+        # stupid python types
+        path = cast(List[str | int], path.split("."))
+    value, found = get_prop(value, path)
+    if not found:
+        if default_value is None:
+            raise TypeError("Int prop not found")
+        return default_value
+    if isinstance(value, list):
+        return value
+    raise TypeError("Expected list")
 
 
 def generate_parameters(parameters):
@@ -297,10 +389,10 @@ def generate_parameters(parameters):
     for parameter in parameters:
         rows.append(
             [
-                prop(parameter, "name", "n/a"),
-                prop(parameter, "description", "n/a"),
-                prop(parameter, ["schema", "type"], "n/a"),
-                prop(parameter, "in", "n/a"),
+                str_prop(parameter, "name", "n/a"),
+                str_prop(parameter, "description", "n/a"),
+                str_prop(parameter, ["schema", "type"], "n/a"),
+                str_prop(parameter, "in", "n/a"),
             ]
         )
     widths = ["150px", "1000px", "150px", "150px"]
@@ -329,9 +421,9 @@ def generate_path(spec: dict):
 
 
 def generate_path2(spec: dict):
-    path = prop(spec, "path")
-    method = prop(spec, "method")
-    method_spec = prop(spec, "spec")
+    path = str_prop(spec, "path", "n/a")
+    method = str_prop(spec, "method", "n/a")
+    method_spec = dict_prop(spec, "spec", {})
     md = []
     md.append(md_header(f"{method.upper()} {path}", 4))
     # md.append(md_tags(method_spec.get('tags', 'n/a')))
@@ -369,22 +461,23 @@ def generate_properties(required, properties):
 
 def generate_type(type_name, type_spec):
     # all types are objects, afaik.
-    required = prop(type_spec, "required", [])
-    properties = prop(type_spec, "properties", {})
+    required = list_prop(type_spec, "required", [])
+    properties = dict_prop(type_spec, "properties", {})
     prop_table = generate_properties(required, properties)
 
     return [
         md_header(type_name, 5, anchor_prefix="type"),
-        prop(type_spec, "description", ""),
+        str_prop(type_spec, "description", ""),
         prop_table,
         md_line(2),
     ]
 
 
 def generate_types(spec):
-    schemas = prop(spec, "components.schemas")
-    if schemas is None:
+    if not has_prop(spec, "components.schemas"):
         return "Strange, no types!"
+
+    schemas = dict_prop(spec, "components.schemas")
 
     return [
         generate_type(type_name, type_spec) for type_name, type_spec in schemas.items()
@@ -441,9 +534,7 @@ def generate_glossary():
         anchor = generate_anchor("glossary_term", term["term"])
         if "link" in term:
             md.append(
-                [
-                    f"<dt>{anchor}<a href='{term['link']}'>{term['term']}</a></dt><dd>{term['definition']}"
-                ]
+                f"<dt>{anchor}<a href='{term['link']}'>{term['term']}</a></dt><dd>{term['definition']}"
             )
         else:
             md.append(f"<dt>{anchor}{term['term']}</dt><dd>{term['definition']}</dd>")
@@ -468,9 +559,9 @@ def main():
             tag["paths"] = []
             tags_map[tag["name"]] = tag
 
-        for path, path_spec in prop(spec, "paths").items():
+        for path, path_spec in dict_prop(spec, "paths").items():
             for method, method_spec in path_spec.items():
-                tag = prop(method_spec, ["tags", 0])
+                tag = str_prop(method_spec, ["tags", 0])
                 tags_map[tag]["paths"].append(
                     {"path": path, "method": method, "spec": method_spec}
                 )
