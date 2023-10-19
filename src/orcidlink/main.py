@@ -180,13 +180,12 @@ def config_to_log_level(log_level: str) -> int:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
-    #
-    # Load the config here in order to trigger any configuration problems early in the
-    # application startup.
-    #
+    """
+    Load the config here in order to trigger any configuration problems early in the
+    application startup.
+    """
     stats()
     logger.log_level(config_to_log_level(config().log_level))
-
     yield
 
 
@@ -239,13 +238,17 @@ COMMON_ERRORS.extend(Entrypoint.default_errors)
 @asynccontextmanager
 async def logging_middleware(ctx: JsonRpcContext):
     logger = logging.getLogger("api")
-    # logger.info('Request: %r', ctx.raw_request)
-    logger.info("jsonrpc request", extra={"request": ctx.raw_request})
+    logger.info(
+        "jsonrpc request", extra={"type": "jsonrpc_request", "request": ctx.raw_request}
+    )
     try:
         yield
     finally:
         # logger.info('Response: %r', ctx.raw_response)
-        logger.info("jsonrpc response", extra={"response": ctx.raw_response})
+        logger.info(
+            "jsonrpc response",
+            extra={"type": "jsonrpc_response", "response": ctx.raw_response},
+        )
 
 
 api_v1 = Entrypoint(
@@ -255,13 +258,19 @@ api_v1 = Entrypoint(
 
 app.bind_entrypoint(api_v1)
 
+#
+# JSON-RPC methods
+#
+# All method handlers should call a method implementation form another module.
+#
+
 
 @api_v1.method(name="status")
 def status() -> StatusResult:
     return status_method()
 
 
-@api_v1.method()
+@api_v1.method(name="info")
 def info() -> InfoResult:
     return info_method()
 

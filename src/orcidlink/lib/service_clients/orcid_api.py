@@ -656,10 +656,19 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # Just some basic sanity testing; also, forced by using type analysis
     content_type_raw = response.headers.get("Content-Type")
     if content_type_raw is None:
+        log_error("No content-type in response", "failed_call", {"error": None})
         raise UpstreamError("No content-type in response")
 
     content_type, _, _ = content_type_raw.partition(";")
     if content_type != ORCID_API_CONTENT_TYPE:
+        log_error(
+            f"Expected JSON response ({ORCID_API_CONTENT_TYPE}), got {content_type}",
+            "failed_call",
+            {
+                "expected_content_type": ORCID_API_CONTENT_TYPE,
+                "actual_content_type": content_type,
+            },
+        )
         raise UpstreamError(
             (
                 f"Expected JSON response ({ORCID_API_CONTENT_TYPE}), "
@@ -673,6 +682,7 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
         text_response = await response.text()
         json_response = json.loads(text_response)
     except json.JSONDecodeError as jde:
+        log_error("Error decoding JSON response", "failed_call", {"error": str(jde)})
         raise UpstreamError(
             "Error decoding JSON response",
         ) from jde
@@ -699,71 +709,24 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # Shoehorn the error code into the appropriate structure
     error = extract_error(json_response)
 
-    # logger.error(
-    #     "Error fetching profile from ORCID API",
-    #     extra={
-    #         "type": "orcidapi",
-    #         "event": "failed_call",
-    #         "info": {
-    #             "orcid_id": orcid_id,
-    #         },
-    #         "error": {"error": dict(error)},
-    #         "correlation_id": correlation_id.get(),
-    #     },
-    # )
+    error_info: Any
+    if isinstance(error, ORCIDAPIError):
+        error_info = dict(error)
+    elif isinstance(error, OAuthBearerError):
+        error_info = dict(error)
+    elif isinstance(error, dict):
+        error_info = error
+    else:
+        error_info = "unknown"
 
-    # 1. ORCID Id does not correspond to a user.
-    # if response.status == 404:
-    #     raise ORCIDAPINotFoundError("Not Found")
+    log_error(
+        "Error fetching profile from ORCID API", "failed_call", {"error": error_info}
+    )
 
-    # if response.status == 401:
-    # raise AuthorizationRequiredError(
-    #     "Not authorized for ORCID Access"
-    # )
-    # TODO: Perhaps we should just return UpstreamError and wrap the original error.
-    # For now, ignore the status code.
     if isinstance(error, ORCIDAPIError):
         raise orcid_api_error_to_json_rpc_error(error)
-        # api_error_code = get_orcid_api_error_code(error.error_code)
-
-        # if error.error_code == 9017:
-        #     # 3. access_code does not match requested account, there is
-        #     # nothing to do here other than inform the user.
-        #     #
-        #     # This should not occur under normal circumstances, as we
-        #     # currently only make profile calls from the orcid link
-        #     # ui, which is carried out under the orcid link owner.
-        #     #
-        #     # Thus this is a service error, and no not something the user can do anything about.
-        #     # raise NotAuthorizedError(
-        #     #     "Not authorized for access to this account"
-        #     # )
-        #     raise ORCIDAPIClientOtherError(
-        #         "Not authorized for access to this account"
-        #     )
-        # elif error.error_code == 9016:
-        #     raise ORCIDAPINotFoundError("Not found")
-        # elif error.error_code == 9034:
-        #     raise ORCIDAPINotFoundError("Not found")
-        # else:
-        #     raise ORCIDAPIClientOtherError("Authorization error", api_error=error)
-        #     # raise AuthorizationRequiredError(
-        #     #     "Not authorized for ORCID Access"
-        #     # )
     elif isinstance(error, OAuthBearerError):
         raise orcid_oauth_bearer_to_json_rpc_error(error)
-        # if error.error == "invalid_token":
-        #     # This indicates that either the token is actually malformed, or, in the
-        #     # context of ORCID Link, that that the token has become invalid at
-        #     # ORCID. The most likely cause being the user directly removing
-        #     # authorization for KBase.
-        #     raise ORCIDAPIClientInvalidAccessTokenError(
-        #         "Invalid ORCID access token"
-        #     )
-        # else:
-        #     raise ORCIDAPIClientOtherError(
-        #         "Not authorized for ORCID Access", oauth_error=error
-        #     )
     elif error is None:
         raise UpstreamError(data={"message": "Error is not a JSON object"})
     else:
@@ -799,6 +762,32 @@ def extract_error(result: Any) -> ORCIDAPIError | OAuthBearerError | JSONObject 
         return ORCIDAPIError.model_validate(result)
     else:
         return result
+
+
+def log_info(message: str, event: str, extra: dict[str, Any]) -> None:
+    logger = logging.getLogger("orcidapi")
+    logger.info(
+        message,
+        extra={
+            "type": "orcidapi",
+            "event": event,
+            "correlation_id": correlation_id.get(),
+            **extra,
+        },
+    )
+
+
+def log_error(message: str, event: str, extra: dict[str, Any]) -> None:
+    logger = logging.getLogger("orcidapi")
+    logger.error(
+        message,
+        extra={
+            "type": "orcidapi",
+            "event": event,
+            "correlation_id": correlation_id.get(),
+            **extra,
+        },
+    )
 
 
 class ORCIDAPIClient:
@@ -859,15 +848,10 @@ class ORCIDAPIClient:
         required" - that is, the profile access requires authorization, it has been
         provided, and it is inadequate.
         """
-        logger = logging.getLogger("orcidapi")
-        logger.info(
-            "Calling ORCID API /record endpoint",
-            extra={
-                "type": "orcidapi",
-                "event": "before_call",
-                "params": {"orcid_id": orcid_id},
-                "correlation_id": correlation_id.get(),
-            },
+        log_info(
+            f"Calling ORCID API {orcid_id}/record",
+            "before_call",
+            {"params": {"orcid_id": orcid_id}},
         )
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -875,14 +859,10 @@ class ORCIDAPIClient:
             ) as response:
                 result = await handle_json_response(response)
                 orcid_profile = ORCIDProfile.model_validate(result)
-                logger.info(
-                    "Successfully fetched profile from ORCID API",
-                    extra={
-                        "type": "orcidapi",
-                        "event": "successful_call",
-                        "result": {"orcid_profile": orcid_profile},
-                        "correlation_id": correlation_id.get(),
-                    },
+                log_info(
+                    f"Successfully called ORCID API {orcid_id}/record",
+                    "successful_call",
+                    {"result": {"orcid_profile": orcid_profile}},
                 )
                 return orcid_profile
 
@@ -895,23 +875,43 @@ class ORCIDAPIClient:
         Get all of the work activity records for the given ORCID account, as identified
         by the ORCID Id.
         """
-        # TODO: catch errors here
+        url = self.url(f"{orcid_id}/works")
+        log_info(
+            f"Calling ORCID API GET {orcid_id}/works",
+            "before_call",
+            {"url": url, "params": {"orcid_id": orcid_id}},
+        )
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                self.url(f"{orcid_id}/works"), headers=self.header()
-            ) as response:
+            async with session.get(url, headers=self.header()) as response:
                 result = await handle_json_response(response)
-                return Works.model_validate(result)
+                works = Works.model_validate(result)
+                log_info(
+                    f"Successfully called GET ORCID API {orcid_id}/works",
+                    "successful_call",
+                    {"result": {"works": works}},
+                )
+                return works
 
     async def get_work(self, orcid_id: str, put_code: int) -> GetWorkResult:
         """
         Get a single work activity record, as identified by ORCID Id and Put Code.
         """
         url = self.url(f"{orcid_id}/works/{put_code}")
+        log_info(
+            f"Calling ORCID API GET {orcid_id}/works/{put_code}",
+            "before_call",
+            {"url": url, "params": {"orcid_id": orcid_id, "put_code": put_code}},
+        )
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=self.header()) as response:
                 result = await handle_json_response(response)
-                return GetWorkResult.model_validate(result)
+                work = GetWorkResult.model_validate(result)
+                log_info(
+                    f"Successfully called ORCID API GET {orcid_id}/works/{put_code}",
+                    "successful_call",
+                    {"result": {"work": work}},
+                )
+                return work
 
     async def save_work(
         self, orcid_id: str, put_code: int, work_record: WorkUpdate
@@ -919,14 +919,26 @@ class ORCIDAPIClient:
         """
         Save a work activity record, as identified by ORCID Id and Put Code.
         """
+        url = self.url(f"{orcid_id}/work/{put_code}")
+        log_info(
+            f"Calling ORCID API PUT {orcid_id}/works/{put_code}",
+            "before_call",
+            {"url": url, "params": {"orcid_id": orcid_id, "put_code": put_code}},
+        )
         async with aiohttp.ClientSession() as session:
             async with session.put(
-                self.url(f"{orcid_id}/work/{put_code}"),
+                url,
                 headers=self.header(),
                 data=json.dumps(work_record.model_dump(by_alias=True)),
             ) as response:
                 result = await handle_json_response(response)
-                return Work.model_validate(result)
+                work = Work.model_validate(result)
+                log_info(
+                    f"Successfully called PUT {orcid_id}/works/{put_code}",
+                    "successful_call",
+                    {"result": {"work": work}},
+                )
+                return work
 
 
 def orcid_api(token: str) -> ORCIDAPIClient:
