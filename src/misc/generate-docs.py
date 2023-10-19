@@ -228,6 +228,14 @@ def md_tags(tags):
     return f'tags: {", ".join(tags)}'
 
 
+def generate_rotated_table(table_data: dict[str, str]) -> str:
+    result = "<table>"
+    for k, v in table_data.items():
+        result += f"<tr><th>{k}</th><td>{v}</td></tr>"
+    result += "</table>"
+    return result
+
+
 def generate_schema(schema):
     if "$ref" in schema:
         link = schema["$ref"]
@@ -247,6 +255,11 @@ def generate_schema(schema):
         html = "<div><i>All Of</i></div>"
         for all_of in schema["allOf"]:
             html += f"<div>{generate_schema(all_of)}</div>"
+        return html
+    elif "const" in schema:
+        html = "<div><i>Const</i></div>"
+        html += generate_rotated_table(schema)
+        # html += f'<table><span>{schema["title"]}</span><span>{schema["const"]}</div>'
         return html
     else:
         print("NOT HANDLED", schema)
