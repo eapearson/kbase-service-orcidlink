@@ -1,6 +1,6 @@
-from copy import deepcopy
 import json
 import logging
+from copy import deepcopy
 from typing import Any, Dict, List
 
 import aiohttp
@@ -116,7 +116,9 @@ class ORCIDOAuthAPIClient:
             text_response = await response.text()
             json_response = json.loads(text_response)
         except json.JSONDecodeError as jde:
-            log_error("Error decoding JSON response", "failed_call", {"error": str(jde)})
+            log_error(
+                "Error decoding JSON response", "failed_call", {"error": str(jde)}
+            )
             raise JSONDecodeError(
                 "Error decoding JSON response",
             ) from jde
