@@ -57,13 +57,13 @@ loggers:
     handlers:
       - json
     propagate: no
-  orcidlinkapi:
+  orcidapi:
     level: DEBUG
     filters: [correlation_id]
     handlers:
       - json
     propagate: no
-  orcidlinkoauth:
+  orcidoauthapi:
     level: DEBUG
     filters: [correlation_id]
     handlers:
