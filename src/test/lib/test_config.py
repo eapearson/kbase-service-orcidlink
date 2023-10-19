@@ -101,7 +101,7 @@ def test_get_config_bad_env():
 
 def test_get_int_constant_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ServiceConfig.get_int_constant(
+        value = ServiceConfig.get_int_environment_variable(
             IntEnvironmentVariable(
                 required=True, env_name="FOO", unit="foo", description="my foo"
             )
@@ -111,7 +111,7 @@ def test_get_int_constant_no_default():
 
 def test_get_int_constant_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ServiceConfig.get_int_constant(
+        value = ServiceConfig.get_int_environment_variable(
             IntEnvironmentVariable(
                 required=True,
                 env_name="FOO",
@@ -125,7 +125,7 @@ def test_get_int_constant_with_default():
 
 def test_get_int_constant_missing_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ServiceConfig.get_int_constant(
+        value = ServiceConfig.get_int_environment_variable(
             IntEnvironmentVariable(
                 required=True,
                 env_name="BAR",
@@ -146,7 +146,7 @@ def test_get_int_constant_missing_no_default():
                 "default value"
             ),
         ):
-            ServiceConfig.get_int_constant(
+            ServiceConfig.get_int_environment_variable(
                 IntEnvironmentVariable(
                     required=True, env_name="BAR", unit="foo", description="my foo"
                 )
@@ -158,7 +158,7 @@ def test_get_int_constant_missing_no_default():
 
 def test_get_str_constant_no_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ServiceConfig.get_str_constant(
+        value = ServiceConfig.get_str_environment_variable(
             StrEnvironmentVariable(required=True, env_name="FOO", description="my foo")
         )
         assert value == "123"
@@ -166,7 +166,7 @@ def test_get_str_constant_no_default():
 
 def test_get_str_constant_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ServiceConfig.get_str_constant(
+        value = ServiceConfig.get_str_environment_variable(
             StrEnvironmentVariable(
                 required=True, env_name="FOO", value="456", description="my foo"
             )
@@ -176,7 +176,7 @@ def test_get_str_constant_with_default():
 
 def test_get_str_constant_missing_with_default():
     with mock.patch.dict(os.environ, TEST_ENV, clear=True):
-        value = ServiceConfig.get_str_constant(
+        value = ServiceConfig.get_str_environment_variable(
             StrEnvironmentVariable(
                 required=True, env_name="BAR", value="baz", description="my bar"
             )
@@ -193,7 +193,7 @@ def test_get_str_constant_missing_no_default():
                 "is no default value"
             ),
         ):
-            ServiceConfig.get_str_constant(
+            ServiceConfig.get_str_environment_variable(
                 StrEnvironmentVariable(
                     required=True, env_name="BAR", description="my bar"
                 )

@@ -27,7 +27,7 @@ async def is_manager(username: str, account_info: AccountInfo) -> IsManagerResul
     if username != account_info.user:
         raise NotAuthorizedError()
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         return IsManagerResult(is_manager=False)
         # raise exceptions.UnauthorizedError("Not authorized for management operations")
 

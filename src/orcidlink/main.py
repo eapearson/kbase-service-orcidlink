@@ -98,7 +98,6 @@ from orcidlink.model import (
 from orcidlink.routers import linking_sessions
 from orcidlink.runtime import config, stats
 
-
 ###############################################################################
 # FastAPI application setup
 #
@@ -432,7 +431,7 @@ async def find_links_handler(
 ) -> FindLinksResult:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     result = await find_links(query)
@@ -446,7 +445,7 @@ async def get_link_handler(
 ) -> GetLinkResult:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     link_record = await get_link(username)
@@ -460,7 +459,7 @@ async def get_linking_sessions_handler(
 ) -> GetLinkingSessionsResult:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     result = await get_linking_sessions()
@@ -474,7 +473,7 @@ async def delete_expired_linking_sessions_handler(
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     await delete_expired_linking_sessions()
@@ -486,7 +485,7 @@ async def delete_linking_session_initial_handler(
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     await delete_linking_session_initial(session_id)
@@ -498,7 +497,7 @@ async def delete_linking_session_started_handler(
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     await delete_linking_session_started(session_id)
@@ -510,7 +509,7 @@ async def delete_linking_session_completed_handler(
 ) -> None:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     await delete_linking_session_completed(session_id)
@@ -531,7 +530,7 @@ async def get_stats_handler(
 ) -> GetStatsResult:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     result = await get_stats()
@@ -545,7 +544,7 @@ async def refresh_tokens_handler(
 ) -> RefreshTokensResult:
     _, account_info = await ensure_account2(authorization)
 
-    if "orcidlink_admin" not in account_info.customroles:
+    if config().manager_role not in account_info.customroles:
         raise NotAuthorizedError("Not authorized for management operations")
 
     result = await refresh_tokens(username)

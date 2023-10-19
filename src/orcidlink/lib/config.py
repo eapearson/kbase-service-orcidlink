@@ -133,7 +133,7 @@ class StrEnvironmentVariables(ServiceBaseModel):
     orcid_site_base_url: StrEnvironmentVariable = Field(...)
     orcid_client_id: StrEnvironmentVariable = Field(...)
     orcid_client_secret: StrEnvironmentVariable = Field(...)
-    orcid_link_manager_role: StrEnvironmentVariable = Field(...)
+    manager_role: StrEnvironmentVariable = Field(...)
     mongo_host: StrEnvironmentVariable = Field(...)
     mongo_database: StrEnvironmentVariable = Field(...)
     mongo_username: StrEnvironmentVariable = Field(...)
@@ -142,7 +142,7 @@ class StrEnvironmentVariables(ServiceBaseModel):
     log_level: StrEnvironmentVariable = Field(...)
 
 
-STR_CONSTANT_DEFAULTS = StrEnvironmentVariables(
+STR_ENVIRONMENT_VARIABLE_DEFAULTS = StrEnvironmentVariables(
     service_directory=StrEnvironmentVariable(
         required=True, env_name="SERVICE_DIRECTORY", description=("")
     ),
@@ -170,10 +170,10 @@ STR_CONSTANT_DEFAULTS = StrEnvironmentVariables(
         value="/read-limited /activities/update",
         description=(""),
     ),
-    orcid_link_manager_role=StrEnvironmentVariable(
+    manager_role=StrEnvironmentVariable(
         required=True,
-        env_name="ORCID_LINK_MANAGER_ROLE",
-        value="orcidlink_admin",
+        env_name="MANAGER_ROLE",
+        value="ORCIDLINK_MANAGER",
         description=(""),
     ),
     mongo_host=StrEnvironmentVariable(
@@ -201,6 +201,7 @@ class RuntimeConfig(ServiceBaseModel):
     token_cache_lifetime: int = Field(...)
     token_cache_max_items: int = Field(...)
     log_level: str = Field(...)
+    manager_role: str = Field(...)
 
     orcid_api_base_url: str = Field(...)
     orcid_oauth_base_url: str = Field(...)
@@ -229,51 +230,70 @@ class ServiceConfig:
     runtime_config: RuntimeConfig
 
     def __init__(self) -> None:
-        self.kbase_endpoint = self.get_str_constant(
-            STR_CONSTANT_DEFAULTS.kbase_endpoint
+        self.kbase_endpoint = self.get_str_environment_variable(
+            STR_ENVIRONMENT_VARIABLE_DEFAULTS.kbase_endpoint
         )
         self.runtime_config = RuntimeConfig(
-            service_directory=self.get_str_constant(
-                STR_CONSTANT_DEFAULTS.service_directory
+            service_directory=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.service_directory
             ),
-            kbase_endpoint=self.get_str_constant(STR_CONSTANT_DEFAULTS.kbase_endpoint),
-            request_timeout=self.get_int_constant(
+            kbase_endpoint=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.kbase_endpoint
+            ),
+            request_timeout=self.get_int_environment_variable(
                 INT_CONSTANT_DEFAULTS.request_timeout
             ),
-            token_cache_lifetime=self.get_int_constant(
+            token_cache_lifetime=self.get_int_environment_variable(
                 INT_CONSTANT_DEFAULTS.token_cache_lifetime
             ),
-            token_cache_max_items=self.get_int_constant(
+            token_cache_max_items=self.get_int_environment_variable(
                 INT_CONSTANT_DEFAULTS.token_cache_max_items
             ),
-            orcid_authorization_retirement_age=self.get_int_constant(
+            orcid_authorization_retirement_age=self.get_int_environment_variable(
                 INT_CONSTANT_DEFAULTS.orcid_authorization_retirement_age
             ),
-            log_level=self.get_str_constant(STR_CONSTANT_DEFAULTS.log_level),
-            orcid_api_base_url=self.get_str_constant(
-                STR_CONSTANT_DEFAULTS.orcid_api_base_url
+            log_level=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.log_level
             ),
-            orcid_oauth_base_url=self.get_str_constant(
-                STR_CONSTANT_DEFAULTS.orcid_oauth_base_url
+            manager_role=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.manager_role
             ),
-            orcid_site_base_url=self.get_str_constant(
-                STR_CONSTANT_DEFAULTS.orcid_site_base_url
+            orcid_api_base_url=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_api_base_url
             ),
-            orcid_client_id=self.get_str_constant(
-                STR_CONSTANT_DEFAULTS.orcid_client_id
+            orcid_oauth_base_url=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_oauth_base_url
             ),
-            orcid_client_secret=self.get_str_constant(
-                STR_CONSTANT_DEFAULTS.orcid_client_secret
+            orcid_site_base_url=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_site_base_url
             ),
-            orcid_scopes=self.get_str_constant(STR_CONSTANT_DEFAULTS.orcid_scopes),
-            linking_session_lifetime=self.get_int_constant(
+            orcid_client_id=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_client_id
+            ),
+            orcid_client_secret=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_client_secret
+            ),
+            orcid_scopes=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.orcid_scopes
+            ),
+            linking_session_lifetime=self.get_int_environment_variable(
                 INT_CONSTANT_DEFAULTS.linking_session_lifetime
             ),
-            mongo_host=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_host),
-            mongo_port=self.get_int_constant(INT_CONSTANT_DEFAULTS.mongo_port),
-            mongo_database=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_database),
-            mongo_username=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_username),
-            mongo_password=self.get_str_constant(STR_CONSTANT_DEFAULTS.mongo_password),
+            mongo_host=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_host
+            ),
+            mongo_port=self.get_int_environment_variable(
+                INT_CONSTANT_DEFAULTS.mongo_port
+            ),
+            mongo_database=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_database
+            ),
+            mongo_username=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_username
+            ),
+            mongo_password=self.get_str_environment_variable(
+                STR_ENVIRONMENT_VARIABLE_DEFAULTS.mongo_password
+            ),
             ui_origin=self.get_ui_origin(),
             auth_url=self.get_service_url(SERVICE_DEFAULTS.auth2),
             orcidlink_url=self.get_service_url(SERVICE_DEFAULTS.orcid_link),
@@ -289,7 +309,7 @@ class ServiceConfig:
     # Integer constants
 
     @staticmethod
-    def get_int_constant(constant_default: IntEnvironmentVariable) -> int:
+    def get_int_environment_variable(constant_default: IntEnvironmentVariable) -> int:
         value = os.environ.get(constant_default.env_name)
 
         if value is not None:
@@ -305,7 +325,7 @@ class ServiceConfig:
 
     # String constants
     @staticmethod
-    def get_str_constant(constant_default: StrEnvironmentVariable) -> str:
+    def get_str_environment_variable(constant_default: StrEnvironmentVariable) -> str:
         value = os.environ.get(constant_default.env_name)
 
         if value is not None:

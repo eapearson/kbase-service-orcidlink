@@ -6,7 +6,7 @@
      
   ],
   "customroles": [
-        "orcidlink_admin"
+        "ORCIDLINK_MANAGER"
   ],
   "policyids": [
       {

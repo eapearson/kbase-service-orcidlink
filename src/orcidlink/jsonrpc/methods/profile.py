@@ -43,7 +43,6 @@ async def get_profile(username: str, auth_username: str) -> ORCIDProfile:
     #
     # Get the user's profile from ORCID
     #
-    print("ABOUT TO CALL", access_token, orcid_id)
     profile_json = await orcid_api.orcid_api(access_token).get_profile(orcid_id)
     # try:
     #     profile_json = await orcid_api.orcid_api(access_token).get_profile(orcid_id)
