@@ -302,6 +302,8 @@ class ServiceConfig:
     def get_service_url(self, service_default: ServiceDefault) -> str:
         env_path = os.environ.get(service_default.env_name)
         path = env_path or service_default.path
+        # Note that urljoin ignores (strips off) any trailing forward slashes
+        # from kbase_endpoint
         return urljoin(self.kbase_endpoint, path)
 
     # MORE...
@@ -342,6 +344,19 @@ class ServiceConfig:
     # misc
 
     def get_ui_origin(self) -> str:
+        """
+        Returns the "origin" suitable for usage in urls targeting a KBase user interface
+        in the current KBase deployment environment.
+
+        The deployment environment is indicated by the "KBASE_ENDPOINT" environment
+        variable, which must be set in order for the service to start.
+
+        For user interfaces, unlike for services, we need the "origin" - that is the
+        protocol and host. 
+
+        We make an explicit exception for the one environment, production, that breaks
+        the rule that user interfaces operate on the same host as services.
+        """
         endpoint_url = urlparse(self.kbase_endpoint)
 
         # We need to handle the ui endpoint for prod specially, as it operates
