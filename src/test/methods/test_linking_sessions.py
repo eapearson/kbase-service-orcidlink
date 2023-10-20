@@ -447,12 +447,14 @@ async def test_delete_linking_session():
                     expected_response_code=302,
                 )
 
+                # Prove we have a completed linking session
                 response = rpc_call(
                     "get-linking-session", {"session_id": initial_session_id}, TOKEN_FOO
                 )
                 result = assert_json_rpc_result_ignore_result(response)
                 assert result["username"] == "foo"
 
+                # Now delete the linking session - it should succeed with an empty response
                 response = rpc_call(
                     "delete-linking-session",
                     {"session_id": initial_session_id},
@@ -461,6 +463,7 @@ async def test_delete_linking_session():
                 result = assert_json_rpc_result_ignore_result(response)
                 assert result is None
 
+                # Now try again, and we should find that the session is not found.
                 response = rpc_call(
                     "get-linking-session", {"session_id": initial_session_id}, TOKEN_FOO
                 )

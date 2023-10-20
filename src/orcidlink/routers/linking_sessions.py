@@ -8,8 +8,10 @@ ORCID Link and to fit into various front end usage scenarios.
 """
 import json
 import logging
+from typing import Any
 from urllib.parse import urlencode
 
+from asgi_correlation_id import correlation_id
 from fastapi import APIRouter, Cookie, Path, Query, responses
 from fastapi_jsonrpc import InvalidParams
 from pydantic import Field
@@ -77,6 +79,37 @@ KBASE_SESSION_BACKUP_COOKIE = Cookie(
 )
 
 #
+# Logging wrappers
+#
+
+
+def log_info(message: str, event: str, extra: dict[str, Any]) -> None:
+    logger = logging.getLogger("interactiveapi")
+    logger.info(
+        message,
+        extra={
+            "type": "interactiveapi",
+            "event": event,
+            "correlation_id": correlation_id.get(),
+            **extra,
+        },
+    )
+
+
+def log_error(message: str, event: str, extra: dict[str, Any]) -> None:
+    logger = logging.getLogger("orcidoauthapi")
+    logger.error(
+        message,
+        extra={
+            "type": "interactiveapi",
+            "event": event,
+            "correlation_id": correlation_id.get(),
+            **extra,
+        },
+    )
+
+
+#
 # OAuth Interactive Endpoints
 #
 
@@ -132,6 +165,23 @@ async def start_linking_session(
     access_token stored at KBase for future use by the user.
     """
 
+    log_info(
+        "Starting start_linking_session",
+        "start",
+        {
+            "params": {
+                "session_id": session_id,
+                "return_link": return_link,
+                "skip_prompt": skip_prompt,
+                "ui_options": ui_options,
+                "kbase_session": "REDACTED" if kbase_session is not None else "n/a",
+                "kbase_session_backup": "REDACTED"
+                if kbase_session_backup is not None
+                else "n/a",
+            }
+        },
+    )
+
     if kbase_session is None:
         if kbase_session_backup is None:
             raise UIError(
@@ -178,14 +228,8 @@ async def start_linking_session(
     )
     url = f"{config().orcid_oauth_base_url}/authorize?{urlencode(params.model_dump())}"
 
-    logger = logging.getLogger("api")
-    logger.info(
-        "Successfully called GET /linking-sessions/{session_id}/oauth/start method",
-        extra={
-            "type": "api",
-            "params": {"authorization": "REDACTED", "session_id": session_id},
-            "path": "/linking-sessions/{session_id}/oauth/start",
-        },
+    log_info(
+        "Successfully started linking session", "success", {"redirection_url": url}
     )
 
     return responses.RedirectResponse(url, status_code=302)
@@ -254,6 +298,22 @@ async def linking_sessions_continue(
     user interface. Rather, it redirects to kbase-ui when finished. If an error is
     encountered, it redirects to an error viewing endpoint in kbase-ui.
     """
+    log_info(
+        "Starting start_linking_session",
+        "start",
+        {
+            "params": {
+                "code": "REDACTED" if code is not None else "n/a",
+                "state": state,
+                "error": error,
+                "kbase_session": "REDACTED" if kbase_session is not None else "n/a",
+                "kbase_session_backup": "REDACTED"
+                if kbase_session_backup is not None
+                else "n/a",
+            }
+        },
+    )
+
     # Note that this is the target for redirection from ORCID,
     # and we don't have an Authorization header. We don't
     # (necessarily) have an auth cookie.
@@ -378,23 +438,10 @@ async def linking_sessions_continue(
     params["skip_prompt"] = "true" if session_record.skip_prompt else "false"
     params["ui_options"] = session_record.ui_options
 
-    logger = logging.getLogger("api")
-    logger.info(
-        "Successfully called GET /linking-sessions/oauth/continue method",
-        extra={
-            "type": "api",
-            "params": {
-                "kbase_session": "REDACTED",
-                "kbase_session_backup": "REDACTED",
-                "code": code,
-                "state": state,
-                "error": error,
-            },
-            "path": "/linking-sessions//oauth/continue",
-        },
+    url = f"{config().ui_origin}?{urlencode(params)}#orcidlink/continue/{session_id}"
+
+    log_info(
+        "Successfully continued linking session", "success", {"redirection_url": url}
     )
 
-    return RedirectResponse(
-        f"{config().ui_origin}?{urlencode(params)}#orcidlink/continue/{session_id}",
-        status_code=302,
-    )
+    return RedirectResponse(url, status_code=302)
