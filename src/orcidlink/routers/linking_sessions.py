@@ -149,8 +149,8 @@ async def start_linking_session(
     return_link: str | None = RETURN_LINK_QUERY,
     skip_prompt: bool = SKIP_PROMPT_QUERY,
     ui_options: str = UI_OPTIONS_QUERY,
-    kbase_session: str = KBASE_SESSION_COOKIE,
-    kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
+    kbase_session: str | None = KBASE_SESSION_COOKIE,
+    kbase_session_backup: str | None = KBASE_SESSION_BACKUP_COOKIE,
 ) -> RedirectResponse:
     # TODO: should be no json responses here!
     """
@@ -267,8 +267,8 @@ async def start_linking_session(
     tags=["linking-sessions"],
 )
 async def linking_sessions_continue(
-    kbase_session: str = KBASE_SESSION_COOKIE,
-    kbase_session_backup: str = KBASE_SESSION_BACKUP_COOKIE,
+    kbase_session: str | None = KBASE_SESSION_COOKIE,
+    kbase_session_backup: str | None = KBASE_SESSION_BACKUP_COOKIE,
     code: str
     | None = Query(
         default=None,

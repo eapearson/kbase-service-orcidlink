@@ -33,6 +33,7 @@ from typing import (
     TypeAlias,
     TypeVar,
     Union,
+    assert_never,
 )
 
 import aiohttp
@@ -41,7 +42,7 @@ from multidict import CIMultiDict
 from pydantic import Field
 
 from orcidlink.jsonrpc.errors import UpstreamError
-from orcidlink.lib.json_support import JSONObject
+from orcidlink.lib.json_support import JSONObject, JSONValue, as_json_object, json_path
 from orcidlink.lib.service_clients.orcid_api_errors import (
     OAuthBearerError,
     ORCIDAPIError,
@@ -393,9 +394,6 @@ class PersistedWork(ServiceBaseModel):
         validation_alias="last-modified-date",
         serialization_alias="last-modified-date",
     )
-    # TODO: either defaults to str, and overridden in the standalone to optional,
-    # or defaults to optional, and becomes required for summary.
-    path: Optional[str] = Field(default=None)
     # publication_date: Date = Field(validation_alias="publication-date",
     # serialization_alias="publication-date")
     source: ORCIDSource = Field(...)
@@ -419,6 +417,9 @@ class Work(WorkBase, PersistedWork):
     )
     citation: Optional[Citation] = Field(default=None)
     contributors: ContributorWrapper = Field(...)
+    # TODO: either defaults to str, and overridden in the standalone to optional,
+    # or defaults to optional, and becomes required for summary.
+    path: Optional[str] = Field(default=None)
 
 
 class WorkSummary(WorkBase, PersistedWork):
@@ -680,7 +681,7 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # None for an empty body (which is simply wrong).
     try:
         text_response = await response.text()
-        json_response = json.loads(text_response)
+        json_response = as_json_object(json.loads(text_response))
     except json.JSONDecodeError as jde:
         log_error("Error decoding JSON response", "failed_call", {"error": str(jde)})
         raise UpstreamError(
@@ -697,14 +698,17 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     #
     if response.status == 200:
         # let's just handle the case of a work not found.
-        simple_bulk_error = (
-            "bulk" in json_response
-            and len(json_response["bulk"]) == 1
-            and "error" in json_response["bulk"][0]
-        )
-        if not simple_bulk_error:
+        found, simple_bulk_error = json_path(json_response, ["bulk", 0, "error"])
+
+        # simple_bulk_error = (
+        #     "bulk" in json_response and isinstance(json_response["bulk"], list)
+        #     and len(json_response["bulk"]) == 1
+        #     and isinstance(json_response["bulk"][0], dict)
+        #     and "error" in json_response["bulk"][0]
+        # )
+        if not found:
             return json_response
-        json_response = json_response["bulk"][0]["error"]
+        json_response = simple_bulk_error
 
     # Shoehorn the error code into the appropriate structure
     error = extract_error(json_response)
@@ -716,8 +720,10 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
         error_info = dict(error)
     elif isinstance(error, dict):
         error_info = error
-    else:
+    elif error is None:
         error_info = "unknown"
+    else:
+        assert_never(error)
 
     log_error(
         "Error fetching profile from ORCID API", "failed_call", {"error": error_info}
@@ -727,13 +733,12 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
         raise orcid_api_error_to_json_rpc_error(error)
     elif isinstance(error, OAuthBearerError):
         raise orcid_oauth_bearer_to_json_rpc_error(error)
-    elif error is None:
-        raise UpstreamError(data={"message": "Error is not a JSON object"})
-    else:
-        # Wow, some other type of error.
+    elif isinstance(error, dict):
         raise UpstreamError(
             data=ORCIDAPIOtherErrorDetail(upstream_error=error).model_dump()
         )
+    elif error is None:
+        raise UpstreamError(data={"message": "Error is not a JSON object"})
 
     # This will capture any >=300 errors, which we just
     # in through as an internal error.
@@ -748,7 +753,9 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # raise ORCIDAPIClientOtherError("Other ORCID API Error")
 
 
-def extract_error(result: Any) -> ORCIDAPIError | OAuthBearerError | JSONObject | None:
+def extract_error(
+    result: JSONValue,
+) -> ORCIDAPIError | OAuthBearerError | JSONObject | None:
     # Shoehorn the error code into the appropriate structure
     if not isinstance(result, dict):
         return None
@@ -760,6 +767,8 @@ def extract_error(result: Any) -> ORCIDAPIError | OAuthBearerError | JSONObject 
         return OAuthBearerError.model_validate(result)
     elif "error-code" in result:
         return ORCIDAPIError.model_validate(result)
+    # elif isinstance(result, dict):
+    #     return result
     else:
         return result
 

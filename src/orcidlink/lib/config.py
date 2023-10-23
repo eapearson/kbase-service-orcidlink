@@ -352,7 +352,7 @@ class ServiceConfig:
         variable, which must be set in order for the service to start.
 
         For user interfaces, unlike for services, we need the "origin" - that is the
-        protocol and host. 
+        protocol and host.
 
         We make an explicit exception for the one environment, production, that breaks
         the rule that user interfaces operate on the same host as services.

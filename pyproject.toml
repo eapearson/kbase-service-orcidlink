@@ -59,3 +59,6 @@ profile = "black"
 
 [tool.pyright]
 include = ["src"]
+reportMissingImports = true
+# reportMissingTypeStubs = false
+strict = ["src/orcidlink"]

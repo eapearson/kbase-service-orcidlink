@@ -82,27 +82,12 @@ class JSONLogger:
         return log_id
 
 
-# def format_time_in_rfc3339(
-#     _self: logging.Formatter, record: logging.LogRecord, _: str | None = None
-# ) -> str:
-#     return datetime.datetime.fromtimestamp(
-#         record.created, datetime.timezone.utc
-#     ).isoformat()
-
-
-ORCID_LOGGER = None
-
-
-def global_logger() -> JSONLogger:
-    global ORCID_LOGGER
-    if ORCID_LOGGER is None:
-        ORCID_LOGGER = JSONLogger("orcidlink")
-    return ORCID_LOGGER
+ORCID_LOGGER = JSONLogger("orcidlink")
 
 
 def log_level(level: int) -> None:
-    global_logger().log_level(level)
+    ORCID_LOGGER.log_level(level)
 
 
 def log_event(event: str, data: Any, level: int = logging.INFO) -> str:
-    return global_logger().log_event(event, data, level)
+    return ORCID_LOGGER.log_event(event, data, level)

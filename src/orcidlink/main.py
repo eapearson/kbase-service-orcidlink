@@ -21,7 +21,7 @@ from typing import Any, AsyncGenerator, Generic, List, Optional, TypeVar
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import Body, FastAPI, Request
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi_jsonrpc import API, Entrypoint, JsonRpcContext
+from fastapi_jsonrpc import API, BaseError, Entrypoint, JsonRpcContext
 from pydantic import Field
 from starlette.responses import HTMLResponse
 
@@ -77,6 +77,7 @@ from orcidlink.jsonrpc.methods.works import (
 )
 from orcidlink.jsonrpc.utils import ensure_account2, ensure_authorization2
 from orcidlink.lib import logger
+from orcidlink.lib.json_support import as_json_object
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     PUT_CODE_PARAM,
@@ -229,7 +230,11 @@ app = API(
 )
 
 
-COMMON_ERRORS = [AuthorizationRequiredError, NotAuthorizedError, NotFoundError]
+COMMON_ERRORS: List[type[BaseError]] = [
+    AuthorizationRequiredError,
+    NotAuthorizedError,
+    NotFoundError,
+]
 COMMON_ERRORS.extend(Entrypoint.default_errors)
 
 # JSON-RPC middlewares
@@ -239,7 +244,10 @@ COMMON_ERRORS.extend(Entrypoint.default_errors)
 async def logging_middleware(ctx: JsonRpcContext):
     logger = logging.getLogger("api")
     logger.info(
-        "jsonrpc request", extra={"type": "jsonrpc_request", "request": ctx.raw_request}
+        "jsonrpc request",
+        extra=as_json_object(
+            {"type": "jsonrpc_request", "request": as_json_object(ctx.raw_request)}
+        ),  # type: ignore
     )
     try:
         yield
@@ -247,7 +255,7 @@ async def logging_middleware(ctx: JsonRpcContext):
         # logger.info('Response: %r', ctx.raw_response)
         logger.info(
             "jsonrpc response",
-            extra={"type": "jsonrpc_response", "response": ctx.raw_response},
+            extra={"type": "jsonrpc_response", "response": ctx.raw_response},  # type: ignore
         )
 
 
@@ -256,7 +264,7 @@ api_v1 = Entrypoint(
 )
 
 
-app.bind_entrypoint(api_v1)
+app.bind_entrypoint(api_v1)  # type: ignore
 
 #
 # JSON-RPC methods
@@ -265,22 +273,22 @@ app.bind_entrypoint(api_v1)
 #
 
 
-@api_v1.method(name="status")
+@api_v1.method(name="status")  # type: ignore
 def status() -> StatusResult:
     return status_method()
 
 
-@api_v1.method(name="info")
+@api_v1.method(name="info")  # type: ignore
 def info() -> InfoResult:
     return info_method()
 
 
-@api_v1.method(name="error-info")
+@api_v1.method(name="error-info")  # type: ignore
 def error_info(error_code: int) -> ErrorInfoResult:
     return error_info_method(error_code)
 
 
-@api_v1.method(name="is-linked", errors=[AuthorizationRequiredError])
+@api_v1.method(name="is-linked", errors=[AuthorizationRequiredError])  # type: ignore
 async def is_linked(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> bool:
@@ -312,7 +320,7 @@ async def is_linked(
     return result
 
 
-@api_v1.method(name="owner-link", errors=[*COMMON_ERRORS])
+@api_v1.method(name="owner-link", errors=[*COMMON_ERRORS])  # type: ignore
 async def owner_link_handler(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> LinkRecordPublic:
@@ -333,7 +341,7 @@ async def owner_link_handler(
     return result
 
 
-@api_v1.method(name="other-link", errors=[*COMMON_ERRORS])
+@api_v1.method(name="other-link", errors=[*COMMON_ERRORS])  # type: ignore
 async def other_link_handler(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> LinkRecordPublicNonOwner:
@@ -351,7 +359,7 @@ async def other_link_handler(
     return result
 
 
-@api_v1.method(name="delete-own-link", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-own-link", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_own_link_handler(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> None:
@@ -360,7 +368,7 @@ async def delete_own_link_handler(
     await delete_own_link(username, token_info.user)
 
 
-@api_v1.method(name="create-linking-session", errors=[*COMMON_ERRORS])
+@api_v1.method(name="create-linking-session", errors=[*COMMON_ERRORS])  # type: ignore
 async def create_linking_session_handler(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> CreateLinkingSessionResult:
@@ -371,7 +379,7 @@ async def create_linking_session_handler(
     return result
 
 
-@api_v1.method(name="get-linking-session", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-linking-session", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_linking_session_handler(
     session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> LinkingSessionCompletePublic:
@@ -382,7 +390,7 @@ async def get_linking_session_handler(
     return result
 
 
-@api_v1.method(name="delete-linking-session", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-linking-session", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_linking_session_handler(
     session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
@@ -393,7 +401,7 @@ async def delete_linking_session_handler(
     return result
 
 
-@api_v1.method(name="finish-linking-session", errors=[*COMMON_ERRORS])
+@api_v1.method(name="finish-linking-session", errors=[*COMMON_ERRORS])  # type: ignore
 async def finish_linking_session_handler(
     session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
@@ -404,7 +412,7 @@ async def finish_linking_session_handler(
     return result
 
 
-@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-orcid-profile", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_orcid_profile_handler(
     username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> ORCIDProfile:
@@ -423,7 +431,7 @@ async def get_orcid_profile_handler(
 #
 
 
-@api_v1.method(name="is-manager", errors=[*COMMON_ERRORS])
+@api_v1.method(name="is-manager", errors=[*COMMON_ERRORS])  # type: ignore
 async def is_manager_handler(
     username: str, authorization: str = AUTHORIZATION_HEADER
 ) -> IsManagerResult:
@@ -434,7 +442,7 @@ async def is_manager_handler(
     return result
 
 
-@api_v1.method(name="find-links", errors=[*COMMON_ERRORS])
+@api_v1.method(name="find-links", errors=[*COMMON_ERRORS])  # type: ignore
 async def find_links_handler(
     query: Optional[SearchQuery], authorization: str = AUTHORIZATION_HEADER
 ) -> FindLinksResult:
@@ -448,7 +456,7 @@ async def find_links_handler(
     return result
 
 
-@api_v1.method(name="get-link", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-link", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_link_handler(
     username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> GetLinkResult:
@@ -462,7 +470,7 @@ async def get_link_handler(
     return link_record
 
 
-@api_v1.method(name="get-linking-sessions", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-linking-sessions", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_linking_sessions_handler(
     authorization: str = AUTHORIZATION_HEADER,
 ) -> GetLinkingSessionsResult:
@@ -476,7 +484,7 @@ async def get_linking_sessions_handler(
     return result
 
 
-@api_v1.method(name="delete-expired-linking-sessions", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-expired-linking-sessions", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_expired_linking_sessions_handler(
     authorization: str = AUTHORIZATION_HEADER,
 ) -> None:
@@ -488,7 +496,7 @@ async def delete_expired_linking_sessions_handler(
     await delete_expired_linking_sessions()
 
 
-@api_v1.method(name="delete-linking-session-initial", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-linking-session-initial", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_linking_session_initial_handler(
     session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
@@ -500,7 +508,7 @@ async def delete_linking_session_initial_handler(
     await delete_linking_session_initial(session_id)
 
 
-@api_v1.method(name="delete-linking-session-started", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-linking-session-started", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_linking_session_started_handler(
     session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
@@ -512,7 +520,7 @@ async def delete_linking_session_started_handler(
     await delete_linking_session_started(session_id)
 
 
-@api_v1.method(name="delete-linking-session-completed", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-linking-session-completed", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_linking_session_completed_handler(
     session_id: str = SESSION_ID_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> None:
@@ -524,7 +532,7 @@ async def delete_linking_session_completed_handler(
     await delete_linking_session_completed(session_id)
 
 
-@api_v1.method(name="delete-link", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-link", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_link_handler(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> None:
@@ -533,7 +541,7 @@ async def delete_link_handler(
     await delete_link(username, account_info)
 
 
-@api_v1.method(name="get-stats", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-stats", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_stats_handler(
     authorization: str = AUTHORIZATION_HEADER,
 ) -> GetStatsResult:
@@ -547,7 +555,7 @@ async def get_stats_handler(
 
 
 # TODO: I don't think this is used.
-@api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])
+@api_v1.method(name="refresh-tokens", errors=[*COMMON_ERRORS])  # type: ignore
 async def refresh_tokens_handler(
     username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> RefreshTokensResult:
@@ -565,7 +573,7 @@ async def refresh_tokens_handler(
 #
 
 
-@api_v1.method(name="get-orcid-works", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-orcid-works", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_orcid_works_handler(
     username: str = USERNAME_PARAM, authorization: str = AUTHORIZATION_HEADER
 ) -> List[ORCIDWorkGroup]:
@@ -578,7 +586,7 @@ async def get_orcid_works_handler(
     return result
 
 
-@api_v1.method(name="get-orcid-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="get-orcid-work", errors=[*COMMON_ERRORS])  # type: ignore
 async def get_orcid_work_handler(
     username: str = USERNAME_PARAM,
     put_code: int = PUT_CODE_PARAM,
@@ -593,7 +601,7 @@ async def get_orcid_work_handler(
     return result
 
 
-@api_v1.method(name="create-orcid-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="create-orcid-work", errors=[*COMMON_ERRORS])  # type: ignore
 async def create_work_handler(
     username: str = USERNAME_PARAM,
     new_work: NewWork = Body(..., description="New work activity record"),
@@ -608,7 +616,7 @@ async def create_work_handler(
     return result
 
 
-@api_v1.method(name="update-orcid-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="update-orcid-work", errors=[*COMMON_ERRORS])  # type: ignore
 async def save_work_handler(
     username: str = USERNAME_PARAM,
     work_update: WorkUpdate = Body(..., description="A work activity update record"),
@@ -623,7 +631,7 @@ async def save_work_handler(
     return result
 
 
-@api_v1.method(name="delete-orcid-work", errors=[*COMMON_ERRORS])
+@api_v1.method(name="delete-orcid-work", errors=[*COMMON_ERRORS])  # type: ignore
 async def delete_work_handler(
     username: str = USERNAME_PARAM,
     put_code: int = PUT_CODE_PARAM,

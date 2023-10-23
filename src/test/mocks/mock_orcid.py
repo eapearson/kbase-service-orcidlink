@@ -26,20 +26,21 @@ class MockORCIDAPI(MockService):
             self.send_json(work_record, ORCID_API_CONTENT_TYPE)
 
         elif self.path == "/orcid-id-foo/works/1234":
-            error = {
-                "response-code": 400,
-                "developer-message": (
-                    "400 Bad Request: The put code provided is not valid. "
-                    "Full validation error: '1234' is not a valid put code"
-                ),
-                "user-message": (
-                    "There was an error when updating the record. Please try again. "
-                    "If the error persists, please contact KBase CI for assistance."
-                ),
-                "error-code": 9034,
-                "more-info": "https://members.orcid.org/api/resources/troubleshooting",
-            }
-            self.send_json_error(error, 400, ORCID_API_CONTENT_TYPE)
+            error = load_test_data(TEST_DATA_DIR, "orcid", "get-works-bad-put-code")
+            # error = {
+            #     "response-code": 400,
+            #     "developer-message": (
+            #         "400 Bad Request: The put code provided is not valid. "
+            #         "Full validation error: '1234' is not a valid put code"
+            #     ),
+            #     "user-message": (
+            #         "There was an error when updating the record. Please try again. "
+            #         "If the error persists, please contact KBase CI for assistance."
+            #     ),
+            #     "error-code": 9034,
+            #     "more-info": "https://members.orcid.org/api/resources/troubleshooting",
+            # }
+            self.send_json_error(error, 200, ORCID_API_CONTENT_TYPE)
 
         elif self.path == "/orcid-id-foo/works/12345":
             error = {
