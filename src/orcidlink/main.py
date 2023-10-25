@@ -77,7 +77,6 @@ from orcidlink.jsonrpc.methods.works import (
 )
 from orcidlink.jsonrpc.utils import ensure_account2, ensure_authorization2
 from orcidlink.lib import logger
-from orcidlink.lib.json_support import as_json_object
 from orcidlink.lib.responses import (
     AUTHORIZATION_HEADER,
     PUT_CODE_PARAM,
@@ -245,9 +244,7 @@ async def logging_middleware(ctx: JsonRpcContext):
     logger = logging.getLogger("api")
     logger.info(
         "jsonrpc request",
-        extra=as_json_object(
-            {"type": "jsonrpc_request", "request": as_json_object(ctx.raw_request)}
-        ),  # type: ignore
+        extra={"type": "jsonrpc_request", "request": ctx.raw_request},  # type: ignore
     )
     try:
         yield

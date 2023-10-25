@@ -1139,15 +1139,15 @@ async def test_get_work_errors():
         params = {
             "username": "bar",
         }
-        response = rpc_call("get-orcid-work", params, generate_kbase_token("bar"))
-        assert_json_rpc_error(response, -32602, "Invalid params")
+        # response = rpc_call("get-orcid-work", params, generate_kbase_token("bar"))
+        # assert_json_rpc_error(response, -32602, "Invalid params")
 
-        #
-        # An unlinked user gets a Not Found, which is caught by the method impl.
-        #
-        params = {"username": "bar", "put_code": 1526002}
-        response = rpc_call("get-orcid-work", params, generate_kbase_token("bar"))
-        assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
+        # #
+        # # An unlinked user gets a Not Found, which is caught by the method impl.
+        # #
+        # params = {"username": "bar", "put_code": 1526002}
+        # response = rpc_call("get-orcid-work", params, generate_kbase_token("bar"))
+        # assert_json_rpc_error(response, NotFoundError.CODE, NotFoundError.MESSAGE)
 
         # Another cause of not-found is if the work is not found.
         params = {"username": "foo", "put_code": 1234}

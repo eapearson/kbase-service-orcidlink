@@ -242,7 +242,6 @@ class MockORCIDOAuth(MockService):
         if self.path == "/revoke":
             data = parse_qs(self.get_body_string())
             token = data.get("token")
-            # print('REVOKE', data, token)
             if token is None:
                 # what?
                 pass
@@ -479,5 +478,4 @@ class MockORCIDOAuth2(MockService):
     def do_POST(self):
         # TODO: Reminder - switch to normal auth2 endpoint in config and here.
         if self.path == "/revoke":
-            print("GETTING THERE", self.headers)
             self.send_empty(status_code=204)

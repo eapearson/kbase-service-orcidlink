@@ -22,6 +22,7 @@ async def get_works(username: str) -> List[ORCIDWorkGroup]:
     orcid_id = link_record.orcid_auth.orcid
 
     orcid_works = await orcid_api.orcid_api(token).get_works(orcid_id)
+
     result: List[ORCIDWorkGroup] = []
     for group in orcid_works.group:
         result.append(
@@ -64,12 +65,6 @@ async def get_work(username: str, put_code: int) -> GetWorkResult:
     raw_work = await orcid_api.orcid_api(token).get_work(orcid_id, put_code)
     profile = await orcid_api.orcid_api(token).get_profile(orcid_id)
     return GetWorkResult(work=to_service.transform_work(profile, raw_work.bulk[0].work))
-    # except orcid_api.ORCIDAPINotFoundError as err:
-    #     raise NotFoundError(err.message)
-    # except orcid_api.ORCIDAPIClientInvalidAccessTokenError as err:
-    #     raise ORCIDInsufficientAuthorizationError(err.message)
-    # except orcid_api.ORCIDAPIClientOtherError as err:
-    #     raise UpstreamError(err.message)
 
 
 class CreateWorkResult(ServiceBaseModel):

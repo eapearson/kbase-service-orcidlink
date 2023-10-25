@@ -306,38 +306,39 @@ class ServiceConfig:
         # from kbase_endpoint
         return urljoin(self.kbase_endpoint, path)
 
-    # MORE...
-
-    # Integer constants
-
+    # Integer environment variables
     @staticmethod
-    def get_int_environment_variable(constant_default: IntEnvironmentVariable) -> int:
-        value = os.environ.get(constant_default.env_name)
+    def get_int_environment_variable(
+        environment_variable: IntEnvironmentVariable,
+    ) -> int:
+        value = os.environ.get(environment_variable.env_name)
 
         if value is not None:
             return int(value)
 
-        if constant_default.value is not None:
-            return constant_default.value
+        if environment_variable.value is not None:
+            return environment_variable.value
 
         raise ValueError(
-            f'The environment variable "{constant_default.env_name}" is missing '
+            f'The environment variable "{environment_variable.env_name}" is missing '
             "and there is no default value"
         )
 
-    # String constants
+    # String environment variables
     @staticmethod
-    def get_str_environment_variable(constant_default: StrEnvironmentVariable) -> str:
-        value = os.environ.get(constant_default.env_name)
+    def get_str_environment_variable(
+        environment_variable: StrEnvironmentVariable,
+    ) -> str:
+        value = os.environ.get(environment_variable.env_name)
 
         if value is not None:
             return value
 
-        if constant_default.value is not None:
-            return constant_default.value
+        if environment_variable.value is not None:
+            return environment_variable.value
 
         raise ValueError(
-            f'The environment variable "{constant_default.env_name}" is missing'
+            f'The environment variable "{environment_variable.env_name}" is missing'
             " and there is no default value"
         )
 

@@ -42,11 +42,10 @@ from multidict import CIMultiDict
 from pydantic import Field
 
 from orcidlink.jsonrpc.errors import UpstreamError
-from orcidlink.lib.json_support import JSONObject, JSONValue, as_json_object, json_path
+from orcidlink.lib.json_support import JSONObject, JSONValue, json_path
 from orcidlink.lib.service_clients.orcid_api_errors import (
     OAuthBearerError,
     ORCIDAPIError,
-    ORCIDAPIOtherErrorDetail,
     orcid_api_error_to_json_rpc_error,
     orcid_oauth_bearer_to_json_rpc_error,
 )
@@ -659,7 +658,6 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     if content_type_raw is None:
         log_error("No content-type in response", "failed_call", {"error": None})
         raise UpstreamError("No content-type in response")
-
     content_type, _, _ = content_type_raw.partition(";")
     if content_type != ORCID_API_CONTENT_TYPE:
         log_error(
@@ -681,7 +679,7 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     # None for an empty body (which is simply wrong).
     try:
         text_response = await response.text()
-        json_response = as_json_object(json.loads(text_response))
+        json_response = json.loads(text_response)
     except json.JSONDecodeError as jde:
         log_error("Error decoding JSON response", "failed_call", {"error": str(jde)})
         raise UpstreamError(
@@ -699,13 +697,6 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     if response.status == 200:
         # let's just handle the case of a work not found.
         found, simple_bulk_error = json_path(json_response, ["bulk", 0, "error"])
-
-        # simple_bulk_error = (
-        #     "bulk" in json_response and isinstance(json_response["bulk"], list)
-        #     and len(json_response["bulk"]) == 1
-        #     and isinstance(json_response["bulk"][0], dict)
-        #     and "error" in json_response["bulk"][0]
-        # )
         if not found:
             return json_response
         json_response = simple_bulk_error
@@ -734,23 +725,9 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
     elif isinstance(error, OAuthBearerError):
         raise orcid_oauth_bearer_to_json_rpc_error(error)
     elif isinstance(error, dict):
-        raise UpstreamError(
-            data=ORCIDAPIOtherErrorDetail(upstream_error=error).model_dump()
-        )
+        raise UpstreamError(data={"upstream_error": error})
     elif error is None:
         raise UpstreamError(data={"message": "Error is not a JSON object"})
-
-    # This will capture any >=300 errors, which we just
-    # in through as an internal error.
-    # Remember, actual >= 500 errors will result in an exception
-    # thrown or possibly trigger a json parse error above, as we
-    # expect a valid response.
-    # TODO: we need to make the new upstream error carry data
-    # raise exceptions.UpstreamError()
-    # raise exceptions.make_upstream_error(
-    #     response.status, result, source="get_profile"
-    # )
-    # raise ORCIDAPIClientOtherError("Other ORCID API Error")
 
 
 def extract_error(
@@ -767,8 +744,6 @@ def extract_error(
         return OAuthBearerError.model_validate(result)
     elif "error-code" in result:
         return ORCIDAPIError.model_validate(result)
-    # elif isinstance(result, dict):
-    #     return result
     else:
         return result
 
