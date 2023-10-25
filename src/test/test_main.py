@@ -1131,6 +1131,14 @@ async def test_get_work2():
 async def test_get_work_errors():
     with mock_services():
         await clear_database()
+
+        # Link not found for this user.
+        params = {"username": "foo", "put_code": 1234}
+        response = rpc_call("get-orcid-work", params, generate_kbase_token("foo"))
+        assert_json_rpc_error(
+            response, NotFoundError.CODE, NotFoundError.MESSAGE
+        )
+
         await create_link(TEST_LINK)
         #
         # Omitting a param
