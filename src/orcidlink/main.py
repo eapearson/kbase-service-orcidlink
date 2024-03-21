@@ -14,6 +14,7 @@ endpoints (other than /docs). Routers include: link, linking-sessions, works, or
 root.
 
 """
+
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Generic, List, Optional, TypeVar
@@ -289,13 +290,13 @@ def error_info(error_code: int) -> ErrorInfoResult:
 async def is_linked(
     username: str = USERNAME_PARAM, authorization: str | None = AUTHORIZATION_HEADER
 ) -> bool:
-    logger = logging.getLogger("api")
-    logger.info(
+    api_logger = logging.getLogger("api")
+    api_logger.info(
         "Called /is-linked method",
         extra={
             "type": "api",
             "event": "call_started",
-            "params": {"authorization": "NOT_DISPLAYED"},
+            "params": {"authorization": "REDACTED"},
             "path": "/is-linked",
         },
     )
@@ -304,7 +305,7 @@ async def is_linked(
 
     result = await is_linked_method(username, token_info.user)
 
-    logger.info(
+    api_logger.info(
         "Successfully called /is_linked method",
         extra={
             "type": "api",

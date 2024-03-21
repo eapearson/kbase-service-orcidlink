@@ -33,7 +33,6 @@ from typing import (
     TypeAlias,
     TypeVar,
     Union,
-    assert_never,
 )
 
 import aiohttp
@@ -535,10 +534,11 @@ class Affiliations(ServiceBaseModel):
     last_modified_date: Optional[ORCIDIntValue] = Field(
         validation_alias="last-modified-date", serialization_alias="last-modified-date"
     )
-    affiliation_group: Union[
-        ORCIDAffiliationGroup, List[ORCIDAffiliationGroup]
-    ] = Field(
-        validation_alias="affiliation-group", serialization_alias="affiliation-group"
+    affiliation_group: Union[ORCIDAffiliationGroup, List[ORCIDAffiliationGroup]] = (
+        Field(
+            validation_alias="affiliation-group",
+            serialization_alias="affiliation-group",
+        )
     )
     path: str = Field(...)
 
@@ -709,12 +709,15 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
         error_info = dict(error)
     elif isinstance(error, OAuthBearerError):
         error_info = dict(error)
-    elif isinstance(error, dict):
-        error_info = error
-    elif error is None:
-        error_info = "unknown"
     else:
-        assert_never(error)
+        log_error(
+            "Error fetching profile from ORCID API and rror is not an expected object",
+            "failed_call",
+            {"upstream_error": error},
+        )
+        raise UpstreamError(
+            data={"message": "Error is not an expected object", "upstream_error": error}
+        )
 
     log_error(
         "Error fetching profile from ORCID API", "failed_call", {"error": error_info}
@@ -722,12 +725,8 @@ async def handle_json_response(response: aiohttp.ClientResponse) -> Any:
 
     if isinstance(error, ORCIDAPIError):
         raise orcid_api_error_to_json_rpc_error(error)
-    elif isinstance(error, OAuthBearerError):
+    else:
         raise orcid_oauth_bearer_to_json_rpc_error(error)
-    elif isinstance(error, dict):
-        raise UpstreamError(data={"upstream_error": error})
-    elif error is None:
-        raise UpstreamError(data={"message": "Error is not a JSON object"})
 
 
 def extract_error(

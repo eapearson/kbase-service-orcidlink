@@ -10,6 +10,7 @@ credentials, which must be well controlled.
 Because configuration is needed throughout the service's code, it is provided by means
 of a module variable which is populated when the module is first loaded.
 """
+
 import json
 import os
 import tomllib
@@ -296,10 +297,18 @@ class ServiceConfig:
             ),
             ui_origin=self.get_ui_origin(),
             auth_url=self.get_service_url(SERVICE_DEFAULTS.auth2),
-            orcidlink_url=self.get_service_url(SERVICE_DEFAULTS.orcid_link),
+            orcidlink_url=self.get_own_url(SERVICE_DEFAULTS.orcid_link),
         )
 
     def get_service_url(self, service_default: ServiceDefault) -> str:
+        env_path = os.environ.get(service_default.env_name)
+        path = env_path or service_default.path
+
+        # Note that urljoin ignores (strips off) any trailing forward slashes
+        # from kbase_endpoint
+        return urljoin(self.kbase_endpoint, path)
+
+    def get_own_url(self, service_default: ServiceDefault) -> str:
         env_path = os.environ.get(service_default.env_name)
         path = env_path or service_default.path
         # Note that urljoin ignores (strips off) any trailing forward slashes

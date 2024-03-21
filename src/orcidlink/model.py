@@ -11,6 +11,7 @@ JSON support, auto-documentation, the opportunity for more detailed schemas and
 documentation.
 
 """
+
 from enum import Enum
 from typing import Generic, List, Optional, TypeVar, Union
 

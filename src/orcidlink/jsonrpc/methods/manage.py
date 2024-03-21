@@ -122,7 +122,7 @@ def augment_with_time_filter(
 
 async def find_links(query: Optional[SearchQuery] = None) -> FindLinksResult:
     filter: dict[str, dict[str, str | int]] = {}
-    sort = []
+    sort: list[tuple[str, int]] = []
     offset = 0
     limit = None
 
@@ -143,9 +143,11 @@ async def find_links(query: Optional[SearchQuery] = None) -> FindLinksResult:
                 sort.append(  # type: ignore
                     (
                         sort_spec.field_name,
-                        pymongo.DESCENDING
-                        if sort_spec.descending is True
-                        else pymongo.ASCENDING,
+                        (
+                            pymongo.DESCENDING
+                            if sort_spec.descending is True
+                            else pymongo.ASCENDING
+                        ),
                     )
                 )
 

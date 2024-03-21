@@ -114,12 +114,16 @@ def transform_work_summary(
     return model.WorkSummary(
         putCode=work_summary.put_code,
         createdAt=work_summary.created_date.value,
-        updatedAt=work_summary.last_modified_date.value
-        if work_summary.last_modified_date is not None
-        else None,
-        source=work_summary.source.source_name.value
-        if work_summary.source.source_name is not None
-        else None,
+        updatedAt=(
+            work_summary.last_modified_date.value
+            if work_summary.last_modified_date is not None
+            else None
+        ),
+        source=(
+            work_summary.source.source_name.value
+            if work_summary.source.source_name is not None
+            else None
+        ),
         title=work_summary.title.title.value,
         journal=journal,
         date=orcid_date_to_string_date(work_summary.publication_date),
@@ -299,12 +303,14 @@ def transform_work(
 
 
 def transform_affilations(
-    affiliation_group: orcid_api.ORCIDAffiliationGroup
-    | List[orcid_api.ORCIDAffiliationGroup],
+    affiliation_group: (
+        orcid_api.ORCIDAffiliationGroup | List[orcid_api.ORCIDAffiliationGroup]
+    ),
 ) -> List[model.ORCIDAffiliation]:
     def coerce_to_list(
-        from_orcid: orcid_api.ORCIDAffiliationGroup
-        | List[orcid_api.ORCIDAffiliationGroup],
+        from_orcid: (
+            orcid_api.ORCIDAffiliationGroup | List[orcid_api.ORCIDAffiliationGroup]
+        ),
     ) -> List[orcid_api.ORCIDAffiliationGroup]:
         if isinstance(from_orcid, orcid_api.ORCIDAffiliationGroup):
             return [from_orcid]
@@ -373,12 +379,16 @@ def orcid_profile(profile_raw: orcid_api.ORCIDProfile) -> model.ORCIDProfile:
             private=False,
             fields=ORCIDNameFields(
                 firstName=profile_raw.person.name.given_names.value,
-                lastName=profile_raw.person.name.family_name.value
-                if profile_raw.person.name.family_name is not None
-                else None,
-                creditName=profile_raw.person.name.credit_name.value
-                if profile_raw.person.name.credit_name is not None
-                else None,
+                lastName=(
+                    profile_raw.person.name.family_name.value
+                    if profile_raw.person.name.family_name is not None
+                    else None
+                ),
+                creditName=(
+                    profile_raw.person.name.credit_name.value
+                    if profile_raw.person.name.credit_name is not None
+                    else None
+                ),
             ),
         )
 
