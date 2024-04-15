@@ -1,7 +1,6 @@
 #
 # A dockerfile which simulates production better than the main dockerfile, which is for development.
 #
-version: '3.8'
 name: kbase-dev
 networks:
   kbase-dev:
