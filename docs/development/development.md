@@ -23,9 +23,9 @@ alias run="${PWD}/Taskfile"
 It is a good idea to start any development session by running the code checks and tests. This ensures you are starting in a clean, well-functioning state.
 
 ```shell
-run pyright
-run black
-run test
+./Taskfile pyright
+./Taskfile black
+./Taskfile test
 ```
 
 ## Running server locally
