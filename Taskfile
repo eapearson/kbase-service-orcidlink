@@ -129,28 +129,39 @@ function dev-server {
   _dc-up dev
 }
 
-function orcid-sandbox-env {
+function set-orcid-sandbox-env {
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
   export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://sandbox.orcid.org
+  export ORCID_CLIENT_ID=${1:?Required environment variable 'ORCID_CLIENT_ID' not provided}
+  export ORCID_CLIENT_SECRET=${2?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
+}
+
+function set-orcid-production-env {
+  export ORCID_OAUTH_BASE_URL=https://orcid.org/oauth
+  export ORCID_API_BASE_URL=https://api.orcid.org/v3.0
   export ORCID_SITE_BASE_URL=https://orcid.org
   export ORCID_CLIENT_ID=${1:?Required environment variable 'ORCID_CLIENT_ID' not provided}
   export ORCID_CLIENT_SECRET=${2?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
 }
 
-function server {
-  export SERVICE_DIRECTORY="/kb/module"
-  export KBASE_ENDPOINT=${KBASE_ENDPOINT:?Required environment variable 'KBASE_ENDPOINT' not provided}
+function set-mongo-dev-env {
   export MONGO_HOST=mongo
   export MONGO_PORT=27017
   export MONGO_DATABASE=orcidlink
   export MONGO_USERNAME=dev
   export MONGO_PASSWORD=d3v
-  echo
-  echo "ENV???"
-  env
+}
+
+function server {
+  # export SERVICE_DIRECTORY="/kb/module"
+  export KBASE_ENDPOINT=${KBASE_ENDPOINT:?Required environment variable 'KBASE_ENDPOINT' not provided}
+
   echo
   echo "required environment variables check"
-  echo "SERVICE_DIRECTORY=${SERVICE_DIRECTORY}"
+  echo "KBASE_ENDPOINT=${KBASE_ENDPOINT}"
+  echo "SERVICE_DIRECTORY="
+  echo "  (will use default)"
   echo "ORCID_API_BASE_URL=${ORCID_API_BASE_URL}"
   echo "ORCID_OAUTH_BASE_URL=${ORCID_OAUTH_BASE_URL}"
   echo "ORCID_SITE_BASE_URL=${ORCID_SITE_BASE_URL}"
