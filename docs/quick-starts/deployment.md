@@ -1,12 +1,43 @@
 # Deployment Quick Start
 
+Topics covered:
+
+- external dependencies: database, orcid
+- image
+- docker command
+- environment variables
+- verify a deployment
+
+## External Dependencies
+
+### Mongo Database
+
+The service requires a mongo database. See below for configuration variables.
+The database user assigned in the configuration should have the role `dbOwner`.
+
+### ORCID
+
+The service relies upon the availability of ORCID API, oAuth endpoints, and
+general web site being available. ORCID maintains a sandbox environment, which
+replicates almost all of their production environments, and is the appropriate
+target when testing and evaluating the service and changes to it.
+
+In order to use the API and OAuth, credentials are required. ORCID sandbox and
+production have different endpoints, and require different credentials.
+
+The credentials consist of the client id and secret. For the sandbox, an
+individual developer may obtain credentials. The process, out of scope here,
+starts with a form and thereafter is via email. The production credentials are
+handled by our ORCID KBase Organization contact.
+
 ## Image
 
 A production deployment image is tagged with the release semver 2.0 version. E.g.
 `ghcr.io/kbase/kbase-service-orcidlink:v1.2.3`.
 
-Evaluation of pull requests in CI or some other environment can be achieved with images
-built from pull request activity, which have the form `ghcr.io/kbase/kbase-service-orcidlink-develop:pr-123`.
+Evaluation of pull requests in CI or some other environment can be achieved with
+images built from pull request activity, which have the form
+`ghcr.io/kbase/kbase-service-orcidlink-develop:pr-123`.
 
 ## Docker Command
 
@@ -47,7 +78,8 @@ overridden and understood at a glance.
 
 ### Optional
 
-All environment variables utilized are required. Several have defaults, however, which means that in practice the environment variables do not need to be provided. Still, it is best practice to provide values for all environment variables.
+These environment variables all have sensible defaults and need not be specified
+in the deployment.
 
 | Name                     | Type | Default           | Description                                                                                                                                                                 | Example |
 |--------------------------|------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
