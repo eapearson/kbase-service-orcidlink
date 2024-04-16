@@ -145,7 +145,10 @@ class StrEnvironmentVariables(ServiceBaseModel):
 
 STR_ENVIRONMENT_VARIABLE_DEFAULTS = StrEnvironmentVariables(
     service_directory=StrEnvironmentVariable(
-        required=True, env_name="SERVICE_DIRECTORY", description=("")
+        required=True, 
+        env_name="SERVICE_DIRECTORY", 
+        value="/kb/module",
+        description=("The directory in which the service is installed")
     ),
     kbase_endpoint=StrEnvironmentVariable(
         required=True, env_name="KBASE_ENDPOINT", description=("")
