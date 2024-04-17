@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-1.  install git hooks
+1. install git hooks
 
 Git hooks are a convenience, but not a requirement. Currently, there is a pre-commit and pre-push hook. The pre-commit runs the same code checks as the GHA workflows do, and the pre-push runs the tests.
 
@@ -12,7 +12,7 @@ git config --local core.hooksPath .githooks/
 
 2. A convenience...
 
-As all development tasks are automated with `Taskfile`. Rather than invoke it with `./Taskfile task`, you can create an alias and invoke it as `run task`:
+All development tasks are automated with a `Taskfile`. Rather than invoke it with `./Taskfile task`, you can create an alias and invoke it as `run task`:
 
 ```shell
 alias run="${PWD}/Taskfile"
@@ -23,18 +23,30 @@ alias run="${PWD}/Taskfile"
 It is a good idea to start any development session by running the code checks and tests. This ensures you are starting in a clean, well-functioning state.
 
 ```shell
-run mypy
-run black
-run test
+./Taskfile pyright
+./Taskfile black
+./Taskfile test
 ```
 
-## Running server locally 
+## Running server locally
 
-> TODO
+build image
+
+```shell
+./Taskfile build-image
+```
+
+run image
+
+> doesn't work as is -- needs mongo!
+
+```shell
+ORCID_CLIENT_ID='AAA' ORCID_CLIENT_SECRET='BBB' ./Taskfile run-image
+```
 
 ## Running server locally with kbase-ui
 
-> TODO 
+> TODO
 
 ## Contributing
 
@@ -46,7 +58,7 @@ When the branch is ready for review, a PR is made from the contribution branch t
 
 Upon approval, the PR will be merged into the develop branch.
 
-Periodically, or as needed, the state of the develop branch will be deployed to the CI environment, https://ci.kbase.us.
+Periodically, or as needed, the state of the develop branch will be deployed to the CI environment, <https://ci.kbase.us>.
 
 At some point in the future, when a release is called for, the develop branch will be merged into the master branch, a release created, and the resulting image deployed to the next environment, appdev, and ultimately production.
 
@@ -58,9 +70,9 @@ It is useful to understand exactly when the GHA workflows are triggered and what
 
 ### Top level workflows
 
-| # | KBase? | Name                            | Filename                  | 
+| # | KBase? | Name                            | Filename                  |
 |---|--------|---------------------------------|---------------------------|
-| 1 | ✓      | Pull Request Build, Tag, & Push | pr_build.yml              | 
+| 1 | ✓      | Pull Request Build, Tag, & Push | pr_build.yml              |
 | 2 | ✓      | Release - Build & Push Image    | release-main.yml          |
 | 3 | ✓      | Manual Build & Push             | manual-build.yml          |
 | 4 |        | Code Checks & Tests             | code-checks-and-tests.yml |
@@ -71,7 +83,7 @@ KBase workflows are provided through the kbase GitHub organization. They should 
 
 ##### Pull Request Build, Tag, & Push
 
-Handles pull request activity on main, master, and develop branches. The activities include opened, reopened, synchronize, and closed. Conditional workflow jobs handle more fine-grained triggering. 
+Handles pull request activity on main, master, and develop branches. The activities include opened, reopened, synchronize, and closed. Conditional workflow jobs handle more fine-grained triggering.
 
 For example, the `build-develop-open` job only applies to the develop branch and for a PR action which does not involve a merge, and only performs a build, not a push.
 
@@ -93,7 +105,7 @@ The KBase workflows do not contain any requirements for testing, so each service
 
 This workflow is triggered by the same conditions as the KBase workflows.
 
-The detachment of test from build has consequences for the "workflow" with GitHub. 
+The detachment of test from build has consequences for the "workflow" with GitHub.
 
 - two workflows are run for each trigger - the KBase build & push and the orcidlink code checks & tests
 - the build & push workflow will proceed even if tests fail
@@ -104,17 +116,17 @@ The detachment of test from build has consequences for the "workflow" with GitHu
 | # | branch  | triggering condition     | test | build | push | image name                      | image tag                      |
 |---|---------|--------------------------|------|-------|------|---------------------------------|--------------------------------|
 | 1 | develop | pr activity <sup>1</sup> | ✓    | ✓     |      |                                 |                                |
-| 2 | develop | pr merged                | ✓    | ✓     | ✓    | kbase-service-orcidlink-develop | latest, pr-_#_ <sup>2</sup>    |
-| 3 | main    | pr activity              | ✓    | ✓     | ✓    | kbase-service-orcidlink         | pr-_#_ <sup>2</sup>            |
-| 4 | main    | pr merged                | ✓    | ✓     | ✓    | kbase-service-orcidlink         | latest-rc, pr-_#_ <sup>2</sup> |
-| 5 | main    | release                  | ✓    | ✓     | ✓    | kbase-service-orcidlink         | latest, _#.#.#_ <sup>3</sup>   |
-| 6 | any     | manual <sup>5</sup>      | ✓    | ✓     | ✓    | kbase-service-orcidlink-develop | br-_branch_ <sup>4</sup>       |
-| 7 | any     | manual <sup>6</sup>      | ✓    |       |      |                                 | br-_branch_ <sup>4</sup>       |
+| 2 | develop | pr merged                | ✓    | ✓     | ✓    | kbase-service-orcidlink-develop | latest, pr-*#* <sup>2</sup>    |
+| 3 | main    | pr activity              | ✓    | ✓     | ✓    | kbase-service-orcidlink         | pr-*#* <sup>2</sup>            |
+| 4 | main    | pr merged                | ✓    | ✓     | ✓    | kbase-service-orcidlink         | latest-rc, pr-*#* <sup>2</sup> |
+| 5 | main    | release                  | ✓    | ✓     | ✓    | kbase-service-orcidlink         | latest, *#.#.#* <sup>3</sup>   |
+| 6 | any     | manual <sup>5</sup>      | ✓    | ✓     | ✓    | kbase-service-orcidlink-develop | br-*branch* <sup>4</sup>       |
+| 7 | any     | manual <sup>6</sup>      | ✓    |       |      |                                 | br-*branch* <sup>4</sup>       |
 
-<sup>1</sup> activity defined as "opened", "reopened", "synchronize"   
-<sup>2</sup> where _#_ is the pull request number  
-<sup>3</sup> where _#.#.#_ is the semver 2 formatted version  
-<sup>4</sup> where _branch_ is the branch name upon which the manual workflow was run  
+<sup>1</sup> activity defined as "opened", "reopened", "synchronize"
+<sup>2</sup> where *#* is the pull request number  
+<sup>3</sup> where *#.#.#* is the semver 2 formatted version  
+<sup>4</sup> where *branch* is the branch name upon which the manual workflow was run  
 <sup>5</sup> when running "Manual Build & Push" workflow  
 <sup>6</sup> when running "Code Checks and Tests" workflow
 
@@ -130,10 +142,7 @@ As can be seen in the table above, several workflow conditions tag images with t
 
 ### Separate test workflow
 
-Since we have the condition that the Kbase 
-
-
- 
+Since we have the condition that the Kbase
 
 ## A workflow
 
@@ -141,7 +150,6 @@ Since we have the condition that the Kbase
 
 - deploy this service locally, backed by MongoDB
 - run kbase-ui locally, configured to use this service locally
-- deployed with reload-on-change 
+- deployed with reload-on-change
 - develop demo calls via RESTer in Firefox
 - need some secrets to run against ORCID Sandbox.
-

@@ -1,4 +1,4 @@
-version: '3.6'
+name: kbase-dev
 networks:
   kbase-dev:
     name: kbase-dev
@@ -6,9 +6,9 @@ services:
   orcidlink:
     build:
       context: ..
-      dockerfile: Dockerfile.dev
+      dockerfile: .devcontainer/Dockerfile.devcontainer
 
-    image: kbase/orcidlink:dev
+    image: kbase/orcidlink:devcontainer
 
     container_name: orcidlink
     dns: 8.8.8.8

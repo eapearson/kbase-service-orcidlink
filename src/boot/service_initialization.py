@@ -405,6 +405,32 @@ def initialize_v040(db):
     }
 
 
+def migrate_v040_to_v041(db: database.Database):
+    service_version = "0.4.1"
+
+    # The first migration, which will be the case in this branch, adds index and
+    # then updates the description to show that it has been migrated.
+
+    actions = []
+
+    # Update the database description
+    description = db.get_collection("description").find_one()
+
+    if description is None:
+        raise Exception("No description document found")
+
+    db.get_collection("description").update_one(
+        {"_id": description["_id"]},
+        {"$set": {"version": service_version, "migrated": True}},
+    )
+
+    return {
+        "status": "ok",
+        "message": "Migration successfully completed",
+        "actions": actions,
+    }
+
+
 def migrate_db():
     try:
         client = make_db_client()
@@ -413,6 +439,10 @@ def migrate_db():
         description = db.get_collection("description").find_one()
 
         service_description = get_service_description()
+
+        print("database migration")
+        print(description)
+        print(service_description)
 
         if service_description.version == "0.2.1":
             if description is None:
@@ -474,6 +504,35 @@ def migrate_db():
                             f"{service_description.version}"
                         ),
                     }
+        elif service_description.version == "0.4.1":
+            if description is None:
+                # TODO: this approach is new; need to test it out.
+                # For minor releases, we initialize from the major release,
+                # and then apply each migration in order.
+                result = initialize_v040(db)
+                if result["status"] != "ok":
+                    return result
+                return migrate_v040_to_v041(db)
+            else:
+                database_version = description["version"]
+                if database_version == service_description.version:
+                    return {
+                        "status": "ok",
+                        "code": "migration-not-required",
+                        "message": "Database already migrated for this version",
+                    }
+                elif database_version == "0.4.0":
+                    return migrate_v040_to_v041(db)
+                else:
+                    return {
+                        "status": "error",
+                        "code": "migration-error",
+                        "message": (
+                            "No migration available from db version "
+                            f"{description['version']} to service version "
+                            f"{service_description.version}"
+                        ),
+                    }
 
         else:
             return {
@@ -509,7 +568,9 @@ def main():
     result = migrate_db()
     log_event("initialization-migrate-database", result)
     if result["status"] == "error":
-        raise Exception("mongodb database migration failed - see logs")
+        raise Exception(
+            f"mongodb database migration failed - see logs: {result['code']}, {result['message']}"
+        )
 
 
 main()
