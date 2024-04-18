@@ -6,6 +6,7 @@ Topics covered:
 - image
 - docker command
 - environment variables
+- custom auth role for managing
 - verify a deployment
 
 ## External Dependencies
@@ -89,6 +90,14 @@ in the deployment.
 | KBASE_SERVICE_AUTH       | str  | auth              | The path to be joined to KBASE_ENDPOINT to form the url for the Auth Service                                                                                                |         |
 | KBASE_SERVICE_ORCID_LINK | str  | orcidlink         | The path to be joined to KBASE_ENDPOINT to form the url for the ORCID Link Service                                                                                          |         |
 | MANAGER_ROLE             | str  | ORCIDLINK_MANAGER | The "custom role" in KBase auth which gives a user the ability to use the management api and management interface                                                           |         |
+
+## Custom Role for Management
+
+The ORCID Link service and front-end support a basic level of management. This
+capability is unlocked for a user via the "ORCIDLINK_MANAGER" custom auth role.
+
+Thus, for a fresh deployment, this role needs to be created, and then assigned
+to whoever needs it.
 
 ## Verifying deployment
 
