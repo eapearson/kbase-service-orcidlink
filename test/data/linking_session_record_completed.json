@@ -1,0 +1,18 @@
+{
+  "session_id": "bar",
+  "username": "foo",
+  "created_at": 1,
+  "expires_at": 2,
+  "ui_options": "none",
+  "skip_prompt": false,
+  "return_link": "baz",
+  "orcid_auth": {
+    "access_token": "foo",
+    "token_type": "bar",
+    "refresh_token": "baz",
+    "expires_in": 3,
+    "scope": "boo",
+    "name": "abc",
+    "orcid": "def"
+  }
+}

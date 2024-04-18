@@ -1,0 +1,9 @@
+{
+  "session_id": "bar",
+  "username": "foo",
+  "created_at": 123,
+  "expires_at": 456,
+  "ui_options": "none",
+  "skip_prompt": false,
+  "return_link": "baz"
+}

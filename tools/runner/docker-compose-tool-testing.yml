@@ -1,0 +1,24 @@
+networks:
+  kbase-dev:
+    name: kbase-dev
+services:
+  testing:
+    build:
+      context: .
+      dockerfile: tools/runner/Dockerfile
+    volumes:
+      - .:/app
+    command:
+      - bash
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo:3.6.13
+    restart: always
+    volumes:
+      - ./tools/scripts/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev_root
+      MONGO_INITDB_ROOT_PASSWORD: dev_r00t

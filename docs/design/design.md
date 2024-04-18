@@ -15,21 +15,23 @@ There are several reasons to diverge from the KBase SDK:
     - automatic api documentation generation
     - easy REST api building
   
-In addition, this service would need to support more than one browser-interactive endpoint to support three-legged OAuth integration with ORCID. Although it is certain feasible to support both JSON-RPC, as is required for a strictly kb-sdk service, as well as REST-like or browser-interactive endpoints, it would make the codebase more complex and difficult to understand.
+In addition, this service needs to support browser-interactive endpoints to support three-legged OAuth integration with ORCID. Although it is certainly feasible to support both JSON-RPC, as is required for a strictly kb-sdk service, as well as REST-like or browser-interactive endpoints, it would make the codebase more complex and difficult to understand.
+
+> There is JSON-RPC extension for FastAPI, but it is lagging behind FastAPI releases quite a bit, so is not usable yet. If it becomse usable, I belive it could be a good alternative to REST apis with FastAPI. JSON-RPC presents a simpler request/response architecture without a dependence on HTTP headers and response codes. 
 
 ## FastAPI
 
 ### Using types
 
-FastAPI has optional strong typing based partly on Pydantic. This conflicts with one of the major benefits of using Python for a service like this - simplicity. On of the aspects of simplicity is lack of static typing.
+FastAPI has optional strong typing based on Pydantic. This conflicts with one of the major benefits of using Python for a service like this - simplicity. One of the aspects of simplicity is lack of static typing.
 
 Still, Pydantic typing, which is based on native Python typing, can be applied incrementally and partially. If one were to apply full typing across a codebase, it could be argued that one should just use a statically typed language!
 
 So, I've chosen a layered approach to Python / FastAPI / Pydantic typing. As a project, the typing should be applied where it will provide the most benefits first, and then proceed through the codebase layers applying it where it is beneficial. There is probably a limit to the this, where the cost exceeds the benefit.
 
-The most benefit is at the API boundary, the parameters and results; and here the most benefit is in the parameters. The parameters are provided from outside the system, so strict typing provides both clarity in documentation and automatic validation and "cleansing" of data entering the system. This typing is nearly forced upon us by FastAPI, although there are ways to skirt it.
+The most benefit is at the API boundary, the parameters and results; and here the most benefit is in the parameters. The parameters are provided from outside the system, so strict typing provides both clarity in documentation and automatic validation and transformation of data entering the system. This typing is nearly forced upon us by FastAPI, although there are ways to skirt it.
 
-When adding typing there are even still more layers. Pydantic typing applied by FastAPI ensures that data adheres to the general data types and container structures. However, it also supports validation, so numeric rangers, string formats, enumeration ranges, and more!, may be applied to ensure data is even more compliant.
+When adding typing there are even more layers. Pydantic typing applied by FastAPI ensures that data adheres to the general data types and container structures. However, it also supports validation, so numeric ranges, string formats, enumeration ranges, and more, may be applied to ensure data is compliant.
 
 For API methods, the return values can also be typed. This is beneficial in the same way inputs are, but it could be said that the validity of return values should be more trusted, as it is programmatically determined.
 

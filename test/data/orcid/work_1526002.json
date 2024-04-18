@@ -1,71 +1,80 @@
 {
-  "created-date": {
-    "value": 1663706262725
-  },
-  "last-modified-date": {
-    "value": 1671118870800
-  },
-  "source": {
-    "source-orcid": null,
-    "source-client-id": {
-      "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
-      "path": "APP-RC3PM3KSMMV3GKWS",
-      "host": "sandbox.orcid.org"
-    },
-    "source-name": {
-      "value": "KBase CI"
-    },
-    "assertion-origin-orcid": null,
-    "assertion-origin-client-id": null,
-    "assertion-origin-name": null
-  },
-  "put-code": 1526002,
-  "path": null,
-  "title": {
-    "title": {
-      "value": "Some Data Set, yo"
-    },
-    "subtitle": null,
-    "translated-title": null
-  },
-  "journal-title": {
-    "value": "Me myself and I and me"
-  },
-  "short-description": null,
-  "citation": null,
-  "type": "online-resource",
-  "publication-date": {
-    "year": {
-      "value": "2021"
-    },
-    "month": null,
-    "day": null
-  },
-  "external-ids": {
-    "external-id": [
-      {
-        "external-id-type": "doi",
-        "external-id-value": "123",
-        "external-id-normalized": null,
-        "external-id-normalized-error": {
-          "error-code": "8001",
-          "error-message": "Cannot normalize identifier value doi:123",
-          "transient": true
+  "bulk": [
+    {
+      "work": {
+        "created-date": {
+          "value": 1663706262725
         },
-        "external-id-url": {
-          "value": "https://example.com"
+        "last-modified-date": {
+          "value": 1673106994937
         },
-        "external-id-relationship": "self"
+        "source": {
+          "source-orcid": null,
+          "source-client-id": {
+            "uri": "https://sandbox.orcid.org/client/APP-RC3PM3KSMMV3GKWS",
+            "path": "APP-RC3PM3KSMMV3GKWS",
+            "host": "sandbox.orcid.org"
+          },
+          "source-name": {
+            "value": "KBase CI"
+          },
+          "assertion-origin-orcid": null,
+          "assertion-origin-client-id": null,
+          "assertion-origin-name": null
+        },
+        "put-code": 1526002,
+        "path": null,
+        "title": {
+          "title": {
+            "value": "Some Data Set, yo, bro, whoa"
+          },
+          "subtitle": null,
+          "translated-title": null
+        },
+        "journal-title": {
+          "value": "Me myself and I and me, and thee"
+        },
+        "short-description": "my short description",
+        "citation": {
+          "citation_type": "formatted-vancouver",
+          "citation_value": "my citation"
+        },
+        "type": "online-resource",
+        "publication-date": {
+          "year": {
+            "value": "2021"
+          },
+          "month": null,
+          "day": null
+        },
+        "external-ids": {
+          "external-id": [
+            {
+              "external-id-type": "doi",
+              "external-id-value": "123",
+              "external-id-normalized": null,
+              "external-id-normalized-error": {
+                "error-code": "8001",
+                "error-message": "Cannot normalize identifier value doi:123",
+                "transient": true
+              },
+              "external-id-url": {
+                "value": "https://example.com"
+              },
+              "external-id-relationship": "self"
+            }
+          ]
+        },
+        "url": {
+          "value": "https://kbase.us"
+        },
+        "contributors": {
+          "contributor": []
+        },
+        "language-code": null,
+        "country": null,
+        "visibility": "public"
       }
-    ]
-  },
-  "url": {
-    "value": "https://kbase.us"
-  },
-  "contributors": {
-    "contributor": []
-  },
-  "language-code": null,
-  "country": null,
-  "visibility": "public"
+    }
+  ]
 }

@@ -2,8 +2,8 @@ import json
 import sys
 
 from fastapi.openapi.utils import get_openapi
-from orcidlink.main import app
 
+from orcidlink.main import app
 
 #
 # In which we generate an openapi.json spec, and then compare it to the
@@ -68,7 +68,8 @@ def dict_diff(dict1: dict, dict2: dict, context=[]):
 
 
 def main():
-    with open("/kb/module/docs/api/openapi.json", "r") as fin:
+    dest = sys.argv[1]
+    with open(f"{dest}/docs/api/openapi.json", "r") as fin:
         current_openapi = json.load(fin)
 
     new_openapi = json.loads(

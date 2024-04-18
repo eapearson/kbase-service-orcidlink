@@ -6,7 +6,8 @@ All changes between the most recent release and the present set of changes shoul
 
 One line per change in the release. Each line is a markdown list item.
 
-If the change is associated with a JIRA ticket, add the ticket number at the end of the change line surrounded by brackets.
+If the change is associated with a JIRA ticket, add the ticket number at the end
+of the change line surrounded by brackets.
 
 ## Unreleased
 
@@ -14,10 +15,21 @@ DATE of release
 
 SUMMARY of release
 
-* Replace GHA workflow files with official KBase ones [CE-161]
-* Update to Pyton 11.1 image to solve CVE-2022-40897 [CE-161]
-* Patch poetry venv in Dockerfile to solve 2nd CVE-2022-40897 [CE-161]
+## 0.4.1
 
+4/18/2024
+
+A release to freeze orcidlink prior to release on next.
+
+* Replace GHA workflow files with official KBase ones [CE-161]
+* Update to Python 11.1 image to solve CVE-2022-40897 [CE-161]
+* Patch poetry venv in Dockerfile to solve 2nd CVE-2022-40897 [CE-161]
+* Improvements to work activity record CRUD operations [CE-202]
+* Many new tests
+* Database validation (schema)
+* Updated documentation
+* Python 12.2
+* All dependencies up to date
 
 ## 0.2.0
 

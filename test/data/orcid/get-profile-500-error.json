@@ -1,0 +1,7 @@
+{
+  "response-code": 500,
+  "developer-message": "javax.ws.rs.NotFoundException Full validation error: HTTP 404 Not Found",
+  "user-message": "Something went wrong in ORCID.",
+  "error-code": 9008,
+  "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+}

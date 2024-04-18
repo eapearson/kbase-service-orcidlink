@@ -1,0 +1,64 @@
+{
+    "collMod": "description",
+    "validator": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "_id",
+                "version",
+                "at",
+                "migrated",
+                "messages"
+            ],
+            "additionalProperties": false,
+            "description": "A description of this database",
+            "properties": {
+                "_id": {
+                    "bsonType": "objectId",
+                    "description": "Built-in document identifier"
+                },
+                "version": {
+                    "bsonType": "string",
+                    "pattern": "^(?:(?:[0])|(?:[1-9][0-9]*))[.](?:(?:[0])|(?:[1-9][0-9]*))[.](?:(?:[0])|(?:[1-9][0-9]*))$",
+                    "description": "The semantic version for this database version"
+                },
+                "at": {
+                    "bsonType": "long",
+                    "minimum": 1672531200000,
+                    "maximum": 4828204800000,
+                    "description": "The time in milliseconds epoch at which the database was created or migrated. Range is from 1/1/2023 to 1/1/2123"
+                },
+                "migrated": {
+                    "bsonType": "bool",
+                    "description": "Whether the database has been migrated yet."
+                },
+                "messages": {
+                    "bsonType": "array",
+                    "description": "Informational messages describing the creation or migration of the database",
+                    "items": {
+                        "bsonType": "object",
+                        "description": "On message",
+                        "required": [
+                            "at",
+                            "message"
+                        ],
+                        "properties": {
+                            "at": {
+                                "bsonType": "long",
+                                "minimum": 1672531200000,
+                                "maximum": 4828204800000,
+                                "description": "The time in milliseconds epoch at which the database was created or migrated. Range is from 1/1/2023 to 1/1/2123"
+                            },
+                            "message": {
+                                "bsonType": "string",
+                                "minLength": 10,
+                                "maxLength": 1000,
+                                "description": "A text description of information of note during database creation or migration; e.g. an action, warning, or friendly greeting"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

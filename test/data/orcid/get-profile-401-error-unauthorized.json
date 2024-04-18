@@ -1,0 +1,7 @@
+{
+  "response-code": 401,
+  "developer-message": "401 Unauthorized: The client application is not authorized for this ORCID record. Full validation error: Access token is for a different record",
+  "user-message": "The client application is not authorized.",
+  "error-code": 9017,
+  "more-info": "https://members.orcid.org/api/resources/troubleshooting"
+}

@@ -1,0 +1,28 @@
+{
+  "created": 1490218786860,
+  "lastlogin": 1692657562380,
+  "display": "Alfred B. Manager",
+  "roles": [
+     
+  ],
+  "customroles": [
+        "ORCIDLINK_MANAGER"
+  ],
+  "policyids": [
+      {
+          "id": "data-policy.1",
+          "agreedon": 1496617821124
+      },
+      {
+          "id": "data-policy.3",
+          "agreedon": 1490224219598
+      }
+  ],
+  "user": "amanager",
+  "local": false,
+  "email": "eapearson-amanager@lbl.gov",
+  "idents": [
+     
+  ],
+  "anonid": "aaaaaaaa-1111-cccc-dddd-eeeeeeeeeeee"
+}

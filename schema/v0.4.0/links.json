@@ -1,0 +1,90 @@
+{
+    "collMod": "links",
+    "validator": {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": [
+                "_id",
+                "username",
+                "created_at",
+                "expires_at",
+                "retires_at",
+                "orcid_auth"
+            ],
+            "description": "Contains ORCID Links - ties together a KBase account (username) with ORCID account (ORCID Id)",
+            "properties": {
+                "_id": {
+                    "bsonType": "objectId",
+                    "description": "Built-in document identifier"
+                },
+                "username": {
+                    "bsonType": "string",
+                    "minLength": 2,
+                    "maxLength": 100,
+                    "description": ""
+                },
+                "created_at": {
+                    "bsonType": "long",
+                    "minimum": 1672531200000,
+                    "maximum": 4828204800000,
+                    "description": "The time in milliseconds epoch at which the link was created.. Range is from 1/1/2023 to 1/1/2123"
+                },
+                "expires_at": {
+                    "bsonType": "long",
+                    "minimum": 1672531200000,
+                    "maximum": 4828204800000,
+                    "description": "The time in milliseconds epoch at which the access_token in the orcid_auth is considered unusable. Range is from 1/1/2023 to 1/1/2123"
+                },
+                "retires_at": {
+                    "bsonType": "long",
+                    "minimum": 1672531200000,
+                    "maximum": 4828204800000,
+                    "description": "The time in milliseconds epoch after which the orcid_auth should be refreshed. Range is from 1/1/2023 to 1/1/2123"
+                },
+                "orcid_auth": {
+                    "bsonType": "object",
+                    "required": [
+                        "access_token",
+                        "token_type",
+                        "refresh_token",
+                        "expires_in",
+                        "scope",
+                        "name",
+                        "orcid"
+                    ],
+                    "description": "The full response from ORCID after a successful authorization flow has completed; a superset of the OAUTH-specified data - see https://datatracker.ietf.org/doc/html/rfc6749#section-5.1 and https://openid.net/specs/openid-connect-core-1_0.html#TokenResponse",
+                    "properties": {
+                        "access_token": {
+                            "bsonType": "string",
+                            "description": "The primary authorization token to be used to acccess ORCID on bahalf of the assocaited user"
+                        },
+                        "token_type": {
+                            "bsonType": "string",
+                            "description": "Always the case insensitive balue 'bearer'"
+                        },
+                        "refresh_token": {
+                            "bsonType": "string",
+                            "description": "Special token which can be used with ORCID API to create additional tokens; currently unused"
+                        },
+                        "expires_in": {
+                            "bsonType": "int",
+                            "description": "The lifetime in seconds of the access token."
+                        },
+                        "scope": {
+                            "bsonType": "string",
+                            "description": "The scope of the access token"
+                        },
+                        "name": {
+                            "bsonType": "string",
+                            "description": "The user's real name as they have stored it in their ORCID account"
+                        },
+                        "orcid": {
+                            "bsonType": "string",
+                            "description": "The user's ORCID Id"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "Login",
+  "id": "aaaaaaaa-1111-1111-dddd-eeeeeeeeeeee",
+  "expires": 1671665405604,
+  "created": 1670455805604,
+  "name": null,
+  "user": "amanager",
+  "custom": {},
+  "cachefor": 300000
+}

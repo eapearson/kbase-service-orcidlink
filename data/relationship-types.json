@@ -1,0 +1,18 @@
+[
+  {
+    "value": "part-of",
+    "label": "Part Of"
+  },
+  {
+    "value": "self",
+    "label": "Self"
+  },
+  {
+    "value": "version-of",
+    "label": "Version Of"
+  },
+  {
+    "value": "funded-by",
+    "label": "Funded By"
+  }
+]

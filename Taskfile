@@ -9,49 +9,73 @@
 #
 # Runs docker compose with the given docker compose filename suffix with the given command arguments
 #
-function _run-dc {
-  docker compose -f "etc/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --rm orcidlink "${@:2}"
+function _dc-run {
+  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink run --remove-orphans --rm orcidlink "${@:2}"
 }
 
 function _dc-up {
-  docker compose -f "etc/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink up
+  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink up
+  docker compose -f "tools/docker-compose-${1}.yml" --project-directory "${PWD}" --project-name orcidlink rm -f
+}
+
+
+#function _run-tool {
+#  echo "Running: "
+#  echo "${@:1}"
+#  docker compose -f "tools/runner/docker-compose-tool-runner.yml" --project-directory "${PWD}" --project-name tools run --rm runner "${@:1}"
+#  echo "done"
+#}
+
+function _run {
+  echo "Running: "
+  echo "${@:1}"
+  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools run --remove-orphans --rm "${1}" "${@:2}"
+  docker compose -f "tools/runner/docker-compose-tool-${1}.yml" --project-directory "${PWD}" --project-name tools down
+
 }
 
 #
 # COMMANDS
 #
 
-function mypy {
-  _run-dc runner scripts/run-mypy.sh
+function pyright {
+  _run runner tools/scripts/run-pyright.sh
+}
+
+function autoflake {
+  _run runner tools/scripts/run-autoflake.sh
+}
+
+function isort {
+  _run runner tools/scripts/run-isort.sh "${1}" "${2}"
 }
 
 function black {
-  _run-dc runner scripts/run-black.sh "${1}" "${2}"
+  _run runner tools/scripts/run-black.sh "${1}" "${2}"
 }
 
 function git-info {
-  mkdir -p deploy
-  _run-dc runner poetry run python src/misc/git-info.py
+  _run runner poetry --quiet run python src/misc/git-info.py
 }
 
-function render-config {
-  mkdir -p deploy
-  _run-dc runner scripts/render-config.sh
+function lock {
+  _run runner poetry lock
 }
+
 
 #
 # Generates the openapi spec in memory, and compares it to the one already existing in docs/api/openapi.json.
 # Returns a success if identical, error (1) if there are any differences.
 #
 function check-openapi {
-  _run-dc runner poetry run python src/misc/check-openapi.py
+  _run runner poetry --quiet run python src/misc/check-openapi.py /app
 }
 
 #
 # Generates the openapi.json spec file at docs/api/openapi.json
 #
 function generate-openapi {
-  _run-dc runner poetry run python src/misc/generate-openapi.py
+  _run runner poetry --quiet run python src/misc/generate-openapi.py /app
 }
 
 #
@@ -61,48 +85,42 @@ function generate-openapi {
 #
 function generate-docs {
   rm -rf docs/api/openapi/*
-  _run-dc runner poetry run python src/misc/generate-docs.py
+  _run runner poetry --quiet run python src/misc/generate-docs.py /app
+}
+
+function extract-schema {
+  _run runner poetry --quiet run python src/misc/extract-schema.py /app "${1}"
 }
 
 function shell {
-  _run-dc runner bash
+  _run runner bash
 }
 
-function server {
-  docker compose -f etc/docker-compose-prod-like.yml
-}
+#function server {
+#  docker compose -f tools/docker-compose-prod-like.yml
+#}
 
-#
-# For generating a config to be used
-# Environment variables are filled with either test
-#
-function render-config-dev {
-  export KBASE_ENDPOINT=https://ci.kbase.us/services/
-  export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
-  export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
-  export ORCID_CLIENT_ID=${ORCID_CLIENT_ID}
-  export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET}
-  export MONGO_HOST=mongo
-  export MONGO_PORT=27017
-  export MONGO_DATABASE=orcidlink
-  export MONGO_USERNAME=dev
-  export MONGO_PASSWORD=d3v
-  _run-dc runner scripts/render-config.sh
-}
+
 
 function test {
   # Testing only touches locally controlled services, either mock
   # mock (kbase auth, orcid) or locally running (mongodb), so
   # all such values are controlled within the test environment.
-  _run-dc testing scripts/run-tests.sh "${1}"
+  export PROJECT_ROOT=/app
+  _run testing tools/scripts/run-tests.sh "${1}"
+}
+
+function viewcov {
+  open "${PWD}/htmlcov/index.html"
 }
 
 function dev-server {
   export KBASE_ENDPOINT=https://ci.kbase.us/services/
   export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
   export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://sandbox.orcid.org
   export ORCID_CLIENT_ID=${ORCID_CLIENT_ID:?Required environment variable 'ORCID_CLIENT_ID' not provided}
-  export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET?Required environment variable 'ORCID_CLIENT_ID' not provided}
+  export ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
   export MONGO_HOST=mongo
   export MONGO_PORT=27017
   export MONGO_DATABASE=orcidlink
@@ -111,23 +129,58 @@ function dev-server {
   _dc-up dev
 }
 
-function server {
-  KBASE_ENDPOINT=https://ci.kbase.us/services/ \
-  ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth \
-  ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0 \
-  ORCID_CLIENT_ID=${ORCID_CLIENT_ID} \
-  ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET} \
-  MONGO_HOST=mongo \
-  MONGO_PORT=27017 \
-  MONGO_DATABASE=orcidlink \
-  MONGO_USERNAME=dev \
-  MONGO_PASSWORD=d3v \
-  docker compose -f etc/docker-compose-prod-like.yml up
+function set-orcid-sandbox-env {
+  export ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth
+  export ORCID_API_BASE_URL=https://api.sandbox.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://sandbox.orcid.org
+  export ORCID_CLIENT_ID=${1:?Required environment variable 'ORCID_CLIENT_ID' not provided}
+  export ORCID_CLIENT_SECRET=${2?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
 }
+
+function set-orcid-production-env {
+  export ORCID_OAUTH_BASE_URL=https://orcid.org/oauth
+  export ORCID_API_BASE_URL=https://api.orcid.org/v3.0
+  export ORCID_SITE_BASE_URL=https://orcid.org
+  export ORCID_CLIENT_ID=${1:?Required environment variable 'ORCID_CLIENT_ID' not provided}
+  export ORCID_CLIENT_SECRET=${2?Required environment variable 'ORCID_CLIENT_SECRET' not provided}
+}
+
+function set-mongo-dev-env {
+  export MONGO_HOST=mongo
+  export MONGO_PORT=27017
+  export MONGO_DATABASE=orcidlink
+  export MONGO_USERNAME=dev
+  export MONGO_PASSWORD=d3v
+}
+
+function server {
+  # export SERVICE_DIRECTORY="/kb/module"
+  export KBASE_ENDPOINT=${KBASE_ENDPOINT:?Required environment variable 'KBASE_ENDPOINT' not provided}
+
+  echo
+  echo "required environment variables check"
+  echo "KBASE_ENDPOINT=${KBASE_ENDPOINT}"
+  echo "SERVICE_DIRECTORY="
+  echo "  (will use default)"
+  echo "ORCID_API_BASE_URL=${ORCID_API_BASE_URL}"
+  echo "ORCID_OAUTH_BASE_URL=${ORCID_OAUTH_BASE_URL}"
+  echo "ORCID_SITE_BASE_URL=${ORCID_SITE_BASE_URL}"
+  echo "ORCID_CLIENT_ID=${ORCID_CLIENT_ID}"
+  echo "ORCID_CLIENT_SECRET=${ORCID_CLIENT_SECRET}"
+  echo "MONGO_HOST=${MONGO_HOST}"
+  echo "MONGO_PORT=${MONGO_PORT}"
+  echo "MONGO_DATABASE=${MONGO_DATABASE}"
+  echo "MONGO_USERNAME=${MONGO_USERNAME}"
+  echo "MONGO_PASSWORD=${MONGO_PASSWORD}"
+
+  _dc-up prod-like
+}
+
+export DEFAULT_LOCAL_IMAGE="kbase/orcidlink:dev"
 
 # For building a prod-like image locally
 function build-image {
-  docker build -t kbase/orcidlink:dev .
+  docker build -t "${DEFAULT_LOCAL_IMAGE}" .
 }
 
 #
@@ -145,9 +198,14 @@ function build-image {
 #}
 
 # For running a prod-like image locally
-function image {
+function run-image {
   # NB There should be a mongo db running at the indicated
   # host and port with the indicated auth
+  IMAGE_NAME="${1:-$DEFAULT_LOCAL_IMAGE}"
+  echo
+  echo "Running orcidlink image"
+  echo "Image name: ${IMAGE_NAME}"
+  echo
   docker run \
     -e KBASE_ENDPOINT=https://ci.kbase.us/services/ \
     -e ORCID_OAUTH_BASE_URL=https://sandbox.orcid.org/oauth \
@@ -159,14 +217,13 @@ function image {
     -e MONGO_DATABASE=orcidlink \
     -e MONGO_USERNAME=dev \
     -e MONGO_PASSWORD=d3v \
-    --pull always \
     --stop-signal SIGINT \
     --dns 8.8.8.8 \
     --network kbase-dev \
     --name orcidlink \
     --hostname orcidlink \
     --rm \
-    "${1:-kbase/orcidlink:dev}"
+    "${IMAGE_NAME}"
 }
 
 function help {

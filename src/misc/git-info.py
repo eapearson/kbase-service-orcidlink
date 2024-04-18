@@ -1,8 +1,9 @@
+import json
+import os
+import pathlib
 import subprocess
 import sys
 from typing import List
-
-import toml
 
 
 def print_lines(prefix: str, lines: List[str]):
@@ -23,13 +24,11 @@ def run_command(command, ignore_error=False):
         print(str(cpe))
         sys.exit(1)
 
-    if ignore_error:
-        return process.stdout, True
-    return process.stdout
+    return process.stdout, True
 
 
 def git_info():
-    output = run_command(
+    output, _ = run_command(
         ["git", "show", "--format=%H%n%h%n%an%n%at%n%cn%n%ct%n%d", "--name-status"]
     )
 
@@ -42,7 +41,6 @@ def git_info():
         committer_date,
         *_,
     ] = output.split("\n")
-    # print('hash', commit_hash)
     return {
         "commit_hash": commit_hash,
         "commit_hash_abbreviated": commit_hash_abbreviated,
@@ -54,7 +52,7 @@ def git_info():
 
 
 def git_url():
-    output = run_command(["git", "config", "--get", "remote.origin.url"])
+    output, _ = run_command(["git", "config", "--get", "remote.origin.url"])
     url = output.rstrip("\n")
     if url.endswith(".git"):
         url = url[0:-4]
@@ -62,7 +60,7 @@ def git_url():
 
 
 def git_branch():
-    output = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    output, _ = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     return output.rstrip("\n")
 
 
@@ -77,19 +75,25 @@ def git_tag(commit_hash):
 
 
 def git_config():
-    output = run_command(["git", "config", "--global", "--add", "safe.directory", "*"])
+    output, _ = run_command(
+        ["git", "config", "--global", "--add", "safe.directory", "*"]
+    )
     return output.rstrip("\n")
 
 
-def save_info(info):
-    with open("/kb/module/deploy/git-info.toml", "w") as fout:
-        toml.dump(
-            info,
-            fout,
-        )
+def save_info(info, dest):
+    pathlib.Path(dest).mkdir(exist_ok=True)
+    with open(os.path.join(dest, "git-info.json"), "w", encoding="utf-8") as fout:
+        json.dump(info, fout, indent=4)
+
+
+def service_path(path: str) -> str:
+    return os.path.join(os.path.dirname(__file__), "../..", path)
 
 
 def main():
+    dest = service_path("build")
+
     git_config()
     info = git_info()
     url = git_url()
@@ -101,7 +105,7 @@ def main():
     info["branch"] = branch
     info["tag"] = tag
 
-    save_info(info)
+    save_info(info, dest)
 
     sys.exit(0)
 

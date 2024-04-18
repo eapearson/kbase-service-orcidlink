@@ -1,0 +1,302 @@
+[
+    {
+        "code": 9000,
+        "developerMessage": "There was an error connecting to ORCID.",
+        "userMessage": "There was an error connecting to ORCID."
+    },
+    {
+        "code": 9001,
+        "developerMessage": "400 Bad Request: There is an issue with your data or the API endpoint. 405 Method Not Allowed: Endpoint and method mismatch. 415 Unsupported Media Type: data must be in XML or JSON format.",
+        "userMessage": "ORCID could not process the data, because they were invalid."
+    },
+    {
+        "code": 9002,
+        "developerMessage": "The client application is not authorized.",
+        "userMessage": "The client application is not authorized."
+    },
+    {
+        "code": 9003,
+        "developerMessage": "The client application is not authorized.",
+        "userMessage": "The client application is not authorized."
+    },
+    {
+        "code": 9004,
+        "developerMessage": "403 Forbidden: Insufficient or wrong scope.",
+        "userMessage": "The client application is forbidden to perform the action."
+    },
+    {
+        "code": 9005,
+        "developerMessage": "403 Forbidden: Insufficient or wrong scope.",
+        "userMessage": "The client application is forbidden to perform the action."
+    },
+    {
+        "code": 9006,
+        "developerMessage": "The client application sent a bad request to ORCID.",
+        "userMessage": "The client application sent a bad request to ORCID."
+    },
+    {
+        "code": 9007,
+        "developerMessage": "301 Moved Permanently: This account is deprecated. Please refer to account: ${orcid}. ORCID ${deprecated_orcid}",
+        "userMessage": "This account is deprecated. Please refer to account: ${orcid}."
+    },
+    {
+        "code": 9008,
+        "developerMessage": "Something went wrong in ORCID.",
+        "userMessage": "Something went wrong in ORCID."
+    },
+    {
+        "code": 9009,
+        "developerMessage": "403 Forbidden: The notification has already been read and cannot be archived.",
+        "userMessage": "The client application tried to archive a message that has already been read."
+    },
+    {
+        "code": 9010,
+        "developerMessage": "403 Forbidden: You are not the source of the ${activity}, so you are not allowed to update it.",
+        "userMessage": "The client application is not the source of the resource it is trying to access."
+    },
+    {
+        "code": 9011,
+        "developerMessage": "404 Not Found: The ORCID record or item was not found.",
+        "userMessage": "The resource was not found."
+    },
+    {
+        "code": 9012,
+        "developerMessage": "The client application made a bad request to the ORCID API.",
+        "userMessage": "The client application made a bad request to the ORCID API."
+    },
+    {
+        "code": 9013,
+        "developerMessage": "403 Forbidden: The item is private and you are not the source.",
+        "userMessage": "The client application is forbidden to perform the action."
+    },
+    {
+        "code": 9014,
+        "developerMessage": "The client application is forbidden to perform the action.",
+        "userMessage": "The client application is forbidden to perform the action."
+    },
+    {
+        "code": 9015,
+        "developerMessage": "One of the provided scopes is not allowed. Please refer to the list of allowed scopes at: https://github.com/ORCID/ORCID-Source/tree/master/orcid-model/src/main/resources/record_2.0#scopes.",
+        "userMessage": "The client application tried to use an invalid permission on the ORCID API."
+    },
+    {
+        "code": 9016,
+        "developerMessage": "404 Not Found: The resource was not found.",
+        "userMessage": "The resource was not found."
+    },
+    {
+        "code": 9017,
+        "developerMessage": "401 Unauthorized: The client application is not authorized for this ORCID record.",
+        "userMessage": "The client application is not authorized."
+    },
+    {
+        "code": 9018,
+        "developerMessage": "409 Conflict: The ORCID record is locked and cannot be edited. ORCID ${orcid}",
+        "userMessage": "The ORCID record is locked."
+    },
+    {
+        "code": 9019,
+        "developerMessage": "400 Bad Request: The put code in the URL was ${urlPutCode} whereas the one in the body was ${bodyPutCode}.",
+        "userMessage": "There was an error when updating the record. Please try again. If the error persists, please contact ${clientName} for assistance."
+    },
+    {
+        "code": 9020,
+        "developerMessage": "400 Bad Request: Invalid incoming message.",
+        "userMessage": "Invalid incoming message."
+    },
+    {
+        "code": 9021,
+        "developerMessage": "409 Conflict: You have already added this activity (matched by external identifiers), please see element with put-code ${putCode}. If you are trying to edit the item, please use PUT instead of POST.",
+        "userMessage": "There was an error when updating the record. Please try again. If the error persists, please contact ${clientName} for assistance."
+    },
+    {
+        "code": 9022,
+        "developerMessage": "400 Bad Request: Invalid activity, a title is required.",
+        "userMessage": "Invalid activity:  A title is required."
+    },
+    {
+        "code": 9023,
+        "developerMessage": "400 Bad Request: Invalid activity, an external identifier is required.",
+        "userMessage": "Invalid activity: an external identifier is required."
+    },
+    {
+        "code": 9024,
+        "developerMessage": "400 Bad Request: Put-code is included when not expected. When posting new activities, the put code should be omitted.",
+        "userMessage": "There was an error when updating the record. Please try again. If the error persists, please contact ${clientName} for assistance."
+    },
+    {
+        "code": 9025,
+        "developerMessage": "409 Conflict: The given group-id-record already exists.",
+        "userMessage": "The given group-id-record already exists."
+    },
+    {
+        "code": 9026,
+        "developerMessage": "400 Bad Request: The group you are trying to access does not exist, you may need to create it.",
+        "userMessage": "The group-id-record does not exist."
+    },
+    {
+        "code": 9027,
+        "developerMessage": "Unable to find client profile associated with client:${client}.",
+        "userMessage": "The resource was not found."
+    },
+    {
+        "code": 9028,
+        "developerMessage": "No webhook found for orcid=${orcid}, and uri=${uri}.",
+        "userMessage": "The resource was not found."
+    },
+    {
+        "code": 9029,
+        "developerMessage": "404 Not Found: Could not find notification with id: ${id} for ORCID: ${orcid}.",
+        "userMessage": "The resource was not found."
+    },
+    {
+        "code": 9030,
+        "developerMessage": "The element '${value}' of type '${type}' is duplicated. ",
+        "userMessage": "The element '${value}' of type '${type}' is duplicated. "
+    },
+    {
+        "code": 9031,
+        "developerMessage": "Put-code is required to update elements.",
+        "userMessage": "There was an error when updating the record. Please try again. If the error persists, please contact ${clientName} for assistance."
+    },
+    {
+        "code": 9032,
+        "developerMessage": "409 Conflict: The user has opted not to receive notifications so you cannot post notifications.",
+        "userMessage": "The user ${orcid} doesn't allow notifications."
+    },
+    {
+        "code": 9033,
+        "developerMessage": "The other name does not exist.",
+        "userMessage": "The other name does not exist."
+    },
+    {
+        "code": 9034,
+        "developerMessage": "400 Bad Request: The put code provided is not valid.",
+        "userMessage": "There was an error when updating the record. Please try again. If the error persists, please contact ${clientName} for assistance."
+    },
+    {
+        "code": 9035,
+        "developerMessage": "403 Forbidden: You can't change the visibility of an item, please remove the visibility or set it to the current value.",
+        "userMessage": "There was an error when updating the record. Please try again. If the error persists, please contact ${clientName} for assistance."
+    },
+    {
+        "code": 9036,
+        "developerMessage": "409 Conflict: This record has not been claimed.",
+        "userMessage": "This record has not been claimed, if this is your record you can claim it at https://orcid.org/resend-claim."
+    },
+    {
+        "code": 9037,
+        "developerMessage": "Invalid ${type}, valid values are: ${values}.",
+        "userMessage": "Please specify a work type."
+    },
+    {
+        "code": 9038,
+        "developerMessage": "409 Conflict: The item has a limited or private visibility and your request doesn't have the required scope.",
+        "userMessage": "You don't have the permissions to execute this action."
+    },
+    {
+        "code": 9039,
+        "developerMessage": "403 Forbidden: The item is not public and cannot be accessed with the Public API.",
+        "userMessage": "The client application is forbidden to perform the action."
+    },
+    {
+        "code": 9040,
+        "developerMessage": "The item can't be deleted.",
+        "userMessage": "The item can't be deleted."
+    },
+    {
+        "code": 9041,
+        "developerMessage": "404 Not Found: Biography for the given record is null.",
+        "userMessage": "There is no biography for the given record."
+    },
+    {
+        "code": 9042,
+        "developerMessage": "Too many put codes supplied",
+        "userMessage": "Too many put codes supplied"
+    },
+    {
+        "code": 9043,
+        "developerMessage": "The start parameter for API users without credentials must be an integer between 0 and 10,000",
+        "userMessage": "The start parameter for API users without credentials must be an integer between 0 and 10,000"
+    },
+    {
+        "code": 9044,
+        "developerMessage": "409 Conflict: The ORCID record is deactivated and cannot be edited.",
+        "userMessage": "The ORCID record is deactivated."
+    },
+    {
+        "code": 9045,
+        "developerMessage": "400 Bad request: disambiguated-organization must be present and valid",
+        "userMessage": "No valid disambiguated-organization is included in the data."
+    },
+    {
+        "code": 9046,
+        "developerMessage": "400 Bad request: organization must be present and valid",
+        "userMessage": "No valid organization is included in the data."
+    },
+    {
+        "code": 9047,
+        "developerMessage": "400 Bad request: invalid JSON - ${error}",
+        "userMessage": "Invalid JSON."
+    },
+    {
+        "code": 9048,
+        "developerMessage": "409 Conflict: The maximum number of works that can be connected to an ORCID record is 10,000",
+        "userMessage": "The maximum number of works that can be connected to an ORCID record is 10,000 and you have now exceeded this limit. Please remove some works and try again. For more information, see https://support.orcid.org/hc/articles/360006973133"
+    },
+    {
+        "code": 9049,
+        "developerMessage": "400 Bad request: invalid date: ${dateString} ",
+        "userMessage": "Invalid date"
+    },
+    {
+        "code": 9050,
+        "developerMessage": "400 Bad request: missing start-date. If you specify an end-date, you must specify a start-date",
+        "userMessage": "Missing start-date. If you specify an end-date, you must specify a start-date"
+    },
+    {
+        "code": 9051,
+        "developerMessage": "400 Bad request: invalid value '${value}' for enum '${enum}'",
+        "userMessage": "Invalid value for type. "
+    },
+    {
+        "code": 9052,
+        "developerMessage": "403 Forbidden: this access_token is only valid on API v3.0_rc2 and above",
+        "userMessage": "This access_token is only valid on API v3.0_rc2 and above."
+    },
+    {
+        "code": 9053,
+        "developerMessage": "400 Bad Request: invalid ISSN",
+        "userMessage": "This does not appear to be a valid ISSN"
+    },
+    {
+        "code": 9054,
+        "developerMessage": "400 Bad Request: invalid amount",
+        "userMessage": "This does not appear to be a valid funding amount"
+    },
+    {
+        "code": 9055,
+        "developerMessage": "400 Bad Request: End date must come after start date.",
+        "userMessage": "End date must come after start date."
+    },
+    {
+        "code": 9056,
+        "developerMessage": "Release candidates for V{0} are now disabled, your request will be redirected to the corresponding V{0} end point",
+        "userMessage": "Release candidates for V{0} are now disabled, your request will be redirected to the corresponding V{0} end point"
+    },
+    {
+        "code": 9057,
+        "developerMessage": "409 Conflict: The client is locked.",
+        "userMessage": "The client is locked."
+    },
+    {
+        "code": 9058,
+        "developerMessage": "404 Bad Request: Invalid contributor role: ${role}. Expected one of ${validRoles}. ",
+        "userMessage": "Invalid contributor role."
+    },
+    {
+        "code": 9059,
+        "developerMessage": "Release candidates for V3.0 are now disabled, your request will be redirected to the corresponding V3.0 end point",
+        "userMessage": "Release candidates for V3.0 are now disabled, your request will be redirected to the corresponding V3.0 end point"
+    }
+]
