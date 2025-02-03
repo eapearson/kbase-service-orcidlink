@@ -21,7 +21,7 @@ Error ids are strings.
 | link.state_missing      | interactive | The 'state' query param is required but missing              | oauth misuse        |
 | link.session_id_missing | interactive | The 'session_id' was not provided in the 'state' query param | internal error      |
 
-Interactive errors are conveyed by a redirect (302) from the ORCIDLink service to the ui endpoint `#orcidlink/error`. The url provides the error information in the following fields of the query params:
+Interactive errors are conveyed by a redirect (302) from the ORCIDLink service to the ui endpoint `f"{config().linking_session_return_url}/error"`. The url provides the error information in the following fields of the query params:
 
 - `code` - the error code as described above
 
@@ -125,4 +125,3 @@ and recreating the link. A KBase not-authorized means the user needs to either l
 (and is accessing the orcidlink api w/out a token) or the KBase token has expired or
 been revoked in another session. Just very different recovery scenarios that need to be
 distinguished.
-

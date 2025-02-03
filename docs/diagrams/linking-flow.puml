@@ -106,7 +106,7 @@ error
 end note
 
 alt error
-LinkingService --> Browser: #orcidlink/error
+LinkingService --> Browser: f"{config().linking_session_return_url}/error"
 Browser -> KBaseUI: load
 KBaseUI -> LinkingUI: run
 LinkingUI --> User: display error

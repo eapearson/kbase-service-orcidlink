@@ -7,6 +7,7 @@ import pytest
 from fastapi.responses import RedirectResponse
 
 from orcidlink.lib.responses import ui_error_response
+from orcidlink.runtime import config
 
 
 @pytest.fixture
@@ -92,7 +93,7 @@ def test_ui_error_response(fake_fs):
         url = urlparse(location_value)
         assert url.scheme == "http"
         assert url.hostname == "127.0.0.1"
-        assert url.path == "/orcidlink/error"
+        assert url.path == f"{config().linking_session_return_url}/error"
         # assert url.query
         # annoyingly, may be string or bytes, so coerce, primarily to make
         # typing happy.
