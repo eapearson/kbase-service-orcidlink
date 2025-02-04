@@ -72,42 +72,6 @@ class ExceptionData(ServiceBaseModel):
     traceback: List[ExceptionTraceback]
 
 
-# def exception_error_response(
-#     error: ErrorCode2,
-#     exception: Exception,
-#     status_code: int = 400,
-# ) -> JSONResponse:
-#     traceback = []
-#     for tb in extract_tb(exception.__traceback__):
-#         traceback.append(
-#             ExceptionTraceback(
-#                 filename=tb.filename, line_number=tb.lineno, name=tb.name, line=tb.line
-#             )
-#         )
-
-#     data = ExceptionData(exception=str(exception), traceback=traceback)
-
-#     response = ErrorResponse[Any](
-#         code=error.code,
-#         title=error.title or "Exception",
-#         message=str(exception),
-#         data=data,
-#     )
-
-#     return JSONResponse(
-#         status_code=status_code, content=jsonable_encoder(response, exclude_unset=True)
-#     )
-
-
-# def ui_error_responsex(error: ErrorCode2, message: str) -> RedirectResponse:
-#     error_params = urlencode(
-#         {"code": error.code, "title": error.title, "message": message}
-#     )
-#     return RedirectResponse(
-#         f"{config().ui_origin}?{error_params}#orcidlink/error", status_code=302
-#     )
-
-
 def ui_error_response(
     code: int, message: str, data: Optional[Any] = None
 ) -> RedirectResponse:
@@ -120,7 +84,7 @@ def ui_error_response(
 
     error_params = urlencode(raw_error)
     return RedirectResponse(
-        f"{config().ui_origin}/orcidlink/error?{error_params}", status_code=302
+        f"{config().linking_session_return_url}/error?{error_params}", status_code=302
     )
 
 

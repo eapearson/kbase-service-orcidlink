@@ -28,6 +28,7 @@ from httpx import Response
 
 from orcidlink.jsonrpc.errors import NotAuthorizedError
 from orcidlink.main import app
+from orcidlink.runtime import config
 
 TEST_DATA_DIR = os.environ["TEST_DATA_DIR"]
 TEST_LINK = load_data_json(TEST_DATA_DIR, "link2.json")
@@ -198,9 +199,10 @@ def assert_ui_error_response(response: Response, expected_error_code: int) -> No
     assert location_value is not None
 
     url = urlparse(response.headers.get("location"))
-    assert url.scheme == "http"
-    assert url.hostname == "127.0.0.1"
-    assert url.path == "/orcidlink/error"
+    correct_url = urlparse(f"{config().linking_session_return_url}/error")
+    assert url.scheme == correct_url.scheme
+    assert url.hostname == correct_url.hostname
+    assert url.path == correct_url.path
     # assert url.query
     # annoyingly, may be string or bytes, so coerce, primarily to make
     # typing happy.
